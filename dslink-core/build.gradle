@@ -1,0 +1,5 @@
+apply from: '../build.gradle'
+
+javadoc {
+    exclude("**/com/**")
+}

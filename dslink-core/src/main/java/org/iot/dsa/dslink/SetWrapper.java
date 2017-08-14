@@ -1,0 +1,67 @@
+package org.iot.dsa.dslink;
+
+import org.iot.dsa.dslink.responder.InboundSetRequest;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.security.DSPermission;
+
+/**
+ * Maps a request path into a node tree.
+ *
+ * @author Aaron Hansen
+ */
+class SetWrapper implements InboundSetRequest {
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Constants
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Fields
+    ///////////////////////////////////////////////////////////////////////////
+
+    private String path;
+    private InboundSetRequest request;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ///////////////////////////////////////////////////////////////////////////
+
+    SetWrapper(String path, InboundSetRequest request) {
+        this.path = path;
+        this.request = request;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public String getPath() {
+        return path;
+    }
+
+    @Override
+    public DSPermission getPermission() {
+        return request.getPermission();
+    }
+
+    @Override
+    public Integer getRequestId() {
+        return request.getRequestId();
+    }
+
+    @Override
+    public DSLinkSession getSession() {
+        return request.getSession();
+    }
+
+    @Override
+    public DSElement getValue() {
+        return request.getValue();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Inner Classes
+    ///////////////////////////////////////////////////////////////////////////
+
+}

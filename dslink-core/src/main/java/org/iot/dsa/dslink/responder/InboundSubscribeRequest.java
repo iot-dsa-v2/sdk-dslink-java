@@ -1,0 +1,30 @@
+package org.iot.dsa.dslink.responder;
+
+import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSQuality;
+
+/**
+ * The details about an incoming subscribe request passed to the responder.
+ *
+ * @author Aaron Hansen
+ * @see org.iot.dsa.dslink.DSResponder#onSubscribe(InboundSubscribeRequest)
+ */
+public interface InboundSubscribeRequest extends InboundRequest {
+
+    /**
+     * Allows the responder to forcefully terminate the subscription.
+     */
+    public void close();
+
+    /**
+     * Unique subscription id for this path.
+     */
+    public Integer getSubscriptionId();
+
+    /**
+     * The responder should call this when first received and then whenever the value or status
+     * changes.
+     */
+    public void update(long timestamp, DSIValue value, DSQuality quality);
+
+}
