@@ -24,7 +24,7 @@ name.
 3. README.md
     - Please maintain a readme with a version history.
 4. Main.java
-    - Be sure to change the directory structure to match your package.
+    - Also be sure to change the directory structure to match your package.
 
 ## Link Development
 

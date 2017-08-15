@@ -25,4 +25,5 @@
 **/.key
 **/db
 **/nodes.json
+**/nodes*.zip
 **/test.json

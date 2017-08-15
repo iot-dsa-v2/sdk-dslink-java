@@ -8,8 +8,9 @@ Only use org.iot.dsa APIs, do not use or depend on anything in the com.* package
 
 ## Overview
 
-The purpose of this document is to guide the reader through the development of DSA links. 
-Developers will build links using the org.iot.dsa.* packages found in sdk-dslink-java/dslink-core.
+The purpose of this document is to guide the reader through the development of Java DSA links using
+this SDK. Developers will build links using the org.iot.dsa.* packages found in 
+sdk-dslink-java/dslink-core.
 
 Key objectives of this SDK:
 
@@ -23,15 +24,39 @@ Key objectives of this SDK:
     while others do not.  SLF4J and Netty were explicitly bound to the original SDK but can not be 
     used in Niagara because of it's strict Security Manager.
 
-There are two ways to create a link.
+There are three ways to create a link.
 
-1. The easy way.  Create nodes and use values defined in org.iot.dsa.node.  You will get
-free persistence and DSA protocol conversion.
+1. The easy way.  Use nodes and values defined in org.iot.dsa.node.  You will get
+free configuration persistence and DSA protocol translation.
 
-2. Implement org.iot.dsa.dslink.DSResponder
+2. The hard way.  Implement your own org.iot.dsa.dslink.DSResponder.
 
-## Link Structure
+3. A combination of 1 and 2.
 
+## Creating Links the Easy Way
+
+1. Boiler plate.  Copy the dslink-java-template module from this repo.  It has everything needed
+to create a standalone link.  It's README talks about what needs to be modified.
+
+2. Create a root node.  This node should subclass org.iot.dsa.dslink.DSRootNode.  The main class
+in the template module already does this.
+
+3. Create nodes and values specific to your link's functionality.
+
+### Project Boiler Plate
+
+The dslink-java-template subproject in this repository can be copied to make a standalone link
+repository.
+
+### Create a Root Node
+
+The root node type is specified in dslink.json
+
+### Creating Nodes and Values
+
+## Link
+
+This package defines a data model that supports persistent
 There are a few key classes / interfaces that define the general structure of a link and the SDK.
 
     - Link (org.iot.dsa.dslink.DSLink)

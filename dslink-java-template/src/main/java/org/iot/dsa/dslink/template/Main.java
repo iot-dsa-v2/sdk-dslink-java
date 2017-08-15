@@ -39,6 +39,9 @@ public class Main extends DSRootNode implements Runnable {
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    public void actionInvoked(ActionInvocation invoke) {
+    }
+
     @Override
     protected void declareDefaults() {
         declareDefault("First", DSInt.valueOf(1)).setReadOnly(true);

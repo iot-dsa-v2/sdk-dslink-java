@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    compile project (':dslink-core')  //replace this with the next linke
+    compile project (':dslink-core')  //replace this with the next line
     //compile 'org.iot.dsa:dslink-core:+'
     compile project (':dslink-websocket-standalone')  //replace this with the next line
     //compile 'org.iot.dsa:dslink-websocket-standalone:+'

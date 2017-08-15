@@ -80,6 +80,10 @@ public class DSRootNode extends DSNode implements DSResponder {
         }
         DSNode parent = path.getParent();
         DSInfo info = path.getInfo();
+        if (info.isReadOnly()) {
+            throw new DSRequestException("Not writable: " + getPath());
+        }
+        //TODO verify incoming permission
         DSIValue value = info.getValue();
         if (value == null) {
             if (info.getDefaultObject() instanceof DSIValue) {
@@ -93,7 +97,7 @@ public class DSRootNode extends DSNode implements DSResponder {
         } else {
             throw new DSRequestException("Cannot decode value: " + parent.getPath());
         }
-        parent.put(info.getName(), value);
+        parent.onSet(info, value);
     }
 
     ///////////////////////////////////////////////////////////////////////////
