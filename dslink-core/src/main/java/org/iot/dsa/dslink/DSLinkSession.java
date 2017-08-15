@@ -19,4 +19,4 @@ public interface DSLinkSession {
      */
     public boolean shouldEndMessage();
 
-} //class
+}

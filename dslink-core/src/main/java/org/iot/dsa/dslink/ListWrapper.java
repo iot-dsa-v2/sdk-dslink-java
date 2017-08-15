@@ -4,7 +4,7 @@ import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 
 /**
- * Maps a request path into a node tree.
+ * Used by DSRootNode to handle and list request.
  *
  * @author Aaron Hansen
  */

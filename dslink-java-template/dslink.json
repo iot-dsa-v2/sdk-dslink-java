@@ -10,10 +10,10 @@
   "main": "bin/dslink-java-template",
   "repository": {
     "type": "git",
-    "url": "https://github.com/IOT-DSA/dslink-java"
+    "url": "https://github.com/IOT-DSA/sdk-dslink-java"
   },
   "bugs": {
-    "url": "https://github.com/IOT-DSA/dslink-java/issues"
+    "url": "https://github.com/IOT-DSA/sdk-dslink-java/issues"
   },
   "configs": {
     "section1": {
@@ -22,27 +22,15 @@
       "value": null
     },
     "broker": {
-      "description": "URL to broker.",
+      "description": "URL to broker. Can be specified on the command line.",
       "type": "url",
       "value": null,
       "required": true
     },
-    "key": {
-      "description": "Path to public/private key pair.",
-      "type": "path",
-      "value": ".key",
-      "required": true
-    },
-    "nodes": {
-      "description": "Path to configuration database.",
-      "type": "path",
-      "value": "nodes.json",
-      "required": true
-    },
     "rootType": {
-      "description": "Type of the root node of the link.",
+      "description": "Type of the root node of the link. Must be specified here.",
       "type": "string",
-      "value": "org.iot.dsa.node.DSNode",
+      "value": "org.iot.dsa.dslink.template.Main",
       "required": true
     },
     "section2": {
@@ -56,6 +44,12 @@
       "value": null,
       "required": false
     },
+    "key": {
+      "description": "Path to public/private key pair.",
+      "type": "path",
+      "value": ".key",
+      "required": true
+    },
     "log": {
       "description": "finest, finer, fine, config, info, warning or severe",
       "type": "string",
@@ -67,6 +61,12 @@
       "type": "path",
       "value": null,
       "required": false
+    },
+    "nodes": {
+      "description": "Path to configuration database.",
+      "type": "path",
+      "value": "nodes.json",
+      "required": true
     },
     "readTimeout": {
       "description": "Millis timeout for reading from the connection.",

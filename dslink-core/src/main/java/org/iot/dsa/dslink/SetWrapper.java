@@ -5,7 +5,7 @@ import org.iot.dsa.node.DSElement;
 import org.iot.dsa.security.DSPermission;
 
 /**
- * Maps a request path into a node tree.
+ * Used by DSRootNode to handle a set request.
  *
  * @author Aaron Hansen
  */

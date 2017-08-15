@@ -9,15 +9,15 @@
 
 ## Overview
 
-This repository contains a Java SDK for creating [DSA](http://iot-dsa.org) links.
-learn about the DSA architecture, please visit [this page](http://iot-dsa.org/get-started/how-dsa-works).
+This repository contains a Java SDK for creating [DSA](http://iot-dsa.org) links. to learn about 
+the DSA architecture, please visit [this page](http://iot-dsa.org/get-started/how-dsa-works).
 
-## Contents
+## Modules
 
   - **/dslink-core** - The APIs used to build new links.
-  - **/dslink-link-template** - Can be copied and modified to create a new dslink.
+  - **/dslink-java-template** - Can be copied to create a new dslink.
   - **/dslink-websocket-standalone** - Used by links that run in their own process rather
-    than in a container which provides it's own websocket implementation.
+    than in a container which provides it's a different websocket implementation.
     
 ## Link Development
 

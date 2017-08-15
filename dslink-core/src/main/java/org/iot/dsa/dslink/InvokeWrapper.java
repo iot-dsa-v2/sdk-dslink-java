@@ -6,7 +6,7 @@ import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;
 
 /**
- * Maps a request path into a node tree.
+ * Used by DSRootNode to handle an invoke request.
  *
  * @author Aaron Hansen
  */

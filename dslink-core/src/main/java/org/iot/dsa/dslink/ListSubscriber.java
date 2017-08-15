@@ -10,7 +10,8 @@ import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 
 /**
- * Subscribes to the target of a list request and updates the stream when changes are detected.
+ * Used by DSRootNode to subscribe to the target of a list request and update the stream when
+ * changes are detected.
  *
  * @author Aaron Hansen
  */
