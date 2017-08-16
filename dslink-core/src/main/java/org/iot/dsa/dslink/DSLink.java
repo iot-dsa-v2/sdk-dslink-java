@@ -17,9 +17,18 @@ import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
 
 /**
- * Represents an upstream connection, a node hierarchy, and manages the lifecycle of both. <p> Links
- * are created with DSLinkConfig object. The main method of the process is responsible for creating
- * the config.  After instantiation, the link should call DSLink.start() <p> Lifecycle: TODO
+ * Represents an upstream connection, a node hierarchy, and manages the lifecycle of both.
+ *
+ * <p>
+ *
+ * Links are created with DSLinkConfig object. The main method of the process is responsible for
+ * creating the config.  After instantiation, the link should call DSLink.run()
+ *
+ * <p>
+ *
+ * Lifecycle:
+ *
+ * TODO
  *
  * @author Aaron Hansen
  */
@@ -80,7 +89,7 @@ public class DSLink extends DSNode {
                 throw new IllegalStateException("Config missing the root node type");
             }
             config(config() ? "Root type: " + type : null);
-            DSNode tmp  = (DSNode) Class.forName(type).newInstance();
+            DSNode tmp = (DSNode) Class.forName(type).newInstance();
             if (!(tmp instanceof DSResponder)) {
                 throw new IllegalStateException("Root type not a responder: " + type);
             }

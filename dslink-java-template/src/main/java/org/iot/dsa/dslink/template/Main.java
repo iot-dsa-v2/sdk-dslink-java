@@ -39,6 +39,9 @@ public class Main extends DSRootNode implements Runnable {
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    public void actionInvoked(ActionInvocation invoke) {
+    }
+
     @Override
     protected void declareDefaults() {
         declareDefault("First", DSInt.valueOf(1)).setReadOnly(true);
@@ -53,9 +56,7 @@ public class Main extends DSRootNode implements Runnable {
      * Launch the link.
      */
     public static void main(String[] args) throws Exception {
-        DSLinkConfig cfg = new DSLinkConfig(args)
-                .setRootName("Test")
-                .setRootType(Main.class);
+        DSLinkConfig cfg = new DSLinkConfig(args);
         DSLink link = new DSLink(cfg);
         link.run();
     }

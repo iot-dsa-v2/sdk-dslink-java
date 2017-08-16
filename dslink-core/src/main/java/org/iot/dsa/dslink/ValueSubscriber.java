@@ -14,7 +14,7 @@ import org.iot.dsa.node.DSQuality;
 import org.iot.dsa.node.DSString;
 
 /**
- * Maps a request path into a node tree.
+ * Used by DSRootNode to handle value subscriptions.
  *
  * @author Aaron Hansen
  */

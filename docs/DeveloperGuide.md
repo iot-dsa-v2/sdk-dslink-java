@@ -1,21 +1,6 @@
 # DSLink Java Developer Guide
 
-[Home](https://github.com/iot-dsa-v2/dslink-java) - [Javadoc](https://iot-dsa-v2.github.io/dslink-java/javadoc/)
-
-The purpose of this document is to guide the reader through the development of DSA links. 
-Developers will build links using the org.iot.dsa.* packages found in 
-dslink-java/modules/core/dslink-core.
-
-Key objectives of the SDK:
-
-  - Pluggable architecture:
-    - Protocol independence.  Primarily to support DSA V1 and V2.
-    - Transport independence.  Websockets, plain sockets, http, and whatever else comes along.
-  - Support multiple links in the same process.
-  - Support JDK 1.6 for Distech.
-  - High performance for activities such as video streaming.
-  - 3rd party library independence.  Some environments provide transport libraries while others
-  do not.  SLF4J and Netty were explicitly bound to the original SDK but can not be used in Niagara.
+[Home](https://github.com/iot-dsa-v2/sdk-dslink-java) - [Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/)
 
 ## Warning
 
@@ -23,22 +8,55 @@ Only use org.iot.dsa APIs, do not use or depend on anything in the com.* package
 
 ## Overview
 
-Distributed Services Architecture (DSA), is an open source IoT platform that facilitates device 
-inter-communication, logic and applications at every layer of the Internet of Things 
-infrastructure. The objective is to unify the disparate devices, services and applications 
-into a structured and adaptable real-time data model. The premise of the open source DSA 
-initiative is to build a community of manufacturers, makers and solution providers that will 
-contribute to an ever-expanding library of Distributed Service Links which allow protocol 
-translation and data integration to and from 3rd party data-sources. 
+The purpose of this document is to guide the reader through the development of Java DSA links using
+this SDK. Developers will build links using the org.iot.dsa.* packages found in 
+sdk-dslink-java/dslink-core.
 
-From the developer's perspective a link is composed of the following:
+Key objectives of this SDK:
 
-  - The root DSLink object.
-  - The connection to the upstream broker.
-  - A node tree representing functionality such a protocol drivers and applications.
+  - Pluggable architecture:
+    - Protocol independence.  Primarily to support DSA V1 and V2.
+    - Transport independence.  Websockets, plain sockets, http, and whatever else comes along.
+  - Support multiple links in the same process.
+  - Support JDK 1.6 for Distech Controls.
+  - High performance for video streaming.
+  - 3rd party library independence.  Some environments such as Niagara provide transport libraries 
+    while others do not.  SLF4J and Netty were explicitly bound to the original SDK but can not be 
+    used in Niagara because of it's strict Security Manager.
 
-## Link Structure
+There are three ways to create a link.
 
+1. The easy way.  Use nodes and values defined in org.iot.dsa.node.  You will get
+free configuration persistence and DSA protocol translation.
+
+2. The hard way.  Implement your own org.iot.dsa.dslink.DSResponder.
+
+3. A combination of 1 and 2.
+
+## Creating Links the Easy Way
+
+1. Boiler plate.  Copy the dslink-java-template module from this repo.  It has everything needed
+to create a standalone link.  It's README talks about what needs to be modified.
+
+2. Create a root node.  This node should subclass org.iot.dsa.dslink.DSRootNode.  The main class
+in the template module already does this.
+
+3. Create nodes and values specific to your link's functionality.
+
+### Project Boiler Plate
+
+The dslink-java-template subproject in this repository can be copied to make a standalone link
+repository.
+
+### Create a Root Node
+
+The root node type is specified in dslink.json
+
+### Creating Nodes and Values
+
+## Link
+
+This package defines a data model that supports persistent
 There are a few key classes / interfaces that define the general structure of a link and the SDK.
 
     - Link (org.iot.dsa.dslink.DSLink)

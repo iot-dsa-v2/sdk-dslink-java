@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.logging.DSLogging;
 import org.iot.dsa.node.action.ActionInvocation;
@@ -560,6 +561,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {
         throw new IllegalStateException("onInvoke not overridden");
+    }
+
+    /**
+     * Override point, called when a value child is being set by the responder.  The default
+     * implementation calls put(info, value).  If you throw an exception, an error will be
+     * reported to the requester.
+     *
+     * @param info The child being changed.
+     * @param value The new value.
+     * @see org.iot.dsa.dslink.DSResponder#onSet(InboundSetRequest)
+     */
+    public void onSet(DSInfo info, DSIValue value) {
+        put(info, value);
     }
 
     /**

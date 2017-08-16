@@ -27,7 +27,6 @@ public class DSLinkConfig {
     public static final String CFG_LOG_LEVEL = "log";
     public static final String CFG_NODE_FILE = "nodes";
     public static final String CFG_READ_TIMEOUT = "readTimeout";
-    public static final String CFG_ROOT_NAME = "rootName";
     public static final String CFG_ROOT_TYPE = "rootType";
     public static final String CFG_STABLE_DELAY = "stableDelay";
     public static final String CFG_TRANSPORT_FACTORY = "transportFactory";
@@ -45,7 +44,6 @@ public class DSLinkConfig {
     private File logFile;
     private Level logLevel;
     private File nodesFile;
-    private String rootName;
     private String rootType;
     private String token;
     private File workingDir = new File(".");
@@ -264,21 +262,14 @@ public class DSLinkConfig {
     }
 
     /**
-     * The name of the root node.
-     */
-    public String getRootName() {
-        if (rootName == null) {
-            setRootName(getConfig(CFG_ROOT_NAME, null));
-        }
-        return rootName;
-    }
-
-    /**
      * The type of the root node.
      */
     public String getRootType() {
         if (rootType == null) {
-            setRootType(getConfig(CFG_ROOT_TYPE, null));
+            rootType = getConfig(CFG_ROOT_TYPE, null);
+            if (rootType == null) {
+                throw new IllegalStateException("Missing rootType config.");
+            }
         }
         return rootType;
     }
@@ -343,10 +334,6 @@ public class DSLinkConfig {
                 setLinkName(value);
             } else if (key.equals("--nodes")) {
                 setNodesFile(new File(value));
-            } else if (key.equals("--rootName")) {
-                setRootName(value);
-            } else if (key.equals("--rootType")) {
-                setRootType(value);
             } else if (key.equals("--token")) {
                 setToken(value);
             } else {
@@ -506,43 +493,8 @@ public class DSLinkConfig {
     /**
      * Overrides dslink.json.
      */
-    public DSLinkConfig setRootType(Class arg) {
-        return setRootType(arg.getName());
-    }
-
-    /**
-     * Overrides dslink.json.
-     */
-    public DSLinkConfig setRootName(String arg) {
-        rootName = arg;
-        return setConfig(CFG_ROOT_NAME, arg);
-    }
-
-    /**
-     * Overrides dslink.json.
-     */
-    public DSLinkConfig setRootType(String arg) {
-        rootType = arg;
-        return setConfig(CFG_ROOT_TYPE, arg);
-    }
-
-    /**
-     * Overrides dslink.json.
-     */
     public DSLinkConfig setToken(String arg) {
         return setConfig(CFG_AUTH_TOKEN, arg);
-    }
-
-    /**
-     * Validates that the configuration represents a viable link startup state.  This only needs to
-     * be called if the public no-arg constructor is used.
-     *
-     * @throws IllegalStateException whose message will describe the problem.
-     */
-    public void validate() {
-        if (getBrokerUri() == null) {
-            throw new IllegalStateException("Missing broker uri.");
-        }
     }
 
     /**

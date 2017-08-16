@@ -5,7 +5,7 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSQuality;
 
 /**
- * Maps a request path into a node tree.
+ * Used by DSRootNode to handle subscribe requests.
  *
  * @author Aaron Hansen
  */
