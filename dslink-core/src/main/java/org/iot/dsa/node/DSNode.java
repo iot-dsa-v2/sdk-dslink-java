@@ -647,18 +647,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 ((DSNode) object).start();
             }
             info.subscribe();
-            try {
-                onChildChanged(info);
-            } catch (Exception x) {
-                severe(getPath(), x);
-            }
-            if (subscriber != null) {
-                try {
-                    subscriber.onEvent(this, info, CHILD_CHANGED);
-                } catch (Exception x) {
-                    severe(getPath(), x);
-                }
-            }
+            childChanged(info);
             if (isStable()) {
                 if (object instanceof DSNode) {
                     ((DSNode) object).stable();
@@ -666,6 +655,25 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
         }
         return this;
+    }
+    
+    /**
+     * TEMPORARY
+     * Call this to indicate that a child has changed
+     */
+    public void childChanged(DSInfo info) {
+    	try {
+            onChildChanged(info);
+        } catch (Exception x) {
+            severe(getPath(), x);
+        }
+        if (subscriber != null) {
+            try {
+                subscriber.onEvent(this, info, CHILD_CHANGED);
+            } catch (Exception x) {
+                severe(getPath(), x);
+            }
+        }
     }
 
     /**

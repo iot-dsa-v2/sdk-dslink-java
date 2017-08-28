@@ -109,7 +109,9 @@ public class NodeEncoder {
             try {
                 info = arg.getInfo(i);
                 obj = info.getObject();
-                if (info.isDefault()) {  //includes actions
+                if (info.isTransient()) {
+                	//skip it
+                } else if (info.isDefault()) {  //includes actions
                     writeDefault(info);
                 } else if (obj == null) {
                     out.value((DSElement) null);
