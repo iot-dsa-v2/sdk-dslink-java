@@ -10,7 +10,7 @@ Only use org.iot.dsa APIs, do not use or depend on anything in the com.* package
 
 The purpose of this document is to guide the reader through the development of Java DSA links using
 this SDK. Developers will build links using the org.iot.dsa.* packages found in 
-sdk-dslink-java/dslink-core.
+dslink-core sub-project.
 
 Key objectives of this SDK:
 
@@ -24,35 +24,79 @@ Key objectives of this SDK:
     while others do not.  SLF4J and Netty were explicitly bound to the original SDK but can not be 
     used in Niagara because of it's strict Security Manager.
 
-There are three ways to create a link.
+## Creating a Link
 
-1. The easy way.  Use nodes and values defined in org.iot.dsa.node.  You will get
-free configuration persistence and DSA protocol translation.
+These are the major steps you'll take when creating a link:
 
-2. The hard way.  Implement your own org.iot.dsa.dslink.DSResponder.
+1. Create link boiler plate.
+ 
+2. Create a root node.
 
-3. A combination of 1 and 2.
+3. Create application nodes.
 
-## Creating Links the Easy Way
+## Project Boiler Plate
 
-1. Boiler plate.  Copy the dslink-java-template module from this repo.  It has everything needed
-to create a standalone link.  It's README talks about what needs to be modified.
+Copy the dslink-java-template subproject to create a new repository.  It's README provides
+further instructions.
 
-2. Create a root node.  This node should subclass org.iot.dsa.dslink.DSRootNode.  The main class
-in the template module already does this.
+## Create a Root Node
 
-3. Create nodes and values specific to your link's functionality.
+A root node must be DSNode subclass.
 
-### Project Boiler Plate
+If your link is to be a responder, it must also implement DSResponder.
 
-The dslink-java-template subproject in this repository can be copied to make a standalone link
-repository.
+The fully qualified class node must be specified as the "rootType" in dslink.json.
 
-### Create a Root Node
+If you will be modeling data in your link as DSNodes and DSIValues, all you need to do is subclass 
+org.iot.dsa.dslink.DSRootNode.
 
-The root node type is specified in dslink.json
+If you want to proxy another model and don't need persistence, you should subclass DSNode and
+implement org.iot.dsa.dslink.DSResponder.
 
-### Creating Nodes and Values
+You can create a hybrid solution by subclassing DSRootNode, but implementing DSResponder in nodes
+lower in the tree.  That can be used to get some configuration persistence without having to model
+everything as a DSNode or DSIValue.
+
+## Creating Application Nodes
+
+You will be subclassing org.iot.dsa.node.DSNode.  It is a container of other nodes and data values.
+
+### Defaults
+
+Nodes use a type of instance based inheritance.  Every subtype of DSNode has a private default 
+instance, all other instances of any particular type are copies of the default instance.
+
+If a DSNode subtype needs to have certain child nodes or values (most will), it should override
+the declareDefaults method.  The method should:
+
+1. Call super.declareDefaults();
+2. Call DSNode.declareDefault(String name, DSIObject child) for each permanent (non-removable)
+child.  Do not add dynamic children in declareDefaults, because if they are removed, they will be
+re-added the next time the link is restarted.
+
+### Node Lifecycle
+
+**Stopped**
+
+A node is instanciated in the stopped state.  If a node tree has been persisted, will be be fully
+restored in the stopped state.  DSNode.onStopped will not be called in this case.
+
+When nodes are removed from a stable parent node, they will be stopped.  DSNode.onStopped will be 
+after all child nodes have been stopped.
+
+When a link is stopped, an attempt to stop the tree will be made, but it cannot be guaranteed.
+
+**Started**
+
+After the node tree is fully restored it will be started.  DSNode.onStart will be called after all
+of it's child nodes have been started.
+
+Nodes will also started when they are added to a stable parent node.
+
+**Stable**
+
+Callbacks
+
 
 ## Link
 
