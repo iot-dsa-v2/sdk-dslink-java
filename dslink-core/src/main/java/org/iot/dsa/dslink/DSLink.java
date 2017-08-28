@@ -96,6 +96,9 @@ public class DSLink extends DSNode {
             root = tmp;
             saveDatabase();
         }
+        if (root instanceof DSRequester) {
+        	requester = (DSRequester) root;
+        }
         add("Root", root).setTransient(true);
     }
 
@@ -180,7 +183,7 @@ public class DSLink extends DSNode {
         try {
             info(info() ? "Stabilizing root node" : null);
             stable();
-            long nextSave = System.currentTimeMillis() + DSTime.MILLIS_HOUR;
+            long nextSave = System.currentTimeMillis() + DSTime.MILLIS_MINUTE;
             while (isRunning()) {
                 synchronized (this) {
                     try {
@@ -190,7 +193,7 @@ public class DSLink extends DSNode {
                     }
                     if (System.currentTimeMillis() > nextSave) {
                         saveDatabase();
-                        nextSave = System.currentTimeMillis() + DSTime.MILLIS_HOUR;
+                        nextSave = System.currentTimeMillis() + DSTime.MILLIS_MINUTE;
                     }
                 }
             }
