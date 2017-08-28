@@ -262,9 +262,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 DSInfo info;
                 for (int i = 0; i < len; i++) {
                     info = new DSInfoProxy(defaultInstance.getInfo(i));
-                    info.setParent(this);
-                    childMap.put(info.getName(), info);
-                    children.add(info);
+                    add(info);
                 }
             }
         }

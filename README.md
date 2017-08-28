@@ -15,10 +15,10 @@ the DSA architecture, please visit
 
 ## Sub Projects
 
-  - **/dslink-core** - The plumbing and APIs used to build new links.
+  - **/dslink-core** - The APIs used to build new links.
   - **/dslink-java-template** - Boiler plate that can be copied to create a new dslink.
-  - **/dslink-websocket-standalone** - Used by links that run in their own process rather
-    than in a container that provides it's own websocket implementation.
+  - **/dslink-websocket-standalone** - Used by links that run in their own process, rather
+    than in a container which provides it's own websocket implementation.
     
 ## Link Development
 
