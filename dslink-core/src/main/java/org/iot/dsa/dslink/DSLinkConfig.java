@@ -209,7 +209,7 @@ public class DSLinkConfig {
            .append(" --Log|-l     Log level (finest,finer,fine,config,info,warning,severe).\n")
            .append(" --dslink-json|-d  Location of the dslink.json file.\n")
            .append(" --name       Name of the link implementation, for example ")
-           .append("dslink-java-protocol.\n")
+           .append("dslink-java-modbus.\n")
            .append(" --help|-h    Displays this message.\n");
         return buf.toString();
     }
