@@ -287,6 +287,13 @@ public class DSLinkConfig {
     }
 
     /**
+     * Looks for the isRequester config.
+     */
+    public boolean isRequester() {
+        return getConfig(CFG_IS_REQUESTER, false);
+    }
+
+    /**
      * Parses command line args to set the internal state of this object.
      *
      * @param args The argument passed to a main method.
@@ -490,6 +497,14 @@ public class DSLinkConfig {
     public DSLinkConfig setNodesFile(File file) {
         nodesFile = file;
         return setConfig(CFG_NODE_FILE, file.getAbsolutePath());
+    }
+
+    /**
+     * Overrides dslink.json.
+     */
+    public DSLinkConfig setRequester(boolean isRequester) {
+        setConfig(CFG_IS_REQUESTER, isRequester);
+        return this;
     }
 
     /**
