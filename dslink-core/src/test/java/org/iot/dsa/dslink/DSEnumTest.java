@@ -29,10 +29,10 @@ public class DSEnumTest {
         DSElement e = javaEnum.encode();
         javaEnum = (DSEnum) DSEnum.NULL.decode(e);
         Assert.assertTrue(javaEnum.toString().equals("FIRST"));
-        Iterator<String>  it = javaEnum.getEnums().iterator();
-        Assert.assertTrue(it.next().equals("FIRST"));
-        Assert.assertTrue(it.next().equals("SECOND"));
-        Assert.assertTrue(it.next().equals("THIRD"));
+        Iterator<DSElement>  it = javaEnum.getEnums(null).iterator();
+        Assert.assertTrue(it.next().toString().equals("FIRST"));
+        Assert.assertTrue(it.next().toString().equals("SECOND"));
+        Assert.assertTrue(it.next().toString().equals("THIRD"));
     }
 
     // Inner Classes

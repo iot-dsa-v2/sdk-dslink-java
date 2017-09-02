@@ -1,8 +1,5 @@
 package org.iot.dsa.node;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -10,7 +7,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSEnum implements DSIEnum, DSIValue {
+public class DSEnum implements DSIEnum, DSIMetadata, DSIValue {
 
     // Constants
     // ---------
@@ -21,7 +18,7 @@ public class DSEnum implements DSIEnum, DSIValue {
     // ------
 
     private Enum value;
-    private List<String> values;
+    private DSList values;
 
     // Constructors
     // ------------
@@ -83,15 +80,27 @@ public class DSEnum implements DSIEnum, DSIValue {
     }
 
     @Override
-    public List<String> getEnums() {
+    public DSList getEnums(DSList bucket) {
+        if (bucket == null) {
+            bucket = new DSList();
+        }
         if (values == null) {
-            values = new ArrayList<String>();
+            values = new DSList();
             for (Enum e : value.getClass().getEnumConstants()) {
                 values.add(e.name());
             }
-            values = Collections.unmodifiableList(values);
         }
-        return values;
+        bucket.addAll(values);
+        return bucket;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        if (values == null) {
+            bucket.put(DSMetadata.ENUM_RANGE, getEnums(new DSList()));
+        } else {
+            bucket.put(DSMetadata.ENUM_RANGE, values);
+        }
     }
 
     @Override
@@ -110,7 +119,7 @@ public class DSEnum implements DSIEnum, DSIValue {
     }
 
     /**
-     * The Java enum value.
+     * The Java enum.
      */
     public Enum toEnum() {
         return value;
@@ -132,14 +141,11 @@ public class DSEnum implements DSIEnum, DSIValue {
         return new DSEnum(value);
     }
 
-    // Inner Classes
-    // --------------
-
     // Initialization
     // --------------
 
     static {
-        DSRegistry.registerNull(DSEnum.class, NULL);
+        DSRegistry.registerDecoder(DSEnum.class, NULL);
     }
 
 }

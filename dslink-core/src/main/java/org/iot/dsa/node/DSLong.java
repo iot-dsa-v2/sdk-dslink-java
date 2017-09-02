@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSLong extends DSElement implements DSINumber, DSIValue {
+public class DSLong extends DSElement implements DSINumber {
 
     // Constants
     // ---------
@@ -208,7 +208,7 @@ public class DSLong extends DSElement implements DSINumber, DSIValue {
     // --------------
 
     static {
-        DSRegistry.registerNull(DSLong.class, NULL);
+        DSRegistry.registerDecoder(DSLong.class, NULL);
     }
 
 }

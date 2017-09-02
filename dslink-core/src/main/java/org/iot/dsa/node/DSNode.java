@@ -3,6 +3,7 @@ package org.iot.dsa.node;
 import static org.iot.dsa.node.DSIPublisher.Event.CHILD_ADDED;
 import static org.iot.dsa.node.DSIPublisher.Event.CHILD_CHANGED;
 import static org.iot.dsa.node.DSIPublisher.Event.CHILD_REMOVED;
+import static org.iot.dsa.node.DSIPublisher.Event.PUBLISHER_CHANGED;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -120,6 +121,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             if (container.infoInParent != null) {
                 throw new IllegalArgumentException("Already parented");
             }
+        } else if (object instanceof DSGroup) {
+            ((DSGroup) object).setParent(this);
         }
         DSInfo info;
         if (childMap == null) {
@@ -145,6 +148,27 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
         }
         return info;
+    }
+
+    /**
+     * Can be used to force a child changed event for the given child.
+     */
+    public void childChanged(DSInfo info) {
+        if (info.getParent() != this) {
+            throw new IllegalArgumentException("Not a child of this node.");
+        }
+        try {
+            onChildChanged(info);
+        } catch (Exception x) {
+            severe(getPath(), x);
+        }
+        if (subscriber != null) {
+            try {
+                subscriber.onEvent(this, info, CHILD_CHANGED);
+            } catch (Exception x) {
+                severe(getPath(), x);
+            }
+        }
     }
 
     /**
@@ -523,6 +547,20 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
+     * Fires a publisher changed event for this node.  Useful if the node is also a DSIValue and you
+     * want to notify listeners of a value change.
+     */
+    protected void nodeChanged() {
+        if (subscriber != null) {
+            try {
+                subscriber.onEvent(this, null, PUBLISHER_CHANGED);
+            } catch (Exception x) {
+                severe(getPath(), x);
+            }
+        }
+    }
+
+    /**
      * Called when the given child is added and in the stable state.
      */
     protected void onChildAdded(DSInfo info) {
@@ -563,10 +601,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Override point, called when a value child is being set by the responder.  The default
-     * implementation calls put(info, value).  If you throw an exception, an error will be
-     * reported to the requester.
+     * implementation calls put(info, value).  If you throw an exception, an error will be reported
+     * to the requester.
      *
-     * @param info The child being changed.
+     * @param info  The child being changed.
      * @param value The new value.
      * @see org.iot.dsa.dslink.DSResponder#onSet(InboundSetRequest)
      */
@@ -606,21 +644,21 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Add or replace the named child.
+     * Adds or replaces the named child.
      *
      * @return this
      */
-    public DSNode put(String name, DSIObject object) {
+    public DSInfo put(String name, DSIObject object) {
         DSInfo info = getInfo(name);
         if (info == null) {
-            add(name, object);
-            return this;
+            return add(name, object);
         }
-        return put(info, object);
+        put(info, object);
+        return info;
     }
 
     /**
-     * Replace the child.
+     * Replaces the child.
      *
      * @return this
      */
@@ -628,11 +666,16 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (info.getParent() != this) {
             throw new IllegalArgumentException("Info parented in another container");
         }
+        if (object instanceof DSGroup) {
+            ((DSGroup) object).setParent(this);
+        }
         DSIObject old = info.getObject();
         if (old instanceof DSNode) {
             DSNode container = (DSNode) old;
             container.infoInParent = null;
             container.stop();
+        } else if (old instanceof DSGroup) {
+            ((DSGroup) object).setParent(null);
         }
         info.unsubscribe();
         info.setObject(object);
@@ -653,25 +696,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
         }
         return this;
-    }
-    
-    /**
-     * TEMPORARY
-     * Call this to indicate that a child has changed
-     */
-    public void childChanged(DSInfo info) {
-    	try {
-            onChildChanged(info);
-        } catch (Exception x) {
-            severe(getPath(), x);
-        }
-        if (subscriber != null) {
-            try {
-                subscriber.onEvent(this, info, CHILD_CHANGED);
-            } catch (Exception x) {
-                severe(getPath(), x);
-            }
-        }
     }
 
     /**
@@ -728,8 +752,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * There can be multiple subscribers but will only call onSubscribe for the first subscriber
-     * that transitions the container from unsubscribed to subscribed.
+     * There can be multiple subscribers but will only call onSubscribed when the node transitions
+     * from unsubscribed to subscribed.
      */
     public void subscribe(DSISubscriber arg) {
         boolean first = false;
@@ -862,8 +886,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * There can be multiple subscribers but this will only call onUnsubscribed for the removal of
-     * the last subscriber.
+     * There can be multiple subscribers but this will only call onUnsubscribed when the node
+     * transitions from subscribed to unsubscribed.
      */
     public void unsubscribe(DSISubscriber arg) {
         synchronized (this) {

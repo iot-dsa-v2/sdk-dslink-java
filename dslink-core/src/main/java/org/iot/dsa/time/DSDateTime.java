@@ -125,7 +125,7 @@ public class DSDateTime implements DSIValue {
     ///////////////////////////////////////////////////////////////////////////
 
     static {
-        DSRegistry.registerNull(DSDateTime.class, NULL);
+        DSRegistry.registerDecoder(DSDateTime.class, NULL);
     }
 
 }

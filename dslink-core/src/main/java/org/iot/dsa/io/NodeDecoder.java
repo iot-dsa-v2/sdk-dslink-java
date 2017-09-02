@@ -69,7 +69,7 @@ public class NodeDecoder {
             } else {
                 clazz = tokenMap.get(type);
             }
-            ret = DSRegistry.getNull(clazz);
+            ret = DSRegistry.getDecoder(clazz);
             if (ret == null) {
                 ret = (DSIObject) clazz.newInstance();
             }

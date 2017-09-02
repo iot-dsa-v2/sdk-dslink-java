@@ -94,7 +94,7 @@ public class DSLink extends DSNode {
                 throw new IllegalStateException("Root type not a responder: " + type);
             }
             root = tmp;
-            saveDatabase();
+            saveNodes();
         }
         if (root instanceof DSRequester) {
         	requester = (DSRequester) root;
@@ -183,7 +183,9 @@ public class DSLink extends DSNode {
         try {
             info(info() ? "Stabilizing root node" : null);
             stable();
-            long nextSave = System.currentTimeMillis() + DSTime.MILLIS_MINUTE;
+            long saveInterval = config.getConfig(DSLinkConfig.CFG_SAVE_INTERVAL, 60);
+            saveInterval *= 60000;
+            long nextSave = System.currentTimeMillis() + saveInterval;
             while (isRunning()) {
                 synchronized (this) {
                     try {
@@ -192,8 +194,8 @@ public class DSLink extends DSNode {
                         warn(getPath(), x);
                     }
                     if (System.currentTimeMillis() > nextSave) {
-                        saveDatabase();
-                        nextSave = System.currentTimeMillis() + DSTime.MILLIS_MINUTE;
+                        saveNodes();
+                        nextSave = System.currentTimeMillis() + saveInterval;
                     }
                 }
             }
@@ -204,7 +206,7 @@ public class DSLink extends DSNode {
         }
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                saveDatabase();
+                saveNodes();
             }
         });
     }
@@ -236,7 +238,10 @@ public class DSLink extends DSNode {
         }
     }
 
-    private void saveDatabase() {
+    /**
+     * Serializes the node tree.
+     */
+    public void saveNodes() {
         try {
             File nodes = config.getNodesFile();
             StringBuilder buf = new StringBuilder();

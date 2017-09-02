@@ -197,7 +197,7 @@ public class DSInt implements DSINumber, DSIValue {
     // --------------
 
     static {
-        DSRegistry.registerNull(DSInt.class, NULL);
+        DSRegistry.registerDecoder(DSInt.class, NULL);
     }
 
 }

@@ -1,7 +1,5 @@
 package org.iot.dsa.node;
 
-import java.util.List;
-
 /**
  * DSA Enum mapping.
  *
@@ -10,9 +8,13 @@ import java.util.List;
 public interface DSIEnum {
 
     /**
-     * Returns the range of enum values as an immutable list.
+     * Adds the range of possible values to the given bucket.
+     *
+     * @param bucket Also the return value, can be null, which will result in the creation of a new
+     *               list.
+     * @return The list argument, or if it was null, a new list.
      */
-    public List<String> getEnums();
+    public DSList getEnums(DSList bucket);
 
     /**
      * The string representation of the the enum value.

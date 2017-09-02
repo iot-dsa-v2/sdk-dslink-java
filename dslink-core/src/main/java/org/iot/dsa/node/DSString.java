@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSString extends DSElement implements DSIValue {
+public class DSString extends DSElement {
 
     // Constants
     // ---------
@@ -127,7 +127,7 @@ public class DSString extends DSElement implements DSIValue {
     // --------------
 
     static {
-        DSRegistry.registerNull(DSString.class, NULL);
+        DSRegistry.registerDecoder(DSString.class, NULL);
     }
 
 }

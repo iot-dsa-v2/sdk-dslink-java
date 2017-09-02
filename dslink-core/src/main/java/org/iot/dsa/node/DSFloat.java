@@ -200,7 +200,7 @@ public class DSFloat implements DSINumber, DSIValue {
     // --------------
 
     static {
-        DSRegistry.registerNull(DSFloat.class, NULL);
+        DSRegistry.registerDecoder(DSFloat.class, NULL);
     }
 
 }

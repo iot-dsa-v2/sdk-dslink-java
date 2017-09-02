@@ -6,7 +6,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSBool extends DSElement implements DSIBoolean, DSIValue {
+public class DSBool extends DSElement implements DSIBoolean {
 
     // Constants
     // ---------
@@ -192,7 +192,7 @@ public class DSBool extends DSElement implements DSIBoolean, DSIValue {
     // --------------
 
     static {
-        DSRegistry.registerNull(DSBool.class, NULL);
+        DSRegistry.registerDecoder(DSBool.class, NULL);
     }
 
 }

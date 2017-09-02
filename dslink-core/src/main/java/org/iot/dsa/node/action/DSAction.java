@@ -3,13 +3,14 @@ package org.iot.dsa.node.action;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.security.DSPermission;
-import org.iot.dsa.util.DSMetadata;
 
 /**
  * Fully describes an action and routes invocations to DSNode.onInvoke.
@@ -30,7 +31,7 @@ public class DSAction implements ActionSpec, DSIObject {
     private List<DSMap> parameters;
     private DSPermission permission = DSPermission.READ;
     private ResultType result = ResultType.VOID;
-    private List<ActionResultSpec> valueResults;
+    private List<DSMap> valueResults;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -46,23 +47,37 @@ public class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * The most low-level and flexible way to create an action parameter.  At the very least, the
-     * parameter should have a unique name and a value type, see the Metadata utility class.
+     * A convenience which calls addParameter with the same arguments, and also sets the
+     * metadata for default value.
      *
+     * @param name        Must not be null.
+     * @param value       Must not be null.
+     * @param description Can be null.
+     * @return Metadata for further configuration.
+     */
+    public DSMetadata addDefaultParameter(String name, DSIValue value, String description) {
+        return addParameter(name, value, description).setDefault(value);
+    }
+
+    /**
+     * Fully describes a parameter for method invocation.  At the very least, the map should have a
+     * unique name and a value type, see the metadata utility class.
+     *
+     * @return This.
      * @see DSMetadata
      */
-    public DSAction addParameter(DSMap param) {
+    public DSAction addParameter(DSMap metadata) {
         if (parameters == null) {
             parameters = new ArrayList<DSMap>();
         }
-        validate(param);
-        parameters.add(param);
+        validate(metadata, parameters);
+        parameters.add(metadata);
         return this;
     }
 
     /**
-     * Creates a Metadata, calls setName and setDefault on it, adds the internal map to the
-     * parameter list and returns the Metadata instance for further configuration.
+     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to the parameter
+     * list and returns the metadata instance for further configuration.
      *
      * @param name        Must not be null.
      * @param value       Must not be null.
@@ -70,32 +85,85 @@ public class DSAction implements ActionSpec, DSIObject {
      * @return Metadata for further configuration.
      */
     public DSMetadata addParameter(String name, DSIValue value, String description) {
-        DSMetadata ret = new DSMetadata().setName(name)
-                                         .setDefault(value)
-                                         .setDescription(description);
+        DSMetadata ret = new DSMetadata();
+        if (value instanceof DSIMetadata) {
+            ((DSIMetadata) value).getMetadata(ret.getMap());
+        }
+        ret.setName(name)
+           .setType(value)
+           .setDescription(description);
         addParameter(ret.getMap());
         return ret;
     }
 
     /**
-     * Only needed when the result type is VALUES.
+     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to the parameter
+     * list and returns the metadata instance for further configuration.
      *
-     * @param name     Required
-     * @param type     Required
-     * @param metadata Optional
-     * @return This.
+     * @param name        Must not be null.
+     * @param type        Must not be null.
+     * @param description Can be null.
+     * @return Metadata for further configuration.
      */
-    public DSAction addValueResult(String name, DSValueType type, DSMap metadata) {
+    public DSMetadata addParameter(String name, DSValueType type, String description) {
+        DSMetadata ret = new DSMetadata();
+        ret.setName(name)
+           .setType(type)
+           .setDescription(description);
+        addParameter(ret.getMap());
+        return ret;
+    }
+
+    /**
+     * Fully describes a return value when the result type is VALUES.  Must be added in the order
+     * that the values will be returned. At the very least, the map should have a unique name and a
+     * value type, see the Metadata utility class.
+     *
+     * @return This.
+     * @see DSMetadata
+     */
+    public DSAction addValueResult(DSMap metadata) {
         if (valueResults == null) {
-            valueResults = new ArrayList<ActionResultSpec>();
+            valueResults = new ArrayList<DSMap>();
         }
-        if (name == null) {
-            throw new NullPointerException("Name cannot be null");
-        } else if (type == null) {
-            throw new NullPointerException("Type cannot be null");
-        }
-        valueResults.add(new ValueResult(name, type, metadata));
+        validate(metadata, valueResults);
+        valueResults.add(metadata);
         return this;
+    }
+
+    /**
+     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to the results
+     * list and returns the metadata instance for further configuration.
+     *
+     * @param name        Must not be null.
+     * @param value       Must not be null.
+     * @return Metadata for further configuration.
+     */
+    public DSMetadata addValueResult(String name, DSIValue value) {
+        DSMetadata ret = new DSMetadata();
+        if (value instanceof DSIMetadata) {
+            ((DSIMetadata) value).getMetadata(ret.getMap());
+        }
+        ret.setName(name)
+           .setType(value);
+        addValueResult(ret.getMap());
+        return ret;
+    }
+
+    /**
+     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to the results
+     * list and returns the metadata instance for further configuration.
+     *
+     * @param name        Must not be null.
+     * @param type        Must not be null.
+     * @return Metadata for further configuration.
+     */
+    public DSMetadata addValueResult(String name, DSValueType type) {
+        DSMetadata ret = new DSMetadata();
+        ret.setName(name)
+           .setType(type);
+        addValueResult(ret.getMap());
+        return ret;
     }
 
     @Override
@@ -117,7 +185,7 @@ public class DSAction implements ActionSpec, DSIObject {
     }
 
     @Override
-    public Iterator<ActionResultSpec> getValueResults() {
+    public Iterator<DSMap> getValueResults() {
         return valueResults.iterator();
     }
 
@@ -163,27 +231,25 @@ public class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * Prevent null and duplicates.
+     * Ensure name and type, and prevent duplicate names. Prevent null and duplicates.
      */
-    private void validate(DSMap params) {
+    private void validate(DSMap params, List<DSMap> existing) {
         if (params.isEmpty()) {
-            throw new IllegalArgumentException("Missing parameter name");
+            throw new IllegalArgumentException("Empty metadata");
         }
         String name = params.getString("name");
-        if (name == null) {
-            throw new IllegalArgumentException("Missing parameter name");
+        if ((name == null) || name.isEmpty()) {
+            throw new IllegalArgumentException("Missing name");
         }
         if (params.getString(DSMetadata.TYPE) == null) {
-            if (params.getString(DSMetadata.DEFAULT) == null) {
-                throw new IllegalArgumentException("Missing parameter default value or type");
-            }
+            throw new IllegalArgumentException("Missing type");
         }
         if (parameters == null) {
             return;
         }
-        for (DSMap param : parameters) {
+        for (DSMap param : existing) {
             if (name.equals(param.getString("name"))) {
-                throw new IllegalArgumentException("Duplicate parameter name: " + name);
+                throw new IllegalArgumentException("Duplicate name: " + name);
             }
         }
     }
@@ -191,34 +257,6 @@ public class DSAction implements ActionSpec, DSIObject {
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
-
-    private static class ValueResult implements ActionResultSpec {
-
-        private String name;
-        private DSValueType valueType;
-        private DSMap metadata;
-
-        ValueResult(String name, DSValueType valueType, DSMap metadata) {
-            this.name = name;
-            this.valueType = valueType;
-            this.metadata = metadata;
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public DSMap getMetadata() {
-            return metadata;
-        }
-
-        @Override
-        public DSValueType getType() {
-            return valueType;
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Initialization

@@ -122,6 +122,9 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     @Override
     public void getMetadata(DSMap bucket) {
+        if (value instanceof DSIMetadata) {
+            ((DSIMetadata)value).getMetadata(bucket);
+        }
         if (value instanceof DSNode) {
             ((DSNode) value).getMetadata(this, bucket);
         }
@@ -272,19 +275,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return this;
     }
 
-    public DSInfo setReadOnly(boolean readOnly) {
-        setFlag(READONLY, readOnly);
-        return this;
-    }
-
-    public DSInfo setTransient(boolean trans) {
-        setFlag(TRANSIENT, trans);
-        return this;
-    }
-
-    /**
-     * Change the value and return this.
-     */
     DSInfo setObject(DSIObject arg) {
         this.value = arg;
         return this;
@@ -297,6 +287,16 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     DSInfo setPermanent(boolean arg) {
         setFlag(PERMANENT, arg);
+        return this;
+    }
+
+    public DSInfo setReadOnly(boolean readOnly) {
+        setFlag(READONLY, readOnly);
+        return this;
+    }
+
+    public DSInfo setTransient(boolean trans) {
+        setFlag(TRANSIENT, trans);
         return this;
     }
 

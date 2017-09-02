@@ -11,7 +11,6 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionResultSpec;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.ActionValues;
@@ -278,18 +277,10 @@ class DS1InboundInvoke extends DS1InboundRequest
     private void writeColumns(DSWriter out) {
         if (result instanceof ActionValues) {
             out.key("columns").beginList();
-            Iterator<ActionResultSpec> it = result.getAction().getValueResults();
-            ActionResultSpec spec;
+            Iterator<DSMap> it = result.getAction().getValueResults();
             if (it != null) {
                 while (it.hasNext()) {
-                    out.beginMap();
-                    spec = it.next();
-                    out.key("name").value(spec.getName());
-                    out.key("type").value(spec.getType().toString());
-                    if (spec.getMetadata() != null) {
-                        out.key("meta").value(spec.getMetadata());
-                    }
-                    out.endMap();
+                    out.value(it.next());
                 }
             }
             out.endList();
@@ -301,18 +292,10 @@ class DS1InboundInvoke extends DS1InboundRequest
                .key("meta").beginMap().endMap()
                .endMap();
             out.key("columns").beginList();
-            Iterator<ActionResultSpec> iterator = ((ActionTable) result).getColumns();
+            Iterator<DSMap> iterator = ((ActionTable) result).getColumns();
             if (iterator != null) {
-                ActionResultSpec column;
                 while (iterator.hasNext()) {
-                    out.beginMap();
-                    column = iterator.next();
-                    out.key("name").value(column.getName());
-                    out.key("type").value(column.getType().toString());
-                    if (column.getMetadata() != null) {
-                        out.key("meta").value(column.getMetadata());
-                    }
-                    out.endMap();
+                    out.value(iterator.next());
                 }
             }
             out.endList();

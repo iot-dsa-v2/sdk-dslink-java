@@ -8,11 +8,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * String keyed collection of DSObjs that preserves the order of addition.  Keys and
- * values can be accessed via index.  This is not thread safe.
- * <p>
- * Can not be added to the node tree.
+ * String keyed collection of elements that preserves the order of addition.  Keys and values can be
+ * accessed via index.
  *
+ * <p>
+ *
+ * This can be mounted in the node tree.  However, the parent node will not know when it has been
+ * modified, so the modifier is responsible for calling DSNode.childChanged(DSInfo).
+ *
+ * <p>
+ *
+ * This is not thread safe.
  *
  * @author Aaron Hansen
  */
@@ -39,7 +45,7 @@ public class DSMap extends DSGroup {
     // Public Methods
     // --------------
 
-   @Override
+    @Override
     public DSMap clear() {
         keys.clear();
         map.clear();
@@ -57,6 +63,16 @@ public class DSMap extends DSGroup {
             ret.put(getKey(i), get(i).copy());
         }
         return ret;
+    }
+
+    @Override
+    public DSMap decode(DSElement element) {
+        return element.toMap();
+    }
+
+    @Override
+    public DSMap encode() {
+        return this;
     }
 
     @Override
@@ -78,8 +94,8 @@ public class DSMap extends DSGroup {
     }
 
     /**
-     * Optional getter, returns the provided default if the value mapped to the key is
-     * null or not convertible.
+     * Optional getter, returns the provided default if the value mapped to the key is null or not
+     * convertible.
      */
     public boolean get(String key, boolean def) {
         DSElement ret = get(key);
@@ -94,8 +110,7 @@ public class DSMap extends DSGroup {
     }
 
     /**
-     * Optional getter, returns the provided default if the value mapped to the key is
-     * null.
+     * Optional getter, returns the provided default if the value mapped to the key is null.
      */
     public double get(String key, double def) {
         DSElement ret = get(key);
@@ -110,8 +125,8 @@ public class DSMap extends DSGroup {
     }
 
     /**
-     * Optional getter, returns the provided default if the value mapped to the key is
-     * null or not convertible.
+     * Optional getter, returns the provided default if the value mapped to the key is null or not
+     * convertible.
      */
     public int get(String key, int def) {
         DSElement ret = get(key);
@@ -126,8 +141,8 @@ public class DSMap extends DSGroup {
     }
 
     /**
-     * Optional getter, returns the provided default if the value mapped to the key is
-     * null or not convertible.
+     * Optional getter, returns the provided default if the value mapped to the key is null or not
+     * convertible.
      */
     public long get(String key, long def) {
         DSElement ret = get(key);
@@ -142,8 +157,7 @@ public class DSMap extends DSGroup {
     }
 
     /**
-     * Optional getter, returns the provided default if the value mapped to the key is
-     * null.
+     * Optional getter, returns the provided default if the value mapped to the key is null.
      */
     public String get(String key, String def) {
         DSElement ret = get(key);
@@ -261,6 +275,14 @@ public class DSMap extends DSGroup {
     @Override
     public boolean isMap() {
         return true;
+    }
+
+    /**
+     * Returns false.
+     */
+    @Override
+    public boolean isNull() {
+        return false;
     }
 
     /**
@@ -387,6 +409,7 @@ public class DSMap extends DSGroup {
 
     /**
      * Adds / overwrites entries in this map with those from the given.
+     *
      * @return This
      */
     public DSMap putAll(DSMap toAdd) {
@@ -466,8 +489,8 @@ public class DSMap extends DSGroup {
     // -------------
 
     /**
-     * Allows values to be accessed quickly by index in the list, rather than having
-     * to do a key lookup in the map.
+     * Allows values to be accessed quickly by index in the list, rather than having to do a key
+     * lookup in the map.
      */
     public static class Entry {
 
@@ -506,5 +529,11 @@ public class DSMap extends DSGroup {
         }
     }
 
+    // Initialization
+    // --------------
+
+    static {
+        DSRegistry.registerDecoder(DSMap.class, new DSMap());
+    }
 
 }

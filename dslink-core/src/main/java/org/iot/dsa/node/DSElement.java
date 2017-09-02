@@ -5,11 +5,11 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public abstract class DSElement {
+public abstract class DSElement implements DSIValue {
 
     /**
-     * If an object is mutable (list or map) then this should clone it,
-     * immutable objects can simply return themselves.
+     * If an object is mutable (list or map) then this should clone it, immutable objects can simply
+     * return themselves.
      */
     public DSElement copy() {
         return this;
@@ -148,9 +148,9 @@ public abstract class DSElement {
     }
 
     /**
-     * Attempts to return a boolean value.  Numerics will return false for 0 and true for
-     * anything else.  Strings should return true for "true" or "1" and false for
-     * "false" or "0".  Anything else will throws a ClassCastException.
+     * Attempts to return a boolean value.  Numerics will return false for 0 and true for anything
+     * else.  Strings should return true for "true" or "1" and false for "false" or "0".  Anything
+     * else will throws a ClassCastException.
      *
      * @throws ClassCastException If not convertible.
      */
@@ -159,10 +159,10 @@ public abstract class DSElement {
     }
 
     /**
-     * Attempts to return a double value.  Numerics of other types will cast the results.
-     * Booleans will return 0 for false and 1 for true.
-     * Strings will attempt to parseRequest the numeric which may result in a parseRequest
-     * exception.  Anything else will throw a ClassCastException.
+     * Attempts to return a double value.  Numerics of other types will cast the results. Booleans
+     * will return 0 for false and 1 for true. Strings will attempt to parseRequest the numeric
+     * which may result in a parseRequest exception.  Anything else will throw a
+     * ClassCastException.
      *
      * @throws ClassCastException If not convertible.
      */
@@ -171,10 +171,10 @@ public abstract class DSElement {
     }
 
     /**
-     * Attempts to return a float value.  Numerics of other types will cast the results.
-     * Booleans will return 0 for false and 1 for true.
-     * Strings will attempt to parseRequest the numeric which may result in a parseRequest
-     * exception.  Anything else will throw a ClassCastException.
+     * Attempts to return a float value.  Numerics of other types will cast the results. Booleans
+     * will return 0 for false and 1 for true. Strings will attempt to parseRequest the numeric
+     * which may result in a parseRequest exception.  Anything else will throw a
+     * ClassCastException.
      *
      * @throws ClassCastException If not convertible.
      */
@@ -192,10 +192,10 @@ public abstract class DSElement {
     }
 
     /**
-     * Attempts to return an int value.  Numerics of other types will cast the results.
-     * Booleans will return 0 for false and 1 for true.
-     * Strings will attempt to parseRequest the numeric which may result in a parseRequest
-     * exception.  Anything else will throw a ClassCastException.
+     * Attempts to return an int value.  Numerics of other types will cast the results. Booleans
+     * will return 0 for false and 1 for true. Strings will attempt to parseRequest the numeric
+     * which may result in a parseRequest exception.  Anything else will throw a
+     * ClassCastException.
      *
      * @throws ClassCastException If not convertible.
      */
@@ -213,10 +213,10 @@ public abstract class DSElement {
     }
 
     /**
-     * Attempts to return a long value.  Numerics of other types will cast the results.
-     * Booleans will return 0 for false and 1 for true.
-     * Strings will attempt to parseRequest the numeric which may result in a parseRequest
-     * exception.  Anything else will throw a ClassCastException.
+     * Attempts to return a long value.  Numerics of other types will cast the results. Booleans
+     * will return 0 for false and 1 for true. Strings will attempt to parseRequest the numeric
+     * which may result in a parseRequest exception.  Anything else will throw a
+     * ClassCastException.
      *
      * @throws ClassCastException If not convertible.
      */

@@ -9,11 +9,14 @@ import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
 import org.iot.dsa.io.DSWriter;
-import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIEnum;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMap.Entry;
+import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSPath;
-import org.iot.dsa.node.action.ActionResultSpec;
+import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionSpec;
 
 /**
@@ -39,7 +42,9 @@ class DS1InboundList extends DS1InboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     private StringBuilder cacheBuf = new StringBuilder();
+    private DSList cacheList = new DSList();
     private DSMap cacheMap = new DSMap();
+    private DSMetadata cacheMeta = new DSMetadata(cacheMap);
     private Iterator<ApiObject> children;
     private Exception closeReason;
     private OutboundListResponse response;
@@ -146,7 +151,7 @@ class DS1InboundList extends DS1InboundRequest
         if (displayName != null) {
             out.key("$name").value(displayName);
         }
-        child.getMetadata(cacheMap);
+        child.getMetadata(cacheMap.clear());
         if (cacheMap.contains("is")) {
             out.key("$is").value(cacheMap.getString("is"));
         } else {
@@ -160,7 +165,8 @@ class DS1InboundList extends DS1InboundRequest
                 out.key("$invokable").value(action.getPermission().toString());
             }
         } else if (child.isValue()) {
-            out.key("$type").value(child.getValue().getValueType().toString());
+            out.key("$type");
+            encodeType(child.getValue(), cacheMeta, out);
             if (!child.isReadOnly()) {
                 out.key("$writable").value(child.isConfig() ? "config" : "write");
             }
@@ -173,7 +179,7 @@ class DS1InboundList extends DS1InboundRequest
      * Encode all the meta data about the root target of a list request.
      */
     private void encodeTarget(ApiObject object, DSWriter out) {
-        object.getMetadata(cacheMap);
+        object.getMetadata(cacheMap.clear());
         if (cacheMap.contains("is")) {
             out.beginList().value("$is").value(cacheMap.getString("is")).endList();
             cacheMap.remove("is");
@@ -195,6 +201,43 @@ class DS1InboundList extends DS1InboundRequest
         cacheMap.clear();
     }
 
+    private void encodeType(DSIValue value, DSMetadata meta, DSWriter out) {
+        DSValueType vt = meta.getType();
+        if ((vt == null) && (value != null)) {
+            meta.setType(value);
+        }
+        if (vt == DSValueType.BOOL) {
+            DSList range = meta.getBooleanRange();
+            if ((range == null) || (range.size() != 2)) {
+                out.value(vt.toString());
+            }
+            cacheBuf.setLength(0);
+            cacheBuf.append('[');
+            cacheBuf.append(range.get(0).toString());
+            cacheBuf.append(',');
+            cacheBuf.append(range.get(1).toString());
+            cacheBuf.append(']');
+            out.value(cacheBuf.toString());
+        } else if (vt == DSValueType.ENUM) {
+            DSList range = meta.getEnumRange();
+            if (range == null) {
+                range = ((DSIEnum)value).getEnums(cacheList.clear());
+            }
+            cacheBuf.setLength(0);
+            cacheBuf.append('[');
+            for (int i = 0, len = range.size(); i < len; i++) {
+                if (i > 0) {
+                    cacheBuf.append(',');
+                }
+                cacheBuf.append(cacheList.get(i).toString());
+            }
+            cacheBuf.append(']');
+            out.value(cacheBuf.toString());
+        } else {
+            vt.toString();
+        }
+    }
+
     /**
      * Called by encodeTarget for actions.
      */
@@ -209,36 +252,19 @@ class DS1InboundList extends DS1InboundRequest
             out.beginList().value("$params").beginList();
             Iterator<DSMap> params = action.getParameters();
             if (params != null) {
-                DSMap map;
                 while (params.hasNext()) {
-                    map = params.next();
-                    //If type not given, try getting it from the default.
-                    if (!map.contains("type")) {
-                        DSElement def = map.get("default");
-                        if (def != null) {
-                            map.put("type", def.getValueType().toString());
-                        }
-                    }
-                    out.value(map);
+                    out.value(params.next());
                 }
             }
             out.endList().endList();
         }
-        if (!cacheMap.contains("columns")) {
-            if (action.getResultType().isValues()) {
+        if (action.getResultType().isValues()) {
+            if (!cacheMap.contains("columns")) {
                 out.beginList().value("$columns").beginList();
-                Iterator<ActionResultSpec> it = action.getValueResults();
-                ActionResultSpec spec;
+                Iterator<DSMap> it = action.getValueResults();
                 if (it != null) {
                     while (it.hasNext()) {
-                        out.beginMap();
-                        spec = it.next();
-                        out.key("name").value(spec.getName());
-                        out.key("type").value(spec.getType().toString());
-                        if (spec.getMetadata() != null) {
-                            out.key("meta").value(spec.getMetadata());
-                        }
-                        out.endMap();
+                        out.value(it.next());
                     }
                 }
                 out.endList().endList();
@@ -261,7 +287,7 @@ class DS1InboundList extends DS1InboundRequest
         if (cacheMap.isEmpty()) {
             return;
         }
-        DSMap.Entry entry;
+        Entry entry;
         for (int i = 0, len = cacheMap.size(); i < len; i++) {
             entry = cacheMap.getEntry(i);
             out.beginList();
@@ -280,10 +306,10 @@ class DS1InboundList extends DS1InboundRequest
     private void encodeTargetValue(ApiObject object, DSWriter out) {
         DSIValue value = object.getValue();
         if (!cacheMap.contains("type")) {
-            out.beginList()
-               .value("$type")
-               .value(value.getValueType().toString())
-               .endList();
+            out.beginList();
+            out.value("$type");
+            encodeType(object.getValue(), cacheMeta, out);
+            out.endList();
         }
         if (!cacheMap.contains("writable")) {
             if (!object.isReadOnly()) {

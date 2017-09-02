@@ -33,7 +33,7 @@ public interface ActionSpec {
     /**
      * This is only called for the VALUES result type.
      */
-    public Iterator<ActionResultSpec> getValueResults();
+    public Iterator<DSMap> getValueResults();
 
     /**
      * Defines what the action returns.

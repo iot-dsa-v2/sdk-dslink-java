@@ -22,12 +22,14 @@ public class DSLinkConfig {
     public static final String CFG_AUTH_TOKEN = "token";
     public static final String CFG_BROKER_URL = "broker";
     public static final String CFG_CONNECTION_TYPE = "connectionType";
+    public static final String CFG_IS_REQUESTER = "isRequester";
     public static final String CFG_KEY_FILE = "key";
     public static final String CFG_LOG_FILE = "logFile";
     public static final String CFG_LOG_LEVEL = "log";
     public static final String CFG_NODE_FILE = "nodes";
     public static final String CFG_READ_TIMEOUT = "readTimeout";
     public static final String CFG_ROOT_TYPE = "rootType";
+    public static final String CFG_SAVE_INTERVAL = "saveInterval";
     public static final String CFG_STABLE_DELAY = "stableDelay";
     public static final String CFG_TRANSPORT_FACTORY = "transportFactory";
 

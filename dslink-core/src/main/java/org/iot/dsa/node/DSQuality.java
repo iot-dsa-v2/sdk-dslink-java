@@ -374,7 +374,7 @@ public class DSQuality implements DSIQuality, DSIValue {
     ///////////////////////////////////////////////////////////////////////////
 
     static {
-        DSRegistry.registerNull(DSQuality.class, NULL);
+        DSRegistry.registerDecoder(DSQuality.class, NULL);
         stringCache.put("null", NULL.bits);
         stringCache.put(OK_STR, OK);
         stringCache.put(GOOD_OVERRIDE_STR, GOOD_OVERRIDE);

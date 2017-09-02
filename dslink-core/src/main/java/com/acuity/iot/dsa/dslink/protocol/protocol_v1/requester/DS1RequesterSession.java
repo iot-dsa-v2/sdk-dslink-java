@@ -22,7 +22,6 @@ import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionResultSpec;
 
 public class DS1RequesterSession extends DSLogger implements DSRequesterSession {
 
@@ -156,25 +155,7 @@ public class DS1RequesterSession extends DSLogger implements DSRequesterSession 
         response.setMetadata(meta);
         if (columns != null) {
             for (int i = 0; i < columns.size(); i++) {
-                final DSMap colmap = columns.getMap(i);
-                ActionResultSpec col = new ActionResultSpec() {
-                    @Override
-                    public DSMap getMetadata() {
-                        return colmap.getMap("meta");
-                    }
-
-                    @Override
-                    public String getName() {
-                        return colmap.getString("name");
-                    }
-
-                    @Override
-                    public DSValueType getType() {
-                        String typestr = colmap.getString("type");
-                        return DSValueType.valueOf(typestr.toUpperCase());
-                    }
-                };
-                response.addColumn(col);
+                response.addColumn(columns.getMap(i));
             }
         }
         if (updates != null) {
