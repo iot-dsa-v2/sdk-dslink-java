@@ -35,6 +35,10 @@ public class DSRootNode extends DSNode implements DSResponder {
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    public DSLink getLink() {
+        return (DSLink) getParent();
+    }
+
     @Override
     public ActionResult onInvoke(InboundInvokeRequest request) {
         RequestPath path = new RequestPath(request.getPath(), this);

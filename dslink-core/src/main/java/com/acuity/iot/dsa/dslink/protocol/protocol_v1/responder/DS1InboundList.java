@@ -9,6 +9,7 @@ import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
 import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIEnum;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSList;
@@ -202,40 +203,53 @@ class DS1InboundList extends DS1InboundRequest
     }
 
     private void encodeType(DSIValue value, DSMetadata meta, DSWriter out) {
-        DSValueType vt = meta.getType();
-        if ((vt == null) && (value != null)) {
+        String type = meta.getType();
+        if ((type == null) && (value != null)) {
             meta.setType(value);
         }
-        if (vt == DSValueType.BOOL) {
-            DSList range = meta.getBooleanRange();
+        fixType(cacheMap);
+        out.value(cacheMap.remove(DSMetadata.TYPE));
+        /*
+        String type = meta.getType();
+        if ((type == null) && (value != null)) {
+            meta.setType(value);
+            type = meta.getType();
+        }
+        if ("bool".equals(type)) {
+            DSList range = (DSList) meta.getMap().remove(DSMetadata.BOOLEAN_RANGE);
             if ((range == null) || (range.size() != 2)) {
-                out.value(vt.toString());
+                out.value(type);
+            } else {
+                cacheBuf.setLength(0);
+                cacheBuf.append(type);
+                cacheBuf.append('[');
+                cacheBuf.append(range.get(0).toString());
+                cacheBuf.append(',');
+                cacheBuf.append(range.get(1).toString());
+                cacheBuf.append(']');
+                out.value(cacheBuf.toString());
             }
-            cacheBuf.setLength(0);
-            cacheBuf.append('[');
-            cacheBuf.append(range.get(0).toString());
-            cacheBuf.append(',');
-            cacheBuf.append(range.get(1).toString());
-            cacheBuf.append(']');
-            out.value(cacheBuf.toString());
-        } else if (vt == DSValueType.ENUM) {
-            DSList range = meta.getEnumRange();
+        } else if ("enum".equals(type)) {
+            DSList range = (DSList) meta.getMap().remove(DSMetadata.ENUM_RANGE);
             if (range == null) {
                 range = ((DSIEnum)value).getEnums(cacheList.clear());
             }
             cacheBuf.setLength(0);
+            cacheBuf.append(type);
             cacheBuf.append('[');
             for (int i = 0, len = range.size(); i < len; i++) {
                 if (i > 0) {
                     cacheBuf.append(',');
                 }
-                cacheBuf.append(cacheList.get(i).toString());
+                cacheBuf.append(range.get(i).toString());
             }
             cacheBuf.append(']');
             out.value(cacheBuf.toString());
         } else {
-            vt.toString();
+            out.value(type);
         }
+        cacheMap.remove(DSMetadata.TYPE);
+    */
     }
 
     /**
@@ -253,7 +267,7 @@ class DS1InboundList extends DS1InboundRequest
             Iterator<DSMap> params = action.getParameters();
             if (params != null) {
                 while (params.hasNext()) {
-                    out.value(params.next());
+                    out.value(fixType(params.next()));
                 }
             }
             out.endList().endList();
@@ -264,7 +278,7 @@ class DS1InboundList extends DS1InboundRequest
                 Iterator<DSMap> it = action.getValueResults();
                 if (it != null) {
                     while (it.hasNext()) {
-                        out.value(it.next());
+                        out.value(fixType(it.next()));
                     }
                 }
                 out.endList().endList();
@@ -365,6 +379,45 @@ class DS1InboundList extends DS1InboundRequest
             enqueued = true;
         }
         getSession().sendResponse(this);
+    }
+
+    /**
+     * Combines boolean and enum ranges into the type.
+     */
+    private DSMap fixType(DSMap arg) {
+        String type = arg.getString(DSMetadata.TYPE);
+        if ("bool".equals(type)) {
+            DSList range = (DSList) arg.remove(DSMetadata.BOOLEAN_RANGE);
+            if ((range == null) || (range.size() != 2)) {
+                return arg;
+            } else {
+                cacheBuf.setLength(0);
+                cacheBuf.append(type);
+                cacheBuf.append('[');
+                cacheBuf.append(range.get(0).toString());
+                cacheBuf.append(',');
+                cacheBuf.append(range.get(1).toString());
+                cacheBuf.append(']');
+                arg.put(DSMetadata.TYPE, cacheBuf.toString());
+            }
+        } else if ("enum".equals(type)) {
+            DSList range = (DSList) arg.remove(DSMetadata.ENUM_RANGE);
+            if (range == null) {
+                return arg;
+            }
+            cacheBuf.setLength(0);
+            cacheBuf.append(type);
+            cacheBuf.append('[');
+            for (int i = 0, len = range.size(); i < len; i++) {
+                if (i > 0) {
+                    cacheBuf.append(',');
+                }
+                cacheBuf.append(range.get(i).toString());
+            }
+            cacheBuf.append(']');
+            arg.put(DSMetadata.TYPE, cacheBuf.toString());
+        }
+        return arg;
     }
 
     private boolean isClosed() {

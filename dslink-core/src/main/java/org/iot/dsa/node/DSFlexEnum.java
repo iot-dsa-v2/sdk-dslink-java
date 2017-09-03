@@ -48,11 +48,14 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIMetadata, DSIVal
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
-        DSFlexEnum ret = new DSFlexEnum();
-        DSMap map = (DSMap) arg;
-        ret.value = map.getString("value");
-        ret.values = map.getList("values");
-        return ret;
+        if (arg instanceof DSMap) {
+            DSFlexEnum ret = new DSFlexEnum();
+            DSMap map = (DSMap) arg;
+            ret.value = map.getString("value");
+            ret.values = map.getList("values");
+            return ret;
+        }
+        return valueOf(arg.toString());
     }
 
     @Override
@@ -98,7 +101,7 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIMetadata, DSIVal
 
     @Override
     public void getMetadata(DSMap bucket) {
-        bucket.put(DSMetadata.ENUM_RANGE, values);
+        bucket.put(DSMetadata.ENUM_RANGE, values.copy());
     }
 
     @Override
@@ -137,7 +140,7 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIMetadata, DSIVal
     /**
      * Creates a new enum for the given value using the range of values from this instance.
      *
-     * @param value Must be a member of the range in this list.  If null, the NULL instance will be
+     * @param value Must be a member of the range in this enum.  If null, the NULL instance will be
      *              returned.
      */
     public DSFlexEnum valueOf(String value) {

@@ -7,12 +7,12 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSEnum implements DSIEnum, DSIMetadata, DSIValue {
+public class DSJavaEnum implements DSIEnum, DSIMetadata, DSIValue {
 
     // Constants
     // ---------
 
-    public static final DSEnum NULL = new DSEnum();
+    public static final DSJavaEnum NULL = new DSJavaEnum();
 
     // Fields
     // ------
@@ -23,10 +23,10 @@ public class DSEnum implements DSIEnum, DSIMetadata, DSIValue {
     // Constructors
     // ------------
 
-    private DSEnum() {
+    private DSJavaEnum() {
     }
 
-    private DSEnum(Enum value) {
+    private DSJavaEnum(Enum value) {
         this.value = value;
     }
 
@@ -34,12 +34,12 @@ public class DSEnum implements DSIEnum, DSIMetadata, DSIValue {
     // --------------
 
     @Override
-    public DSEnum copy() {
+    public DSJavaEnum copy() {
         return this;
     }
 
     @Override
-    public DSEnum decode(DSElement arg) {
+    public DSJavaEnum decode(DSElement arg) {
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
@@ -47,9 +47,13 @@ public class DSEnum implements DSIEnum, DSIMetadata, DSIValue {
         try {
             String s = arg.toString();
             int idx = s.indexOf(':');
-            String value = s.substring(0, idx);
-            Class clazz = Class.forName(s.substring(++idx));
-            e = Enum.valueOf(clazz, value);
+            if (idx > 0) {
+                String value = s.substring(0, idx);
+                Class clazz = Class.forName(s.substring(++idx));
+                e = Enum.valueOf(clazz, value);
+            } else {
+                e = value.valueOf(value.getClass(), s);
+            }
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
@@ -72,8 +76,8 @@ public class DSEnum implements DSIEnum, DSIMetadata, DSIValue {
         if (arg == this) {
             return true;
         }
-        if (arg instanceof DSEnum) {
-            DSEnum denum = (DSEnum) arg;
+        if (arg instanceof DSJavaEnum) {
+            DSJavaEnum denum = (DSJavaEnum) arg;
             return denum.value.equals(value);
         }
         return false;
@@ -134,18 +138,18 @@ public class DSEnum implements DSIEnum, DSIMetadata, DSIValue {
      * Creates a dynamic enum set to the given value and the list of values only contains the
      * given.
      */
-    public static DSEnum valueOf(Enum value) {
+    public static DSJavaEnum valueOf(Enum value) {
         if (value == null) {
             return NULL;
         }
-        return new DSEnum(value);
+        return new DSJavaEnum(value);
     }
 
     // Initialization
     // --------------
 
     static {
-        DSRegistry.registerDecoder(DSEnum.class, NULL);
+        DSRegistry.registerDecoder(DSJavaEnum.class, NULL);
     }
 
 }

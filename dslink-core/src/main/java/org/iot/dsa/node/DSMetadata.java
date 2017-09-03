@@ -140,12 +140,8 @@ public class DSMetadata {
     /**
      * The type for action parameters, can be used to override types in the responder api.
      */
-    public DSValueType getType() {
-        String s = map.getString(TYPE);
-        if (s == null) {
-            return null;
-        }
-        return DSValueType.valueOf(s);
+    public String getType() {
+        return map.getString(TYPE);
     }
 
     /**

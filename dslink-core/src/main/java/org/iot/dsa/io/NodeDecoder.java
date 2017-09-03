@@ -128,6 +128,28 @@ public class NodeDecoder {
                     throw new IllegalStateException("Missing name");
                 }
                 DSIObject obj = null;
+                if (info != null) {
+                    obj = info.getObject();
+                }
+                if (type != null) {
+                    obj = getInstance(type);
+                    info = parent.put(name, obj);
+                }
+                if (obj == null) { //dynamic, or declareDefaults was modified
+                    in.next();
+                    obj = in.getElement();
+                    info = parent.put(name, obj);
+                } else if (obj instanceof DSNode) {
+                    readChildren((DSNode) obj);
+                } else {
+                    in.next();
+                    DSIValue val = (DSIValue) obj;
+                    parent.put(info, val.decode(in.getElement()));
+                }
+                if (state != null) {
+                    info.decodeState(state);
+                }
+                /*
                 if (type != null) {
                     obj = getInstance(type);
                     parent.put(name, obj);
@@ -148,6 +170,7 @@ public class NodeDecoder {
                     DSIValue val = (DSIValue) obj;
                     parent.put(info, val.decode(in.getElement()));
                 }
+                */
             }
         }
     }

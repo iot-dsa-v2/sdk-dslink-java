@@ -113,14 +113,15 @@ public class DSString extends DSElement {
         return value;
     }
 
-    public static DSString valueOf(String arg) {
+    public static DSString valueOf(Object arg) {
         if (arg == null) {
             return NULL;
         }
-        if (arg.isEmpty()) {
+        String str = arg.toString();
+        if (str.isEmpty()) {
             return EMPTY;
         }
-        return new DSString(arg);
+        return new DSString(str);
     }
 
     // Initialization
