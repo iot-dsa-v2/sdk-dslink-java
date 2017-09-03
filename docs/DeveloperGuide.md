@@ -4,7 +4,11 @@
 
 ## Warning
 
-Only use org.iot.dsa APIs, do not use or depend on anything in the com.* packages.
+Only use org.iot.dsa APIs, do not use or depend on anything in the com.* packages.  
+
+Please utilize the 
+[Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/)
+for the core sdk.  It's not perfect, but the more it is used, the better it will get.
 
 ## Overview
 
