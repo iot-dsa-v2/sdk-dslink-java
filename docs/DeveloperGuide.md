@@ -28,16 +28,15 @@ Key objectives of this SDK:
 
 These are the major steps you'll take when creating a link:
 
-1. Create link boiler plate.
- 
-2. Create a root node.
+1. Create link boilerplate.
+2. Create a main class.
+3. Create a root node.
+4. Create application nodes.
 
-3. Create application nodes.
-
-## Project Boiler Plate
+## Create Link Boilerplate
 
 Copy the dslink-java-template subproject to create a new repository.  It's README provides
-further instructions.
+further instructions for customization.
 
 ## Create a Main Class
 
@@ -51,31 +50,41 @@ All this needs to do is create a link and run it as follows.
     }
 ```
 
-The main class must be specified in build.gradle.  It can be the root node of the link.
+The main class must be specified in build.gradle.  In the template project, the main class is
+the root node.
+
+    mainClassName = 'org.iot.dsa.dslink.template.Main'
 
 ## Create a Root Node
 
-A root node must be DSNode subclass.
+A root node must be subclass of 
+[org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html).
 
-If your link is to be a responder, it must also implement DSResponder. If you will be modeling 
-data as a DSNode tree, all you need to do is subclass **org.iot.dsa.dslink.DSRootNode**.
+If your link is to be a responder, it must also implement 
+[org.iot.dsa.dslink.DSResponder](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/dslink/DSResponder.html).
 
-The fully qualified class name must be specified as the **rootType** in _dslink.json_.
+If you will be modeling data as a DSNode tree, then all you need to do is subclass 
+[org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html).
+
+The fully qualified class name must be specified as the config **rootType** in _dslink.json_.
 
 If you want to proxy another model and don't need a persistent node tree, you should subclass 
-DSNode and implement org.iot.dsa.dslink.DSResponder.
+DSNode and implement DSResponder.
 
 You can also create a hybrid solution by subclassing DSRootNode, but implementing DSResponder in 
-nodes lower in the tree.  If a node in a request path implements DSResponder, it will be their
+nodes lower in the tree.  If a node in a request path implements DSResponder, it is their
 responsibility for processing the request.  Paths of the request will have the path leading to the
 responder removed.  This approach can be used to get some configuration persistence without 
 having to model everything as a DSNode or DSIValue.
 
-## Creating Application Nodes
+## Create Application Nodes
 
 The hook for links' functionality is the node tree.  Links will subclass 
-org.iot.dsa.node.DSNode, configure the default child values and nodes, and use the various 
-lifecycle callbacks to trigger custom functionality.
+[org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
+and do the following:
+
+1. Configure the default children (nodes, values and actions).
+2. Use various lifecycle callbacks to trigger custom functionality.
 
 ### Defaults
 
@@ -91,6 +100,12 @@ the declareDefaults method.  The method should:
 child.  Do not add dynamic children in declareDefaults, because if they are removed, they will be
 re-added the next time the link is restarted.
 
+During node serialization (configuration database, not DSA interop), children that match their 
+declared default are omitted.  This has two benefits:
+1. Smaller node database means faster serialization / deserialization.
+2. Default values can be modified and all existing database will be automatically upgraded when next
+time updated class loaded.
+
 ### Node Lifecycle
 
 It is important to know the application lifecycle.  Your nodes should not execute any application
@@ -99,24 +114,25 @@ logic unless they are running (started or stable).
 **Stopped**
 
 A node is instantiated in the stopped state.  If a node tree has been persisted, will be be fully
-restored in the stopped state.  DSNode.onStopped will not be called.
+restored in the stopped state.  DSNode.onStopped will not be called, it is only called when nodes
+transition from running to stopped.
 
-When nodes are removed from a stable parent node, they will be stopped.  DSNode.onStopped will be 
-called after all of the child nodes have been stopped.
+When nodes are removed from a running parent node, they will be stopped.  DSNode.onStopped will be 
+called after all child nodes have been stopped.
 
 When a link is stopped, an attempt to stop the tree will be made, but it cannot be guaranteed.
 
 **Started**
 
-After the node tree is fully restored it will be started.  DSNode.onStart will be called after all
-of it's child nodes have been started.  There is no guarantee anywhere else in the node tree is
-started.
+After the node tree is fully deserialized it will be started.  A node's onStart method will be 
+called after all of its child nodes have been started.  The only guarantee is that all child
+nodes have been started.
 
-Nodes will also started when they are added to a stable parent node.
+Nodes will also started when they are added to an already running parent node.
 
 **Stable**
 
-Stable is called all nodes have been started.  The first time the tree is loaded, there is a 
+Stable is called all nodes have been started.  The first time the node tree is loaded, there is a 
 stable delay of 5 seconds.  This is configurable as **stableDelay** in _dslink.json_.
 
 Nodes added to an already stable parent will have onStart and onStable called immediately.
@@ -126,65 +142,60 @@ When in doubt of whether to use onStarted or onStable, use onStable.
 **Other Callbacks**
 
 When a node is stable, there are several other callbacks for various state changes.  All callbacks
-begin with **on** such as _onChildAdded()_.  See the [DSNode Javadoc]() for a complete list.
+begin with **on** such as _onChildAdded()_.  See the 
+[DSNode Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
+for a complete list.
 
 ### Subscriptions
 
-Nodes should suspend, or minimize activity when nothing is interested in them.  To do this use
-the following APIs:
+Nodes should suspend, or minimize activity when nothing is interested in them.  For example, if 
+nothing is interested in a point, it is best to not poll the point on the foreign system.  
+To do this you use the following APIs:
 
 * DSNode.onSubscribed - Called when the node transitions from unsubscribed to subscribed.  This is
-not called for subsequent subscribers once already in the subscribed state.
+not called for subsequent subscribers once in the subscribed state.
 * DSNode.onUnsubscribed - Called when the node transitions from subscribed to unsubscribed.   If
 there are multiple subscribers, this is only called when the last one unsubscribes.
-* DSNode.isSubscribed - Tell the caller whether or not the node is subscribed.
-
+* DSNode.isSubscribed - Tells the caller whether or not the node is subscribed.
 
 ### Values
 
-DSValues represent leaf members of the node tree. They can also be sub-divided into two categories:
-  1. Elements
-  2. Synthetics
+Values mostly represent leaf members of the node tree.  There are two types of values:
 
-Elements map directly to JSON type system.  They do not require the persistence of additional
-typing meta-data to decode.  If new value types are needed, they must be synthetic, no new
-elements can be added unless JSON evolves or is abandoned.
+1. [org.io.dsa.node.DSElement](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSElement.html) - 
+These map to the JSON type system and represent leaf members of the node tree.
+2. [org.io.dsa.node.DSIValue](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSIValue.html) - 
+These don't map to the JSON type system, and it is possible for nodes to implement this interface.  
+This allows for values to have children.
 
-Synthetics persist themselves using the core JSON types, but require typing meta-data so that
-they can be encoded and decoded properly.
+Many values are singleton instances.  This is for efficiency, the same value instance (e.g.
+DSBoolean.TRUE) can be stored in many nodes. Singleton values must be immutable.
 
+Whenever possible, values should also have NULL instance.  Rather than storing a generic null, 
+this helps the system decode the proper type such as when a requester is attempting to set
+a value.
+  
+### Actions
 
-## Metadata
+Add actions to your node to allow requester invocation using 
+[org.iot.dsa.node.action.DSAction](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/action/DSAction.html).  
 
-Every child member of a container has a corresponding DSObjectInfo.  This info stores metadata
-about the child.  In fact, child instance cannot be directly stores are fields, but the info
-can.  For example, the following is incorrect:
-
-    public class MyNode extends DSNode {
-      private MyNode myChild = new MyNode();
-    }
-
-Instead, it would be stored as follows:
-
-    public class MyNode extends DSNode {
-      private DSObjectInfo myChild = getInfo("myChild");
-    }
-    
-The second example skips over how the myChild instance was instantiated, but to understand that
-one need to first understand defaults.
+Override DSNode.onInvoke handle invocations.  The reason for this is complicated but it is possible
+to subclass DSAction, just carefully read the javadoc if you do.
 
 ### DSInfo
 
-All node children have a corresponding DSInfo instances.  This class serves serves two purposes:
+All node children have corresponding DSInfo instances.  This types serves serves two purposes:
 
-1. It carries some meta-data defining the relationship between the parent node and the child.
+1. It carries some meta-data about the relationship between the parent node and the child.
 2. It tracks whether or not the child matches a declared default.
 
 Important things for developers to know about DSInfo are:
 
 * You can configure several flags such as transient, readonly and hidden.
 * You can declare fields in the your Java class for (declared default) info instances to avoid
-looking up the child every time it is needed.  This is can be used to create getters and setters.
+looking up the child every time it is needed.  This is can be used to create fast getters and 
+setters.
 
 Without declaring fields (lookups required):
 
@@ -218,80 +229,31 @@ With declared fields:
     }
 ```
 
+### Metadata
 
+Metadata can be information such as units for number types and ranges for enums.
 
+When the system collects metadata about an object, it uses these steps:
 
+1. If the target value or node implements 
+[org.iot.dsa.node.DSIMetadata](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSIMetadata.html).
+it will be given the opportunity to provide metadata first.
+2. Then getMetadata on the parent node will be called with the DSInfo representing the child.
+This will be useful when nodes want to store user editable metadata.
 
+To simplify metadata, use the utility class
+[org.iot.dsa.node.DSMetadata](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSMetadata.html).
 
+### Timers and Threads
 
-**Defaults**
+Use 
+[org.iot.dsa.DSRuntime](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/DSRuntime.html), 
+and that all you need to know about that.
 
-The node data model uses defaults extensively.  In a nutshell, all DSNode subclasses have a
-default instance in memory.  All other instances of the same type reference the default values
-in that instance and only store their differences.
+### Logging
 
-This has some benefits:
-  - Reduced memory usage.  This will reduce the number of objects in very large graphs.
-  - Upgrade-ability.  Default values can easily be changed for an existing instances
-  since they are only recording their differences.
-
-Defaults are defined in a single method and it is only called for the default instance.  The
-method is cleverly named initializeDefaults().  Here is an example:
-
-    protected void initializeDefaults() {
-      addDefault("Can Not Be Removed", DSElement.valueOf(true));
-    }
-
-Only DSValue defaults are tracked, it isn't necessary to build a complex DSNode children in a 
-default instance.
-    
-## Creating DSNode Subclasses
-
-Creating a DSNode subclass requires an understanding of these key concepts:
-  - Names
-  - Defaults
-  - Lifecycle
-
-**Names**
-
-The DSNode API does not restrict names in any way.  It will encode names properly when reading
-and writing paths.
-
-    Names should only be encoded (escaped) in paths.  The developer will rarely have to do this.
-
-There are two naming issues to be aware of:
-
-  1. DSA Attributes start with @
-  2. DSA Configs start with $
-
-Unless the developer understands these concepts and has a specific reason, they should not start 
-their names with $ or @.  If user
-
-**Defaults**
-
-Defaults are created in the initializeDefault method.  This method is only called once on  first
-creating an instance of a DSNode subclass.  In initializeDefaults, the implementor will add
-
-TODO
-
-**Lifecycle**
-
-TODO
-
-## Configuration
-
-TODO
-
-## Logging
-
-TODO
-
-When possible subclass DSLogger.  DSNode does so it should not be an issue.  This will allow us to 
-plug in other loggings packages should it be necessary.
-
-Create multiple loggers, the level of each will be individually controllable in the future.
-
-It's async so it fast.  Take advantage of DSLogger for efficiency.
-
-Level definitions
+Use Java Util Logging (JUL).  A high performance async logger is automatically installed which also 
+manages backups.  Most types subclass 
+[org.iot.dsa.logging.DSLogger](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/logging/DSLogger.html) 
+as a convenience.
 

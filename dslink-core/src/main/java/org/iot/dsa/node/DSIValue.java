@@ -24,11 +24,6 @@ package org.iot.dsa.node;
 public interface DSIValue extends DSIObject {
 
     /**
-     * If immutable, returns this.
-     */
-    public DSIValue copy();
-
-    /**
      * Instances must decode new instances from an element type.  The null instance
      * from will most often be used for decoding.
      */
