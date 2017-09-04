@@ -197,7 +197,7 @@ public class DSMetadata {
         if (arg == null) {
             return this;
         }
-        map.put(DEFAULT, arg.encode());
+        map.put(DEFAULT, arg.toElement());
         return this;
     }
 

@@ -33,8 +33,8 @@ public class DSFlexEnumTest {
             Assert.assertTrue(it.next().toString().equals("First"));
             Assert.assertTrue(it.next().toString().equals("Second"));
             Assert.assertTrue(it.next().toString().equals("Third"));
-            DSElement e = fe.encode();
-            fe = DSFlexEnum.NULL.decode(e);
+            DSElement e = fe.store();
+            fe = DSFlexEnum.NULL.restore(e);
             Assert.assertTrue(fe.toString().equals("First"));
             it = fe.getEnums(null).iterator();
             Assert.assertTrue(it.next().toString().equals("First"));

@@ -144,7 +144,7 @@ public class NodeDecoder {
                 } else {
                     in.next();
                     DSIValue val = (DSIValue) obj;
-                    parent.put(info, val.decode(in.getElement()));
+                    parent.put(info, val.valueOf(in.getElement()));
                 }
                 if (state != null) {
                     info.decodeState(state);

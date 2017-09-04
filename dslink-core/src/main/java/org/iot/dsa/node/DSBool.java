@@ -30,36 +30,6 @@ public class DSBool extends DSElement implements DSIBoolean {
     // Public Methods
     // --------------
 
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSBool copy() {
-        return this;
-    }
-
-    @Override
-    public DSBool decode(DSElement arg) {
-        if ((arg == null) || arg.isNull()) {
-            return NULL;
-        }
-        if (arg instanceof DSBool) {
-            return (DSBool) arg;
-        }
-        if (arg instanceof DSString) {
-            return valueOf(arg.toString());
-        }
-        throw new IllegalArgumentException("Cannot decoding boolean: " + arg);
-    }
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSBool encode() {
-        return this;
-    }
-
     @Override
     public boolean equals(Object arg) {
         if (arg instanceof DSBool) {
@@ -164,6 +134,20 @@ public class DSBool extends DSElement implements DSIBoolean {
         return FALSE;
     }
 
+    @Override
+    public DSBool valueOf(DSElement arg) {
+        if ((arg == null) || arg.isNull()) {
+            return NULL;
+        }
+        if (arg instanceof DSBool) {
+            return (DSBool) arg;
+        }
+        if (arg instanceof DSString) {
+            return valueOf(arg.toString());
+        }
+        throw new IllegalArgumentException("Cannot decoding boolean: " + arg);
+    }
+
     /**
      * Will return NULL, TRUE or FALSE.
      *
@@ -179,11 +163,17 @@ public class DSBool extends DSElement implements DSIBoolean {
         if (arg.equalsIgnoreCase("null")) {
             return NULL;
         }
+        if (arg.equalsIgnoreCase("true")) {
+            return TRUE;
+        }
         if (arg.equalsIgnoreCase("false")) {
             return FALSE;
         }
-        if (arg.equalsIgnoreCase("true")) {
+        if (arg.equals("1")) {
             return TRUE;
+        }
+        if (arg.equals("0")) {
+            return FALSE;
         }
         throw new IllegalArgumentException("Cannot decode boolean: " + arg);
     }

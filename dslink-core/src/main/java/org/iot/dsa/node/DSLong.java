@@ -28,39 +28,6 @@ public class DSLong extends DSElement implements DSINumber {
     // --------------
 
     /**
-     * Returns this.
-     */
-    @Override
-    public DSLong copy() {
-        return this;
-    }
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSLong decode(DSElement arg) {
-        if ((arg == null) || arg.isNull()) {
-            return NULL;
-        }
-        if (arg instanceof DSINumber) {
-            return valueOf(arg.toLong());
-        }
-        if (arg instanceof DSString) {
-            return valueOf(arg.toString());
-        }
-        throw new IllegalArgumentException("Can not decode long: " + arg);
-    }
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSLong encode() {
-        return this;
-    }
-
-    /**
      * True if the argument is a DSINumber and the values are equal or they are both isNull.
      */
     @Override
@@ -149,6 +116,23 @@ public class DSLong extends DSElement implements DSINumber {
             return "null";
         }
         return String.valueOf(value);
+    }
+
+    /**
+     * Returns this.
+     */
+    @Override
+    public DSLong valueOf(DSElement arg) {
+        if ((arg == null) || arg.isNull()) {
+            return NULL;
+        }
+        if (arg instanceof DSINumber) {
+            return valueOf(arg.toLong());
+        }
+        if (arg instanceof DSString) {
+            return valueOf(arg.toString());
+        }
+        throw new IllegalArgumentException("Can not decode long: " + arg);
     }
 
     /**

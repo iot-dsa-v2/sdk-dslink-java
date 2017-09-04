@@ -26,10 +26,16 @@ public class DSJavaEnumTest {
     @Test
     public void theTest() throws Exception {
         DSJavaEnum javaEnum = DSJavaEnum.valueOf(TestEnum.FIRST);
-        DSElement e = javaEnum.encode();
-        javaEnum = (DSJavaEnum) DSJavaEnum.NULL.decode(e);
+        DSElement e = javaEnum.store();
+        javaEnum = DSJavaEnum.NULL.restore(e);
         Assert.assertTrue(javaEnum.toString().equals("FIRST"));
-        Iterator<DSElement>  it = javaEnum.getEnums(null).iterator();
+        Iterator<DSElement> it = javaEnum.getEnums(null).iterator();
+        Assert.assertTrue(it.next().toString().equals("FIRST"));
+        Assert.assertTrue(it.next().toString().equals("SECOND"));
+        Assert.assertTrue(it.next().toString().equals("THIRD"));
+        javaEnum = javaEnum.valueOf("SECOND");
+        it = javaEnum.getEnums(null).iterator();
+        Assert.assertTrue(javaEnum.toString().equals("SECOND"));
         Assert.assertTrue(it.next().toString().equals("FIRST"));
         Assert.assertTrue(it.next().toString().equals("SECOND"));
         Assert.assertTrue(it.next().toString().equals("THIRD"));

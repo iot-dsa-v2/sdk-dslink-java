@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Aaron Hansen
  */
-public class DSQuality implements DSIQuality, DSIValue {
+public class DSQuality extends DSValue implements DSIQuality {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -97,24 +97,6 @@ public class DSQuality implements DSIQuality, DSIValue {
             buf.append(',').append(' ');
         }
         buf.append(str);
-    }
-
-    @Override
-    public DSQuality copy() {
-        return this;
-    }
-
-    @Override
-    public DSQuality decode(DSElement element) {
-        if ((element == null) || element.isNull()) {
-            return NULL;
-        }
-        return valueOf(element.toString());
-    }
-
-    @Override
-    public DSElement encode() {
-        return DSString.valueOf(toString());
     }
 
     /**
@@ -273,6 +255,21 @@ public class DSQuality implements DSIQuality, DSIValue {
     }
 
     @Override
+    public DSElement store() {
+        return DSLong.valueOf(bits);
+    }
+
+    @Override
+    public DSQuality restore(DSElement arg) {
+        return valueOf(arg.toInt());
+    }
+
+    @Override
+    public DSElement toElement() {
+        return DSString.valueOf(toString());
+    }
+
+    @Override
     public String toString() {
         if (isNull()) {
             return "null";
@@ -332,6 +329,14 @@ public class DSQuality implements DSIQuality, DSIValue {
         return this;
     }
 
+    @Override
+    public DSQuality valueOf(DSElement element) {
+        if ((element == null) || element.isNull()) {
+            return NULL;
+        }
+        return valueOf(element.toString());
+    }
+
     public static DSQuality valueOf(int bits) {
         if (bits == NULL.bits) {
             return NULL;
@@ -349,12 +354,7 @@ public class DSQuality implements DSIQuality, DSIValue {
     }
 
     public static DSQuality valueOf(String string) {
-        String[] strings = string.split(",");
-        int tmp = 0;
-        for (String s : strings) {
-            tmp = tmp | getBit(s);
-        }
-        return valueOf(tmp);
+        return valueOf(string.split(","));
     }
 
     public static DSQuality valueOf(String[] strings) {

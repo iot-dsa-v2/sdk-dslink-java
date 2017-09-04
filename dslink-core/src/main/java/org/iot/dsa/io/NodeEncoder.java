@@ -111,7 +111,7 @@ public class NodeEncoder {
                 obj = info.getObject();
                 if (info.isTransient()) {
                     //skip it
-                } else if (info.isDefault()) {  //includes actions
+                } else if (info.equalsDefault()) {  //includes actions
                     writeDefault(info);
                 } else if (obj == null) {
                     out.value((DSElement) null);
@@ -135,10 +135,10 @@ public class NodeEncoder {
             ((AbstractJsonWriter) out).writeNewLineIndent();
         }
         out.key("n").value(arg.getName());
-        if (!arg.isDefaultState()) {
+        if (!arg.equalsDefaultState()) {
             out.key("i").value(arg.encodeState());
         }
-        if (!arg.isDefaultType()) {
+        if (!arg.equalsDefaultType()) {
             DSNode node = (DSNode) arg.getObject();
             if (node != null) {
                 out.key("t").value(getToken(node));
@@ -154,10 +154,10 @@ public class NodeEncoder {
             ((AbstractJsonWriter) out).writeNewLineIndent();
         }
         out.key("n").value(arg.getName());
-        if (!arg.isDefaultState()) {
+        if (!arg.equalsDefaultState()) {
             out.key("i").value(arg.encodeState());
         }
-        if (!arg.isDefaultType()) {
+        if (!arg.equalsDefaultType()) {
             DSIObject obj = arg.getObject();
             if (obj != null) {
                 out.key("t").value(getToken(obj));
@@ -172,21 +172,21 @@ public class NodeEncoder {
             ((AbstractJsonWriter) out).writeNewLineIndent();
         }
         out.key("n").value(arg.getName());
-        if (!arg.isDefaultState()) {
+        if (!arg.equalsDefaultState()) {
             out.key("i").value(arg.encodeState());
         }
-        if (!arg.isDefaultType()) {
+        if (!arg.equalsDefaultType()) {
             DSIValue v = (DSIValue) arg.getObject();
             if (v != null) {
                 out.key("t").value(getToken(v));
-                out.key("v").value(v.encode());
+                out.key("v").value(v.store());
             } else {
                 out.key("v").value((String) null);
             }
-        } else if (!arg.isDefaultValue()) {
+        } else if (!arg.equalsDefaultValue()) {
             DSIValue v = (DSIValue) arg.getObject();
             if (v != null) {
-                out.key("v").value(v.encode());
+                out.key("v").value(v.store());
             } else {
                 out.key("v").value((String) null);
             }

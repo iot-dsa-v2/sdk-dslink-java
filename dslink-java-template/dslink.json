@@ -1,6 +1,6 @@
 {
   "name": "dslink-java-template",
-  "version": "0.0.1",
+  "version": "0.0.1-alpha1",
   "description": "Template Link",
   "license": "ISC",
   "author": {
@@ -10,10 +10,10 @@
   "main": "bin/dslink-java-template",
   "repository": {
     "type": "git",
-    "url": "https://github.com/IOT-DSA/sdk-dslink-java"
+    "url": "https://github.com/iot-dsa-v2/sdk-dslink-java"
   },
   "bugs": {
-    "url": "https://github.com/IOT-DSA/sdk-dslink-java/issues"
+    "url": "https://github.com/iot-dsa-v2/sdk-dslink-java/issues"
   },
   "configs": {
     "section1": {

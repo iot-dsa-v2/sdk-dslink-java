@@ -4,7 +4,6 @@ package org.iot.dsa.time;
  * Enum representing periods of time.
  *
  * @author Aaron Hansen
- * @see DSInterval
  */
 public enum DSInterval {
 

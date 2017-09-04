@@ -66,12 +66,12 @@ public class DSMap extends DSGroup {
     }
 
     @Override
-    public DSMap decode(DSElement element) {
+    public DSMap valueOf(DSElement element) {
         return element.toMap();
     }
 
     @Override
-    public DSMap encode() {
+    public DSMap toElement() {
         return this;
     }
 

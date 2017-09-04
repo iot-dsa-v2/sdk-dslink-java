@@ -313,7 +313,7 @@ class DS1InboundInvoke extends DS1InboundRequest
             if (values != null) {
                 while (values.hasNext()) {
                     DSIValue val = values.next();
-                    out.value(val.encode());
+                    out.value(val.toElement());
                 }
             }
             out.endList();

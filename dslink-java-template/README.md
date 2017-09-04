@@ -1,15 +1,21 @@
 # dslink-java-template
 
 * Version: 0.0.0
-* JDK 1.6 and up.
+* Java - version 1.6 and up.
 * [License](https://en.wikipedia.org/wiki/ISC_license)
 
 
 ## Overview
 
-This project can be used to create a new link.  In a nutshell, copy it, change 
-org.iot.dsa.dlink.template to your package structure and globally replace 'template' with your link 
-name.
+This project can be used to create the boilerplate for a new Java DSLink.  In a nutshell, copy it, 
+change org.iot.dsa.dlink.template to your package structure and globally replace 
+'dslink-java-template' with your link name.
+
+If you are not familiar with DSA, an overview can be found at
+[here](http://iot-dsa.org/get-started/how-dsa-works).
+
+This link was built using the Java DSLink SDK which can be found
+[here](https://github.com/iot-dsa-v2/sdk-dslink-java).
 
 ## Files Requiring Modification
 1. build.gradle
@@ -20,11 +26,16 @@ name.
     - dependencies - Replace the sdk-dslink-java project dependencies with the commented out
       versions on the following line.
 2. dslink.json
-    - TODO
+    - Change the link name.
+    - Change the rootType config to the fully qualified class name of your root node type.
 3. README.md
-    - Please maintain a readme with a version history.
+    - Change the title link name.
+    - Maintain the version number.
+    - Change the license if necessary.
+    - Provide some sort of Overview.
+    - Maintain a version history.
 4. Main.java
-    - Also be sure to change the directory structure to match your package.
+    - If you reuse this, be sure to change the directory structure to match your package.
 
 ## Link Development
 

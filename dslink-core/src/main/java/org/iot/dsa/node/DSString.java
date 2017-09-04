@@ -31,27 +31,6 @@ public class DSString extends DSElement {
     // Public Methods
     // --------------
 
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSString copy() {
-        return this;
-    }
-
-    @Override
-    public DSString decode(DSElement arg) {
-        return valueOf(arg.toString());
-    }
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSString encode() {
-        return this;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == this) {
@@ -111,6 +90,11 @@ public class DSString extends DSElement {
             return "null";
         }
         return value;
+    }
+
+    @Override
+    public DSString valueOf(DSElement arg) {
+        return valueOf(arg.toString());
     }
 
     public static DSString valueOf(Object arg) {

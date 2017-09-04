@@ -7,6 +7,8 @@ import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
 /**
+ * Misc time utility functions.
+ *
  * @author Aaron Hansen
  */
 public class DSTime {
@@ -64,8 +66,7 @@ public class DSTime {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
@@ -77,8 +78,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The time to modify.
@@ -93,8 +93,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
@@ -106,8 +105,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The time to modify.
@@ -122,8 +120,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
@@ -135,8 +132,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The time to modify.
@@ -151,8 +147,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
@@ -164,8 +159,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The time to modify.
@@ -180,8 +174,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
@@ -193,8 +186,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The time to modify.
@@ -209,8 +201,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
@@ -221,8 +212,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The time to modify.
@@ -233,8 +223,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
@@ -246,8 +235,7 @@ public class DSTime {
     }
 
     /**
-     * Adds or subtracts the corresponding time field, does not
-     * perform any alignment.
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
      *
      * @param count     The quantity to change, can be negative.
      * @param timestamp The time to modify.
@@ -423,8 +411,8 @@ public class DSTime {
     }
 
     /**
-     * This is a convenience that uses reuses and recycles a calendar instance to
-     * get the time in millis.
+     * This is a convenience that uses reuses and recycles a calendar instance to get the time in
+     * millis.
      */
     public static long decode(String timestamp) {
         Calendar cal = getCalendar();
@@ -435,8 +423,8 @@ public class DSTime {
     }
 
     /**
-     * Converts a DSA encoded timestamp into a Java Calendar.  DSA encoding is based
-     * on ISO 8601 but allows for an unspecified timezone.
+     * Converts a DSA encoded timestamp into a Java Calendar.  DSA encoding is based on ISO 8601 but
+     * allows for an unspecified timezone.
      *
      * @param timestamp The encoded timestamp.
      * @param calendar  The instance to decodeKeys into and returnt, may be null.  If the timestamp
@@ -517,8 +505,8 @@ public class DSTime {
     }
 
     /**
-     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based
-     * on ISO 8601 but allows the timezone offset to not be specified.
+     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based on ISO 8601 but
+     * allows the timezone offset to not be specified.
      *
      * @param timestamp      What to encode.
      * @param encodeTzOffset Whether or not to encode the timezone offset.
@@ -532,8 +520,8 @@ public class DSTime {
     }
 
     /**
-     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based
-     * on ISO 8601 but allows the timezone offset to not be specified.
+     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based on ISO 8601 but
+     * allows the timezone offset to not be specified.
      *
      * @param timestamp      What to encode.
      * @param encodeTzOffset Whether or not to encode the timezone offset.
@@ -549,8 +537,8 @@ public class DSTime {
     }
 
     /**
-     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based
-     * on ISO 8601 but the timezone offset is optional.
+     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based on ISO 8601 but
+     * the timezone offset is optional.
      *
      * @param calendar       The calendar representing the timestamp to encode.
      * @param encodeTzOffset Whether or not to encode the timezone offset.
@@ -633,9 +621,8 @@ public class DSTime {
     }
 
     /**
-     * Converts a Java Calendar into a number safe for file names: YYMMDDHHMMSS.
-     * If seconds align to 00, then they will be omitted.  DSTime.alignMinutes
-     * can be used to achieve that.
+     * Converts a Java Calendar into a number safe for file names: YYMMDDHHMMSS. If seconds align to
+     * 00, then they will be omitted.  DSTime.alignMinutes can be used to achieve that.
      *
      * @param calendar The calendar representing the timestamp to encode.
      * @param buf      The buffer to append the encoded timestamp and return, can be null.
@@ -686,8 +673,7 @@ public class DSTime {
     }
 
     /**
-     * Converts a Java Calendar into a shorter human readable timestamp for use
-     * in logging files.
+     * Converts a Java Calendar into a shorter human readable timestamp for use in logging files.
      *
      * @param calendar The calendar representing the timestamp to encode.
      * @param buf      The buffer to append the encoded timestamp and return, can be null.
@@ -733,8 +719,7 @@ public class DSTime {
     }
 
     /**
-     * Attempts to reuse a calendar instance, the timezone will be set to
-     * TimeZone.getDefault().
+     * Attempts to reuse a calendar instance, the timezone will be set to TimeZone.getDefault().
      */
     public static Calendar getCalendar() {
         Calendar cal = null;
@@ -756,8 +741,8 @@ public class DSTime {
     }
 
     /**
-     * Attempts to reuse a calendar instance and sets the time in millis to the argument
-     * and the timezone to TimeZone.getDefault().
+     * Attempts to reuse a calendar instance and sets the time in millis to the argument and the
+     * timezone to TimeZone.getDefault().
      */
     public static Calendar getCalendar(long timestamp) {
         Calendar cal = getCalendar();
@@ -779,8 +764,8 @@ public class DSTime {
     }
 
     /**
-     * Converts the character to a digit, throws an IllegalStateException if it isn't a
-     * valid digit.
+     * Converts the character to a digit, throws an IllegalStateException if it isn't a valid
+     * digit.
      */
     private static int toDigit(char ch) {
         if (('0' <= ch) && (ch <= '9')) {
@@ -790,8 +775,8 @@ public class DSTime {
     }
 
     /**
-     * Used for decoding timestamp, throws an IllegalStateException if the two
-     * characters are not equal.
+     * Used for decoding timestamp, throws an IllegalStateException if the two characters are not
+     * equal.
      */
     private static void validateChar(char c1, char c2) {
         if (c1 != c2) {

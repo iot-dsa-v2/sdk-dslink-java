@@ -7,7 +7,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSJavaEnum implements DSIEnum, DSIMetadata, DSIValue {
+public class DSJavaEnum extends DSValue implements DSIEnum, DSIMetadata {
 
     // Constants
     // ---------
@@ -32,41 +32,6 @@ public class DSJavaEnum implements DSIEnum, DSIMetadata, DSIValue {
 
     // Public Methods
     // --------------
-
-    @Override
-    public DSJavaEnum copy() {
-        return this;
-    }
-
-    @Override
-    public DSJavaEnum decode(DSElement arg) {
-        if ((arg == null) || arg.isNull()) {
-            return NULL;
-        }
-        Enum e = null;
-        try {
-            String s = arg.toString();
-            int idx = s.indexOf(':');
-            if (idx > 0) {
-                String value = s.substring(0, idx);
-                Class clazz = Class.forName(s.substring(++idx));
-                e = Enum.valueOf(clazz, value);
-            } else {
-                e = value.valueOf(value.getClass(), s);
-            }
-        } catch (Exception x) {
-            DSException.throwRuntime(x);
-        }
-        return valueOf(e);
-    }
-
-    @Override
-    public DSElement encode() {
-        if (isNull()) {
-            return DSString.NULL;
-        }
-        return DSString.valueOf(value.name() + ':' + value.getClass().getName());
-    }
 
     /**
      * True if the argument is a DSDynamicEnum and the values are equal or they are both isNull.
@@ -103,7 +68,7 @@ public class DSJavaEnum implements DSIEnum, DSIMetadata, DSIValue {
         if (values == null) {
             bucket.put(DSMetadata.ENUM_RANGE, getEnums(new DSList()));
         } else {
-            bucket.put(DSMetadata.ENUM_RANGE, values);
+            bucket.put(DSMetadata.ENUM_RANGE, values.copy());
         }
     }
 
@@ -122,6 +87,29 @@ public class DSJavaEnum implements DSIEnum, DSIMetadata, DSIValue {
         return this == NULL;
     }
 
+    @Override
+    public DSJavaEnum restore(DSElement arg) {
+        if ((arg == null) || arg.isNull()) {
+            return NULL;
+        }
+        Enum e = null;
+        try {
+            String s = arg.toString();
+            int idx = s.indexOf(':');
+            String value = s.substring(0, idx);
+            Class clazz = Class.forName(s.substring(++idx));
+            e = Enum.valueOf(clazz, value);
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
+        return valueOf(e);
+    }
+
+    @Override
+    public DSElement store() {
+        return DSString.valueOf(value.name() + ':' + value.getClass().getName());
+    }
+
     /**
      * The Java enum.
      */
@@ -130,19 +118,54 @@ public class DSJavaEnum implements DSIEnum, DSIMetadata, DSIValue {
     }
 
     @Override
+    public DSElement toElement() {
+        if (isNull()) {
+            return DSString.NULL;
+        }
+        return DSString.valueOf(value.name());
+    }
+
+    @Override
     public String toString() {
         return value.name();
     }
 
+    @Override
+    public DSJavaEnum valueOf(DSElement arg) {
+        if ((arg == null) || arg.isNull()) {
+            return NULL;
+        }
+        Enum e = null;
+        try {
+            String s = arg.toString();
+            e = Enum.valueOf(value.getClass(), s);
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
+        return valueOf(e);
+    }
+
     /**
-     * Creates a dynamic enum set to the given value and the list of values only contains the
-     * given.
+     * Creates an enum for the given value (and it's range).
      */
     public static DSJavaEnum valueOf(Enum value) {
         if (value == null) {
             return NULL;
         }
         return new DSJavaEnum(value);
+    }
+
+    public DSJavaEnum valueOf(String arg) {
+        if ((arg == null) || arg.isEmpty()) {
+            return NULL;
+        }
+        Enum e = null;
+        try {
+            e = Enum.valueOf(value.getClass(), arg);
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
+        return valueOf(e);
     }
 
     // Initialization

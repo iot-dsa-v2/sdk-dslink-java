@@ -8,7 +8,7 @@ Only use org.iot.dsa APIs, do not use or depend on anything in the com.* package
 
 Please utilize the 
 [Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/)
-for the core sdk.  It's not perfect, but the more it is used, the better it will get.
+for the core sdk.  It's not perfect, but the more it is referenced, the better it will get.
 
 ## Overview
 
@@ -54,26 +54,26 @@ All this needs to do is create a link and run it as follows.
     }
 ```
 
-The main class must be specified in build.gradle.  In the template project, the main class is
-the root node.
+If using the boilerplate project, the main class must be specified in build.gradle.
 
     mainClassName = 'org.iot.dsa.dslink.template.Main'
+    
+In that project, the main class is also the root node.
 
 ## Create a Root Node
-
-A root node must be subclass of 
-[org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html).
-
-If your link is to be a responder, it must also implement 
-[org.iot.dsa.dslink.DSResponder](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/dslink/DSResponder.html).
 
 If you will be modeling data as a DSNode tree, then all you need to do is subclass 
 [org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html).
 
-The fully qualified class name must be specified as the config **rootType** in _dslink.json_.
+Otherwise the root node must be subclass of 
+[org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html).
+and if your link is to be a responder, it must also implement 
+[org.iot.dsa.dslink.DSResponder](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/dslink/DSResponder.html).
+
+The fully qualified class name must be specified as the **rootType** config in _dslink.json_.
 
 If you want to proxy another model and don't need a persistent node tree, you should subclass 
-DSNode and implement DSResponder.
+DSNode and implement DSResponder interface.
 
 You can also create a hybrid solution by subclassing DSRootNode, but implementing DSResponder in 
 nodes lower in the tree.  If a node in a request path implements DSResponder, it is their
@@ -83,7 +83,7 @@ having to model everything as a DSNode or DSIValue.
 
 ## Create Application Nodes
 
-The hook for links' functionality is the node tree.  Links will subclass 
+The hook for link functionality is the node tree.  Links will subclass 
 [org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
 and do the following:
 
@@ -92,23 +92,24 @@ and do the following:
 
 ### Defaults
 
-Nodes use a type of instance based inheritance.  Every subtype of DSNode has a private default 
-instance, all other instances of any particular type are copies of the default instance.  This is
-why you should never perform application logic unless your node is running (started or stable).
+Every subtype of DSNode has a private default instance, all other instances of any particular type 
+are copies of the default instance.  This is why you should never perform application logic unless 
+your node is running (started or stable).
 
 If a DSNode subtype needs to have specific child nodes or values (most will), it should override
 the declareDefaults method.  The method should:
 
 1. Call super.declareDefaults();
-2. Call DSNode.declareDefault(String name, DSIObject child) for each permanent (non-removable)
-child.  Do not add dynamic children in declareDefaults, because if they are removed, they will be
-re-added the next time the link is restarted.
+2. Call DSNode.declareDefault(String name, DSIObject child) for each non-removable child.  Do not 
+add dynamic children in declareDefaults, because if they are removed, they will be re-added the 
+next time the link is restarted.
 
 During node serialization (configuration database, not DSA interop), children that match their 
 declared default are omitted.  This has two benefits:
+
 1. Smaller node database means faster serialization / deserialization.
-2. Default values can be modified and all existing database will be automatically upgraded when next
-time updated class loaded.
+2. Default values can be modified and all existing database will be automatically upgraded the next
+time the updated class loaded.
 
 ### Node Lifecycle
 
@@ -136,8 +137,8 @@ Nodes will also started when they are added to an already running parent node.
 
 **Stable**
 
-Stable is called all nodes have been started.  The first time the node tree is loaded, there is a 
-stable delay of 5 seconds.  This is configurable as **stableDelay** in _dslink.json_.
+Stable is called after the entire tree has been started.  The first time the node tree is loaded, 
+there is a stable delay of 5 seconds.  This is configurable as **stableDelay** in _dslink.json_.
 
 Nodes added to an already stable parent will have onStart and onStable called immediately.
 
@@ -154,6 +155,7 @@ for a complete list.
 
 Nodes should suspend, or minimize activity when nothing is interested in them.  For example, if 
 nothing is interested in a point, it is best to not poll the point on the foreign system.  
+
 To do this you use the following APIs:
 
 * DSNode.onSubscribed - Called when the node transitions from unsubscribed to subscribed.  This is
@@ -185,19 +187,20 @@ Add actions to your node to allow requester invocation using
 [org.iot.dsa.node.action.DSAction](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/action/DSAction.html).  
 
 Override DSNode.onInvoke handle invocations.  The reason for this is complicated but it is possible
-to subclass DSAction, just carefully read the javadoc if you do.
+to subclass DSAction, just carefully read the javadoc if you do.  Be sure to call super.onInvoke()
+when overriding that method.
 
 ### DSInfo
 
-All node children have corresponding DSInfo instances.  This types serves serves two purposes:
+All node children have corresponding DSInfo instances.  This type serves serves two purposes:
 
 1. It carries some meta-data about the relationship between the parent node and the child.
 2. It tracks whether or not the child matches a declared default.
 
 Important things for developers to know about DSInfo are:
 
-* You can configure several flags such as transient, readonly and hidden.
-* You can declare fields in the your Java class for (declared default) info instances to avoid
+* You can configure state such as transient, readonly and hidden.
+* You can declare fields in the your Java class for default info instances to avoid
 looking up the child every time it is needed.  This is can be used to create fast getters and 
 setters.
 
@@ -209,11 +212,11 @@ Without declaring fields (lookups required):
         declareDefault("The Int", DSInt.valueOf(0));
     }
     public int getTheInt() {
-        DSInt theInt = (DSInt) get("The Int");
+        DSInt theInt = (DSInt) get("The Int"); //map lookup
         return theInt.toInt();
     }
     public void setTheInt(int value) {
-        put("The Int", DSInt.valueOf(value));
+        put("The Int", DSInt.valueOf(value)); //map lookup
     }
 ```
 
@@ -226,10 +229,10 @@ With declared fields:
         declareDefault("The Int", DSInt.valueOf(0));
     }
     public int getTheInt() {
-        return theInt.toInt();
+        return theInt.toInt(); //no lookup
     }
     public void setTheInt(int value) {
-        put(theInt, DSInt.valueOf(value));
+        put(theInt, DSInt.valueOf(value)); //no lookup
     }
 ```
 
@@ -245,7 +248,7 @@ it will be given the opportunity to provide metadata first.
 2. Then getMetadata on the parent node will be called with the DSInfo representing the child.
 This will be useful when nodes want to store user editable metadata.
 
-To simplify metadata, use the utility class
+To simplify configuring metadata, use the utility class
 [org.iot.dsa.node.DSMetadata](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSMetadata.html).
 
 ### Timers and Threads

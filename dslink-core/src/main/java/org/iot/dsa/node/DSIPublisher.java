@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * <p>
  *
- * Containers do not notify parent containers of any events.  However, if a container subtype
+ * Nodes do not notify parent containers of any events.  However, if a node subtype
  * implements this interface, parent containers will treat all events emitted as a child changed
  * event.
  *

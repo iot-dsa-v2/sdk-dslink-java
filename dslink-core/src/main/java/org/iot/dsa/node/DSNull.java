@@ -1,7 +1,8 @@
 package org.iot.dsa.node;
 
 /**
- * This is used for decoding raw json.  Try to use strong typed null instances instead.
+ * This is used for decoding raw json.  Try to use strong typed null instances instead (e.g.
+ * DBool.NULL).
  *
  * @author Aaron Hansen
  */
@@ -36,7 +37,7 @@ public class DSNull extends DSElement {
      * Returns this.
      */
     @Override
-    public DSNull decode(DSElement arg) {
+    public DSNull valueOf(DSElement arg) {
         return this;
     }
 
@@ -44,7 +45,7 @@ public class DSNull extends DSElement {
      * Returns this.
      */
     @Override
-    public DSNull encode() {
+    public DSNull toElement() {
         return this;
     }
 

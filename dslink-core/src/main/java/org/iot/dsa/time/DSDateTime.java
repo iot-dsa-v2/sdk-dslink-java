@@ -1,7 +1,7 @@
 package org.iot.dsa.time;
 
+import org.iot.dsa.node.DSValue;
 import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValueType;
@@ -11,7 +11,7 @@ import org.iot.dsa.node.DSValueType;
  *
  * @author Aaron Hansen
  */
-public class DSDateTime implements DSIValue {
+public class DSDateTime extends DSValue {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -47,24 +47,6 @@ public class DSDateTime implements DSIValue {
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public DSDateTime copy() {
-        return this;
-    }
-
-    @Override
-    public DSDateTime decode(DSElement element) {
-        if ((element == null) || element.isNull()) {
-            return NULL;
-        }
-        return valueOf(element.toString());
-    }
-
-    @Override
-    public DSElement encode() {
-        return DSString.valueOf(toString());
-    }
-
     /**
      * String.
      */
@@ -88,6 +70,11 @@ public class DSDateTime implements DSIValue {
         return millis;
     }
 
+    @Override
+    public DSElement toElement() {
+        return DSString.valueOf(toString());
+    }
+
     /**
      * ISO 8601 standard format of "yyyy-mm-ddThh:mm:ss.mmm[+/-]hh:mm".
      */
@@ -97,6 +84,14 @@ public class DSDateTime implements DSIValue {
             string = DSTime.encode(millis, true).toString();
         }
         return string;
+    }
+
+    @Override
+    public DSDateTime valueOf(DSElement element) {
+        if ((element == null) || element.isNull()) {
+            return NULL;
+        }
+        return valueOf(element.toString());
     }
 
     public static DSDateTime valueOf(long millis) {

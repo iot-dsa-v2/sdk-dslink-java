@@ -1,11 +1,11 @@
 package org.iot.dsa.node;
 
 /**
- * Data types that can be used to model JSON structures without additional meta-data.
+ * The primitives of the node model.  These map JSON types without additional meta-data.
  *
  * @author Aaron Hansen
  */
-public abstract class DSElement implements DSIValue {
+public abstract class DSElement extends DSValue {
 
     /**
      * If an object is mutable (list or map) then this should clone it, immutable objects can simply
@@ -171,6 +171,14 @@ public abstract class DSElement implements DSIValue {
     }
 
     /**
+     * Returns this.
+     */
+    @Override
+    public DSElement toElement() {
+        return this;
+    }
+
+    /**
      * Attempts to return a float value.  Numerics of other types will cast the results. Booleans
      * will return 0 for false and 1 for true. Strings will attempt to parseRequest the numeric
      * which may result in a parseRequest exception.  Anything else will throw a
@@ -231,6 +239,14 @@ public abstract class DSElement implements DSIValue {
      */
     public DSMap toMap() {
         throw new ClassCastException(getClass().getName() + " not map");
+    }
+
+    /**
+     * Returns the argument.
+     */
+    @Override
+    public DSIValue valueOf(DSElement arg) {
+        return arg;
     }
 
 }

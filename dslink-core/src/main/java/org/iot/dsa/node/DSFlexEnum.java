@@ -1,24 +1,22 @@
 package org.iot.dsa.node;
 
-import org.iot.dsa.logging.DSLogger;
-
 /**
- * An enum where the range and value are mutable, primarily intended for defining action
- * parameters.
+ * An enum where the value and range can be created at runtime, primarily intended for defining
+ * action parameters.
  *
  * @author Aaron Hansen
  */
-public class DSFlexEnum extends DSLogger implements DSIEnum, DSIMetadata, DSIValue {
+public class DSFlexEnum extends DSValue implements DSIEnum, DSIMetadata {
 
     // Constants
     // ---------
 
-    public static final DSFlexEnum NULL = new DSFlexEnum("null", null); //TODO
+    public static final DSFlexEnum NULL = new DSFlexEnum("null", DSList.valueOf("null"));
 
     // Fields
     // ------
 
-    private String value;
+    private DSString value;
     private DSList values;
 
     // Constructors
@@ -28,6 +26,10 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIMetadata, DSIVal
     }
 
     private DSFlexEnum(String value, DSList values) {
+        this(DSString.valueOf(value), values);
+    }
+
+    private DSFlexEnum(DSString value, DSList values) {
         this.value = value;
         this.values = values;
     }
@@ -37,36 +39,7 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIMetadata, DSIVal
 
     @Override
     public DSFlexEnum copy() {
-        DSFlexEnum ret = new DSFlexEnum();
-        ret.value = value;
-        ret.values = values;
-        return ret;
-    }
-
-    @Override
-    public DSFlexEnum decode(DSElement arg) {
-        if ((arg == null) || arg.isNull()) {
-            return NULL;
-        }
-        if (arg instanceof DSMap) {
-            DSFlexEnum ret = new DSFlexEnum();
-            DSMap map = (DSMap) arg;
-            ret.value = map.getString("value");
-            ret.values = map.getList("values");
-            return ret;
-        }
-        return valueOf(arg.toString());
-    }
-
-    @Override
-    public DSElement encode() {
-        if (isNull()) {
-            return DSString.NULL;
-        }
-        DSMap ret = new DSMap();
-        ret.put("value", value);
-        ret.put("values", values);
-        return ret;
+        return this;
     }
 
     /**
@@ -116,12 +89,45 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIMetadata, DSIVal
 
     @Override
     public boolean isNull() {
-        return this == null;
+        return this == NULL;
+    }
+
+    @Override
+    public DSFlexEnum restore(DSElement arg) {
+        DSFlexEnum ret = new DSFlexEnum();
+        DSMap map = (DSMap) arg;
+        ret.value = (DSString) map.get("value");
+        ret.values = map.getList("values");
+        return ret;
+    }
+
+    @Override
+    public DSMap store() {
+        DSMap ret = new DSMap();
+        ret.put("value", value);
+        ret.put("values", values);
+        return ret;
+    }
+
+    @Override
+    public DSElement toElement() {
+        if (isNull()) {
+            return DSString.NULL;
+        }
+        return value;
     }
 
     @Override
     public String toString() {
-        return value;
+        return value.toString();
+    }
+
+    @Override
+    public DSFlexEnum valueOf(DSElement arg) {
+        if ((arg == null) || arg.isNull()) {
+            return NULL;
+        }
+        return valueOf(arg.toString());
     }
 
     /**
@@ -138,15 +144,11 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIMetadata, DSIVal
     }
 
     /**
-     * Creates a new enum for the given value using the range of values from this instance.
+     * Creates a new enum for the given value using the range from this instance.
      *
-     * @param value Must be a member of the range in this enum.  If null, the NULL instance will be
-     *              returned.
+     * @param value Must be a member of the range in this enum.
      */
     public DSFlexEnum valueOf(String value) {
-        if (value == null) {
-            return NULL;
-        }
         if (!values.contains(DSString.valueOf(value))) {
             throw new IllegalArgumentException("Not in range: " + value);
         }

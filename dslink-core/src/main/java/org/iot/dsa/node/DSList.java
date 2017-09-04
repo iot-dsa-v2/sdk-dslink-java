@@ -149,12 +149,12 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
     }
 
     @Override
-    public DSList decode(DSElement element) {
+    public DSList valueOf(DSElement element) {
         return element.toList();
     }
 
     @Override
-    public DSList encode() {
+    public DSList toElement() {
         return this;
     }
 

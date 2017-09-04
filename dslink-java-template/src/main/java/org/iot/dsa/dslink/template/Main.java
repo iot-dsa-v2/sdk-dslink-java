@@ -1,6 +1,5 @@
 package org.iot.dsa.dslink.template;
 
-import java.util.Date;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
@@ -34,7 +33,6 @@ public class Main extends DSRootNode implements Runnable {
 
     private DSInfo incrementingInt = getInfo("Incrementing Int");
     private DSInfo reset = getInfo("Reset");
-    private DSInfo save = getInfo("Save");
     private DSRuntime.Timer timer;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -59,7 +57,6 @@ public class Main extends DSRootNode implements Runnable {
                             DSJavaEnum.valueOf(MyEnum.Off),
                             "My action description");
         declareDefault("Reset", action);
-        declareDefault("Save", new DSAction());
     }
 
     /**
@@ -80,10 +77,9 @@ public class Main extends DSRootNode implements Runnable {
             put(incrementingInt, DSInt.valueOf(0));
             DSElement arg = invocation.getParameters().get("Arg");
             put("Message", arg);
-        } else if (actionInfo == this.save) {
-            getLink().saveNodes();
+            return null;
         }
-        return null;
+        return super.onInvoke(actionInfo, invocation);
     }
 
     /**

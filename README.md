@@ -4,7 +4,7 @@
 * JDK 1.6 Compatibility is required.
 * [Developer Guide](https://iot-dsa-v2.github.io/sdk-dslink-java/DeveloperGuide)
 * [Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/)
-* [License](https://en.wikipedia.org/wiki/ISC_license)
+* [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 
 ## Overview
@@ -16,14 +16,13 @@ the DSA architecture, please visit
 ## Sub Projects
 
   - **/dslink-core** - The APIs used to build new links.
-  - **/dslink-java-template** - Boiler plate that can be copied to create a new dslink.
+  - **/dslink-java-template** - Boiler plate that can be copied to create a new DSLink repo.
   - **/dslink-websocket-standalone** - Used by links that run in their own process, rather
-    than in a container which provides it's own websocket implementation.
+    than in an environment which provides another websocket implementation.
     
 ## Link Development
 
-Please see the [developer guide](https://iot-dsa-v2.github.io/sdk-dslink-java/DeveloperGuide) and 
-the [Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/).
+Please read the [developer guide](https://iot-dsa-v2.github.io/sdk-dslink-java/DeveloperGuide).
 
 ## Acknowledgements
 
