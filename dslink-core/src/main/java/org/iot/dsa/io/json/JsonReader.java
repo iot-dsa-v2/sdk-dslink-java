@@ -7,16 +7,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import org.iot.dsa.io.AbstractReader;
-import org.iot.dsa.io.DSReader;
+import org.iot.dsa.io.DSIReader;
 
 /**
  * Json implementation of DSReader.  The same instance can be re-used with the setInput methods.
  * This class is not thread safe.
  *
  * @author Aaron Hansen
- * @see DSReader
+ * @see DSIReader
  */
-public class JsonReader extends AbstractReader implements DSReader, JsonConstants {
+public class JsonReader extends AbstractReader implements DSIReader, JsonConstants {
 
     // Constants
     // ---------

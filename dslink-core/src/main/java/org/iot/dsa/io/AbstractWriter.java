@@ -12,9 +12,9 @@ import org.iot.dsa.node.DSMap.Entry;
  * with write.
  *
  * @author Aaron Hansen
- * @see DSWriter
+ * @see DSIWriter
  */
-public abstract class AbstractWriter implements Closeable, DSWriter {
+public abstract class AbstractWriter implements Closeable, DSIWriter {
 
     // Constants
     // ---------

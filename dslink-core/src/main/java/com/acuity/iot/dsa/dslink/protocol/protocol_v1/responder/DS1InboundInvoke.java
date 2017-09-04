@@ -6,7 +6,7 @@ import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Stream;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.responder.InboundInvokeRequest;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -232,7 +232,7 @@ class DS1InboundInvoke extends DS1InboundRequest
     }
 
     @Override
-    public void write(DSWriter out) {
+    public void write(DSIWriter out) {
         enqueued = false;
         if (isClosed()) {
             return;
@@ -274,7 +274,7 @@ class DS1InboundInvoke extends DS1InboundRequest
         out.endMap();
     }
 
-    private void writeColumns(DSWriter out) {
+    private void writeColumns(DSIWriter out) {
         if (result instanceof ActionValues) {
             out.key("columns").beginList();
             Iterator<DSMap> it = result.getAction().getValueResults();
@@ -304,7 +304,7 @@ class DS1InboundInvoke extends DS1InboundRequest
         }
     }
 
-    private void writeInitialResults(DSWriter out) {
+    private void writeInitialResults(DSIWriter out) {
         state = STATE_ROWS;
         out.key("updates").beginList();
         if (result instanceof ActionValues) {
@@ -342,7 +342,7 @@ class DS1InboundInvoke extends DS1InboundRequest
         }
     }
 
-    private void writeUpdates(DSWriter out) {
+    private void writeUpdates(DSIWriter out) {
         Update update = updateHead; //peak ahead
         if (update == null) {
             return;

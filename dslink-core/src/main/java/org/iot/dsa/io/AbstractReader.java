@@ -9,9 +9,9 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Aaron Hansen
  * @see #next()
- * @see DSReader
+ * @see DSIReader
  */
-public abstract class AbstractReader implements DSReader {
+public abstract class AbstractReader implements DSIReader {
 
     // Fields
     // ---------

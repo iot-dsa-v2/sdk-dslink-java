@@ -8,8 +8,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSRequester;
-import org.iot.dsa.io.DSReader;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.logging.DSLogging;
 
@@ -36,11 +36,11 @@ public abstract class DSProtocol extends DSLogger {
     private Object outgoingMutex = new Object();
     private List<OutboundMessage> outgoingRequests = new LinkedList<OutboundMessage>();
     private List<OutboundMessage> outgoingResponses = new LinkedList<OutboundMessage>();
-    private DSReader reader;
+    private DSIReader reader;
     protected boolean requesterAllowed = false;
     private boolean running = false;
     private DSTransport transport;
-    private DSWriter writer;
+    private DSIWriter writer;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -193,7 +193,7 @@ public abstract class DSProtocol extends DSLogger {
         return logger;
     }
 
-    protected DSReader getReader() {
+    protected DSIReader getReader() {
         if ((reader == null) && (transport != null)) {
             setReader(transport.getReader());
         }
@@ -208,7 +208,7 @@ public abstract class DSProtocol extends DSLogger {
         return transport;
     }
 
-    protected DSWriter getWriter() {
+    protected DSIWriter getWriter() {
         if ((writer == null) && (transport != null)) {
             setWriter(transport.getWriter());
         }
@@ -316,7 +316,7 @@ public abstract class DSProtocol extends DSLogger {
         boolean requestsFirst = false;
         DSTransport transport = getTransport();
         lastMessageSent = System.currentTimeMillis();
-        DSWriter writer = getWriter();
+        DSIWriter writer = getWriter();
         try {
             while (running) {
                 synchronized (outgoingMutex) {
@@ -415,7 +415,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setReader(DSReader reader) {
+    public DSProtocol setReader(DSIReader reader) {
         this.reader = reader;
         return this;
     }
@@ -431,7 +431,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setWriter(DSWriter writer) {
+    public DSProtocol setWriter(DSIWriter writer) {
         this.writer = writer;
         return this;
     }

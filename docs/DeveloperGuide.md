@@ -264,3 +264,13 @@ manages backups.  Most types subclass
 [org.iot.dsa.logging.DSLogger](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/logging/DSLogger.html) 
 as a convenience.
 
+<b>Level Guidelines</b>
+
+- finest = verbose or trace
+- finer  = debug
+- fine   = minor and/or frequent event
+- config = configuration info
+- info   = major and infrequent event
+- warn   = unusual and infrequent, not critical
+- severe = critical / fatal error or event
+

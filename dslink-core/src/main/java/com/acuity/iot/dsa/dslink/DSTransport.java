@@ -1,8 +1,8 @@
 package com.acuity.iot.dsa.dslink;
 
 import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.io.DSReader;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
 
 /**
@@ -37,9 +37,9 @@ public interface DSTransport {
      */
     public DSTransport endMessage();
 
-    public DSReader getReader();
+    public DSIReader getReader();
 
-    public DSWriter getWriter();
+    public DSIWriter getWriter();
 
     public boolean isOpen();
 

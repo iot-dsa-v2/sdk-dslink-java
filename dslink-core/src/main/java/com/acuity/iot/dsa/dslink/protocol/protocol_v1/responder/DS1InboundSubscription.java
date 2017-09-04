@@ -5,7 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSQuality;
 import org.iot.dsa.time.DSTime;
@@ -162,7 +162,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
      * @param out Where to encode.
      * @param buf For encoding timestamps.
      */
-    void write(DSWriter out, StringBuilder buf) {
+    void write(DSIWriter out, StringBuilder buf) {
         //Don't check open state - forcefully closing will send an update
         DSResponderSession session = getSession();
         Update update = dequeue();

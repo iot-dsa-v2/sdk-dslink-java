@@ -8,7 +8,7 @@ import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -134,7 +134,7 @@ class DS1InboundList extends DS1InboundRequest
         });
     }
 
-    private void encodeChild(ApiObject child, DSWriter out) {
+    private void encodeChild(ApiObject child, DSIWriter out) {
         out.beginList();
         String name = child.getName();
         String displayName = null;
@@ -176,7 +176,7 @@ class DS1InboundList extends DS1InboundRequest
     /**
      * Encode all the meta data about the root target of a list request.
      */
-    private void encodeTarget(ApiObject object, DSWriter out) {
+    private void encodeTarget(ApiObject object, DSIWriter out) {
         object.getMetadata(cacheMap.clear());
         if (cacheMap.contains("is")) {
             out.beginList().value("$is").value(cacheMap.getString("is")).endList();
@@ -199,7 +199,7 @@ class DS1InboundList extends DS1InboundRequest
         cacheMap.clear();
     }
 
-    private void encodeType(DSIValue value, DSMetadata meta, DSWriter out) {
+    private void encodeType(DSIValue value, DSMetadata meta, DSIWriter out) {
         String type = meta.getType();
         if ((type == null) && (value != null)) {
             meta.setType(value);
@@ -252,7 +252,7 @@ class DS1InboundList extends DS1InboundRequest
     /**
      * Called by encodeTarget for actions.
      */
-    private void encodeTargetAction(ActionSpec action, DSWriter out) {
+    private void encodeTargetAction(ActionSpec action, DSIWriter out) {
         if (!cacheMap.contains("invokable")) {
             out.beginList()
                .value("$invokable")
@@ -294,7 +294,7 @@ class DS1InboundList extends DS1InboundRequest
     /**
      * Called by encodeTarget, encodes meta-data as configs.
      */
-    private void encodeTargetMetadata(DSMap metadata, DSWriter out) {
+    private void encodeTargetMetadata(DSMap metadata, DSIWriter out) {
         if (cacheMap.isEmpty()) {
             return;
         }
@@ -314,7 +314,7 @@ class DS1InboundList extends DS1InboundRequest
     /**
      * Called by encodeTarget for values.
      */
-    private void encodeTargetValue(ApiObject object, DSWriter out) {
+    private void encodeTargetValue(ApiObject object, DSIWriter out) {
         DSIValue value = object.getValue();
         if (!cacheMap.contains("type")) {
             out.beginList();
@@ -332,7 +332,7 @@ class DS1InboundList extends DS1InboundRequest
         }
     }
 
-    private void encodeUpdate(Update update, DSWriter out) {
+    private void encodeUpdate(Update update, DSIWriter out) {
         if (!isOpen()) {
             return;
         }
@@ -458,7 +458,7 @@ class DS1InboundList extends DS1InboundRequest
     }
 
     @Override
-    public void write(DSWriter out) {
+    public void write(DSIWriter out) {
         enqueued = false;
         if (isClosed()) {
             return;
@@ -506,7 +506,7 @@ class DS1InboundList extends DS1InboundRequest
         out.endMap();
     }
 
-    private void writeChildren(DSWriter out) {
+    private void writeChildren(DSIWriter out) {
         if (children != null) {
             ApiObject child;
             while (children.hasNext()) {
@@ -521,7 +521,7 @@ class DS1InboundList extends DS1InboundRequest
         state = STATE_UPDATES;
     }
 
-    private void writeInit(DSWriter out) {
+    private void writeInit(DSIWriter out) {
         ApiObject target = response.getTarget();
         encodeTarget(target, out);
         if (target.hasChildren()) {
@@ -534,7 +534,7 @@ class DS1InboundList extends DS1InboundRequest
         }
     }
 
-    private void writeUpdates(DSWriter out) {
+    private void writeUpdates(DSIWriter out) {
         Update update;
         DS1ResponderSession session = getSession();
         while (!session.shouldEndMessage()) {

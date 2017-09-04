@@ -1,7 +1,7 @@
 package org.iot.dsa.io;
 
 import java.util.HashMap;
-import org.iot.dsa.io.DSReader.Token;
+import org.iot.dsa.io.DSIReader.Token;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIValue;
@@ -30,14 +30,14 @@ public class NodeDecoder {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSReader in;
+    private DSIReader in;
     private HashMap<String, Class> tokenMap = new HashMap<String, Class>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    NodeDecoder(DSReader in) {
+    NodeDecoder(DSIReader in) {
         this.in = in;
     }
 
@@ -48,7 +48,7 @@ public class NodeDecoder {
     /**
      * Reads a node tree from the given input.
      */
-    public static DSNode decode(DSReader in) {
+    public static DSNode decode(DSIReader in) {
         NodeDecoder decoder = new NodeDecoder(in);
         return decoder.read();
     }
@@ -178,7 +178,7 @@ public class NodeDecoder {
     private void readChildren(DSNode parent) {
         validateEqual(in.next(), Token.BEGIN_LIST);
         while (true) {
-            DSReader.Token token = in.next();
+            DSIReader.Token token = in.next();
             switch (token) {
                 case BEGIN_MAP:
                     readChild(parent);

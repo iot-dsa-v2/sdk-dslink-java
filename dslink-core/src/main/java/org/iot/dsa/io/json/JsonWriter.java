@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.iot.dsa.io.DSIWriter;
 
 /**
  * Json implementation of DSWriter intended for OutputStreams and Writers.  While JsonAppender can
@@ -17,7 +18,7 @@ import java.util.zip.ZipOutputStream;
  * with the setOutput methods.</p> <p>This class is not thread safe.</p>
  *
  * @author Aaron Hansen
- * @see org.iot.dsa.io.DSWriter
+ * @see DSIWriter
  */
 public class JsonWriter extends AbstractJsonWriter {
 

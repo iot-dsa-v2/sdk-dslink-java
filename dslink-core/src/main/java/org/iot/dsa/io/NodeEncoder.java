@@ -30,14 +30,14 @@ public class NodeEncoder {
     ///////////////////////////////////////////////////////////////////////////
 
     private int nextToken = 1;
-    private DSWriter out;
+    private DSIWriter out;
     private HashMap<Class, String> classMap = new HashMap<Class, String>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    NodeEncoder(DSWriter out) {
+    NodeEncoder(DSIWriter out) {
         this.out = out;
     }
 
@@ -52,7 +52,7 @@ public class NodeEncoder {
      * @param node What to encode.
      * @return The writer parameter, flushed, but not closed.
      */
-    public static DSWriter encode(DSWriter out, DSNode node) {
+    public static DSIWriter encode(DSIWriter out, DSNode node) {
         NodeEncoder encoder = new NodeEncoder(out);
         encoder.write(node);
         out.flush();

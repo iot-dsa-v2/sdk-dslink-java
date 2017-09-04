@@ -7,8 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Acquire loggers here.  Multiple logs may share the same file, there will be a single file handler
- * per absolute file path and it is thread safe.
+ * Static utilities for configuring the logging subsystem.
  *
  * @author Aaron Hansen
  */

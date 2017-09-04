@@ -6,7 +6,7 @@ import java.io.StringWriter;
 import org.iot.dsa.dslink.DSInvalidPathException;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -117,7 +117,7 @@ public class ErrorResponse extends BaseMessage implements OutboundMessage {
      * Calls the super implementation then writes the error object and closes the entire response
      * object.
      */
-    public void write(DSWriter writer) {
+    public void write(DSIWriter writer) {
         super.write(writer);
         writer.key("error").beginMap();
         if (type != null) {

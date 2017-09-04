@@ -44,7 +44,7 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Aaron Hansen
  */
-public interface DSReader extends Closeable {
+public interface DSIReader extends Closeable {
 
     // Constants
     // ---------
@@ -109,7 +109,7 @@ public interface DSReader extends Closeable {
     /**
      * Sets lastRun() == ROOT.
      */
-    public DSReader reset();
+    public DSIReader reset();
 
     /**
      * Represents the state of the reader, and determines which getter should be called next.
