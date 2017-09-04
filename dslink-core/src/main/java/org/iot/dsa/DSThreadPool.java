@@ -34,8 +34,8 @@ class DSThreadPool {
     /////////////////////////////////////////////////////////////////
 
     /**
-     * Constructs an a thread pool with the min number of threads equal to the number
-     * of processors and an unbounded max.
+     * Constructs an a thread pool with the min number of threads equal to the number of processors
+     * and an unbounded max.
      *
      * @param name Thread name prefix, the total number of threads created in the pool will be
      *             appended.
@@ -68,8 +68,8 @@ class DSThreadPool {
     /////////////////////////////////////////////////////////////////
 
     /**
-     * Enqueue the runnable to be executed by a thread in the pool.  If the thread
-     * pool has been destroyed this does nothing.
+     * Enqueue the runnable to be executed by a thread in the pool.  If the thread pool has been
+     * destroyed this does nothing.
      */
     public synchronized void enqueue(Runnable arg) {
         if (alive) {
@@ -87,8 +87,7 @@ class DSThreadPool {
     }
 
     /**
-     * The maximum number of threads to keep alive.  If 0 or less, the thread pool
-     * is unbounded.
+     * The maximum number of threads to keep alive.  If 0 or less, the thread pool is unbounded.
      */
     public int getMaxThreads() {
         return min;

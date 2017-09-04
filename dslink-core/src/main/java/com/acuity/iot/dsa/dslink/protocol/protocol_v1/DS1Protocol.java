@@ -151,8 +151,8 @@ public class DS1Protocol extends DSProtocol {
     }
 
     /**
-     * Decomposes and processes a complete envelope which can contain multiple requests
-     * and responses.
+     * Decomposes and processes a complete envelope which can contain multiple requests and
+     * responses.
      *
      * @param reader lastRun() will return BEGIN_MAP
      */

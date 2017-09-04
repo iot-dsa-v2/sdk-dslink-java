@@ -5,8 +5,8 @@ import java.util.Arrays;
 import org.iot.dsa.util.DSException;
 
 /**
- * Thread-safe Base64 encoder and decoder.  This only exists because we need to be compatible
- * with Java 6.  While not an exact copy, it borrows heavily from the Java 8 implementation.
+ * Thread-safe Base64 encoder and decoder.  This only exists because we need to be compatible with
+ * Java 6.  While not an exact copy, it borrows heavily from the Java 8 implementation.
  */
 public class DSBase64 {
 
@@ -98,8 +98,8 @@ public class DSBase64 {
     }
 
     /**
-     * Encodes the buffer into a String with the given line length.  Lines
-     * will be padded to the given length.
+     * Encodes the buffer into a String with the given line length.  Lines will be padded to the
+     * given length.
      *
      * @param buf     The bytes to encode.
      * @param linelen A number greater than zero limits the number of characters before an

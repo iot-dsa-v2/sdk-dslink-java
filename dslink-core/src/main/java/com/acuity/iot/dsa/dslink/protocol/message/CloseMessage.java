@@ -33,8 +33,8 @@ public class CloseMessage extends BaseMessage implements OutboundMessage {
     /////////////////////////////////////////////////////////////////
 
     /**
-     * Calls the super implementation then writes the error object and closes the entire
-     * response object.
+     * Calls the super implementation then writes the error object and closes the entire response
+     * object.
      */
     public void write(DSWriter writer) {
         super.write(writer);

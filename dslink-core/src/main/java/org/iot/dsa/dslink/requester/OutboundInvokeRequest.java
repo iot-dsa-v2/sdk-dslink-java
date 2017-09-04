@@ -4,7 +4,7 @@ import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;
 
 public abstract class OutboundInvokeRequest extends OutboundRequest {
-    
+
     private StreamState latestStreamState = StreamState.INITIALIZED;
 
     public StreamState getLatestStreamState() {
@@ -14,7 +14,7 @@ public abstract class OutboundInvokeRequest extends OutboundRequest {
     public void setLatestStreamState(StreamState latestStreamState) {
         this.latestStreamState = latestStreamState;
     }
-    
+
 
     /**
      * The maximum permission level of this invoke, or null

@@ -97,7 +97,7 @@ public class DSLink extends DSNode {
             saveNodes();
         }
         if (root instanceof DSRequester) {
-        	requester = (DSRequester) root;
+            requester = (DSRequester) root;
         }
         add("Root", root).setTransient(true);
     }

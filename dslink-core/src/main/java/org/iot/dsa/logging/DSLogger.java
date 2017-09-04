@@ -12,18 +12,31 @@ import java.util.logging.Logger;
 
 /**
  * Logging abstraction and helper.  Enables efficient logging using ternary expressions.
+ *
  * <p>
+ *
  * For example:  finer(finer() ? complexMsg() : null)
+ *
  * <p>
+ *
  * Level Guidelines:
+ *
  * <ul>
+ *
  * <li>finest = verbose or trace
+ *
  * <li>finer  = debug
+ *
  * <li>fine   = common or frequent event
+ *
  * <li>config = configuration info
+ *
  * <li>info   = major lifecycle event
- * <li>warn   = unusual but not critical issue
+ *
+ * <li>warn   = unusual and infrequent, but not critical
+ *
  * <li>severe = critical / fatal error or event
+ *
  * </ul>
  *
  * @author Aaron Hansen

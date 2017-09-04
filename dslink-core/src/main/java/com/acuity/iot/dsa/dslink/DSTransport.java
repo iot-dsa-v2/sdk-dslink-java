@@ -6,8 +6,8 @@ import org.iot.dsa.io.DSWriter;
 import org.iot.dsa.node.DSMap;
 
 /**
- * Binds an abstract DSLinkConnection to a specific implementation.  Examples of
- * transports would be sockets, websockets and http.
+ * Binds an abstract DSLinkConnection to a specific implementation.  Examples of transports would be
+ * sockets, websockets and http.
  *
  * @author Aaron Hansen
  */
@@ -21,8 +21,8 @@ public interface DSTransport {
     public DSTransport beginMessage();
 
     /**
-     * Close the actual connection and clean up resources.  Calling when already
-     * closed will have no effect.
+     * Close the actual connection and clean up resources.  Calling when already closed will have no
+     * effect.
      *
      * @return This
      */
@@ -31,8 +31,7 @@ public interface DSTransport {
     public DSLinkConnection getConnection();
 
     /**
-     * Signifies the end of an outgoing message. Needed because websockets are frame
-     * based.
+     * Signifies the end of an outgoing message. Needed because websockets are frame based.
      *
      * @return This
      */
@@ -45,8 +44,7 @@ public interface DSTransport {
     public boolean isOpen();
 
     /**
-     * Establish the underlying connection.  Calling when already open will have
-     * no effect.
+     * Establish the underlying connection.  Calling when already open will have no effect.
      *
      * @return This
      */
@@ -65,8 +63,7 @@ public interface DSTransport {
     public DSTransport setConnectionUrl(String url);
 
     /**
-     * The number of millis the input stream will block on a read before throwing
-     * a DSIoException.
+     * The number of millis the input stream will block on a read before throwing a DSIoException.
      *
      * @param millis Timeout in millis, use zero or less for indefinite.
      * @return This
@@ -74,8 +71,8 @@ public interface DSTransport {
     public DSTransport setReadTimeout(long millis);
 
     /**
-     * Whether or not to continue the current message.  Implementations might
-     * have a limit on message size, this should return true before the limit is reached.
+     * Whether or not to continue the current message.  Implementations might have a limit on
+     * message size, this should return true before the limit is reached.
      */
     public boolean shouldEndMessage();
 
@@ -84,9 +81,9 @@ public interface DSTransport {
     /////////////////////////////////////////////////////////////////
 
     /**
-     * Responsible for creating the appropriate transport.  When launching a link, the
-     * config transportFactory needs to be set to an implementation of this.  The implmentation
-     * must support the public no-arg constructor.
+     * Responsible for creating the appropriate transport.  When launching a link, the config
+     * transportFactory needs to be set to an implementation of this.  The implmentation must
+     * support the public no-arg constructor.
      */
     public interface Factory {
 

@@ -9,15 +9,12 @@ import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
 import org.iot.dsa.io.DSWriter;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIEnum;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMap.Entry;
 import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSPath;
-import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionSpec;
 
 /**

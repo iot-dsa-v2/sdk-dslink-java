@@ -17,7 +17,7 @@ import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
 
 /**
- * Simple example of a link root node.
+ * Link main class and root node.
  *
  * @author Aaron Hansen
  */
@@ -111,7 +111,7 @@ public class Main extends DSRootNode implements Runnable {
     }
 
     /**
-     * Called by an internal timer, increments the 'first' child on a one second interval, only when
+     * Called by an internal timer, increments an integer child on a one second interval, only when
      * this node is subscribed.
      */
     @Override

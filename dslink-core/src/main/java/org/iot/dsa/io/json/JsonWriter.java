@@ -12,10 +12,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Json implementation of DSWriter intended for OutputStreams and Writers.  While
- * JsonAppender can also handle OutputStreams and Writer, this is more performant.
- * <p>The same instance can be reused with the setOutput methods.</p>
- * <p>This class is not thread safe.</p>
+ * Json implementation of DSWriter intended for OutputStreams and Writers.  While JsonAppender can
+ * also handle OutputStreams and Writer, this is more performant. <p>The same instance can be reused
+ * with the setOutput methods.</p> <p>This class is not thread safe.</p>
  *
  * @author Aaron Hansen
  * @see org.iot.dsa.io.DSWriter

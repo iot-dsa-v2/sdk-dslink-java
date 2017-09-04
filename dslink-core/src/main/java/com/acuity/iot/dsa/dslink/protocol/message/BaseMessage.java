@@ -93,9 +93,9 @@ public class BaseMessage implements OutboundMessage {
     }
 
     /**
-     * Subclasses should call this super implementation first. This starts the response map and
-     * will write the key value pairs that have been configured on this object, but does not
-     * close the response map.
+     * Subclasses should call this super implementation first. This starts the response map and will
+     * write the key value pairs that have been configured on this object, but does not close the
+     * response map.
      */
     public void write(DSWriter writer) {
         writer.beginMap();

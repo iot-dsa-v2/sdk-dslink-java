@@ -21,7 +21,6 @@ import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSValueType;
 
 public class DS1RequesterSession extends DSLogger implements DSRequesterSession {
 

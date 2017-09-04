@@ -36,8 +36,7 @@ public enum DSInterval {
     /////////////////////////////////////////////////////////////////
 
     /**
-     * Returns the number of intervals for the given time range, or -1
-     * if indeterminate.
+     * Returns the number of intervals for the given time range, or -1 if indeterminate.
      */
     public int count(long start, long end) {
         if ((start < 0) || (end < 0)) {

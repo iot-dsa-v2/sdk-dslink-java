@@ -1,8 +1,8 @@
 package org.iot.dsa.io;
 
 /**
- * A buffer for storing bytes being pushed from an input stream.  Useful when bytes are
- * coming in faster than can be processed.
+ * A buffer for storing bytes being pushed from an input stream.  Useful when bytes are coming in
+ * faster than can be processed.
  *
  * @author Aaron Hansen
  */
@@ -157,9 +157,9 @@ public class DSByteBuffer {
      * Overwrite bytes in the internal buffer (which begins at index 0).
      *
      * @param dest The internal destination offset.
-     * @param msg The data source.
-     * @param off The start offset in the msg to put data.
-     * @param len The maximum number of bytes to read.
+     * @param msg  The data source.
+     * @param off  The start offset in the msg to put data.
+     * @param len  The maximum number of bytes to read.
      */
     public synchronized void put(int dest, byte[] msg, int off, int len) {
         if (!open) {
@@ -177,8 +177,9 @@ public class DSByteBuffer {
         if (newLen > length) {
             length = newLen;
         }
-        if ((dest + len) > length)
-        length += len;
+        if ((dest + len) > length) {
+            length += len;
+        }
         notify();
     }
 

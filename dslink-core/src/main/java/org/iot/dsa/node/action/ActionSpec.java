@@ -46,9 +46,8 @@ public interface ActionSpec {
         CLOSED_TABLE("table"),
 
         /**
-         * A finite sized table whose stream is left open after the row iterator is complete
-         * because it can change over time.  The row iterator does not have to represent the
-         * entire table.
+         * A finite sized table whose stream is left open after the row iterator is complete because
+         * it can change over time.  The row iterator does not have to represent the entire table.
          */
         OPEN_TABLE("stream"),
 

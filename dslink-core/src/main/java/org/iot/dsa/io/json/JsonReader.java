@@ -10,8 +10,8 @@ import org.iot.dsa.io.AbstractReader;
 import org.iot.dsa.io.DSReader;
 
 /**
- * Json implementation of DSReader.  The same instance can be re-used with the
- * setInput methods.  This class is not thread safe.
+ * Json implementation of DSReader.  The same instance can be re-used with the setInput methods.
+ * This class is not thread safe.
  *
  * @author Aaron Hansen
  * @see DSReader

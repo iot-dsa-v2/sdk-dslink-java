@@ -47,8 +47,8 @@ public class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * A convenience which calls addParameter with the same arguments, and also sets the
-     * metadata for default value.
+     * A convenience which calls addParameter with the same arguments, and also sets the metadata
+     * for default value.
      *
      * @param name        Must not be null.
      * @param value       Must not be null.
@@ -135,8 +135,8 @@ public class DSAction implements ActionSpec, DSIObject {
      * Creates a DSMetadata, calls setName and setType on it, adds the internal map to the results
      * list and returns the metadata instance for further configuration.
      *
-     * @param name        Must not be null.
-     * @param value       Must not be null.
+     * @param name  Must not be null.
+     * @param value Must not be null.
      * @return Metadata for further configuration.
      */
     public DSMetadata addValueResult(String name, DSIValue value) {
@@ -154,8 +154,8 @@ public class DSAction implements ActionSpec, DSIObject {
      * Creates a DSMetadata, calls setName and setType on it, adds the internal map to the results
      * list and returns the metadata instance for further configuration.
      *
-     * @param name        Must not be null.
-     * @param type        Must not be null.
+     * @param name Must not be null.
+     * @param type Must not be null.
      * @return Metadata for further configuration.
      */
     public DSMetadata addValueResult(String name, DSValueType type) {

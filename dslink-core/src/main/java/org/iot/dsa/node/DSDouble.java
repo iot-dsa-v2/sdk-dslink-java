@@ -27,7 +27,7 @@ public class DSDouble extends DSElement implements DSINumber {
     // Public Methods
     // --------------
 
-   /**
+    /**
      * True if the argument is a DSINumber and the values are equal or they are both isNull.
      */
     @Override

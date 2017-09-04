@@ -253,8 +253,8 @@ public abstract class DSGroup extends DSElement {
     }
 
     /**
-     * Whether or not the object at the given index is null.  Will return
-     * true if the index is out of bounds.
+     * Whether or not the object at the given index is null.  Will return true if the index is out
+     * of bounds.
      */
     public boolean isNull(int idx) {
         if (idx >= size()) {

@@ -327,8 +327,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param name   The name must not currently be in use.
      * @param object The object to add, nodes must not already be parented.
      * @return Info for the newly added child.
-     * @throws IllegalArgumentException If the name is in use or the value is a node that is
-     *                                  already parented.
+     * @throws IllegalArgumentException If the name is in use or the value is a node that is already
+     *                                  parented.
      */
     public DSInfo add(String name, DSIObject object) {
         dsInit();
@@ -450,9 +450,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Use this in the declareDefaults method to create a non-removable child.  This is only
-     * called on the default instance.  Runtime instances clone the declared defaults found
-     * on the default instance.
+     * Use this in the declareDefaults method to create a non-removable child.  This is only called
+     * on the default instance.  Runtime instances clone the declared defaults found on the default
+     * instance.
      *
      * @return Info for the newly created child.
      * @see #declareDefaults()
@@ -806,8 +806,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Override point, called by the default implementation of DSAction.invoke.  You should call
-     * super.onInvoke if you do not handle an incoming invocation.  However, do not call super
-     * if you do.
+     * super.onInvoke if you do not handle an incoming invocation.  However, do not call super if
+     * you do.
      *
      * @param actionInfo Child info for the action, you can declare a field for the action info for
      *                   quick instance comparison.
@@ -823,8 +823,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Override point, called when a value child is being set by the responder.  The default
-     * implementation calls put(info, value).  Throw an exception to report an error
-     * to the requester.
+     * implementation calls put(info, value).  Throw an exception to report an error to the
+     * requester.
      *
      * @param info  The child being changed.
      * @param value The new value.
@@ -865,8 +865,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Adds or replaces the named child.  If adding, add(String,DSIObject) will
-     * be called.
+     * Adds or replaces the named child.  If adding, add(String,DSIObject) will be called.
      *
      * @return The info for the child.
      */
