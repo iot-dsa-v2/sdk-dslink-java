@@ -2,7 +2,7 @@
 
 * Version: 0.0.0
 * Java - version 1.6 and up.
-* [License](https://en.wikipedia.org/wiki/ISC_license)
+* [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 
 ## Overview
@@ -18,6 +18,7 @@ This link was built using the Java DSLink SDK which can be found
 [here](https://github.com/iot-dsa-v2/sdk-dslink-java).
 
 ## Files Requiring Modification
+
 1. build.gradle
     - Group - Your organization's identifier.
     - Version - major.minor.patch[-pre-release]
@@ -26,7 +27,7 @@ This link was built using the Java DSLink SDK which can be found
     - dependencies - Replace the sdk-dslink-java project dependencies with the commented out
       versions on the following line.
 2. dslink.json
-    - Change the link name.
+    - Change everything that isn't (above) configs.
     - Change the rootType config to the fully qualified class name of your root node type.
 3. README.md
     - Change the title link name.
@@ -35,7 +36,7 @@ This link was built using the Java DSLink SDK which can be found
     - Provide some sort of Overview.
     - Maintain a version history.
 4. Main.java
-    - If you reuse this, be sure to change the directory structure to match your package.
+    - If you reuse this class, be sure to change the directory structure to match your package.
 
 ## Link Development
 
