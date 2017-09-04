@@ -25,6 +25,7 @@ Key objectives of this SDK:
   - Support JDK 1.6 for Distech Controls.
   - High performance for activities such as video streaming.
   - Support very large configuration databases (100K+ points).
+  - Support poll on demand whenever possible.
   - 3rd party library independence.  Some environments such as Niagara provide transport libraries 
     while others do not.  SLF4J and Netty were explicitly bound to the original SDK but can not be 
     used in Niagara because of it's very strict Security Manager.
@@ -109,8 +110,8 @@ During node serialization (configuration database, not DSA interop), children th
 declared default are omitted.  This has two benefits:
 
 1. Smaller node database means faster serialization / deserialization.
-2. Default values can be modified and all existing database will be automatically upgraded the next
-time the updated class loaded.
+2. Default values can be modified in code and all existing database will be automatically upgraded 
+the next time the updated class loaded.
 
 ### Node Lifecycle
 
@@ -172,11 +173,11 @@ Values mostly represent leaf members of the node tree.  There are two types of v
 1. [org.io.dsa.node.DSElement](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSElement.html) - 
 These map to the JSON type system and represent leaf members of the node tree.
 2. [org.io.dsa.node.DSIValue](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSIValue.html) - 
-These don't map to the JSON type system, and it is possible for nodes to implement this interface.  
-This allows for values to have children.
+These don't map to the JSON type system, and it is possible for nodes to implement this 
+interface.  This allows for values with children.
 
-Many values are singleton instances.  This is for efficiency, the same value instance (e.g.
-DSBoolean.TRUE) can be stored in many nodes. Singleton values must be immutable.
+The node model encourages values to be immutable and singletons.  This is for efficiency, the same 
+value instance (e.g. DSBoolean.TRUE) can be stored in many nodes.
 
 Whenever possible, values should also have NULL instance.  Rather than storing a generic null, 
 this helps the system decode the proper type such as when a requester is attempting to set
@@ -184,12 +185,35 @@ a value.
   
 ### Actions
 
-Add actions to your node to allow requester invocation using 
+Actions allow allow responders to expose functionality that can't be modeled as values.
+
+Add actions to your node using 
 [org.iot.dsa.node.action.DSAction](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/action/DSAction.html).  
 
-Override DSNode.onInvoke handle invocations.  The reason for this is complicated but it is possible
-to subclass DSAction, just carefully read the javadoc if you do.  Be sure to call super.onInvoke()
-when overriding that method.
+Override DSNode.onInvoke to handle invocations.
+
+```java
+    private DSInfo doSomething = getInfo("Do Something");
+
+    @Override
+    protected void declareDefaults() {
+        DSAction action = new DSAction();
+        action.addParameter("Arg", DSString.valueOf("arg"), "A description");
+        declareDefault("Do Something", action);
+    }
+    
+    private void doSomething(String arg) {}
+
+    @Override
+    public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {
+        if (actionInfo == doSomething) {
+            DSElement arg = invocation.getParameters().get("Arg");
+            doSomething(arg.toString());
+            return null;
+        }
+        return super.onInvoke(actionInfo, invocation);
+    }
+```
 
 ### DSInfo
 
