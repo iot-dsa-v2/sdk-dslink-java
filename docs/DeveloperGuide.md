@@ -21,12 +21,13 @@ Key objectives of this SDK:
   - Pluggable architecture:
     - Protocol independence.  Primarily to support DSA V1 and V2.
     - Transport independence.  Websockets, plain sockets, http, and whatever else comes along.
-  - Support multiple links in the same process.
+  - Support multiple Java links in the same process.
   - Support JDK 1.6 for Distech Controls.
   - High performance for activities such as video streaming.
+  - Support very large configuration databases (100K+ points).
   - 3rd party library independence.  Some environments such as Niagara provide transport libraries 
     while others do not.  SLF4J and Netty were explicitly bound to the original SDK but can not be 
-    used in Niagara because of it's strict Security Manager.
+    used in Niagara because of it's very strict Security Manager.
 
 ## Creating a Link
 
