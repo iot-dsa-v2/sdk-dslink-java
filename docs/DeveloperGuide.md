@@ -252,16 +252,18 @@ This will be useful when nodes want to store user editable metadata.
 To simplify configuring metadata, use the utility class
 [org.iot.dsa.node.DSMetadata](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSMetadata.html).
 
-### Timers and Threads
+## Timers and Threads
 
-Use 
-[org.iot.dsa.DSRuntime](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/DSRuntime.html), 
-and that all you need to know about that.
+Use [org.iot.dsa.DSRuntime](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/DSRuntime.html).
 
-### Logging
+Create your own threads for long lived activities and try to make them daemon as well.
 
-Use Java Util Logging (JUL).  A high performance async logger is automatically installed which also 
-manages backups.  Most types subclass 
+## Logging
+
+Use Java Util Logging (JUL).  A high performance async logger is automatically installed as the
+root logger and it also manages backups.  
+
+Most types subclass 
 [org.iot.dsa.logging.DSLogger](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/logging/DSLogger.html) 
 as a convenience.
 
