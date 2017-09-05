@@ -48,6 +48,7 @@ public class Main extends DSRootNode implements Runnable {
 
     @Override
     protected void declareDefaults() {
+        super.declareDefaults();
         declareDefault("Incrementing Int", DSInt.valueOf(1)).setReadOnly(true);
         declareDefault("Writable Boolean", DSBool.valueOf(true));
         declareDefault("Writable Enum",
@@ -199,6 +200,7 @@ public class Main extends DSRootNode implements Runnable {
     public static class TestNode extends DSNode {
 
         public void declareDefaults() {
+            super.declareDefaults();
             declareDefault("Incrementing Int", DSInt.valueOf(1)).setReadOnly(true);
             declareDefault("Writable Boolean", DSBool.valueOf(true));
             declareDefault("Writable Enum",
