@@ -2,10 +2,16 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.DSConnection;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
@@ -242,24 +248,59 @@ public class DSLink extends DSNode {
      * Serializes the node tree.
      */
     public void saveNodes() {
+        ZipOutputStream zos = null;
+        InputStream in = null;
         try {
             File nodes = config.getNodesFile();
-            StringBuilder buf = new StringBuilder();
-            buf.append(nodes.getName()).append('.');
-            Calendar cal = DSTime.getCalendar(System.currentTimeMillis());
-            DSTime.encodeForFiles(cal, buf);
-            DSTime.recycle(cal);
-            buf.append(".zip");
-            File back = new File(nodes.getParent(), buf.toString());
-            nodes.renameTo(back);
+            if (nodes.exists()) {
+                info("Backing up node database");
+                StringBuilder buf = new StringBuilder();
+                buf.append(nodes.getName()).append('.');
+                Calendar cal = DSTime.getCalendar(System.currentTimeMillis());
+                DSTime.encodeForFiles(cal, buf);
+                DSTime.recycle(cal);
+                buf.append(".zip");
+                File back = new File(nodes.getParent(), buf.toString());
+                FileOutputStream fos = new FileOutputStream(back);
+                zos = new ZipOutputStream(fos);
+                zos.putNextEntry(new ZipEntry(nodes.getName()));
+                byte[] b = new byte[4096];
+                in = new FileInputStream(nodes);
+                int len = in.read(b);
+                while (len > 0) {
+                    zos.write(b, 0, len);
+                    len = in.read(b);
+                }
+                in.close();
+                in = null;
+                zos.closeEntry();
+                zos.close();
+                zos = null;
+            }
+            long time = System.currentTimeMillis();
             info("Saving node database");
             JsonWriter writer = new JsonWriter(nodes);
             NodeEncoder.encode(writer, root);
             writer.close();
             trimBackups();
-            info("Node database saved");
+            time = System.currentTimeMillis() - time;
+            info("Node database saved: " + time + "ms");
         } catch (Exception x) {
             severe("Saving node database", x);
+        }
+        try {
+            if (in != null) {
+                in.close();
+            }
+        } catch (IOException x) {
+            severe("Closing input", x);
+        }
+        try {
+            if (zos != null) {
+                zos.close();
+            }
+        } catch (IOException x) {
+            severe("Closing output", x);
         }
     }
 
