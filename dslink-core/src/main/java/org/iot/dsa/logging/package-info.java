@@ -1,5 +1,5 @@
 /**
- * Acquire logs with DSLogging.
+ * Async handler for Java Util Logging that also manages log backups.
  *
  * @author Aaron Hansen
  */

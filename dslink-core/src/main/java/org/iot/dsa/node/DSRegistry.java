@@ -16,10 +16,10 @@ public class DSRegistry {
     // Fields
     // ------
 
+    private static ConcurrentHashMap<Class, DSIValue> decoderMap =
+            new ConcurrentHashMap<Class, DSIValue>();
     private static ConcurrentHashMap<Class, DSNode> defaultMap =
             new ConcurrentHashMap<Class, DSNode>();
-    private static ConcurrentHashMap<Class, DSIValue> nullMap =
-            new ConcurrentHashMap<Class, DSIValue>();
 
     // Constructors
     // ------------
@@ -27,17 +27,17 @@ public class DSRegistry {
     // Public Methods
     // --------------
 
-    static DSNode getDefault(Class clazz) {
-        return defaultMap.get(clazz);
+    /**
+     * The instance to use for decoding.
+     *
+     * @param clazz The class of a value type.
+     */
+    public static DSIValue getDecoder(Class clazz) {
+        return decoderMap.get(clazz);
     }
 
-    /**
-     * The null instance for the give DSIValue.
-     *
-     * @param clazz The class of a synthetic type.
-     */
-    public static DSIValue getNull(Class clazz) {
-        return nullMap.get(clazz);
+    static DSNode getDefault(Class clazz) {
+        return defaultMap.get(clazz);
     }
 
     /**
@@ -52,13 +52,13 @@ public class DSRegistry {
     }
 
     /**
-     * DSSynthetics must provide the null instance for their specific class type.
+     * DSIValues must provide an instance for decoding.
      *
      * @param clazz    The type the instance is for.
-     * @param instance The null instance, will often be used for decoding.
+     * @param instance An instance to use for decoding.
      */
-    public static void registerNull(Class clazz, DSIValue instance) {
-        nullMap.put(clazz, instance);
+    public static void registerDecoder(Class clazz, DSIValue instance) {
+        decoderMap.put(clazz, instance);
     }
 
     /**

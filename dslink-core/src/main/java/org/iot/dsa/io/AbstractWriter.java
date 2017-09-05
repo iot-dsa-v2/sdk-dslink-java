@@ -5,15 +5,16 @@ import java.io.IOException;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMap.Entry;
 
 /**
- * Basic implementation of DSWriter.  Subclasses must implement the
- * abstract methods which all start with write.
+ * Basic implementation of DSWriter.  Subclasses must implement the abstract methods which all start
+ * with write.
  *
  * @author Aaron Hansen
- * @see DSWriter
+ * @see DSIWriter
  */
-public abstract class AbstractWriter implements Closeable, DSWriter {
+public abstract class AbstractWriter implements Closeable, DSIWriter {
 
     // Constants
     // ---------
@@ -199,7 +200,7 @@ public abstract class AbstractWriter implements Closeable, DSWriter {
             case MAP:
                 beginMap();
                 DSMap map = arg.toMap();
-                DSMap.Entry e;
+                Entry e;
                 for (int i = 0, len = map.size(); i < len; i++) {
                     e = map.getEntry(i);
                     key(e.getKey()).value(e.getValue());
@@ -409,8 +410,8 @@ public abstract class AbstractWriter implements Closeable, DSWriter {
     protected abstract void writeMapStart() throws IOException;
 
     /**
-     * Override point for subclasses which perform use pretty printing, such as json.
-     * Does nothing by default.
+     * Override point for subclasses which perform use pretty printing, such as json. Does nothing
+     * by default.
      *
      * @see #getDepth()
      */

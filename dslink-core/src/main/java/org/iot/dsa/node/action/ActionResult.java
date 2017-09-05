@@ -10,7 +10,8 @@ package org.iot.dsa.node.action;
 public interface ActionResult {
 
     /**
-     * The action that was invoked.
+     * The action that was invoked.  This is needed for custom DSResponder implementations where the
+     * action is unknown.
      */
     public ActionSpec getAction();
 

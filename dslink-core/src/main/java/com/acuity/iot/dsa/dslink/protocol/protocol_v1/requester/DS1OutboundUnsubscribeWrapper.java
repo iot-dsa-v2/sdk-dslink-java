@@ -3,7 +3,7 @@ package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 import java.util.Iterator;
 import org.iot.dsa.dslink.requester.OutboundSubscription;
 import org.iot.dsa.dslink.requester.OutboundUnsubscribeRequest;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSList;
 
 public class DS1OutboundUnsubscribeWrapper extends DS1OutboundRequestWrapper {
@@ -16,7 +16,7 @@ public class DS1OutboundUnsubscribeWrapper extends DS1OutboundRequestWrapper {
     }
 
     @Override
-    public void write(DSWriter out) {
+    public void write(DSIWriter out) {
         out.beginMap();
         out.key("rid").value(request.getRequestId());
         out.key("method").value(method);

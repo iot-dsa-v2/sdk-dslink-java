@@ -91,8 +91,7 @@ public class DSRuntime {
     }
 
     /**
-     * Run periodically starting at the given time and repeat at the given millisecond
-     * interval.
+     * Run periodically starting at the given time and repeat at the given millisecond interval.
      *
      * @param arg      What to runAt.
      * @param start    First absolute execution time, or if less or equal to 0, start immediately.
@@ -182,8 +181,8 @@ public class DSRuntime {
         }
 
         /**
-         * Cancel execution, will not impact current running tasks and will
-         * have no effect if already cancelled.
+         * Cancel execution, will not impact current running tasks and will have no effect if
+         * already cancelled.
          */
         public void cancel() {
             if (nextRun > 0) {

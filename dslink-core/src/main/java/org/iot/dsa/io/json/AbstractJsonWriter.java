@@ -2,14 +2,14 @@ package org.iot.dsa.io.json;
 
 import java.io.IOException;
 import org.iot.dsa.io.AbstractWriter;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.util.DSException;
 
 /**
  * @author Aaron Hansen
  */
 public abstract class AbstractJsonWriter extends AbstractWriter
-        implements Appendable, DSWriter, JsonConstants {
+        implements Appendable, DSIWriter, JsonConstants {
 
     // Constants
     // ---------

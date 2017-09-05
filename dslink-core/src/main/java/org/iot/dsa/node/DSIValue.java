@@ -1,7 +1,9 @@
 package org.iot.dsa.node;
 
 /**
- * Atomic values of the node tree.
+ * How data values get mapped into the node tree.
+ *
+ * <p>
  *
  * <ul>
  *
@@ -15,7 +17,7 @@ package org.iot.dsa.node;
  *
  * <li>Use a static valueOf method(s) rather than a constructor(s), it helps manage singletons.
  *
- * <li>If mutable, you must implement DSIPublisher so clients can know of changes.
+ * <li>If mutable, you should implement DSIPublisher so nodes can know of changes.
  *
  * </ul>
  *
@@ -24,29 +26,36 @@ package org.iot.dsa.node;
 public interface DSIValue extends DSIObject {
 
     /**
-     * If immutable, returns this.
-     */
-    public DSIValue copy();
-
-    /**
-     * Instances must decode new instances from an element type.  The null instance
-     * from will most often be used for decoding.
-     */
-    public DSIValue decode(DSElement element);
-
-    /**
-     * Instances must convert themselves into an element type.
-     */
-    public DSElement encode();
-
-    /**
      * The DSA type mapping.
      */
     public DSValueType getValueType();
 
     /**
-     * All values must have an instance representing null.
+     * Values should have an instance representing null.  This will allow null defaults in nodes,
+     * but the null instance can be used to properly decode incoming values such as set requests.
      */
     public boolean isNull();
+
+    /**
+     * Deserialize a value from the configuration database.
+     */
+    public DSIValue restore(DSElement element);
+
+    /**
+     * Serialize the value for the configuration database.
+     */
+    public DSElement store();
+
+    /**
+     * The current value should convert itself to an element for DSA interop such as subscription
+     * updates, and setting requests.  This is not for configuration database serialization.
+     */
+    public DSElement toElement();
+
+    /**
+     * This should convert an element transmitted over DSA, such as subscription updates or set
+     * requests.  This is not for configuration database deserialization.
+     */
+    public DSIValue valueOf(DSElement element);
 
 }

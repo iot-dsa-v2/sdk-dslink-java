@@ -1,7 +1,7 @@
 package org.iot.dsa.io;
 
 import java.util.HashMap;
-import org.iot.dsa.io.DSReader.Token;
+import org.iot.dsa.io.DSIReader.Token;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIValue;
@@ -30,14 +30,14 @@ public class NodeDecoder {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSReader in;
+    private DSIReader in;
     private HashMap<String, Class> tokenMap = new HashMap<String, Class>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    NodeDecoder(DSReader in) {
+    NodeDecoder(DSIReader in) {
         this.in = in;
     }
 
@@ -48,7 +48,7 @@ public class NodeDecoder {
     /**
      * Reads a node tree from the given input.
      */
-    public static DSNode decode(DSReader in) {
+    public static DSNode decode(DSIReader in) {
         NodeDecoder decoder = new NodeDecoder(in);
         return decoder.read();
     }
@@ -69,7 +69,7 @@ public class NodeDecoder {
             } else {
                 clazz = tokenMap.get(type);
             }
-            ret = DSRegistry.getNull(clazz);
+            ret = DSRegistry.getDecoder(clazz);
             if (ret == null) {
                 ret = (DSIObject) clazz.newInstance();
             }
@@ -128,6 +128,28 @@ public class NodeDecoder {
                     throw new IllegalStateException("Missing name");
                 }
                 DSIObject obj = null;
+                if (info != null) {
+                    obj = info.getObject();
+                }
+                if (type != null) {
+                    obj = getInstance(type);
+                    info = parent.put(name, obj);
+                }
+                if (obj == null) { //dynamic, or declareDefaults was modified
+                    in.next();
+                    obj = in.getElement();
+                    info = parent.put(name, obj);
+                } else if (obj instanceof DSNode) {
+                    readChildren((DSNode) obj);
+                } else {
+                    in.next();
+                    DSIValue val = (DSIValue) obj;
+                    parent.put(info, val.valueOf(in.getElement()));
+                }
+                if (state != null) {
+                    info.decodeState(state);
+                }
+                /*
                 if (type != null) {
                     obj = getInstance(type);
                     parent.put(name, obj);
@@ -148,6 +170,7 @@ public class NodeDecoder {
                     DSIValue val = (DSIValue) obj;
                     parent.put(info, val.decode(in.getElement()));
                 }
+                */
             }
         }
     }
@@ -155,7 +178,7 @@ public class NodeDecoder {
     private void readChildren(DSNode parent) {
         validateEqual(in.next(), Token.BEGIN_LIST);
         while (true) {
-            DSReader.Token token = in.next();
+            DSIReader.Token token = in.next();
             switch (token) {
                 case BEGIN_MAP:
                     readChild(parent);

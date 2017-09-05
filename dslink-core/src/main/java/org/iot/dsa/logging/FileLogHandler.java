@@ -19,8 +19,8 @@ import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
 
 /**
- * Logs records to a file.  When the file exceeds a certain childCount, it'll be zipped
- * to a backup, and excess backups will be deleted.
+ * Logs records to a file.  When the file exceeds a certain size, it'll be zipped to a backup,
+ * and excess backups will be deleted.
  *
  * @author Aaron Hansen
  */
@@ -94,7 +94,7 @@ public class FileLogHandler extends AsyncLogHandler {
     }
 
     /**
-     * The childCount after which a logging file will be backed up and cleared.
+     * The size after which a logging file will be backed up and cleared.
      */
     public int getBackupThreshold() {
         return backupThreshold;
@@ -121,8 +121,8 @@ public class FileLogHandler extends AsyncLogHandler {
     }
 
     /**
-     * Only public for testing, do not call.  Zips the current logging file, deletes the
-     * unzipped version, then starts a new one.
+     * Only public for testing, do not call.  Zips the current logging file, deletes the unzipped
+     * version, then starts a new one.
      */
     public void makeBackup() {
         if (getMaxBackups() > 0) {
@@ -172,7 +172,7 @@ public class FileLogHandler extends AsyncLogHandler {
     }
 
     /**
-     * The file childCount threshold after which a logging file will be backed up and cleared.
+     * The file size threshold after which a logging file will be backed up and cleared.
      */
     public FileLogHandler setBackupThreshold(int arg) {
         backupThreshold = arg;

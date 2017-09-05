@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSDouble extends DSElement implements DSINumber, DSIValue {
+public class DSDouble extends DSElement implements DSINumber {
 
     // Constants
     // ---------
@@ -26,36 +26,6 @@ public class DSDouble extends DSElement implements DSINumber, DSIValue {
 
     // Public Methods
     // --------------
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSDouble copy() {
-        return this;
-    }
-
-    @Override
-    public DSDouble decode(DSElement arg) {
-        if ((arg == null) || arg.isNull()) {
-            return NULL;
-        }
-        if (arg instanceof DSINumber) {
-            return valueOf(arg.toDouble());
-        }
-        if (arg instanceof DSString) {
-            return valueOf(arg.toString());
-        }
-        throw new IllegalArgumentException("Cannot decoding double: " + arg);
-    }
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSDouble encode() {
-        return this;
-    }
 
     /**
      * True if the argument is a DSINumber and the values are equal or they are both isNull.
@@ -178,6 +148,26 @@ public class DSDouble extends DSElement implements DSINumber, DSIValue {
         return ret;
     }
 
+    @Override
+    public DSDouble valueOf(DSElement arg) {
+        if ((arg == null) || arg.isNull()) {
+            return NULL;
+        }
+        if (arg == this) {
+            return this;
+        }
+        if (arg instanceof DSINumber) {
+            if (arg instanceof DSDouble) {
+                return (DSDouble) arg;
+            }
+            return valueOf(arg.toDouble());
+        }
+        if (arg instanceof DSString) {
+            return valueOf(arg.toString());
+        }
+        throw new IllegalArgumentException("Cannot decoding double: " + arg);
+    }
+
     /**
      * Checks for null, then uses Double.parseDouble()
      */
@@ -222,7 +212,7 @@ public class DSDouble extends DSElement implements DSINumber, DSIValue {
     // --------------
 
     static {
-        DSRegistry.registerNull(DSDouble.class, NULL);
+        DSRegistry.registerDecoder(DSDouble.class, NULL);
     }
 
 }//DSDouble

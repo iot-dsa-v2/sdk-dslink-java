@@ -1,15 +1,23 @@
 package org.iot.dsa.node;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
- * Indexed collection of DSObjs.  This is not thread safe.
+ * Indexed collection of elements.
+ *
  * <p>
- * Can not be added to the node tree.
+ *
+ * This can be mounted in the node tree.  However, the parent node will not know when it has been
+ * modified, so the modifier is responsible for calling DSNode.childChanged(DSInfo).
+ *
+ * <p>
+ *
+ * This is not thread safe.
  *
  * @author Aaron Hansen
  */
-public class DSList extends DSGroup {
+public class DSList extends DSGroup implements Iterable<DSElement> {
 
     // Constants
     // ---------
@@ -85,8 +93,18 @@ public class DSList extends DSGroup {
     }
 
     /**
-     * Appends a new list and returns it.  This is going to cause trouble, but the
-     * the primary usage won't be to add an empty list.
+     * Add all elements of the argument to this list and returns this.
+     */
+    public DSList addAll(DSList list) {
+        for (DSElement e : list) {
+            add(e);
+        }
+        return this;
+    }
+
+    /**
+     * Appends a new list and returns it.  This is going to cause trouble, but the the primary usage
+     * won't be to add an empty list.
      */
     public DSList addList() {
         DSList ret = new DSList();
@@ -112,18 +130,32 @@ public class DSList extends DSGroup {
     }
 
     @Override
-    public DSGroup clear() {
+    public DSList clear() {
         list.clear();
         return this;
     }
 
+    public boolean contains(DSElement value) {
+        return indexOf(value) >= 0;
+    }
+
     @Override
-    public DSElement copy() {
+    public DSList copy() {
         DSList ret = new DSList();
         for (int i = 0, len = list.size(); i < len; i++) {
             ret.add(get(i).copy());
         }
         return ret;
+    }
+
+    @Override
+    public DSList valueOf(DSElement element) {
+        return element.toList();
+    }
+
+    @Override
+    public DSList toElement() {
+        return this;
     }
 
     @Override
@@ -146,6 +178,20 @@ public class DSList extends DSGroup {
      */
     public boolean isList() {
         return true;
+    }
+
+    /**
+     * Returns false.
+     */
+    public boolean isNull() {
+        return false;
+    }
+
+    /**
+     * Returns an iterator that does not implement remove.
+     */
+    public Iterator<DSElement> iterator() {
+        return new MyIterator();
     }
 
     /**
@@ -224,5 +270,70 @@ public class DSList extends DSGroup {
         return this;
     }
 
+    public static DSList valueOf(DSElement... values) {
+        DSList ret = new DSList();
+        for (DSElement v : values) {
+            ret.add(v);
+        }
+        return ret;
+    }
 
-}//DSList
+    public static DSList valueOf(Double... values) {
+        DSList ret = new DSList();
+        for (Double v : values) {
+            ret.add(v);
+        }
+        return ret;
+    }
+
+    public static DSList valueOf(Long... values) {
+        DSList ret = new DSList();
+        for (Long v : values) {
+            ret.add(v);
+        }
+        return ret;
+    }
+
+    public static DSList valueOf(String... values) {
+        DSList ret = new DSList();
+        for (String v : values) {
+            ret.add(v);
+        }
+        return ret;
+    }
+
+    // Inner Classes
+    // -------------
+
+    private class MyIterator implements Iterator<DSElement> {
+
+        private int idx = 0;
+
+        @Override
+        public boolean hasNext() {
+            return idx < size();
+        }
+
+        @Override
+        public DSElement next() {
+            return get(idx++);
+        }
+
+        /**
+         * Not implements, throws an exception.
+         */
+        @Override
+        public void remove() {
+            throw new IllegalStateException("Not implemented");
+        }
+    }
+
+    // Initialization
+    // --------------
+
+    static {
+        DSRegistry.registerDecoder(DSList.class, new DSList());
+    }
+
+
+}

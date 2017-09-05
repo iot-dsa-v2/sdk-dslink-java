@@ -9,9 +9,9 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Aaron Hansen
  * @see #next()
- * @see DSReader
+ * @see DSIReader
  */
-public abstract class AbstractReader implements DSReader {
+public abstract class AbstractReader implements DSIReader {
 
     // Fields
     // ---------
@@ -72,7 +72,7 @@ public abstract class AbstractReader implements DSReader {
         throw new IllegalStateException("Not a value");
     }
 
-   @Override
+    @Override
     public DSList getList() {
         if (last == Token.ROOT) {
             next();
@@ -205,7 +205,9 @@ public abstract class AbstractReader implements DSReader {
     /**
      * Subclasses must override this, read the next item from the stream, then call one of the
      * setXxx methods.
+     *
      * <p>
+     *
      * {@inheritDoc}
      */
     @Override

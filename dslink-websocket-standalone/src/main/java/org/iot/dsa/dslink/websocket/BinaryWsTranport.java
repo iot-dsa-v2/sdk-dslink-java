@@ -19,8 +19,8 @@ import org.glassfish.tyrus.client.ClientManager;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSByteBuffer;
 import org.iot.dsa.io.DSIoException;
-import org.iot.dsa.io.DSReader;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.util.DSException;
 
@@ -51,10 +51,10 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
     private int endMessageThreshold = 32768;
     private int messageSize;
     private boolean open = false;
-    private DSReader reader;
+    private DSIReader reader;
     private Session session;
     private ByteBuffer writeBuffer = ByteBuffer.allocate(BUF_SIZE);
-    private DSWriter writer;
+    private DSIWriter writer;
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -101,7 +101,7 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
     }
 
     @Override
-    public DSReader getReader() {
+    public DSIReader getReader() {
         if (reader == null) {
             reader = null; //TODO
         }
@@ -109,7 +109,7 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
     }
 
     @Override
-    public DSWriter getWriter() {
+    public DSIWriter getWriter() {
         if (writer == null) {
             writer = null; //TODO
         }

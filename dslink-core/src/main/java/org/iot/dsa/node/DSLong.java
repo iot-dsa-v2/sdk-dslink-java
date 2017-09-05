@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSLong extends DSElement implements DSINumber, DSIValue {
+public class DSLong extends DSElement implements DSINumber {
 
     // Constants
     // ---------
@@ -26,39 +26,6 @@ public class DSLong extends DSElement implements DSINumber, DSIValue {
 
     // Public Methods
     // --------------
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSLong copy() {
-        return this;
-    }
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSLong decode(DSElement arg) {
-        if ((arg == null) || arg.isNull()) {
-            return NULL;
-        }
-        if (arg instanceof DSINumber) {
-            return valueOf(arg.toLong());
-        }
-        if (arg instanceof DSString) {
-            return valueOf(arg.toString());
-        }
-        throw new IllegalArgumentException("Can not decode long: " + arg);
-    }
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSLong encode() {
-        return this;
-    }
 
     /**
      * True if the argument is a DSINumber and the values are equal or they are both isNull.
@@ -152,6 +119,23 @@ public class DSLong extends DSElement implements DSINumber, DSIValue {
     }
 
     /**
+     * Returns this.
+     */
+    @Override
+    public DSLong valueOf(DSElement arg) {
+        if ((arg == null) || arg.isNull()) {
+            return NULL;
+        }
+        if (arg instanceof DSINumber) {
+            return valueOf(arg.toLong());
+        }
+        if (arg instanceof DSString) {
+            return valueOf(arg.toString());
+        }
+        throw new IllegalArgumentException("Can not decode long: " + arg);
+    }
+
+    /**
      * Attempts to reuse some common values before creating a new instance.
      */
     public static DSLong valueOf(long arg) {
@@ -208,7 +192,7 @@ public class DSLong extends DSElement implements DSINumber, DSIValue {
     // --------------
 
     static {
-        DSRegistry.registerNull(DSLong.class, NULL);
+        DSRegistry.registerDecoder(DSLong.class, NULL);
     }
 
 }

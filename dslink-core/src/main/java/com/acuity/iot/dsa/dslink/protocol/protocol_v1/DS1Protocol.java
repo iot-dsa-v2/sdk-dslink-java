@@ -1,10 +1,10 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
-import static org.iot.dsa.io.DSReader.Token.BEGIN_LIST;
-import static org.iot.dsa.io.DSReader.Token.BEGIN_MAP;
-import static org.iot.dsa.io.DSReader.Token.END_LIST;
-import static org.iot.dsa.io.DSReader.Token.END_MAP;
-import static org.iot.dsa.io.DSReader.Token.NULL;
+import static org.iot.dsa.io.DSIReader.Token.BEGIN_LIST;
+import static org.iot.dsa.io.DSIReader.Token.BEGIN_MAP;
+import static org.iot.dsa.io.DSIReader.Token.END_LIST;
+import static org.iot.dsa.io.DSIReader.Token.END_MAP;
+import static org.iot.dsa.io.DSIReader.Token.NULL;
 
 import com.acuity.iot.dsa.dslink.DSProtocol;
 import com.acuity.iot.dsa.dslink.DSProtocolException;
@@ -13,9 +13,9 @@ import com.acuity.iot.dsa.dslink.DSResponderSession;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester.DS1RequesterSession;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder.DS1ResponderSession;
 import java.io.IOException;
-import org.iot.dsa.io.DSReader;
-import org.iot.dsa.io.DSReader.Token;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIReader.Token;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
 
 /**
@@ -51,7 +51,7 @@ public class DS1Protocol extends DSProtocol {
 
     @Override
     protected void beginMessage() {
-        DSWriter out = getWriter();
+        DSIWriter out = getWriter();
         out.beginMap();
         if (++nextMsg > MAX_MSG_ID) {
             nextMsg = 1;
@@ -83,7 +83,7 @@ public class DS1Protocol extends DSProtocol {
 
     @Override
     protected void doRun() throws IOException {
-        DSReader reader = getReader();
+        DSIReader reader = getReader();
         while (isOpen()) {
             switch (reader.next()) {
                 case BEGIN_MAP:
@@ -151,12 +151,12 @@ public class DS1Protocol extends DSProtocol {
     }
 
     /**
-     * Decomposes and processes a complete envelope which can contain multiple requests
-     * and responses.
+     * Decomposes and processes a complete envelope which can contain multiple requests and
+     * responses.
      *
      * @param reader lastRun() will return BEGIN_MAP
      */
-    protected void processEnvelope(DSReader reader) {
+    protected void processEnvelope(DSIReader reader) {
         finest(finest() ? printMemory() : null);
         if (!requesterAllowed) {
             getConnection().requesterAllowed();
@@ -212,7 +212,7 @@ public class DS1Protocol extends DSProtocol {
      *
      * @param areRequests True for requests, false for responses.
      */
-    protected void processMessages(DSReader reader, boolean areRequests) {
+    protected void processMessages(DSIReader reader, boolean areRequests) {
         Token next = reader.next();
         if (next == NULL) {
             return;

@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSInt implements DSINumber, DSIValue {
+public class DSInt extends DSValue implements DSINumber {
 
     // Constants
     // ---------
@@ -26,33 +26,6 @@ public class DSInt implements DSINumber, DSIValue {
 
     // Public Methods
     // --------------
-
-    @Override
-    public DSInt copy() {
-        return this;
-    }
-
-    @Override
-    public DSInt decode(DSElement arg) {
-        if ((arg == null) || arg.isNull()) {
-            return NULL;
-        }
-        if (arg instanceof DSINumber) {
-            return valueOf(arg.toInt());
-        }
-        if (arg instanceof DSString) {
-            return valueOf(arg.toString());
-        }
-        throw new IllegalArgumentException("Can not decode int: " + arg);
-    }
-
-    @Override
-    public DSElement encode() {
-        if (isNull()) {
-            return DSLong.NULL;
-        }
-        return DSLong.valueOf(value);
-    }
 
     /**
      * True if the argument is a DSINumber and the values are equal or they are both isNull.
@@ -118,6 +91,14 @@ public class DSInt implements DSINumber, DSIValue {
     }
 
     @Override
+    public DSElement toElement() {
+        if (isNull()) {
+            return DSLong.NULL;
+        }
+        return DSLong.valueOf(value);
+    }
+
+    @Override
     public float toFloat() {
         return (float) value;
     }
@@ -143,6 +124,20 @@ public class DSInt implements DSINumber, DSIValue {
             return "null";
         }
         return String.valueOf(value);
+    }
+
+    @Override
+    public DSInt valueOf(DSElement arg) {
+        if ((arg == null) || arg.isNull()) {
+            return NULL;
+        }
+        if (arg instanceof DSINumber) {
+            return valueOf(arg.toInt());
+        }
+        if (arg instanceof DSString) {
+            return valueOf(arg.toString());
+        }
+        throw new IllegalArgumentException("Can not decode int: " + arg);
     }
 
     /**
@@ -197,7 +192,7 @@ public class DSInt implements DSINumber, DSIValue {
     // --------------
 
     static {
-        DSRegistry.registerNull(DSInt.class, NULL);
+        DSRegistry.registerDecoder(DSInt.class, NULL);
     }
 
 }

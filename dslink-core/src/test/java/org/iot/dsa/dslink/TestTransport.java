@@ -7,8 +7,8 @@ import java.io.OutputStream;
 import java.util.logging.Level;
 import org.iot.dsa.io.DSByteBuffer;
 import org.iot.dsa.io.DSIoException;
-import org.iot.dsa.io.DSReader;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
 
@@ -33,8 +33,8 @@ public class TestTransport implements DSTransport {
     private int endMessageThreshold = 32768;
     private int messageSize;
     private boolean open = false;
-    private DSReader reader;
-    private DSWriter writer;
+    private DSIReader reader;
+    private DSIWriter writer;
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -79,7 +79,7 @@ public class TestTransport implements DSTransport {
     }
 
     @Override
-    public DSReader getReader() {
+    public DSIReader getReader() {
         if (reader == null) {
             reader = new JsonReader(new MyInputStream(), "UTF-8");
         }
@@ -87,7 +87,7 @@ public class TestTransport implements DSTransport {
     }
 
     @Override
-    public DSWriter getWriter() {
+    public DSIWriter getWriter() {
         if (writer == null) {
             writer = new JsonWriter(new MyOutputStream());
         }

@@ -3,6 +3,7 @@ package org.iot.dsa.dslink;
 import java.util.Iterator;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSFlexEnum;
+import org.iot.dsa.node.DSList;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,30 +26,29 @@ public class DSFlexEnumTest {
 
     @Test
     public void theTest() throws Exception {
-        DSFlexEnum fe = DSFlexEnum.valueOf("First", "Second", "Third");
-        Assert.assertTrue(fe.toString().equals("First"));
-        Iterator<String>  it = fe.getEnums().iterator();
-        Assert.assertTrue(it.next().equals("First"));
-        Assert.assertTrue(it.next().equals("Second"));
-        Assert.assertTrue(it.next().equals("Third"));
-        DSElement e = fe.encode();
-        fe = DSFlexEnum.NULL.decode(e);
-        Assert.assertTrue(fe.toString().equals("First"));
-        it = fe.getEnums().iterator();
-        Assert.assertTrue(it.next().equals("First"));
-        Assert.assertTrue(it.next().equals("Second"));
-        Assert.assertTrue(it.next().equals("Third"));
-        fe.add("Fourth");
-        fe.setValue("Second");
-        Assert.assertTrue(fe.toString().equals("Second"));
-        e = fe.encode();
-        fe = DSFlexEnum.NULL.decode(e);
-        Assert.assertTrue(fe.toString().equals("Second"));
-        it = fe.getEnums().iterator();
-        Assert.assertTrue(it.next().equals("First"));
-        Assert.assertTrue(it.next().equals("Second"));
-        Assert.assertTrue(it.next().equals("Third"));
-        Assert.assertTrue(it.next().equals("Fourth"));
+        try {
+            DSFlexEnum fe = DSFlexEnum.valueOf("First", DSList.valueOf("First", "Second", "Third"));
+            Assert.assertTrue(fe.toString().equals("First"));
+            Iterator<DSElement> it = fe.getEnums(null).iterator();
+            Assert.assertTrue(it.next().toString().equals("First"));
+            Assert.assertTrue(it.next().toString().equals("Second"));
+            Assert.assertTrue(it.next().toString().equals("Third"));
+            DSElement e = fe.store();
+            fe = DSFlexEnum.NULL.restore(e);
+            Assert.assertTrue(fe.toString().equals("First"));
+            it = fe.getEnums(null).iterator();
+            Assert.assertTrue(it.next().toString().equals("First"));
+            Assert.assertTrue(it.next().toString().equals("Second"));
+            Assert.assertTrue(it.next().toString().equals("Third"));
+            fe = fe.valueOf("Second");
+            Assert.assertTrue(fe.toString().equals("Second"));
+            it = fe.getEnums(null).iterator();
+            Assert.assertTrue(it.next().toString().equals("First"));
+            Assert.assertTrue(it.next().toString().equals("Second"));
+            Assert.assertTrue(it.next().toString().equals("Third"));
+        } catch (Exception x) {
+            x.printStackTrace();
+        }
     }
 
 

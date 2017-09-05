@@ -6,12 +6,11 @@ import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Stream;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.responder.InboundInvokeRequest;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionResultSpec;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.ActionValues;
@@ -233,7 +232,7 @@ class DS1InboundInvoke extends DS1InboundRequest
     }
 
     @Override
-    public void write(DSWriter out) {
+    public void write(DSIWriter out) {
         enqueued = false;
         if (isClosed()) {
             return;
@@ -275,21 +274,13 @@ class DS1InboundInvoke extends DS1InboundRequest
         out.endMap();
     }
 
-    private void writeColumns(DSWriter out) {
+    private void writeColumns(DSIWriter out) {
         if (result instanceof ActionValues) {
             out.key("columns").beginList();
-            Iterator<ActionResultSpec> it = result.getAction().getValueResults();
-            ActionResultSpec spec;
+            Iterator<DSMap> it = result.getAction().getValueResults();
             if (it != null) {
                 while (it.hasNext()) {
-                    out.beginMap();
-                    spec = it.next();
-                    out.key("name").value(spec.getName());
-                    out.key("type").value(spec.getType().toString());
-                    if (spec.getMetadata() != null) {
-                        out.key("meta").value(spec.getMetadata());
-                    }
-                    out.endMap();
+                    out.value(it.next());
                 }
             }
             out.endList();
@@ -301,18 +292,10 @@ class DS1InboundInvoke extends DS1InboundRequest
                .key("meta").beginMap().endMap()
                .endMap();
             out.key("columns").beginList();
-            Iterator<ActionResultSpec> iterator = ((ActionTable) result).getColumns();
+            Iterator<DSMap> iterator = ((ActionTable) result).getColumns();
             if (iterator != null) {
-                ActionResultSpec column;
                 while (iterator.hasNext()) {
-                    out.beginMap();
-                    column = iterator.next();
-                    out.key("name").value(column.getName());
-                    out.key("type").value(column.getType().toString());
-                    if (column.getMetadata() != null) {
-                        out.key("meta").value(column.getMetadata());
-                    }
-                    out.endMap();
+                    out.value(iterator.next());
                 }
             }
             out.endList();
@@ -321,7 +304,7 @@ class DS1InboundInvoke extends DS1InboundRequest
         }
     }
 
-    private void writeInitialResults(DSWriter out) {
+    private void writeInitialResults(DSIWriter out) {
         state = STATE_ROWS;
         out.key("updates").beginList();
         if (result instanceof ActionValues) {
@@ -330,7 +313,7 @@ class DS1InboundInvoke extends DS1InboundRequest
             if (values != null) {
                 while (values.hasNext()) {
                     DSIValue val = values.next();
-                    out.value(val.encode());
+                    out.value(val.toElement());
                 }
             }
             out.endList();
@@ -359,7 +342,7 @@ class DS1InboundInvoke extends DS1InboundRequest
         }
     }
 
-    private void writeUpdates(DSWriter out) {
+    private void writeUpdates(DSIWriter out) {
         Update update = updateHead; //peak ahead
         if (update == null) {
             return;

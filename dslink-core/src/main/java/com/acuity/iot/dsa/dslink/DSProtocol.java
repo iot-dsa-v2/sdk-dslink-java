@@ -8,8 +8,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSRequester;
-import org.iot.dsa.io.DSReader;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.logging.DSLogging;
 
@@ -36,11 +36,11 @@ public abstract class DSProtocol extends DSLogger {
     private Object outgoingMutex = new Object();
     private List<OutboundMessage> outgoingRequests = new LinkedList<OutboundMessage>();
     private List<OutboundMessage> outgoingResponses = new LinkedList<OutboundMessage>();
-    private DSReader reader;
+    private DSIReader reader;
     protected boolean requesterAllowed = false;
     private boolean running = false;
     private DSTransport transport;
-    private DSWriter writer;
+    private DSIWriter writer;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -51,8 +51,8 @@ public abstract class DSProtocol extends DSLogger {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Prepare a new message.  After this is called, beginRequests and/beginResponses
-     * maybe called.  When the message is complete, endMessage will be called.
+     * Prepare a new message.  After this is called, beginRequests and/beginResponses maybe called.
+     * When the message is complete, endMessage will be called.
      *
      * @see #beginRequests()
      * @see #beginResponses()
@@ -61,9 +61,8 @@ public abstract class DSProtocol extends DSLogger {
     protected abstract void beginMessage();
 
     /**
-     * Prepare for the response portion of the message.  This will be followed by one or
-     * more calls to writeResponse().  When there are no more responses, endResponses()
-     * will be called.
+     * Prepare for the response portion of the message.  This will be followed by one or more calls
+     * to writeResponse().  When there are no more responses, endResponses() will be called.
      *
      * @see #writeResponse(OutboundMessage)
      * @see #endResponses()
@@ -71,9 +70,8 @@ public abstract class DSProtocol extends DSLogger {
     protected abstract void beginResponses();
 
     /**
-     * Prepare for the request portion of the message.  This will be followed by one or
-     * more calls to writeRequest().  When there are no more responses, endRequests()
-     * will be called.
+     * Prepare for the request portion of the message.  This will be followed by one or more calls
+     * to writeRequest().  When there are no more responses, endRequests() will be called.
      *
      * @see #writeResponse(OutboundMessage)
      * @see #endResponses()
@@ -81,9 +79,8 @@ public abstract class DSProtocol extends DSLogger {
     protected abstract void beginRequests();
 
     /**
-     * The protocol implementation should read messages and do something with them.
-     * The implementation should call isOpen() to determine when to exit this
-     * method.
+     * The protocol implementation should read messages and do something with them. The
+     * implementation should call isOpen() to determine when to exit this method.
      *
      * @see #isOpen()
      */
@@ -196,7 +193,7 @@ public abstract class DSProtocol extends DSLogger {
         return logger;
     }
 
-    protected DSReader getReader() {
+    protected DSIReader getReader() {
         if ((reader == null) && (transport != null)) {
             setReader(transport.getReader());
         }
@@ -211,7 +208,7 @@ public abstract class DSProtocol extends DSLogger {
         return transport;
     }
 
-    protected DSWriter getWriter() {
+    protected DSIWriter getWriter() {
         if ((writer == null) && (transport != null)) {
             setWriter(transport.getWriter());
         }
@@ -273,8 +270,8 @@ public abstract class DSProtocol extends DSLogger {
     }
 
     /**
-     * Called by the connection, this manages the running state and calls doRun for the
-     * specific implementation.  A separate thread is spun off to manage writing.
+     * Called by the connection, this manages the running state and calls doRun for the specific
+     * implementation.  A separate thread is spun off to manage writing.
      *
      * @see #doRun()
      */
@@ -311,15 +308,15 @@ public abstract class DSProtocol extends DSLogger {
     }
 
     /**
-     * The runAt method thread spawns a thread which then executes this method for writing
-     * outgoing requests and responses.
+     * The runAt method thread spawns a thread which then executes this method for writing outgoing
+     * requests and responses.
      */
     private void runWriter() {
         long endTime;
         boolean requestsFirst = false;
         DSTransport transport = getTransport();
         lastMessageSent = System.currentTimeMillis();
-        DSWriter writer = getWriter();
+        DSIWriter writer = getWriter();
         try {
             while (running) {
                 synchronized (outgoingMutex) {
@@ -399,8 +396,7 @@ public abstract class DSProtocol extends DSLogger {
     }
 
     /**
-     * Called when there are no outbound messages in the queue.  Can be used for
-     * pinging and acks.
+     * Called when there are no outbound messages in the queue.  Can be used for pinging and acks.
      *
      * @return True to send a message anyway.
      */
@@ -419,7 +415,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setReader(DSReader reader) {
+    public DSProtocol setReader(DSIReader reader) {
         this.reader = reader;
         return this;
     }
@@ -435,15 +431,14 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setWriter(DSWriter writer) {
+    public DSProtocol setWriter(DSIWriter writer) {
         this.writer = writer;
         return this;
     }
 
     /**
-     * Write a request in the current message. Can be called multiple times after
-     * beginRequests() is called.  endRequests() will be called once the request
-     * part of the message is complete.
+     * Write a request in the current message. Can be called multiple times after beginRequests() is
+     * called.  endRequests() will be called once the request part of the message is complete.
      *
      * @see #beginRequests()
      * @see #endRequests()
@@ -453,9 +448,8 @@ public abstract class DSProtocol extends DSLogger {
     }
 
     /**
-     * Write a response in the current message. Can be called multiple times after
-     * beginResponses() is called.  endResponses() will be called once the response
-     * part of the message is complete.
+     * Write a response in the current message. Can be called multiple times after beginResponses()
+     * is called.  endResponses() will be called once the response part of the message is complete.
      *
      * @see #beginResponses()
      * @see #endResponses()

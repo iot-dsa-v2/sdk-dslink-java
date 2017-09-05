@@ -4,11 +4,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 
 /**
- * An runtime exception that forwards most calls to the inner exception.
- * This is to exclude itself from reporting and expose the real issue as soon as possible.
- * <p>
- * The throwRuntime method is a convenience for converting checked exceptions into runtime
- * exceptions.
+ * An runtime exception that forwards most calls to the inner exception. This is to exclude itself
+ * from reporting and expose the real issue as soon as possible. <p> The throwRuntime method is a
+ * convenience for converting checked exceptions into runtime exceptions.
  *
  * @author Aaron Hansen
  */
@@ -32,7 +30,9 @@ public class DSException extends RuntimeException {
     }
 
     @Override
-    public String getMessage() { return inner.getMessage(); }
+    public String getMessage() {
+        return inner.getMessage();
+    }
 
     @Override
     public String getLocalizedMessage() {
@@ -65,8 +65,8 @@ public class DSException extends RuntimeException {
     }
 
     /**
-     * If the given exception is already a runtime exception, it is rethrown,
-     * otherwise it will be thrown wrapped by an instance of this class.
+     * If the given exception is already a runtime exception, it is rethrown, otherwise it will be
+     * thrown wrapped by an instance of this class.
      */
     public static void throwRuntime(Exception x) {
         if (x instanceof RuntimeException) {

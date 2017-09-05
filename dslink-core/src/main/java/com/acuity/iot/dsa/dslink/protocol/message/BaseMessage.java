@@ -1,6 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.message;
 
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
 
 /**
@@ -93,11 +93,11 @@ public class BaseMessage implements OutboundMessage {
     }
 
     /**
-     * Subclasses should call this super implementation first. This starts the response map and
-     * will write the key value pairs that have been configured on this object, but does not
-     * close the response map.
+     * Subclasses should call this super implementation first. This starts the response map and will
+     * write the key value pairs that have been configured on this object, but does not close the
+     * response map.
      */
-    public void write(DSWriter writer) {
+    public void write(DSIWriter writer) {
         writer.beginMap();
         if (rid >= 0) {
             writer.key("rid").value(rid);

@@ -1,8 +1,8 @@
 package org.iot.dsa.io;
 
 /**
- * A buffer for storing chars being pushed from a reader.  Useful when chars are
- * coming in faster than can be processed.
+ * A buffer for storing chars being pushed from a reader.  Useful when chars are coming in faster
+ * than can be processed.
  *
  * @author Aaron Hansen
  */

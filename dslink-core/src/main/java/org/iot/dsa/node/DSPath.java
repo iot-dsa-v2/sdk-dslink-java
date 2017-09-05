@@ -5,6 +5,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 /**
+ * Represents a path in the node tree.  Not necessarily a valid one!
+ *
  * @author Aaron Hansen
  */
 public class DSPath {
@@ -99,23 +101,23 @@ public class DSPath {
 
     /**
      * Ascends the tree and creates pretty printing path.
+     public static String encodeDisplayPath(DSNode node) {
+     ArrayList<DSNode> nodes = new ArrayList<DSNode>();
+     while (node != null) {
+     if (node.getName() != null) {
+     nodes.add(node);
+     break;
+     }
+     node = node.getParent();
+     }
+     StringBuilder builder = new StringBuilder();
+     for (int i = nodes.size(); --i >= 0; ) {
+     builder.append('/');
+     builder.append(node.getName());
+     }
+     return builder.toString();
+     }
      */
-    public static String encodeDisplayPath(DSNode node) {
-        ArrayList<DSNode> nodes = new ArrayList<DSNode>();
-        while (node != null) {
-            if (node.getName() != null) {
-                nodes.add(node);
-                break;
-            }
-            node = node.getParent();
-        }
-        StringBuilder builder = new StringBuilder();
-        for (int i = nodes.size(); --i >= 0; ) {
-            builder.append('/');
-            builder.append(node.getName());
-        }
-        return builder.toString();
-    }
 
     /**
      * Ascends the tree and encodes all the node names into a path.
@@ -233,7 +235,6 @@ public class DSPath {
     }
 
     /**
-     * /**
      * Returns true for characters that should be encoded.
      */
     public static boolean shouldEncode(int ch) {
@@ -255,7 +256,9 @@ public class DSPath {
     }
 
     /**
-     * Splits the path, but does not decodeKeys any names.
+     * Splits the path, but does not decode any names.  The difference between this and
+     * String.split() is that String.split() will return an empty string at index 0 if the path
+     * starts with /.
      *
      * @return Never null, but could be an empty array.
      */

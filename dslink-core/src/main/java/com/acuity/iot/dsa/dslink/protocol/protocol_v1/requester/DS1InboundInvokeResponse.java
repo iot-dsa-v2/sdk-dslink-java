@@ -7,12 +7,11 @@ import org.iot.dsa.dslink.requester.InboundInvokeResponse;
 import org.iot.dsa.dslink.requester.StreamState;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.action.ActionResultSpec;
 
 public class DS1InboundInvokeResponse implements InboundInvokeResponse {
 
     private StreamState streamState;
-    private final List<ActionResultSpec> columns = new ArrayList<ActionResultSpec>();
+    private final List<DSMap> columns = new ArrayList<DSMap>();
     private final List<DSList> rows = new ArrayList<DSList>();
     private DSMap metadata;
 
@@ -25,12 +24,12 @@ public class DS1InboundInvokeResponse implements InboundInvokeResponse {
         return streamState;
     }
 
-    public void addColumn(ActionResultSpec col) {
+    public void addColumn(DSMap col) {
         columns.add(col);
     }
 
     @Override
-    public Iterator<ActionResultSpec> getColumns() {
+    public Iterator<DSMap> getColumns() {
         return columns.iterator();
     }
 

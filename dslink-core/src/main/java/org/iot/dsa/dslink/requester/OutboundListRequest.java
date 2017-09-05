@@ -11,8 +11,8 @@ public abstract class OutboundListRequest extends OutboundRequest {
     public void setLatestStreamState(StreamState latestStreamState) {
         this.latestStreamState = latestStreamState;
     }
-    
-    
+
+
     /**
      * The requested path.
      */

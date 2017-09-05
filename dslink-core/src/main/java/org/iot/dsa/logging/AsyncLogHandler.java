@@ -70,8 +70,8 @@ public abstract class AsyncLogHandler extends Handler {
     }
 
     /**
-     * Ten seconds by default, this is a guideline more than anything else.  Housekeeping
-     * can be called sooner during low activity periods.
+     * Ten seconds by default, this is a guideline more than anything else.  Housekeeping can be
+     * called sooner during low activity periods.
      */
     public long getHouseKeepingIntervalMillis() {
         return DSTime.MILLIS_TEN_SECONDS;
@@ -94,9 +94,9 @@ public abstract class AsyncLogHandler extends Handler {
     protected abstract String getThreadName();
 
     /**
-     * Subclass hook for activities such as rolling files and cleaning up old garbage.
-     * Called during periods of inactivity or after the houseKeepingInterval is
-     * exceeded. Does nothing by default and flush will be called just prior to this.
+     * Subclass hook for activities such as rolling files and cleaning up old garbage. Called during
+     * periods of inactivity or after the houseKeepingInterval is exceeded. Does nothing by default
+     * and flush will be called just prior to this.
      */
     protected void houseKeeping() {
     }
@@ -187,8 +187,8 @@ public abstract class AsyncLogHandler extends Handler {
     }
 
     /**
-     * This must be called for the handler to actually do anything. Starts the write
-     * thread if there isn't already an active write thread.
+     * This must be called for the handler to actually do anything. Starts the write thread if there
+     * isn't already an active write thread.
      */
     protected void start() {
         if (logHandlerThread == null) {

@@ -6,7 +6,34 @@ import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.util.DSUtil;
 
 /**
- * Metadata about a child in it's parent container.
+ * All node children have corresponding DSInfo instances. This type serves two purposes:
+ *
+ * <p>
+ *
+ * <ul>
+ *
+ * <li>It carries some meta-data about the relationship between the parent node and the child.
+ *
+ * <li>It tracks whether or not the child matches a declared default.
+ *
+ * </ul>
+ *
+ * <p>
+ *
+ * Important things for developers to know about DSInfo are:
+ *
+ * <p>
+ *
+ * <ul>
+ *
+ * <li>You can configure state such as transient, readonly and hidden.
+ *
+ * <li>You can declare fields in the your Java class for default infos to avoid looking up the child
+ * every time it is needed.  This is can be used to create fast getters and setters.
+ *
+ * </ul>
+ *
+ * <p>
  *
  * @author Aaron Hansen
  */
@@ -77,6 +104,34 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return false;
     }
 
+    /**
+     * True if this proxies a default and the state and value match the default.
+     */
+    public boolean equalsDefault() {
+        return false;
+    }
+
+    /**
+     * True if the state matches the default state.
+     */
+    public boolean equalsDefaultState() {
+        return flags == 0;
+    }
+
+    /**
+     * True if this proxies a default and the value type matches the default.
+     */
+    public boolean equalsDefaultType() {
+        return false;
+    }
+
+    /**
+     * True if this proxies a default and the value matches the default.
+     */
+    public boolean equalsDefaultValue() {
+        return false;
+    }
+
     public boolean equivalent(DSInfo arg) {
         if (getFlags() != arg.getFlags()) {
             return false;
@@ -122,6 +177,9 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     @Override
     public void getMetadata(DSMap bucket) {
+        if (value instanceof DSIMetadata) {
+            ((DSIMetadata) value).getMetadata(bucket);
+        }
         if (value instanceof DSNode) {
             ((DSNode) value).getMetadata(this, bucket);
         }
@@ -171,34 +229,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
      */
     public boolean isConfig() {
         return getFlag(CONFIG);
-    }
-
-    /**
-     * True if this proxies a default and the state and value match the default.
-     */
-    public boolean isDefault() {
-        return false;
-    }
-
-    /**
-     * True if the state matches the default state.
-     */
-    public boolean isDefaultState() {
-        return flags == 0;
-    }
-
-    /**
-     * True if this proxies a default and the value type matches the default.
-     */
-    public boolean isDefaultType() {
-        return false;
-    }
-
-    /**
-     * True if this proxies a default and the value matches the default.
-     */
-    public boolean isDefaultValue() {
-        return false;
     }
 
     /**
@@ -272,19 +302,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return this;
     }
 
-    public DSInfo setReadOnly(boolean readOnly) {
-        setFlag(READONLY, readOnly);
-        return this;
-    }
-
-    public DSInfo setTransient(boolean trans) {
-        setFlag(TRANSIENT, trans);
-        return this;
-    }
-
-    /**
-     * Change the value and return this.
-     */
     DSInfo setObject(DSIObject arg) {
         this.value = arg;
         return this;
@@ -297,6 +314,16 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     DSInfo setPermanent(boolean arg) {
         setFlag(PERMANENT, arg);
+        return this;
+    }
+
+    public DSInfo setReadOnly(boolean readOnly) {
+        setFlag(READONLY, readOnly);
+        return this;
+    }
+
+    public DSInfo setTransient(boolean trans) {
+        setFlag(TRANSIENT, trans);
         return this;
     }
 

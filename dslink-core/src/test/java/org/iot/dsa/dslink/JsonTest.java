@@ -2,8 +2,8 @@ package org.iot.dsa.dslink;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import org.iot.dsa.io.DSReader;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.node.DSElement;
@@ -31,7 +31,7 @@ public class JsonTest {
     @Test
     public void theTest() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DSWriter out = new JsonWriter(baos);
+        DSIWriter out = new JsonWriter(baos);
         out.beginList();
         {
             out.beginMap()
@@ -61,8 +61,8 @@ public class JsonTest {
         out.endList();
         out.close();
         byte[] encoded = baos.toByteArray();
-        DSReader parser = new JsonReader(new ByteArrayInputStream(encoded),
-                                         "UTF-8");
+        DSIReader parser = new JsonReader(new ByteArrayInputStream(encoded),
+                                          "UTF-8");
         DSList decoded = parser.getElement().toList();
         parser.close();
         parser = new JsonReader(new ByteArrayInputStream(encoded), "UTF-8");

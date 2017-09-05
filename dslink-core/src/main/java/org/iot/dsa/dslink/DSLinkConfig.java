@@ -22,12 +22,14 @@ public class DSLinkConfig {
     public static final String CFG_AUTH_TOKEN = "token";
     public static final String CFG_BROKER_URL = "broker";
     public static final String CFG_CONNECTION_TYPE = "connectionType";
+    public static final String CFG_IS_REQUESTER = "isRequester";
     public static final String CFG_KEY_FILE = "key";
     public static final String CFG_LOG_FILE = "logFile";
     public static final String CFG_LOG_LEVEL = "log";
     public static final String CFG_NODE_FILE = "nodes";
     public static final String CFG_READ_TIMEOUT = "readTimeout";
     public static final String CFG_ROOT_TYPE = "rootType";
+    public static final String CFG_SAVE_INTERVAL = "saveInterval";
     public static final String CFG_STABLE_DELAY = "stableDelay";
     public static final String CFG_TRANSPORT_FACTORY = "transportFactory";
 
@@ -285,6 +287,13 @@ public class DSLinkConfig {
     }
 
     /**
+     * Looks for the isRequester config.
+     */
+    public boolean isRequester() {
+        return getConfig(CFG_IS_REQUESTER, false);
+    }
+
+    /**
      * Parses command line args to set the internal state of this object.
      *
      * @param args The argument passed to a main method.
@@ -488,6 +497,14 @@ public class DSLinkConfig {
     public DSLinkConfig setNodesFile(File file) {
         nodesFile = file;
         return setConfig(CFG_NODE_FILE, file.getAbsolutePath());
+    }
+
+    /**
+     * Overrides dslink.json.
+     */
+    public DSLinkConfig setRequester(boolean isRequester) {
+        setConfig(CFG_IS_REQUESTER, isRequester);
+        return this;
     }
 
     /**

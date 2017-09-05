@@ -1,7 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
 import org.iot.dsa.dslink.requester.OutboundSetRequest;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.security.DSPermission;
 
 public class DS1OutboundSetWrapper extends DS1OutboundRequestWrapper {
@@ -14,7 +14,7 @@ public class DS1OutboundSetWrapper extends DS1OutboundRequestWrapper {
     }
 
     @Override
-    public void write(DSWriter out) {
+    public void write(DSIWriter out) {
 
         out.beginMap();
         out.key("rid").value(request.getRequestId());

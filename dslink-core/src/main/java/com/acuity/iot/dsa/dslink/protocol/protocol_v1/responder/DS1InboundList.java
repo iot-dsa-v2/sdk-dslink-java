@@ -8,12 +8,13 @@ import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
-import org.iot.dsa.io.DSWriter;
-import org.iot.dsa.node.DSElement;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMap.Entry;
+import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSPath;
-import org.iot.dsa.node.action.ActionResultSpec;
 import org.iot.dsa.node.action.ActionSpec;
 
 /**
@@ -39,7 +40,9 @@ class DS1InboundList extends DS1InboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     private StringBuilder cacheBuf = new StringBuilder();
+    private DSList cacheList = new DSList();
     private DSMap cacheMap = new DSMap();
+    private DSMetadata cacheMeta = new DSMetadata(cacheMap);
     private Iterator<ApiObject> children;
     private Exception closeReason;
     private OutboundListResponse response;
@@ -131,7 +134,7 @@ class DS1InboundList extends DS1InboundRequest
         });
     }
 
-    private void encodeChild(ApiObject child, DSWriter out) {
+    private void encodeChild(ApiObject child, DSIWriter out) {
         out.beginList();
         String name = child.getName();
         String displayName = null;
@@ -146,7 +149,7 @@ class DS1InboundList extends DS1InboundRequest
         if (displayName != null) {
             out.key("$name").value(displayName);
         }
-        child.getMetadata(cacheMap);
+        child.getMetadata(cacheMap.clear());
         if (cacheMap.contains("is")) {
             out.key("$is").value(cacheMap.getString("is"));
         } else {
@@ -160,7 +163,8 @@ class DS1InboundList extends DS1InboundRequest
                 out.key("$invokable").value(action.getPermission().toString());
             }
         } else if (child.isValue()) {
-            out.key("$type").value(child.getValue().getValueType().toString());
+            out.key("$type");
+            encodeType(child.getValue(), cacheMeta, out);
             if (!child.isReadOnly()) {
                 out.key("$writable").value(child.isConfig() ? "config" : "write");
             }
@@ -172,8 +176,8 @@ class DS1InboundList extends DS1InboundRequest
     /**
      * Encode all the meta data about the root target of a list request.
      */
-    private void encodeTarget(ApiObject object, DSWriter out) {
-        object.getMetadata(cacheMap);
+    private void encodeTarget(ApiObject object, DSIWriter out) {
+        object.getMetadata(cacheMap.clear());
         if (cacheMap.contains("is")) {
             out.beginList().value("$is").value(cacheMap.getString("is")).endList();
             cacheMap.remove("is");
@@ -195,10 +199,60 @@ class DS1InboundList extends DS1InboundRequest
         cacheMap.clear();
     }
 
+    private void encodeType(DSIValue value, DSMetadata meta, DSIWriter out) {
+        String type = meta.getType();
+        if ((type == null) && (value != null)) {
+            meta.setType(value);
+        }
+        fixType(cacheMap);
+        out.value(cacheMap.remove(DSMetadata.TYPE));
+        /*
+        String type = meta.getType();
+        if ((type == null) && (value != null)) {
+            meta.setType(value);
+            type = meta.getType();
+        }
+        if ("bool".equals(type)) {
+            DSList range = (DSList) meta.getMap().remove(DSMetadata.BOOLEAN_RANGE);
+            if ((range == null) || (range.size() != 2)) {
+                out.value(type);
+            } else {
+                cacheBuf.setLength(0);
+                cacheBuf.append(type);
+                cacheBuf.append('[');
+                cacheBuf.append(range.get(0).toString());
+                cacheBuf.append(',');
+                cacheBuf.append(range.get(1).toString());
+                cacheBuf.append(']');
+                out.value(cacheBuf.toString());
+            }
+        } else if ("enum".equals(type)) {
+            DSList range = (DSList) meta.getMap().remove(DSMetadata.ENUM_RANGE);
+            if (range == null) {
+                range = ((DSIEnum)value).getEnums(cacheList.clear());
+            }
+            cacheBuf.setLength(0);
+            cacheBuf.append(type);
+            cacheBuf.append('[');
+            for (int i = 0, len = range.size(); i < len; i++) {
+                if (i > 0) {
+                    cacheBuf.append(',');
+                }
+                cacheBuf.append(range.get(i).toString());
+            }
+            cacheBuf.append(']');
+            out.value(cacheBuf.toString());
+        } else {
+            out.value(type);
+        }
+        cacheMap.remove(DSMetadata.TYPE);
+    */
+    }
+
     /**
      * Called by encodeTarget for actions.
      */
-    private void encodeTargetAction(ActionSpec action, DSWriter out) {
+    private void encodeTargetAction(ActionSpec action, DSIWriter out) {
         if (!cacheMap.contains("invokable")) {
             out.beginList()
                .value("$invokable")
@@ -209,36 +263,19 @@ class DS1InboundList extends DS1InboundRequest
             out.beginList().value("$params").beginList();
             Iterator<DSMap> params = action.getParameters();
             if (params != null) {
-                DSMap map;
                 while (params.hasNext()) {
-                    map = params.next();
-                    //If type not given, try getting it from the default.
-                    if (!map.contains("type")) {
-                        DSElement def = map.get("default");
-                        if (def != null) {
-                            map.put("type", def.getValueType().toString());
-                        }
-                    }
-                    out.value(map);
+                    out.value(fixType(params.next()));
                 }
             }
             out.endList().endList();
         }
-        if (!cacheMap.contains("columns")) {
-            if (action.getResultType().isValues()) {
+        if (action.getResultType().isValues()) {
+            if (!cacheMap.contains("columns")) {
                 out.beginList().value("$columns").beginList();
-                Iterator<ActionResultSpec> it = action.getValueResults();
-                ActionResultSpec spec;
+                Iterator<DSMap> it = action.getValueResults();
                 if (it != null) {
                     while (it.hasNext()) {
-                        out.beginMap();
-                        spec = it.next();
-                        out.key("name").value(spec.getName());
-                        out.key("type").value(spec.getType().toString());
-                        if (spec.getMetadata() != null) {
-                            out.key("meta").value(spec.getMetadata());
-                        }
-                        out.endMap();
+                        out.value(fixType(it.next()));
                     }
                 }
                 out.endList().endList();
@@ -257,11 +294,11 @@ class DS1InboundList extends DS1InboundRequest
     /**
      * Called by encodeTarget, encodes meta-data as configs.
      */
-    private void encodeTargetMetadata(DSMap metadata, DSWriter out) {
+    private void encodeTargetMetadata(DSMap metadata, DSIWriter out) {
         if (cacheMap.isEmpty()) {
             return;
         }
-        DSMap.Entry entry;
+        Entry entry;
         for (int i = 0, len = cacheMap.size(); i < len; i++) {
             entry = cacheMap.getEntry(i);
             out.beginList();
@@ -277,13 +314,13 @@ class DS1InboundList extends DS1InboundRequest
     /**
      * Called by encodeTarget for values.
      */
-    private void encodeTargetValue(ApiObject object, DSWriter out) {
+    private void encodeTargetValue(ApiObject object, DSIWriter out) {
         DSIValue value = object.getValue();
         if (!cacheMap.contains("type")) {
-            out.beginList()
-               .value("$type")
-               .value(value.getValueType().toString())
-               .endList();
+            out.beginList();
+            out.value("$type");
+            encodeType(object.getValue(), cacheMeta, out);
+            out.endList();
         }
         if (!cacheMap.contains("writable")) {
             if (!object.isReadOnly()) {
@@ -295,7 +332,7 @@ class DS1InboundList extends DS1InboundRequest
         }
     }
 
-    private void encodeUpdate(Update update, DSWriter out) {
+    private void encodeUpdate(Update update, DSIWriter out) {
         if (!isOpen()) {
             return;
         }
@@ -341,6 +378,45 @@ class DS1InboundList extends DS1InboundRequest
         getSession().sendResponse(this);
     }
 
+    /**
+     * Combines boolean and enum ranges into the type.
+     */
+    private DSMap fixType(DSMap arg) {
+        String type = arg.getString(DSMetadata.TYPE);
+        if ("bool".equals(type)) {
+            DSList range = (DSList) arg.remove(DSMetadata.BOOLEAN_RANGE);
+            if ((range == null) || (range.size() != 2)) {
+                return arg;
+            } else {
+                cacheBuf.setLength(0);
+                cacheBuf.append(type);
+                cacheBuf.append('[');
+                cacheBuf.append(range.get(0).toString());
+                cacheBuf.append(',');
+                cacheBuf.append(range.get(1).toString());
+                cacheBuf.append(']');
+                arg.put(DSMetadata.TYPE, cacheBuf.toString());
+            }
+        } else if ("enum".equals(type)) {
+            DSList range = (DSList) arg.remove(DSMetadata.ENUM_RANGE);
+            if (range == null) {
+                return arg;
+            }
+            cacheBuf.setLength(0);
+            cacheBuf.append(type);
+            cacheBuf.append('[');
+            for (int i = 0, len = range.size(); i < len; i++) {
+                if (i > 0) {
+                    cacheBuf.append(',');
+                }
+                cacheBuf.append(range.get(i).toString());
+            }
+            cacheBuf.append(']');
+            arg.put(DSMetadata.TYPE, cacheBuf.toString());
+        }
+        return arg;
+    }
+
     private boolean isClosed() {
         return state == STATE_CLOSED;
     }
@@ -382,7 +458,7 @@ class DS1InboundList extends DS1InboundRequest
     }
 
     @Override
-    public void write(DSWriter out) {
+    public void write(DSIWriter out) {
         enqueued = false;
         if (isClosed()) {
             return;
@@ -430,7 +506,7 @@ class DS1InboundList extends DS1InboundRequest
         out.endMap();
     }
 
-    private void writeChildren(DSWriter out) {
+    private void writeChildren(DSIWriter out) {
         if (children != null) {
             ApiObject child;
             while (children.hasNext()) {
@@ -445,7 +521,7 @@ class DS1InboundList extends DS1InboundRequest
         state = STATE_UPDATES;
     }
 
-    private void writeInit(DSWriter out) {
+    private void writeInit(DSIWriter out) {
         ApiObject target = response.getTarget();
         encodeTarget(target, out);
         if (target.hasChildren()) {
@@ -458,7 +534,7 @@ class DS1InboundList extends DS1InboundRequest
         }
     }
 
-    private void writeUpdates(DSWriter out) {
+    private void writeUpdates(DSIWriter out) {
         Update update;
         DS1ResponderSession session = getSession();
         while (!session.shouldEndMessage()) {

@@ -59,12 +59,12 @@ class DSInfoProxy extends DSInfo {
     }
 
     @Override
-    public boolean isDefault() {
-        return isDefaultState() && isDefaultValue();
+    public boolean equalsDefault() {
+        return equalsDefaultState() && equalsDefaultValue();
     }
 
     @Override
-    public boolean isDefaultState() {
+    public boolean equalsDefaultState() {
         if (flags != defaultInfo.flags) {
             return false;
         }
@@ -72,7 +72,7 @@ class DSInfoProxy extends DSInfo {
     }
 
     @Override
-    public boolean isDefaultType() {
+    public boolean equalsDefaultType() {
         if (value == null) {
             return defaultInfo.value == null;
         }
@@ -83,7 +83,7 @@ class DSInfoProxy extends DSInfo {
     }
 
     @Override
-    public boolean isDefaultValue() {
+    public boolean equalsDefaultValue() {
         return DSUtil.equal(value, defaultInfo.value);
     }
 

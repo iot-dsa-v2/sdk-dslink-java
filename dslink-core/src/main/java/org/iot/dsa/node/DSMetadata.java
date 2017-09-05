@@ -1,12 +1,4 @@
-package org.iot.dsa.util;
-
-import java.util.List;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIEnum;
-import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSList;
-import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSValueType;
+package org.iot.dsa.node;
 
 /**
  * Utility fon constructing metadata maps.
@@ -21,9 +13,10 @@ public class DSMetadata {
 
     public static final String BOOLEAN_RANGE = "booleanRange";
     public static final String DESCRIPTION = "description";
+    public static final String DECIMAL_PLACES = "decimalPlaces";
     public static final String DEFAULT = "default";
-    public static final String ENUM_RANGE = "enumRange";
     public static final String EDITOR = "editor";
+    public static final String ENUM_RANGE = "enumRange";
     public static final String NAME = "name";
     public static final String MAX_VALUE = "maxValue";
     public static final String MIN_VALUE = "minValue";
@@ -31,11 +24,11 @@ public class DSMetadata {
     public static final String TYPE = "type";
     public static final String UNIT = "unit";
 
-    public static final String EDITOR_DATE = "date";
-    public static final String EDITOR_DATE_RANGE = "daterange";
-    public static final String EDITOR_FILE_INPUT = "fileinput";
-    public static final String EDITOR_PASSWORD = "password";
-    public static final String EDITOR_TEXT_AREA = "textarea";
+    //public static final String EDITOR_DATE = "date";
+    //public static final String EDITOR_DATE_RANGE = "daterange";
+    //public static final String EDITOR_FILE_INPUT = "fileinput";
+    //public static final String EDITOR_PASSWORD = "password";
+    //public static final String EDITOR_TEXT_AREA = "textarea";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -77,8 +70,15 @@ public class DSMetadata {
      * The boolean range, or null.  If not null, the length will be 2, index 0 will be the false
      * text and index 1 the true text.
      */
-    public DSList getBooleanText() {
+    public DSList getBooleanRange() {
         return (DSList) map.get(BOOLEAN_RANGE);
+    }
+
+    /**
+     * The decimal precision or null.
+     */
+    public DSLong getDecimalPlaces() {
+        return (DSLong) map.get(DECIMAL_PLACES);
     }
 
     /**
@@ -102,8 +102,11 @@ public class DSMetadata {
         return map.getString(EDITOR);
     }
 
+    /**
+     * The editor, or null.
+     */
     public DSList getEnumRange() {
-        return (DSList) map.get(ENUM_RANGE);
+        return map.getList(ENUM_RANGE);
     }
 
     /**
@@ -137,12 +140,8 @@ public class DSMetadata {
     /**
      * The type for action parameters, can be used to override types in the responder api.
      */
-    public DSValueType getType() {
-        String s = map.getString(TYPE);
-        if (s == null) {
-            return null;
-        }
-        return DSValueType.valueOf(s);
+    public String getType() {
+        return map.getString(TYPE);
     }
 
     /**
@@ -166,7 +165,24 @@ public class DSMetadata {
         return this;
     }
 
-    public DSMetadata setBooleanText(String trueText, String falseText) {
+    /**
+     * The list must be size 2 and the entries must not be null.
+     */
+    public DSMetadata setBooleanRange(DSList range) {
+        if (range.size() != 2) {
+            throw new IllegalStateException();
+        }
+        if (range.get(0).isNull() || range.get(1).isNull()) {
+            throw new NullPointerException();
+        }
+        map.put(BOOLEAN_RANGE, range);
+        return this;
+    }
+
+    /**
+     * The parameters can be null, which will result in the default text (false/true).
+     */
+    public DSMetadata setBooleanRange(String falseText, String trueText) {
         DSList list = new DSList();
         list.add(falseText == null ? "false" : falseText);
         list.add(trueText == null ? "true" : trueText);
@@ -175,22 +191,20 @@ public class DSMetadata {
     }
 
     /**
-     * This will set the TYPE and DEFAULT, and if the arg is an enum, it will also set ENUM_RANGE.
+     * Sets the default value only, does not set type information.
      */
     public DSMetadata setDefault(DSIValue arg) {
         if (arg == null) {
             return this;
         }
-        if (arg instanceof DSIEnum) {
-            List<String> range = ((DSIEnum) arg).getEnums();
-            DSList list = new DSList();
-            for (String s : range) {
-                list.add(s);
-            }
-            map.put(ENUM_RANGE, list);
+        map.put(DEFAULT, arg.toElement());
+        return this;
+    }
+
+    public DSMetadata setDecimalPlaces(DSLong arg) {
+        if (arg != null) {
+            map.put(DECIMAL_PLACES, arg);
         }
-        map.put(TYPE, arg.getValueType().toString());
-        map.put(DEFAULT, arg.encode());
         return this;
     }
 
@@ -207,6 +221,16 @@ public class DSMetadata {
     public DSMetadata setEditor(String arg) {
         if (arg != null) {
             map.put(EDITOR, arg);
+        }
+        return this;
+    }
+
+    /**
+     * See the EDITOR_ constants.
+     */
+    public DSMetadata setEnumRange(DSList arg) {
+        if (arg != null) {
+            map.put(ENUM_RANGE, arg);
         }
         return this;
     }
@@ -256,6 +280,19 @@ public class DSMetadata {
     public DSMetadata setPlaceHolder(String arg) {
         if (arg != null) {
             map.put(PLACEHOLDER, arg);
+        }
+        return this;
+    }
+
+    /**
+     * Sets the type and if the given is an enum, sets the enum range as well.
+     */
+    public DSMetadata setType(DSIValue arg) {
+        if (arg != null) {
+            map.put(TYPE, arg.getValueType().toString());
+        }
+        if (arg instanceof DSIEnum) {
+            setEnumRange(((DSIEnum) arg).getEnums(new DSList()));
         }
         return this;
     }

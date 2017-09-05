@@ -1,29 +1,23 @@
 package org.iot.dsa.node;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import org.iot.dsa.logging.DSLogger;
-
 /**
- * An enum where the range and value are mutable, primarily intended for defining action
- * parameters.
+ * An enum where the value and range can be created at runtime, primarily intended for defining
+ * action parameters.
  *
  * @author Aaron Hansen
  */
-public class DSFlexEnum extends DSLogger implements DSIEnum, DSIValue, DSIPublisher {
+public class DSFlexEnum extends DSValue implements DSIEnum, DSIMetadata {
 
     // Constants
     // ---------
 
-    public static final DSFlexEnum NULL = new DSFlexEnum("null", null);
+    public static final DSFlexEnum NULL = new DSFlexEnum("null", DSList.valueOf("null"));
 
     // Fields
     // ------
 
-    private DSISubscriber subscriber;
-    private String value;
-    private ArrayList<String> values;
+    private DSString value;
+    private DSList values;
 
     // Constructors
     // ------------
@@ -31,94 +25,21 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIValue, DSIPublis
     private DSFlexEnum() {
     }
 
-    private DSFlexEnum(String value, String[] values) {
+    private DSFlexEnum(String value, DSList values) {
+        this(DSString.valueOf(value), values);
+    }
+
+    private DSFlexEnum(DSString value, DSList values) {
         this.value = value;
-        this.values = new ArrayList<String>();
-        if (values == null) {
-            this.values.add(value);
-        } else {
-            boolean found = false;
-            for (String s : values) {
-                this.values.add(s);
-                found |= s.equals(value);
-            }
-            if (!found) {
-                this.values.add(0, value);
-            }
-        }
+        this.values = values;
     }
 
     // Public Methods
     // --------------
 
-    /**
-     * Add a value to the list of potential values and returns this.
-     *
-     * @return this;
-     */
-    public DSFlexEnum add(String value) {
-        if (!values.contains(value)) {
-            values.add(value);
-        }
-        return this;
-    }
-
-    /**
-     * Add a value to the list of potential values and returns this.
-     *
-     * @return this;
-     */
-    public DSFlexEnum add(String... values) {
-        for (String s : values) {
-            this.values.add(s);
-        }
-        if (subscriber != null) {
-            try {
-                subscriber.onEvent(this, null, Event.PUBLISHER_CHANGED);
-            } catch (Exception x) {
-                severe(subscriber.toString(), x);
-            }
-        }
-        return this;
-    }
-
     @Override
     public DSFlexEnum copy() {
-        DSFlexEnum ret = new DSFlexEnum();
-        ret.value = value;
-        ret.values = values;
-        return ret;
-    }
-
-    @Override
-    public DSFlexEnum decode(DSElement arg) {
-        if ((arg == null) || arg.isNull()) {
-            return NULL;
-        }
-        DSFlexEnum ret = new DSFlexEnum();
-        DSMap map = (DSMap) arg;
-        ret.value = map.getString("value");
-        DSList list = map.getList("values");
-        ret.values = new ArrayList<String>();
-        for (int i = 0, len = list.size(); i < len; i++) {
-            ret.values.add(list.get(i).toString());
-        }
-        return ret;
-    }
-
-    @Override
-    public DSElement encode() {
-        if (isNull()) {
-            return DSString.NULL;
-        }
-        DSMap ret = new DSMap();
-        ret.put("value", value);
-        DSList list = new DSList();
-        ret.put("values", list);
-        for (String s : values) {
-            list.add(s);
-        }
-        return ret;
+        return this;
     }
 
     /**
@@ -130,11 +51,11 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIValue, DSIPublis
             return true;
         }
         if (arg instanceof DSFlexEnum) {
-            DSFlexEnum denum = (DSFlexEnum) arg;
-            if (!value.equals(denum.value)) {
+            DSFlexEnum fe = (DSFlexEnum) arg;
+            if (!value.equals(fe.value)) {
                 return false;
             }
-            if (!values.equals(denum.values)) {
+            if (!values.equals(fe.values)) {
                 return false;
             }
             return true;
@@ -143,8 +64,17 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIValue, DSIPublis
     }
 
     @Override
-    public List<String> getEnums() {
-        return Collections.unmodifiableList(values);
+    public DSList getEnums(DSList bucket) {
+        if (bucket == null) {
+            bucket = new DSList();
+        }
+        bucket.addAll(values);
+        return bucket;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        bucket.put(DSMetadata.ENUM_RANGE, values.copy());
     }
 
     @Override
@@ -159,128 +89,77 @@ public class DSFlexEnum extends DSLogger implements DSIEnum, DSIValue, DSIPublis
 
     @Override
     public boolean isNull() {
-        return this == null;
-    }
-
-    /**
-     * Returns true if the given value is in the list of potential values.
-     */
-    public boolean isValid(String value) {
-        return values.contains(value);
-    }
-
-    /**
-     * Remove a value to the list of potential values and returns this.
-     *
-     * @return this
-     */
-    public DSFlexEnum remove(String value) {
-        values.remove(value);
-        return this;
-    }
-
-    /**
-     * Sets the current value, will throw an exception if the value is not in the list of potential
-     * values.
-     *
-     * @return this
-     */
-    public DSFlexEnum setValue(String value) {
-        if (!isValid(value)) {
-            throw new IllegalStateException("Value not in range: " + value);
-        }
-        this.value = value;
-        if (subscriber != null) {
-            try {
-                subscriber.onEvent(this, null, Event.PUBLISHER_CHANGED);
-            } catch (Exception x) {
-                severe(subscriber.toString(), x);
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Replaces the list of values with the given.
-     *
-     * @return this
-     */
-    public DSFlexEnum setValues(String... values) {
-        this.values.clear();
-        for (String s : values) {
-            this.values.add(s);
-        }
-        if (subscriber != null) {
-            try {
-                subscriber.onEvent(this, null, Event.PUBLISHER_CHANGED);
-            } catch (Exception x) {
-                severe(subscriber.toString(), x);
-            }
-        }
-        return this;
+        return this == NULL;
     }
 
     @Override
-    public synchronized void subscribe(DSISubscriber arg) {
-        if (subscriber == null) {
-            subscriber = arg;
-        } else if (subscriber instanceof SubscriberAdapter) {
-            ((SubscriberAdapter) subscriber).subscribe(arg);
-        } else {
-            SubscriberAdapter adapter = new SubscriberAdapter(subscriber);
-            adapter.subscribe(arg);
-            subscriber = adapter;
-        }
+    public DSFlexEnum restore(DSElement arg) {
+        DSFlexEnum ret = new DSFlexEnum();
+        DSMap map = (DSMap) arg;
+        ret.value = (DSString) map.get("value");
+        ret.values = map.getList("values");
+        return ret;
     }
 
     @Override
-    public String toString() {
+    public DSMap store() {
+        DSMap ret = new DSMap();
+        ret.put("value", value);
+        ret.put("values", values);
+        return ret;
+    }
+
+    @Override
+    public DSElement toElement() {
+        if (isNull()) {
+            return DSString.NULL;
+        }
         return value;
     }
 
     @Override
-    public synchronized void unsubscribe(DSISubscriber arg) {
-        if (subscriber == arg) {
-            subscriber = null;
-        } else if (subscriber instanceof SubscriberAdapter) {
-            SubscriberAdapter adapter = (SubscriberAdapter) subscriber;
-            adapter.unsubscribe(arg);
-            if (adapter.isEmpty()) {
-                subscriber = null;
-            }
+    public String toString() {
+        return value.toString();
+    }
+
+    @Override
+    public DSFlexEnum valueOf(DSElement arg) {
+        if ((arg == null) || arg.isNull()) {
+            return NULL;
         }
+        return valueOf(arg.toString());
     }
 
     /**
-     * Creates a dynamic enum set to the given value and the list of values only contains the
-     * given.
+     * Creates a enum representing the given value and range.
+     *
+     * @param value Must be in the given range.
+     * @param range The all possible values in the range, must include the value param.
      */
-    public static DSFlexEnum valueOf(String value) {
-        if (value == null) {
-            return NULL;
+    public static DSFlexEnum valueOf(String value, DSList range) {
+        if (!range.contains(DSString.valueOf(value))) {
+            throw new IllegalArgumentException("Not in range: " + value);
         }
-        return new DSFlexEnum(value, null);
+        return new DSFlexEnum(value, range.copy());
     }
 
     /**
-     * Creates a dynamic enum where the list of potential values is set to the arguments and the
-     * current value will be the first argument.
+     * Creates a new enum for the given value using the range from this instance.
+     *
+     * @param value Must be a member of the range in this enum.
      */
-    public static DSFlexEnum valueOf(String... values) {
-        if (values == null) {
-            return NULL;
+    public DSFlexEnum valueOf(String value) {
+        if (!values.contains(DSString.valueOf(value))) {
+            throw new IllegalArgumentException("Not in range: " + value);
         }
-        return new DSFlexEnum(values[0], values);
+        return new DSFlexEnum(value, values);
     }
-
-    // Inner Classes
-    // --------------
 
     // Initialization
     // --------------
 
     static {
-        DSRegistry.registerNull(DSFlexEnum.class, NULL);
+        DSRegistry.registerDecoder(DSFlexEnum.class, NULL);
     }
 
 }

@@ -12,7 +12,7 @@ public abstract class DSGroup extends DSElement {
     // Fields
     // --------------
 
-    private DSGroup parent;
+    private Object parent;
 
     // Public Methods
     // --------------
@@ -210,13 +210,6 @@ public abstract class DSGroup extends DSElement {
     }
 
     /**
-     * Returns the parent group or null.
-     */
-    public DSGroup getParent() {
-        return parent;
-    }
-
-    /**
      * Primitive getter.
      */
     public String getString(int idx) {
@@ -260,8 +253,8 @@ public abstract class DSGroup extends DSElement {
     }
 
     /**
-     * Whether or not the object at the given index is null.  Will return
-     * true if the index is out of bounds.
+     * Whether or not the object at the given index is null.  Will return true if the index is out
+     * of bounds.
      */
     public boolean isNull(int idx) {
         if (idx >= size()) {
@@ -342,7 +335,7 @@ public abstract class DSGroup extends DSElement {
      * @return This
      * @throws IllegalStateException If already parented.
      */
-    protected DSGroup setParent(DSGroup arg) {
+    DSGroup setParent(Object arg) {
         if (arg == null) {
             this.parent = null;
             return this;

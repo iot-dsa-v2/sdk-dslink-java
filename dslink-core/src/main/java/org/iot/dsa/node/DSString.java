@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSString extends DSElement implements DSIValue {
+public class DSString extends DSElement {
 
     // Constants
     // ---------
@@ -30,27 +30,6 @@ public class DSString extends DSElement implements DSIValue {
 
     // Public Methods
     // --------------
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSString copy() {
-        return this;
-    }
-
-    @Override
-    public DSString decode(DSElement arg) {
-        return valueOf(arg.toString());
-    }
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSString encode() {
-        return this;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -113,21 +92,27 @@ public class DSString extends DSElement implements DSIValue {
         return value;
     }
 
-    public static DSString valueOf(String arg) {
+    @Override
+    public DSString valueOf(DSElement arg) {
+        return valueOf(arg.toString());
+    }
+
+    public static DSString valueOf(Object arg) {
         if (arg == null) {
             return NULL;
         }
-        if (arg.isEmpty()) {
+        String str = arg.toString();
+        if (str.isEmpty()) {
             return EMPTY;
         }
-        return new DSString(arg);
+        return new DSString(str);
     }
 
     // Initialization
     // --------------
 
     static {
-        DSRegistry.registerNull(DSString.class, NULL);
+        DSRegistry.registerDecoder(DSString.class, NULL);
     }
 
 }

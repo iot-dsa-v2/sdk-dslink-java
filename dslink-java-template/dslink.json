@@ -1,6 +1,6 @@
 {
   "name": "dslink-java-template",
-  "version": "0.0.1",
+  "version": "0.0.1-alpha1",
   "description": "Template Link",
   "license": "ISC",
   "author": {
@@ -10,10 +10,10 @@
   "main": "bin/dslink-java-template",
   "repository": {
     "type": "git",
-    "url": "https://github.com/IOT-DSA/sdk-dslink-java"
+    "url": "https://github.com/iot-dsa-v2/sdk-dslink-java"
   },
   "bugs": {
-    "url": "https://github.com/IOT-DSA/sdk-dslink-java/issues"
+    "url": "https://github.com/iot-dsa-v2/sdk-dslink-java/issues"
   },
   "configs": {
     "section1": {
@@ -44,11 +44,17 @@
       "value": null,
       "required": false
     },
+    "isRequester": {
+      "description": "Whether or not the link is a requester.",
+      "type": "boolean",
+      "value": false,
+      "required": false
+    },
     "key": {
       "description": "Path to public/private key pair.",
       "type": "path",
       "value": ".key",
-      "required": true
+      "required": false
     },
     "log": {
       "description": "finest, finer, fine, config, info, warning or severe",
@@ -66,12 +72,18 @@
       "description": "Path to configuration database.",
       "type": "path",
       "value": "nodes.json",
-      "required": true
+      "required": false
     },
     "readTimeout": {
       "description": "Millis timeout for reading from the connection.",
       "type": "number",
       "value": 60000,
+      "required": false
+    },
+    "saveInterval": {
+      "description": "How often to backup the node database in minutes.",
+      "type": "number",
+      "value": 60,
       "required": false
     },
     "stableDelay": {

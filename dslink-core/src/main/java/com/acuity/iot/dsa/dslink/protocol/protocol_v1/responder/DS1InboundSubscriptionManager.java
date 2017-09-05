@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSResponder;
-import org.iot.dsa.io.DSWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.logging.DSLogging;
 
@@ -116,7 +116,7 @@ class DS1InboundSubscriptionManager extends DSLogger implements OutboundMessage 
     }
 
     @Override
-    public void write(DSWriter out) {
+    public void write(DSIWriter out) {
         out.beginMap();
         out.key("rid").value(ZERO);
         out.key("updates").beginList();

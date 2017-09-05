@@ -11,8 +11,7 @@ import org.iot.dsa.node.DSIPublisher.Event;
 public interface DSISubscriber {
 
     /**
-     * @param publisher The object that was subscribed to, will never be null (could be a
-     *                  DSIPublisher or a DSContainer).
+     * @param publisher The object that was subscribed to, will never be null.
      * @param child     If the event does not involve a child, this will be null.
      * @param event     Describes the event, will never be null.
      */

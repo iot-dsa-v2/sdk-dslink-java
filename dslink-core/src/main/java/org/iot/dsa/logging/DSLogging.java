@@ -7,8 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Acquire loggers here.  Multiple logs may share the same file, there will be a
- * single file handler per absolute file path and it is thread safe.
+ * Static utilities for configuring the logging subsystem.
  *
  * @author Aaron Hansen
  */
@@ -61,9 +60,9 @@ public class DSLogging {
     }
 
     /**
-     * Adds a handler for the default log file to the named logger, if there isn't one already.
-     * This can be used repeatedly to acquire the same logger, but doing so would be
-     * inefficient.  Use Logger.getLogger after this has installed the handler.
+     * Adds a handler for the default log file to the named logger, if there isn't one already. This
+     * can be used repeatedly to acquire the same logger, but doing so would be inefficient.  Use
+     * Logger.getLogger after this has installed the handler.
      *
      * @param name Log name.
      */
@@ -84,9 +83,9 @@ public class DSLogging {
     }
 
     /**
-     * Adds a FileLogHandler to the named logger, if there isn't one already.
-     * This can be used repeatedly to acquire the same logger, but doing so would be
-     * inefficient.  Use Logger.getLogger after this has installed the handler.
+     * Adds a FileLogHandler to the named logger, if there isn't one already. This can be used
+     * repeatedly to acquire the same logger, but doing so would be inefficient.  Use
+     * Logger.getLogger after this has installed the handler.
      *
      * @param name    Log name.
      * @param logFile Where record the logging, may be null.  Multiple logs can safely share the
@@ -106,9 +105,9 @@ public class DSLogging {
     }
 
     /**
-     * Adds a PrintStreamLogHandler to the named logger, if there isn't one already.
-     * This can be used repeatedly to acquire the same logger, but doing so would be
-     * inefficient.  Use Logger.getLogger after this has installed the handler.
+     * Adds a PrintStreamLogHandler to the named logger, if there isn't one already. This can be
+     * used repeatedly to acquire the same logger, but doing so would be inefficient.  Use
+     * Logger.getLogger after this has installed the handler.
      *
      * @param name Log name.
      * @param out  Where to print the logging.
@@ -129,8 +128,8 @@ public class DSLogging {
     }
 
     /**
-     * Removes existing handlers from the root logger and installs a
-     * PrintStreamLogHandler for System.out.
+     * Removes existing handlers from the root logger and installs a PrintStreamLogHandler for
+     * System.out.
      */
     public static void replaceRootHandler() {
         Logger global = Logger.getLogger("");

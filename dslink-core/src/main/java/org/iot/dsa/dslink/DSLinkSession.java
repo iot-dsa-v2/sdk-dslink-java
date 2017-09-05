@@ -13,9 +13,9 @@ public interface DSLinkSession {
     public DSLinkConnection getConnection();
 
     /**
-     * Large outbound messages that can be broken into smaller ones should check this
-     * occasionally when writing.  The idea is to prevent buffer overflows as well as not
-     * have a single message hog communication.
+     * Large outbound messages that can be broken into smaller ones should check this occasionally
+     * when writing.  The idea is to prevent buffer overflows as well as not have a single message
+     * hog communication.
      */
     public boolean shouldEndMessage();
 

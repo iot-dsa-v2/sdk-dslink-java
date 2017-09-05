@@ -10,7 +10,7 @@ import org.iot.dsa.node.DSNode;
 
 /**
  * Encodes a node tree using a compact JSON schema.  Defaults are omitted and class names are
- * tokenized to minimize size. Use NodeDecoder to deserialize.
+ * tokenized to minimize size. Use NodeDecoder for deserialization.
  *
  * <p>
  *
@@ -30,14 +30,14 @@ public class NodeEncoder {
     ///////////////////////////////////////////////////////////////////////////
 
     private int nextToken = 1;
-    private DSWriter out;
+    private DSIWriter out;
     private HashMap<Class, String> classMap = new HashMap<Class, String>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    NodeEncoder(DSWriter out) {
+    NodeEncoder(DSIWriter out) {
         this.out = out;
     }
 
@@ -52,7 +52,7 @@ public class NodeEncoder {
      * @param node What to encode.
      * @return The writer parameter, flushed, but not closed.
      */
-    public static DSWriter encode(DSWriter out, DSNode node) {
+    public static DSIWriter encode(DSIWriter out, DSNode node) {
         NodeEncoder encoder = new NodeEncoder(out);
         encoder.write(node);
         out.flush();
@@ -110,8 +110,8 @@ public class NodeEncoder {
                 info = arg.getInfo(i);
                 obj = info.getObject();
                 if (info.isTransient()) {
-                	//skip it
-                } else if (info.isDefault()) {  //includes actions
+                    //skip it
+                } else if (info.equalsDefault()) {  //includes actions
                     writeDefault(info);
                 } else if (obj == null) {
                     out.value((DSElement) null);
@@ -120,7 +120,7 @@ public class NodeEncoder {
                 } else if (obj instanceof DSIValue) {
                     writeValue(info);
                 } else {
-                    throw new IllegalArgumentException("Unknown type: " + obj.getClass().getName());
+                    writeObject(info);
                 }
             } catch (IndexOutOfBoundsException x) {
                 //TODO log a fine - modified during save which is okay.
@@ -135,10 +135,10 @@ public class NodeEncoder {
             ((AbstractJsonWriter) out).writeNewLineIndent();
         }
         out.key("n").value(arg.getName());
-        if (!arg.isDefaultState()) {
+        if (!arg.equalsDefaultState()) {
             out.key("i").value(arg.encodeState());
         }
-        if (!arg.isDefaultType()) {
+        if (!arg.equalsDefaultType()) {
             DSNode node = (DSNode) arg.getObject();
             if (node != null) {
                 out.key("t").value(getToken(node));
@@ -148,27 +148,45 @@ public class NodeEncoder {
         out.endMap();
     }
 
+    void writeObject(DSInfo arg) {
+        out.beginMap();
+        if (out instanceof AbstractJsonWriter) {
+            ((AbstractJsonWriter) out).writeNewLineIndent();
+        }
+        out.key("n").value(arg.getName());
+        if (!arg.equalsDefaultState()) {
+            out.key("i").value(arg.encodeState());
+        }
+        if (!arg.equalsDefaultType()) {
+            DSIObject obj = arg.getObject();
+            if (obj != null) {
+                out.key("t").value(getToken(obj));
+            }
+        }
+        out.endMap();
+    }
+
     void writeValue(DSInfo arg) {
         out.beginMap();
         if (out instanceof AbstractJsonWriter) {
             ((AbstractJsonWriter) out).writeNewLineIndent();
         }
         out.key("n").value(arg.getName());
-        if (!arg.isDefaultState()) {
+        if (!arg.equalsDefaultState()) {
             out.key("i").value(arg.encodeState());
         }
-        if (!arg.isDefaultType()) {
+        if (!arg.equalsDefaultType()) {
             DSIValue v = (DSIValue) arg.getObject();
             if (v != null) {
                 out.key("t").value(getToken(v));
-                out.key("v").value(v.encode());
+                out.key("v").value(v.store());
             } else {
                 out.key("v").value((String) null);
             }
-        } else if (!arg.isDefaultValue()) {
+        } else if (!arg.equalsDefaultValue()) {
             DSIValue v = (DSIValue) arg.getObject();
             if (v != null) {
-                out.key("v").value(v.encode());
+                out.key("v").value(v.store());
             } else {
                 out.key("v").value((String) null);
             }
