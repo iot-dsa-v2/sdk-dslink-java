@@ -157,7 +157,7 @@ public class Main extends DSRootNode implements Runnable {
     private void onTest1(DSNode folder) {
         String name = folder.getName();
         DSNode tmp;
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 100; i++) {
             tmp = new TestNode();
             folder.add(name + i, tmp);
         }

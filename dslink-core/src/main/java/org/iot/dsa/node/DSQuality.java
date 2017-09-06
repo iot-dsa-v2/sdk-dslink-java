@@ -255,7 +255,7 @@ public class DSQuality extends DSValue implements DSIQuality {
     }
 
     @Override
-    public DSElement store() {
+    public DSLong store() {
         return DSLong.valueOf(bits);
     }
 
@@ -265,7 +265,7 @@ public class DSQuality extends DSValue implements DSIQuality {
     }
 
     @Override
-    public DSElement toElement() {
+    public DSString toElement() {
         return DSString.valueOf(toString());
     }
 

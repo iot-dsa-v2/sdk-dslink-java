@@ -27,6 +27,8 @@ import org.iot.dsa.util.DSUtil;
  *
  * <ul>
  *
+ * <li>Constructors
+ *
  * <li>Defaults
  *
  * <li>Node Lifecycle and Callbacks
@@ -40,6 +42,13 @@ import org.iot.dsa.util.DSUtil;
  * <li>DSInfo
  *
  * </ul>
+ *
+ * <p>
+ *
+ * <h3>Constructors</h3>
+ *
+ * DSNode sub-classes must support the public no-arg constructor.  This is how they will be
+ * instantiated when deserializing the configuration database.
  *
  * <p>
  *

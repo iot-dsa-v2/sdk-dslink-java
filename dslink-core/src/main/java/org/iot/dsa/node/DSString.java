@@ -1,5 +1,9 @@
 package org.iot.dsa.node;
 
+import java.nio.charset.Charset;
+import java.util.logging.Level;
+import org.iot.dsa.logging.DSLogging;
+
 /**
  * String wrapper.
  *
@@ -14,7 +18,13 @@ public class DSString extends DSElement {
      * The string of length 0.
      */
     public static final DSString EMPTY = new DSString("");
+
     public static final DSString NULL = new DSString(null);
+
+    /**
+     * The standard UTF8 charset, can be used with string.getBytes(Charset).
+     */
+    public static final Charset UTF8 = utf8();
 
     // Fields
     // ------
@@ -50,6 +60,7 @@ public class DSString extends DSElement {
     public DSElementType getElementType() {
         return DSElementType.STRING;
     }
+
 
     @Override
     public DSValueType getValueType() {
@@ -90,6 +101,15 @@ public class DSString extends DSElement {
             return "null";
         }
         return value;
+    }
+
+    private static Charset utf8() {
+        try {
+            return Charset.forName("UTF-8");
+        } catch (Exception x) {
+            DSLogging.getDefaultLogger().log(Level.SEVERE, "UTF-8 unknown", x);
+        }
+        return Charset.defaultCharset();
     }
 
     @Override
