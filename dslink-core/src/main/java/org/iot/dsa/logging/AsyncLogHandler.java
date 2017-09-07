@@ -207,23 +207,23 @@ public abstract class AsyncLogHandler extends Handler {
             out.println(formatter.format(record));
             return;
         }
-        // log name
-        builder.append(record.getLoggerName());
-        builder.append(" [");
         // timestamp
         calendar.setTimeInMillis(record.getMillis());
         DSTime.encodeForLogs(calendar, builder);
+        // log name
+        builder.append(" [");
+        builder.append(record.getLoggerName());
         builder.append("] ");
         // severity
         builder.append(record.getLevel().getLocalizedName());
         // class
         if (record.getSourceClassName() != null) {
-            builder.append(' ');
+            builder.append(" - ");
             builder.append(record.getSourceClassName());
         }
         // method
         if (record.getSourceMethodName() != null) {
-            builder.append(' ');
+            builder.append(" - ");
             builder.append(record.getSourceMethodName());
         }
         // message
@@ -233,7 +233,7 @@ public abstract class AsyncLogHandler extends Handler {
             if (params != null) {
                 msg = String.format(msg, params);
             }
-            builder.append(' ');
+            builder.append(" - ");
             builder.append(msg);
         }
         out.println(builder.toString());

@@ -1,23 +1,26 @@
 package org.iot.dsa.node;
 
 /**
- * How data values get mapped into the node tree.
+ * How data values are represented in the node tree.
+ *
+ * <p>
+ *
+ * Beyond the interface methods, custom implementations should:
  *
  * <p>
  *
  * <ul>
  *
- * <li>Try to make immutable instances when possible.
+ * <li>Have a NULL instance if possible.
  *
  * <li>Try to maintain singleton instances when possible.
  *
- * <li>All value types should have an instance representing null.  With this, the link can report
- * the type of a value node to clients even when they are null.  The null instance should be
- * registered with DSRegistry and that instance will be used to decode a serialized node database.
+ * <li>Use static valueOf methods to ensure singleton values such as NULL are used.
  *
- * <li>Use a static valueOf method(s) rather than a constructor(s), it helps manage singletons.
+ * <li>Register an instance for decoding with DSRegistry.registerDecoder(YourValue.class, instance)
+ * in a static initializer. If you have a NULL instance, use that.
  *
- * <li>If mutable, you should implement DSIPublisher so nodes can know of changes.
+ * <li>If mutable (avoid if at all possible), implement DSIPublisher so nodes know of changes.
  *
  * </ul>
  *
@@ -37,12 +40,14 @@ public interface DSIValue extends DSIObject {
     public boolean isNull();
 
     /**
-     * Deserialize a value from the configuration database.
+     * Deserialize a value from the configuration database, these will be values returned
+     * from the store() method.
      */
     public DSIValue restore(DSElement element);
 
     /**
-     * Serialize the value for the configuration database.
+     * Serialize the value for the configuration database.  Can be a different element
+     * type than toElement().
      */
     public DSElement store();
 

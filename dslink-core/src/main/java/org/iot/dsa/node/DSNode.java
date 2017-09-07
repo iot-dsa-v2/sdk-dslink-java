@@ -5,9 +5,8 @@ import static org.iot.dsa.node.DSIPublisher.Event.CHILD_CHANGED;
 import static org.iot.dsa.node.DSIPublisher.Event.CHILD_REMOVED;
 import static org.iot.dsa.node.DSIPublisher.Event.PUBLISHER_CHANGED;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
@@ -275,6 +274,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     //Prevents infinite loops when initializing default instances.
     static final DSNode defaultDefaultInstance = new DSNode();
+    private static final int MAP_THRESHOLD = 10;
 
     private static int STATE_STOPPED = 0;
     private static int STATE_STARTED = 1;
@@ -284,12 +284,15 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    ArrayList<DSInfo> children;
-    private ConcurrentHashMap<String, DSInfo> childMap;
+    //private ArrayList<DSInfo> children;
+    private HashMap<String, DSInfo> childMap;
     private DSNode defaultInstance;
+    private DSInfo firstChild;
     private DSInfo infoInParent;
+    private DSInfo lastChild;
     private String path;
     private DSISubscriber subscriber;
+    private int size = 0;
     private int state = 1; //See STATE_*
 
     ///////////////////////////////////////////////////////////////////////////
@@ -304,11 +307,27 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Adds the info to internal collections, sets parent related fields on child nodes.
      */
     void add(final DSInfo info) {
-        synchronized (children) {
-            children.add(info);
+        synchronized (this) {
+            if (lastChild != null) {
+                lastChild.next = info;
+                info.prev = lastChild;
+                lastChild = info;
+            } else {
+                firstChild = info;
+                lastChild = info;
+            }
+            if (++size >= MAP_THRESHOLD) {
+                if (childMap == null) {
+                    childMap = new HashMap<String, DSInfo>();
+                    for (DSInfo tmp = firstChild; tmp != null; tmp = tmp.next()) {
+                        childMap.put(tmp.getName(), tmp);
+                    }
+                } else {
+                    childMap.put(info.getName(), info);
+                }
+            }
         }
         info.setParent(this);
-        childMap.put(info.getName(), info);
         DSIObject val = info.getObject();
         if (val instanceof DSNode) {
             DSNode node = (DSNode) val;
@@ -349,15 +368,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         } else if (object instanceof DSGroup) {
             ((DSGroup) object).setParent(this);
         }
-        DSInfo info;
-        if (childMap == null) {
-            childMap = new ConcurrentHashMap<String, DSInfo>();
-            children = new ArrayList<DSInfo>();
-        } else {
-            info = childMap.get(name);
-            if (info != null) {
-                throw new IllegalArgumentException("Name already in use: " + name);
-            }
+        DSInfo info = getInfo(name);
+        info = getInfo(name);
+        if (info != null) {
+            throw new IllegalArgumentException("Name already in use: " + name);
         }
         info = new DSInfo(name, object);
         add(info);
@@ -401,10 +415,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public int childCount() {
         dsInit();
-        if (childMap == null) {
-            return 0;
-        }
-        return childMap.size();
+        return size;
     }
 
     /**
@@ -413,10 +424,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @return this
      */
     public DSNode clear() {
-        for (int i = childCount(); --i >= 0; ) {
-            if (!getInfo(i).isPermanent()) {
-                remove(i);
+        DSInfo info = firstChild;
+        while (info != null) {
+            if (!info.isPermanent()) {
+                remove(info);
             }
+            info = info.next();
         }
         return this;
     }
@@ -425,10 +438,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Whether or not this node has a child with the given name.
      */
     public boolean contains(String key) {
-        if (childMap == null) {
-            return false;
-        }
-        return childMap.get(key) != null;
+        return getInfo(key) != null;
     }
 
     /**
@@ -444,16 +454,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
-        if (children != null) {
-            ArrayList<DSInfo> tmp = new ArrayList<DSInfo>();
-            synchronized (children) {
-                tmp.addAll(children);
-            }
-            ret.children = new ArrayList<DSInfo>();
-            ret.childMap = new ConcurrentHashMap<String, DSInfo>();
-            for (int i = 0, len = tmp.size(); i < len; i++) {
-                ret.add(tmp.get(i).copy());
-            }
+        DSInfo info = firstChild;
+        while (info != null) {
+            ret.add(info.copy());
+            info = info.next();
         }
         return ret;
     }
@@ -508,15 +512,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                     DSException.throwRuntime(x);
                 }
             }
-            int len = defaultInstance.childCount();
-            if (len > 0) {
-                childMap = new ConcurrentHashMap<String, DSInfo>();
-                children = new ArrayList<DSInfo>(len);
-                DSInfo info;
-                for (int i = 0; i < len; i++) {
-                    info = new DSInfoProxy(defaultInstance.getInfo(i));
-                    add(info);
-                }
+            DSInfo info = defaultInstance.firstChild;
+            while (info != null) {
+                add(new DSInfoProxy(info));
+                info = info.next();
             }
         }
     }
@@ -528,25 +527,18 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             if (him.childCount() != childCount()) {
                 return false;
             }
-            if (children != null) {
-                DSInfo his;
-                DSInfo mine;
-                ArrayList<DSInfo> tmp = new ArrayList<DSInfo>();
-                synchronized (children) {
-                    tmp.addAll(children);
+            DSInfo mine = firstChild;
+            DSInfo his = him.firstChild;
+            while (true) {
+                if ((mine == null) && (his == null)) {
+                    return true;
                 }
-                for (int i = tmp.size(); --i >= 0; ) {
-                    mine = tmp.get(i);
-                    his = him.getInfo(mine.getName());
-                    if (his == null) {
-                        return false;
-                    }
-                    if (!DSUtil.equal(mine.getObject(), his.getObject())) {
-                        return false;
-                    }
+                if (!DSUtil.equal(mine, his)) {
+                    break;
                 }
+                mine = mine.next();
+                his = his.next();
             }
-            return true;
         }
         return false;
     }
@@ -555,10 +547,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Returns the child value at the given index.
      *
      * @throws IndexOutOfBoundsException if invalid index.
-     */
     public DSIObject get(int index) {
-        return getInfo(index).getObject();
+    return getInfo(index).getObject();
     }
+     */
 
     /**
      * Returns the child value with the given name, or null.
@@ -579,13 +571,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param info Must be an info of this node.
      * @return The desired child.
      * @throws IllegalArgumentException If info is not a child of this node.
-     */
     public DSIObject get(DSInfo info) {
         if (info.getParent() != this) {
             throw new IllegalArgumentException("Not a child of this node: " + getPath());
         }
         return info.getObject();
     }
+     */
 
     /**
      * DSInfo for this node in its parent, or null if un-parented.
@@ -596,16 +588,16 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Returns the info for the child at the given index.
+     public DSInfo getInfo(int index) {
+     dsInit();
+     synchronized (children) {
+     if (children == null) {
+     throw new IndexOutOfBoundsException(Integer.toString(index));
+     }
+     return children.get(index);
+     }
+     }
      */
-    public DSInfo getInfo(int index) {
-        dsInit();
-        synchronized (children) {
-            if (children == null) {
-                throw new IndexOutOfBoundsException(Integer.toString(index));
-            }
-            return children.get(index);
-        }
-    }
 
     /**
      * Returns the info for the child with the given name, or null.
@@ -614,10 +606,58 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public DSInfo getInfo(String name) {
         dsInit();
-        if (childMap == null) {
+        if (firstChild == null) {
             return null;
         }
-        return childMap.get(name);
+        synchronized (this) {
+            if (childMap != null) {
+                return childMap.get(name);
+            }
+        }
+        DSInfo info = firstChild;
+        while (info != null) {
+            if (info.getName().equals(name)) {
+                return info;
+            }
+            info = info.next();
+        }
+        return null;
+    }
+
+    /**
+     * The first child, or null.
+     */
+    public DSIObject getFirst() {
+        DSInfo info = firstChild;
+        if (info == null) {
+            return null;
+        }
+        return info.getObject();
+    }
+
+    /**
+     * The first child info, or null.
+     */
+    public DSInfo getFirstInfo() {
+        return firstChild;
+    }
+
+    /**
+     * The last child, or null.
+     */
+    public DSIObject getLast() {
+        DSInfo info = lastChild;
+        if (info == null) {
+            return null;
+        }
+        return info.getObject();
+    }
+
+    /**
+     * The last child info, or null.
+     */
+    public DSInfo getLastInfo() {
+        return lastChild;
     }
 
     /**
@@ -638,10 +678,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * A convenience for (DSNode) get(idx).
+     public DSNode getNode(int idx) {
+     return (DSNode) get(idx);
+     }
      */
-    public DSNode getNode(int idx) {
-        return (DSNode) get(idx);
-    }
 
     /**
      * A convenience for (DSNode) get(name).
@@ -672,9 +712,11 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     @Override
     public int hashCode() {
-        int hc = 0;
-        if (childMap != null) {
-            hc = childMap.hashCode();
+        int hc = 1;
+        DSInfo info = firstChild;
+        while (info != null) {
+            hc = 31 * hc + (info.hashCode());
+            info = info.next();
         }
         return hc;
     }
@@ -702,21 +744,28 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Index of the child with the given name, or -1.
+     public int indexOf(String key) {
+     DSInfo info = null;
+     synchronized (this) {
+     if (childMap != null) {
+     info = childMap.get(key);
+     if (info == null) {
+     return -1;
+     }
+     }
+     }
+     info = firstChild;
+     int i = 0;
+     while (info != null) {
+     if (info.getName().equals(key)) {
+     return i;
+     }
+     i++;
+     info = info.next();
+     }
+     return -1;
+     }
      */
-    public int indexOf(String key) {
-        DSInfo info = getInfo(key);
-        if (info == null) {
-            return -1;
-        }
-        synchronized (children) {
-            for (int i = children.size(); --i >= 0; ) {
-                if (children.get(i) == info) {
-                    return i;
-                }
-            }
-        }
-        throw new IllegalStateException("Key is known, but the index is not, very weird.");
-    }
 
     /**
      * True if this is the default instance for the type.
@@ -769,7 +818,21 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Returns an info iterator that DOES NOT implement the optional remove method.
+     * Returns an iterator of child DSNodes.
+     */
+    public Iterator<DSInfo> iterateNodes() {
+        return new NodeIterator();
+    }
+
+    /**
+     * Returns an iterator of child DSIValues.
+     */
+    public Iterator<DSInfo> iterateValues() {
+        return new ValueIterator();
+    }
+
+    /**
+     * Returns an iterator of all info children.
      */
     public Iterator<DSInfo> iterator() {
         return new ChildIterator();
@@ -929,21 +992,40 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Removes the child a the given index.
+     * Removes the child.
      *
-     * @return The removed info.
-     * @throws IllegalStateException If the info says its not removable.
+     * @return This
+     * @throws IllegalStateException If the info is permanent or not a child of this node.
      */
-
-    public DSInfo remove(int index) {
-        final DSInfo info = getInfo(index);
+    public DSNode remove(DSInfo info) {
         if (info.isPermanent()) {
             throw new IllegalStateException("Can not be removed");
         }
-        synchronized (children) {
-            children.remove(index);
+        if (info.getParent() != this) {
+            throw new IllegalStateException("Not a child of this container");
         }
-        childMap.remove(info.getName());
+        synchronized (this) {
+            if (childMap != null) {
+                childMap.remove(info.getName());
+                if (childMap.size() < MAP_THRESHOLD) {
+                    childMap = null;
+                }
+            }
+            if (size == 1) {
+                firstChild = null;
+                lastChild = null;
+            } else if (info == firstChild) {
+                firstChild = firstChild.next;
+                firstChild.prev = null;
+            } else if (info == lastChild) {
+                lastChild = lastChild.prev;
+                lastChild.next = null;
+            } else {
+                info.prev.next = info.next;
+                info.next.prev = info.prev;
+            }
+            size--;
+        }
         if (info.getObject() instanceof DSNode) {
             DSNode node = (DSNode) info.getObject();
             node.infoInParent = null;
@@ -964,8 +1046,51 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 }
             }
         }
-        return info;
+        return this;
     }
+
+    /**
+     * Removes the child a the given index.
+     *
+     * @return The removed info.
+     * @throws IllegalStateException If the info says its not removable.
+    public DSInfo remove(int index) {
+    final DSInfo info = getInfo(index);
+    if (info.isPermanent()) {
+    throw new IllegalStateException("Can not be removed");
+    }
+    synchronized (children) {
+    children.remove(index);
+    if (childMap != null) {
+    childMap.remove(info.getName());
+    if (childCount() < 20) {
+    childMap = null;
+    }
+    }
+    }
+    if (info.getObject() instanceof DSNode) {
+    DSNode node = (DSNode) info.getObject();
+    node.infoInParent = null;
+    node.stop();
+    }
+    info.unsubscribe();
+    if (isRunning()) {
+    try {
+    onChildRemoved(info);
+    } catch (Exception x) {
+    severe(getPath(), x);
+    }
+    if (subscriber != null) {
+    try {
+    subscriber.onEvent(this, info, CHILD_REMOVED);
+    } catch (Exception x) {
+    severe(getPath(), x);
+    }
+    }
+    }
+    return info;
+    }
+     */
 
     /**
      * Remove the named child if it is contained.
@@ -974,11 +1099,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @throws IllegalStateException If the info says its not removable.
      */
     public DSInfo remove(String name) {
-        int idx = indexOf(name);
-        if (idx < 0) {
-            return null;
+        DSInfo info = getInfo(name);
+        if (info == null) {
+            return info;
         }
-        return remove(idx);
+        remove(info);
+        return info;
     }
 
     /**
@@ -1044,15 +1170,15 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (!isStarted()) {
             throw new IllegalStateException("Not starting: " + getPath());
         }
+        DSInfo info = firstChild;
+        while (info != null) {
+            if (info.isNode()) {
+                info.getNode().stable();
+            }
+            info = info.next();
+        }
         state = DSUtil.setBit(state, STATE_STABLE, true);
         state = DSUtil.setBit(state, STATE_STARTED, false);
-        DSIObject obj;
-        for (int i = 0, len = childCount(); i < len; i++) {
-            obj = get(i);
-            if (obj instanceof DSNode) {
-                ((DSNode) obj).stable();
-            }
-        }
         try {
             onStable();
         } catch (Exception x) {
@@ -1068,18 +1194,16 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             throw new IllegalStateException("Already running: " + getPath());
         }
         path = null;
-        state = DSUtil.setBit(state, STATE_STOPPED, false);
-        state = DSUtil.setBit(state, STATE_STARTED, true);
-        DSIObject obj;
-        DSInfo info;
-        for (int i = 0, len = childCount(); i < len; i++) {
-            info = getInfo(i);
-            obj = info.getObject();
-            if (obj instanceof DSNode) {
-                ((DSNode) obj).start();
+        DSInfo info = firstChild;
+        while (info != null) {
+            if (info.isNode()) {
+                info.getNode().start();
             }
             info.subscribe();
+            info = info.next();
         }
+        state = DSUtil.setBit(state, STATE_STOPPED, false);
+        state = DSUtil.setBit(state, STATE_STARTED, true);
         try {
             onStarted();
         } catch (Exception x) {
@@ -1096,18 +1220,16 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             throw new IllegalStateException("Not stable: " + getPath());
         }
         path = null;
+        DSInfo info = firstChild;
+        while (info != null) {
+            info.unsubscribe();
+            if (info.isNode()) {
+                info.getNode().stop();
+            }
+            info = info.next();
+        }
         state = DSUtil.setBit(state, STATE_STABLE, false);
         state = DSUtil.setBit(state, STATE_STOPPED, true);
-        DSIObject obj;
-        DSInfo info;
-        for (int i = 0, len = childCount(); i < len; i++) {
-            info = getInfo(i);
-            info.unsubscribe();
-            obj = info.getObject();
-            if (obj instanceof DSNode) {
-                ((DSNode) obj).stop();
-            }
-        }
         try {
             onStopped();
         } catch (Exception x) {
@@ -1147,15 +1269,15 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Does not support the remove operation.
+     * Iterates all children.
      */
     private class ChildIterator implements Iterator<DSInfo> {
 
+        private DSInfo last;
         private DSInfo next;
-        private int nextIndex = -1;
 
         ChildIterator() {
-            next();
+            next = firstChild;
         }
 
         public boolean hasNext() {
@@ -1163,20 +1285,84 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
 
         public DSInfo next() {
-            DSInfo ret = next;
-            next = null;
-            try {
-                if (++nextIndex < childCount()) {
-                    next = getInfo(nextIndex);
-                }
-            } catch (Exception ignorable) {
-                fine(getPath(), ignorable);
-            }
-            return ret;
+            last = next;
+            next = next.next;
+            return last;
         }
 
         public void remove() {
-            throw new UnsupportedOperationException("Remove not supported");
+            if (last == null) {
+                throw new NullPointerException();
+            }
+            DSNode.this.remove(last);
+        }
+    }
+
+    /**
+     * Iterates only node children. Does not support the remove operation.
+     */
+    private class NodeIterator implements Iterator<DSInfo> {
+
+        private DSInfo last;
+        private DSInfo next;
+
+        NodeIterator() {
+            if (firstChild.isNode()) {
+                next = firstChild;
+            } else {
+                next = firstChild.nextNode();
+            }
+        }
+
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        public DSInfo next() {
+            last = next;
+            next = next.nextNode();
+            return last;
+        }
+
+        public void remove() {
+            if (last == null) {
+                throw new NullPointerException();
+            }
+            DSNode.this.remove(last);
+        }
+    }
+
+    /**
+     * Iterates only value children.
+     */
+    private class ValueIterator implements Iterator<DSInfo> {
+
+        private DSInfo last;
+        private DSInfo next;
+
+        ValueIterator() {
+            if (firstChild.isValue()) {
+                next = firstChild;
+            } else {
+                next = firstChild.nextValue();
+            }
+        }
+
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        public DSInfo next() {
+            last = next;
+            next = next.nextValue();
+            return last;
+        }
+
+        public void remove() {
+            if (last == null) {
+                throw new NullPointerException();
+            }
+            DSNode.this.remove(last);
         }
     }
 

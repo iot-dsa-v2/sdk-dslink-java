@@ -24,6 +24,12 @@ public class DSAction implements ActionSpec, DSIObject {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Use this when you have no-arg, no-return actions.  This instance cannot
+     * be modified.
+     */
+    public static final DSAction DEFAULT = new DSAction();
+
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
@@ -56,6 +62,9 @@ public class DSAction implements ActionSpec, DSIObject {
      * @return Metadata for further configuration.
      */
     public DSMetadata addDefaultParameter(String name, DSIValue value, String description) {
+        if (this == DEFAULT) {
+            throw new IllegalStateException("Cannot modify the default action.");
+        }
         return addParameter(name, value, description).setDefault(value);
     }
 
@@ -67,6 +76,9 @@ public class DSAction implements ActionSpec, DSIObject {
      * @see DSMetadata
      */
     public DSAction addParameter(DSMap metadata) {
+        if (this == DEFAULT) {
+            throw new IllegalStateException("Cannot modify the default action.");
+        }
         if (parameters == null) {
             parameters = new ArrayList<DSMap>();
         }
@@ -85,6 +97,9 @@ public class DSAction implements ActionSpec, DSIObject {
      * @return Metadata for further configuration.
      */
     public DSMetadata addParameter(String name, DSIValue value, String description) {
+        if (this == DEFAULT) {
+            throw new IllegalStateException("Cannot modify the default action.");
+        }
         DSMetadata ret = new DSMetadata();
         if (value instanceof DSIMetadata) {
             ((DSIMetadata) value).getMetadata(ret.getMap());
@@ -106,6 +121,9 @@ public class DSAction implements ActionSpec, DSIObject {
      * @return Metadata for further configuration.
      */
     public DSMetadata addParameter(String name, DSValueType type, String description) {
+        if (this == DEFAULT) {
+            throw new IllegalStateException("Cannot modify the default action.");
+        }
         DSMetadata ret = new DSMetadata();
         ret.setName(name)
            .setType(type)
@@ -123,6 +141,9 @@ public class DSAction implements ActionSpec, DSIObject {
      * @see DSMetadata
      */
     public DSAction addValueResult(DSMap metadata) {
+        if (this == DEFAULT) {
+            throw new IllegalStateException("Cannot modify the default action.");
+        }
         if (valueResults == null) {
             valueResults = new ArrayList<DSMap>();
         }
@@ -140,6 +161,9 @@ public class DSAction implements ActionSpec, DSIObject {
      * @return Metadata for further configuration.
      */
     public DSMetadata addValueResult(String name, DSIValue value) {
+        if (this == DEFAULT) {
+            throw new IllegalStateException("Cannot modify the default action.");
+        }
         DSMetadata ret = new DSMetadata();
         if (value instanceof DSIMetadata) {
             ((DSIMetadata) value).getMetadata(ret.getMap());
@@ -159,6 +183,9 @@ public class DSAction implements ActionSpec, DSIObject {
      * @return Metadata for further configuration.
      */
     public DSMetadata addValueResult(String name, DSValueType type) {
+        if (this == DEFAULT) {
+            throw new IllegalStateException("Cannot modify the default action.");
+        }
         DSMetadata ret = new DSMetadata();
         ret.setName(name)
            .setType(type);
@@ -218,6 +245,9 @@ public class DSAction implements ActionSpec, DSIObject {
      * Returns this, it is not necessary to set the permission to read.
      */
     public DSAction setPermission(DSPermission permission) {
+        if (this == DEFAULT) {
+            throw new IllegalStateException("Cannot modify the default action.");
+        }
         this.permission = permission;
         return this;
     }
@@ -226,6 +256,9 @@ public class DSAction implements ActionSpec, DSIObject {
      * Returns this, it is not necessary to set the result to void.
      */
     public DSAction setResultType(ResultType result) {
+        if (this == DEFAULT) {
+            throw new IllegalStateException("Cannot modify the default action.");
+        }
         this.result = result;
         return this;
     }

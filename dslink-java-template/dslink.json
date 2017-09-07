@@ -1,7 +1,7 @@
 {
   "name": "dslink-java-template",
-  "version": "0.0.1-alpha1",
-  "description": "Template Link",
+  "version": "0.0.0-preAlpha",
+  "desc": "Template Link",
   "license": "ISC",
   "author": {
     "name": "Aaron Hansen",
@@ -17,92 +17,66 @@
   },
   "configs": {
     "section1": {
-      "description": "*************** REQUIRED CONFIGS IN ALPHABETICAL ORDER ***************",
-      "type": "string",
+      "desc": "*************** REQUIRED CONFIGS IN ALPHABETICAL ORDER ***************",
+      "value": null
+    },
+    "rootType": {
+      "desc1": "Type of the root node of the link. Must be specified here. Even though this can",
+      "desc2": "be set in code, this will be needed when combing multiple links into the same.",
+      "desc3": "process.",
+      "value": "org.iot.dsa.dslink.template.Main"
+    },
+    "section2": {
+      "desc": "*************** OPTIONAL CONFIGS IN ALPHABETICAL ORDER ***************",
       "value": null
     },
     "broker": {
-      "description": "URL to broker. Can be specified on the command line.",
-      "type": "url",
-      "value": null,
-      "required": true
-    },
-    "rootType": {
-      "description": "Type of the root node of the link. Must be specified here.",
-      "type": "string",
-      "value": "org.iot.dsa.dslink.template.Main",
-      "required": true
-    },
-    "section2": {
-      "description": "*************** OPTIONAL CONFIGS IN ALPHABETICAL ORDER ***************",
-      "type": "string",
+      "desc": "URL to broker. Can be specified on the command line.",
       "value": null
     },
     "connectionType": {
-      "description": "Can be specified to override the default connection type.",
-      "type": "string",
-      "value": null,
-      "required": false
+      "desc": "Can be specified to override the default connection type.",
+      "value": null
     },
     "isRequester": {
-      "description": "Whether or not the link is a requester.",
-      "type": "boolean",
-      "value": false,
-      "required": false
+      "desc": "Whether or not the link is a requester.",
+      "value": false
     },
     "key": {
-      "description": "Path to public/private key pair.",
-      "type": "path",
-      "value": ".key",
-      "required": false
+      "desc": "Path to public/private key pair.",
+      "value": ".key"
     },
     "log": {
-      "description": "finest, finer, fine, config, info, warning or severe",
-      "type": "string",
-      "value": "finest",
-      "required": false
+      "desc": "all, finest, finer, fine, config, info, warn, severe, off",
+      "value": "all"
     },
     "logFile": {
-      "description": "Path to the log file.",
-      "type": "path",
-      "value": null,
-      "required": false
+      "desc": "Path to the log file.",
+      "value": null
     },
     "nodes": {
-      "description": "Path to configuration database.",
-      "type": "path",
-      "value": "nodes.json",
-      "required": false
+      "desc": "Path to configuration database.",
+      "value": "nodes.json"
     },
     "readTimeout": {
-      "description": "Millis timeout for reading from the connection.",
-      "type": "number",
-      "value": 60000,
-      "required": false
+      "desc": "Millis timeout for reading from the connection.",
+      "value": 60000
     },
     "saveInterval": {
-      "description": "How often to backup the node database in minutes.",
-      "type": "number",
-      "value": 60,
-      "required": false
+      "desc": "How often to backup the node database in minutes.",
+      "value": 60
     },
     "stableDelay": {
-      "description": "Millis after the node tree is started before calling stable.",
-      "type": "number",
-      "value": 5000,
-      "required": false
+      "desc": "Millis after the node tree is started before calling stable.",
+      "value": 5000
     },
     "token": {
-      "description": "Authentication token for the broker.",
-      "type": "string",
-      "value": null,
-      "required": false
+      "desc": "Authentication token for the broker.",
+      "value": null
     },
     "transportFactory": {
-      "description": "Can be specified to override the default standalone transport.",
-      "type": "string",
-      "value": null,
-      "required": false
+      "desc": "Can be specified to override the default standalone transport.",
+      "value": null
     }
   }
 }

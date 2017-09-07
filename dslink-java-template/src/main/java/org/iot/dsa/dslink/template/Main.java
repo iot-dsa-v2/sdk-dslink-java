@@ -82,6 +82,7 @@ public class Main extends DSRootNode implements Runnable {
             put(incrementingInt, DSInt.valueOf(0));
             DSElement arg = invocation.getParameters().get("Arg");
             put("Message", arg);
+            clear();
             return null;
         } else if (actionInfo == this.test) {
             DSRuntime.run(new Runnable() {
@@ -122,54 +123,40 @@ public class Main extends DSRootNode implements Runnable {
         clear();
         long now = System.currentTimeMillis();
         long dur = now - start;
-        info("Clear duration: " + dur);
-        try {
-            Thread.sleep(5000);
-        } catch (Exception x) {
-        }
-        info("Beginning Add");
+        info("********** Clear duration: " + dur);
         start = System.currentTimeMillis();
         DSNode node = new TestNode();
         add("test", node);
-        onTest1(node);
-        onTest2(node);
-        DSIObject obj;
-        for (int i = 0, len = node.childCount(); i < len; i++) {
-            obj = node.get(i);
-            if (obj instanceof DSNode) {
-                onTest2((DSNode) obj);
+        for (int i = 0; i < 100; i++) {
+            DSNode iNode = new TestNode();
+            node.add("test"+i, iNode);
+            for (int j = 0; j < 100; j++) {
+                DSNode jNode = new TestNode();
+                iNode.add("test"+j, jNode);
+                for (int k = 0; k < 100; k++){
+                    jNode.add("test"+k, new TestNode());
+                }
             }
         }
         now = System.currentTimeMillis();
         dur = now - start;
-        info("Add duration: " + dur);
+        info("********** Add duration: " + dur);
         start = System.currentTimeMillis();
         getLink().saveNodes();
         now = System.currentTimeMillis();
         dur = now - start;
-        info("Save duration: " + dur);
-        try {
-            Thread.sleep(5000);
-        } catch (Exception x) {
-        }
+        info("********** Save duration: " + dur);
+        start = System.currentTimeMillis();
+        onTestIterate(node);
+        now = System.currentTimeMillis();
+        dur = now - start;
+        info("********** Iterate duration: " + dur);
     }
 
-    private void onTest1(DSNode folder) {
-        String name = folder.getName();
-        DSNode tmp;
-        for (int i = 0; i < 100; i++) {
-            tmp = new TestNode();
-            folder.add(name + i, tmp);
-        }
-    }
-
-    private void onTest2(DSNode folder) {
-        String name = folder.getName();
-        DSIObject obj;
-        for (int i = 0, len = folder.childCount(); i < len; i++) {
-            obj = folder.get(i);
-            if (obj instanceof DSNode) {
-                onTest1((DSNode) obj);
+    private void onTestIterate(DSNode node) {
+        for (DSInfo info : node) {
+            if (info.isNode()) {
+                onTestIterate(info.getNode());
             }
         }
     }

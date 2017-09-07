@@ -105,19 +105,19 @@ public class NodeEncoder {
             return;
         }
         out.beginList();
-        for (int i = 0; i < len; i++) {
+        info = arg.getFirstInfo();
+        while (info != null) {
             try {
-                info = arg.getInfo(i);
                 obj = info.getObject();
                 if (info.isTransient()) {
-                    //skip it
+                    ;//skip it
                 } else if (info.equalsDefault()) {  //includes actions
                     writeDefault(info);
                 } else if (obj == null) {
                     out.value((DSElement) null);
-                } else if (obj instanceof DSNode) {
+                } else if (info.isNode()) {
                     writeNode(info);
-                } else if (obj instanceof DSIValue) {
+                } else if (info.isValue()) {
                     writeValue(info);
                 } else {
                     writeObject(info);
@@ -125,6 +125,7 @@ public class NodeEncoder {
             } catch (IndexOutOfBoundsException x) {
                 //TODO log a fine - modified during save which is okay.
             }
+            info = info.next();
         }
         out.endList();
     }
