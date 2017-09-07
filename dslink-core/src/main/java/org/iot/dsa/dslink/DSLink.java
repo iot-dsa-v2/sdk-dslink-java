@@ -84,10 +84,12 @@ public class DSLink extends DSNode {
         File nodes = config.getNodesFile();
         if (nodes.exists()) {
             info(info() ? "Loading node database..." : null);
+            long time = System.currentTimeMillis();
             JsonReader reader = new JsonReader(nodes);
             root = NodeDecoder.decode(reader);
             reader.close();
-            info(info() ? "Node database loaded" : null);
+            time = System.currentTimeMillis() - time;
+            info(info() ? ("Node database loaded: " + time + "ms"): null);
         } else {
             info(info() ? "Creating new database..." : null);
             String type = config.getConfig(DSLinkConfig.CFG_ROOT_TYPE, null);

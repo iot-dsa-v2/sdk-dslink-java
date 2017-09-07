@@ -35,12 +35,12 @@ public class NodeTest {
         Assert.assertTrue(mine.get("first") != null);
         Assert.assertTrue(mine.get("second") != null);
         Assert.assertTrue(mine.get("first") != mine.get("second"));
-        Assert.assertTrue(mine.get("first") == mine.get(0));
-        Assert.assertTrue(mine.get("second") == mine.get(1));
+        Assert.assertTrue(mine.get("first") == mine.getFirst());
+        Assert.assertTrue(mine.get("second") == mine.getLast());
         Assert.assertTrue(mine.get("first") == DSInt.valueOf(1));
         mine.put("first", DSInt.valueOf(2));
         Assert.assertTrue(mine.get("first") == DSInt.valueOf(2));
-        mine.remove(0);
+        mine.remove("first");
         Assert.assertTrue(mine.get("first") == null);
         Assert.assertTrue(mine.childCount() == 1);
         try {

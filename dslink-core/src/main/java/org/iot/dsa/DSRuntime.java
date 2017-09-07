@@ -33,7 +33,7 @@ public class DSRuntime {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Returns the nextRun time execution is needed.
+     * Returns the next time execution is needed.
      */
     private static long executeTimers() {
         Timer current = null;
@@ -230,7 +230,7 @@ public class DSRuntime {
         }
 
         /**
-         * The nextRun schedule time to run.
+         * The next scheduled time to run.
          *
          * @return 0 or less when finished.
          */
@@ -242,7 +242,7 @@ public class DSRuntime {
          * Executes the task if it is time.
          *
          * @param now The current time, just an efficiency.
-         * @return The nextRun update time, or 0 or less if done.
+         * @return The next update time, or 0 or less if done.
          */
         long run(long now) {
             if (nextRun <= 0) {

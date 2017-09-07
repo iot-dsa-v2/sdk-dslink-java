@@ -59,7 +59,9 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     int flags = 0;
     String name;
+    DSInfo next;
     DSNode parent;
+    DSInfo prev;
     DSIObject value;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -154,7 +156,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     @Override
     public Iterator<ApiObject> getChildren() {
-        return new ApiIterator(((DSNode) value).iterator());
+        return new ApiIterator(getNode().iterator());
     }
 
     /**
@@ -189,6 +191,10 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return name;
     }
 
+    public DSNode getNode() {
+        return (DSNode) value;
+    }
+
     public DSIObject getObject() {
         return value;
     }
@@ -204,10 +210,17 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     @Override
     public boolean hasChildren() {
-        if (value instanceof DSNode) {
-            return ((DSNode) value).childCount() > 0;
+        if (isNode()) {
+            return getNode().childCount() > 0;
         }
         return false;
+    }
+
+    /**
+     * True if there is another info after this one.
+     */
+    public boolean hasNext() {
+        return next != null;
     }
 
     @Override
@@ -239,15 +252,18 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     /**
+     * Whether or not the object is a DSNode.
+     * @return
+     */
+    public boolean isNode() {
+        return value instanceof DSNode;
+    }
+
+    /**
      * Whether or not an object can be removed.
      */
     public boolean isPermanent() {
         return getFlag(PERMANENT);
-    }
-
-    @Override
-    public boolean isValue() {
-        return value instanceof DSIValue;
     }
 
     /**
@@ -269,6 +285,60 @@ public class DSInfo implements ApiObject, DSISubscriber {
      */
     public boolean isTransient() {
         return getFlag(TRANSIENT);
+    }
+
+    @Override
+    public boolean isValue() {
+        return value instanceof DSIValue;
+    }
+
+    /**
+     * The next info in the parent node.
+     */
+    public DSInfo next() {
+        return next;
+    }
+
+    /**
+     * The next DSInfo in the parent that is an action, or null.
+     */
+    public DSInfo nextAction() {
+        DSInfo cur = next;
+        while (cur != null) {
+            if (cur.isAction()) {
+                return cur;
+            }
+            cur = cur.next();
+        }
+        return cur;
+    }
+
+    /**
+     * The next DSInfo in the parent that is a node, or null.
+     */
+    public DSInfo nextNode() {
+        DSInfo cur = next;
+        while (cur != null) {
+            if (cur.isNode()) {
+                return cur;
+            }
+            cur = cur.next();
+        }
+        return cur;
+    }
+
+    /**
+     * The next DSInfo in the parent that is a value, or null.
+     */
+    public DSInfo nextValue() {
+        DSInfo cur = next;
+        while (cur != null) {
+            if (cur.isValue()) {
+                return cur;
+            }
+            cur = cur.next();
+        }
+        return cur;
     }
 
     /**

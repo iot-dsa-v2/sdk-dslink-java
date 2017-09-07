@@ -92,6 +92,11 @@ and do the following:
 1. Configure the default children (nodes, values and actions).
 2. Use various lifecycle callbacks to trigger custom functionality.
 
+### Constructors
+
+DSNode sub-classes must support the public no-arg constructor.  This is how they will be 
+instantiated when deserializing the configuration database.
+
 ### Defaults
 
 Every subtype of DSNode has a private default instance, all other instances of any particular type 
@@ -110,7 +115,7 @@ During node serialization (configuration database, not DSA interop), children th
 declared default are omitted.  This has two benefits:
 
 1. Smaller node database means faster serialization / deserialization.
-2. Default values can be modified in code and all existing database will be automatically upgraded 
+2. Default values can be modified in code and all existing databases will be automatically upgraded 
 the next time the updated class loaded.
 
 ### Node Lifecycle
@@ -120,7 +125,7 @@ logic unless they are running (started or stable).
 
 **Stopped**
 
-A node is instantiated in the stopped state.  If a node tree has been persisted, will be be fully
+A node is instantiated in the stopped state.  If a node tree has been persisted, it will be be fully
 restored in the stopped state.  DSNode.onStopped will not be called, it is only called when nodes
 transition from running to stopped.
 
@@ -131,7 +136,7 @@ When a link is stopped, an attempt to stop the tree will be made, but it cannot 
 
 **Started**
 
-After the node tree is fully deserialized it will be started.  A node's onStart method will be 
+After the node tree is fully deserialized it will be started.  A nodes onStart method will be 
 called after all of its child nodes have been started.  The only guarantee is that all child
 nodes have been started.
 
