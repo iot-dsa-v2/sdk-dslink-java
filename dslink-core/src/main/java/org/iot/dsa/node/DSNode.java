@@ -284,7 +284,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    //private ArrayList<DSInfo> children;
     private HashMap<String, DSInfo> childMap;
     private DSNode defaultInstance;
     private DSInfo firstChild;
@@ -316,16 +315,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 firstChild = info;
                 lastChild = info;
             }
-            if (++size >= MAP_THRESHOLD) {
-                if (childMap == null) {
-                    childMap = new HashMap<String, DSInfo>();
-                    for (DSInfo tmp = firstChild; tmp != null; tmp = tmp.next()) {
-                        childMap.put(tmp.getName(), tmp);
-                    }
-                } else {
-                    childMap.put(info.getName(), info);
-                }
+            if (childMap != null) {
+                childMap.put(info.getName(), info);
             }
+            size++;
         }
         info.setParent(this);
         DSIObject val = info.getObject();
@@ -572,10 +565,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @return The desired child.
      * @throws IllegalArgumentException If info is not a child of this node.
     public DSIObject get(DSInfo info) {
-        if (info.getParent() != this) {
-            throw new IllegalArgumentException("Not a child of this node: " + getPath());
-        }
-        return info.getObject();
+    if (info.getParent() != this) {
+    throw new IllegalArgumentException("Not a child of this node: " + getPath());
+    }
+    return info.getObject();
     }
      */
 
@@ -610,7 +603,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             return null;
         }
         synchronized (this) {
-            if (childMap != null) {
+            if (size >= MAP_THRESHOLD) {
+                if (childMap == null) {
+                    childMap = new HashMap<String, DSInfo>(size);
+                    for (DSInfo info = firstChild; info != null; info = info.next()) {
+                        childMap.put(info.getName(), info);
+                    }
+                }
                 return childMap.get(name);
             }
         }
