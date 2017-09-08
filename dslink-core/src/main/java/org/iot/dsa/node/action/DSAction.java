@@ -70,7 +70,7 @@ public class DSAction implements ActionSpec, DSIObject {
 
     /**
      * Fully describes a parameter for method invocation.  At the very least, the map should have a
-     * unique name and a value type, see the metadata utility class.
+     * unique name and a value type, use the metadata utility class to build the map.
      *
      * @return This.
      * @see DSMetadata
@@ -135,7 +135,7 @@ public class DSAction implements ActionSpec, DSIObject {
     /**
      * Fully describes a return value when the result type is VALUES.  Must be added in the order
      * that the values will be returned. At the very least, the map should have a unique name and a
-     * value type, see the Metadata utility class.
+     * value type, use the Metadata utility class.
      *
      * @return This.
      * @see DSMetadata

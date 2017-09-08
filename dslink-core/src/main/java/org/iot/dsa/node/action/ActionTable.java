@@ -3,6 +3,7 @@ package org.iot.dsa.node.action;
 import java.util.Iterator;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMetadata;
 
 /**
  * Provides access to the columns and rows of a table.
@@ -12,7 +13,10 @@ import org.iot.dsa.node.DSMap;
 public interface ActionTable extends ActionResult {
 
     /**
-     * Column definitions, optional but recommended.
+     * Column definitions, optional but highly recommended. The map should have a
+     * unique name and a value type, use the metadata utility class to build the map.
+     *
+     * @see DSMetadata
      */
     public Iterator<DSMap> getColumns();
 
