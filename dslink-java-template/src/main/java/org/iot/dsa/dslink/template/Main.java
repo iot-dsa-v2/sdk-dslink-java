@@ -211,7 +211,15 @@ public class Main extends DSRootNode implements Runnable {
             action.addParameter("Arg2", DSString.valueOf("ID2"), null);
             action.addParameter("Arg3", DSString.valueOf("ID3"), null);
             put("action1", action);
+            action = new DSAction();
+            action.addParameter("Arg1", DSString.valueOf("ID1"), null);
+            action.addParameter("Arg2", DSString.valueOf("ID2"), null);
+            action.addParameter("Arg3", DSString.valueOf("ID3"), null);
             put("action2", action);
+            action = new DSAction();
+            action.addParameter("Arg1", DSString.valueOf("ID1"), null);
+            action.addParameter("Arg2", DSString.valueOf("ID2"), null);
+            action.addParameter("Arg3", DSString.valueOf("ID3"), null);
             put("action3", action);
         }
         */

@@ -51,7 +51,9 @@ public class DSInfo implements ApiObject, DSISubscriber {
     static final int READONLY = 3;
     static final int PERMANENT = 4;
     //static final int PERMANENTLY_SUBSCRIBED = 5;
-    //static final int NO_AUDIT      = 5; //future
+    //static final int NO_ADD_REMOVE_CHILDREN = 5;
+    //static final int NO_MODIFY_FLAGS = 5;
+    //static final int NO_AUDIT      = 5;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
