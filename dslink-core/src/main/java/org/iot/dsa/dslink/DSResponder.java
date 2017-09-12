@@ -57,9 +57,8 @@ public interface DSResponder {
 
 
     /**
-     * The implementation should quickly create an object for responding to the request, but do no
-     * processing of it on the calling thread. Simply throw a descriptive exception to report an
-     * error with the request.
+     * The implementation should do no processing of it on the calling thread. Simply throw a
+     * descriptive exception to report an error with the request.
      *
      * @param request The details of the request.
      */
