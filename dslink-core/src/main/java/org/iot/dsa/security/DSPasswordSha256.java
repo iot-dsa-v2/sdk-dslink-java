@@ -47,12 +47,7 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword {
      * SHA-256 hash of the bytes encoded as url safe base 64..
      */
     public static String encode(byte[] arg) {
-        byte[] hash = null;
-        synchronized (digest) {
-            hash = digest.digest(arg);
-            digest.reset();
-        }
-        return DSBase64.encodeUrl(hash);
+        return DSBase64.encodeUrl(hash(arg));
     }
 
     /**
@@ -65,6 +60,18 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword {
     @Override
     public DSValueType getValueType() {
         return DSValueType.STRING;
+    }
+
+    /**
+     * SHA-256 hash of the bytes.
+     */
+    static byte[] hash(byte[] arg) {
+        byte[] hash = null;
+        synchronized (digest) {
+            hash = digest.digest(arg);
+            digest.reset();
+        }
+        return hash;
     }
 
     @Override

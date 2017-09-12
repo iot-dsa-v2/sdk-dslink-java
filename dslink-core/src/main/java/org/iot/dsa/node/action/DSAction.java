@@ -25,8 +25,7 @@ public class DSAction implements ActionSpec, DSIObject {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Use this when you have no-arg, no-return actions.  This instance cannot
-     * be modified.
+     * Use this when you have no-arg, no-return actions.  This instance cannot be modified.
      */
     public static final DSAction DEFAULT = new DSAction();
 
@@ -70,7 +69,7 @@ public class DSAction implements ActionSpec, DSIObject {
 
     /**
      * Fully describes a parameter for method invocation.  At the very least, the map should have a
-     * unique name and a value type, see the metadata utility class.
+     * unique name and a value type, use the metadata utility class to build the map.
      *
      * @return This.
      * @see DSMetadata
@@ -135,7 +134,7 @@ public class DSAction implements ActionSpec, DSIObject {
     /**
      * Fully describes a return value when the result type is VALUES.  Must be added in the order
      * that the values will be returned. At the very least, the map should have a unique name and a
-     * value type, see the Metadata utility class.
+     * value type, use the DSMetadata utility class.
      *
      * @return This.
      * @see DSMetadata

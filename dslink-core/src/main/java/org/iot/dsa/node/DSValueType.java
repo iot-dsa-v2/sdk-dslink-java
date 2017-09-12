@@ -8,21 +8,21 @@ package org.iot.dsa.node;
  */
 public enum DSValueType {
 
-    ANY,
-    BINARY,
-    BOOL,
-    ENUM,
-    LIST,
-    MAP,
-    NUMBER,
-    STRING;
+    BINARY("binary"),
+    BOOL("bool"),
+    ENUM("enum"),
+    LIST("array"),
+    MAP("map"),
+    NUMBER("number"),
+    STRING("string");
 
     private String display;
 
+    private DSValueType(String display) {
+        this.display = display;
+    }
+
     public String toString() {
-        if (display == null) {
-            display = name().toLowerCase();
-        }
         return display;
     }
 

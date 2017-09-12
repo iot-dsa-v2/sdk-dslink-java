@@ -7,7 +7,6 @@ import org.iot.dsa.dslink.DSRootNode;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSFlexEnum;
-import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSJavaEnum;
@@ -127,14 +126,14 @@ public class Main extends DSRootNode implements Runnable {
         start = System.currentTimeMillis();
         DSNode node = new TestNode();
         add("test", node);
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             DSNode iNode = new TestNode();
-            node.add("test"+i, iNode);
+            node.add("test" + i, iNode);
             for (int j = 0; j < 100; j++) {
                 DSNode jNode = new TestNode();
-                iNode.add("test"+j, jNode);
-                for (int k = 0; k < 100; k++){
-                    jNode.add("test"+k, new TestNode());
+                iNode.add("test" + j, jNode);
+                for (int k = 0; k < 100; k++) {
+                    jNode.add("test" + k, new TestNode());
                 }
             }
         }
@@ -186,7 +185,8 @@ public class Main extends DSRootNode implements Runnable {
 
     public static class TestNode extends DSNode {
 
-        public void declareDefaults() {
+        @Override
+        protected void declareDefaults() {
             super.declareDefaults();
             declareDefault("Incrementing Int", DSInt.valueOf(1)).setReadOnly(true);
             declareDefault("Writable Boolean", DSBool.valueOf(true));
@@ -201,6 +201,29 @@ public class Main extends DSRootNode implements Runnable {
                                 "My action description");
             declareDefault("Reset", action);
         }
+
+        /*
+        @Override
+        protected void onStable() {
+            put("Number", DSInt.valueOf(1));
+            DSAction action = new DSAction();
+            action.addParameter("Arg1", DSString.valueOf("ID1"), null);
+            action.addParameter("Arg2", DSString.valueOf("ID2"), null);
+            action.addParameter("Arg3", DSString.valueOf("ID3"), null);
+            put("action1", action);
+            action = new DSAction();
+            action.addParameter("Arg1", DSString.valueOf("ID1"), null);
+            action.addParameter("Arg2", DSString.valueOf("ID2"), null);
+            action.addParameter("Arg3", DSString.valueOf("ID3"), null);
+            put("action2", action);
+            action = new DSAction();
+            action.addParameter("Arg1", DSString.valueOf("ID1"), null);
+            action.addParameter("Arg2", DSString.valueOf("ID2"), null);
+            action.addParameter("Arg3", DSString.valueOf("ID3"), null);
+            put("action3", action);
+        }
+        */
+
     }
 
     public enum MyEnum {

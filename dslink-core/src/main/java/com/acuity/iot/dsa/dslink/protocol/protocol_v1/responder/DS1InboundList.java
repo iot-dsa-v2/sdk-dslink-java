@@ -206,47 +206,6 @@ class DS1InboundList extends DS1InboundRequest
         }
         fixType(cacheMap);
         out.value(cacheMap.remove(DSMetadata.TYPE));
-        /*
-        String type = meta.getType();
-        if ((type == null) && (value != null)) {
-            meta.setType(value);
-            type = meta.getType();
-        }
-        if ("bool".equals(type)) {
-            DSList range = (DSList) meta.getMap().remove(DSMetadata.BOOLEAN_RANGE);
-            if ((range == null) || (range.size() != 2)) {
-                out.value(type);
-            } else {
-                cacheBuf.setLength(0);
-                cacheBuf.append(type);
-                cacheBuf.append('[');
-                cacheBuf.append(range.get(0).toString());
-                cacheBuf.append(',');
-                cacheBuf.append(range.get(1).toString());
-                cacheBuf.append(']');
-                out.value(cacheBuf.toString());
-            }
-        } else if ("enum".equals(type)) {
-            DSList range = (DSList) meta.getMap().remove(DSMetadata.ENUM_RANGE);
-            if (range == null) {
-                range = ((DSIEnum)value).getEnums(cacheList.clear());
-            }
-            cacheBuf.setLength(0);
-            cacheBuf.append(type);
-            cacheBuf.append('[');
-            for (int i = 0, len = range.size(); i < len; i++) {
-                if (i > 0) {
-                    cacheBuf.append(',');
-                }
-                cacheBuf.append(range.get(i).toString());
-            }
-            cacheBuf.append(']');
-            out.value(cacheBuf.toString());
-        } else {
-            out.value(type);
-        }
-        cacheMap.remove(DSMetadata.TYPE);
-    */
     }
 
     /**

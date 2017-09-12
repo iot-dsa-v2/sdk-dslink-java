@@ -144,33 +144,11 @@ public class NodeDecoder {
                 } else {
                     in.next();
                     DSIValue val = (DSIValue) obj;
-                    parent.put(info, val.valueOf(in.getElement()));
+                    parent.put(info, val.restore(in.getElement()));
                 }
                 if (state != null) {
                     info.decodeState(state);
                 }
-                /*
-                if (type != null) {
-                    obj = getInstance(type);
-                    parent.put(name, obj);
-                    info = parent.getInfo(name);
-                } else {
-                    if (info == null) {
-                        throw new IllegalStateException("Missing type for a dynamic child");
-                    }
-                    obj = info.getObject();
-                }
-                if (state != null) {
-                    info.decodeState(state);
-                }
-                if (obj instanceof DSNode) {
-                    readChildren((DSNode) obj);
-                } else {
-                    in.next();
-                    DSIValue val = (DSIValue) obj;
-                    parent.put(info, val.decode(in.getElement()));
-                }
-                */
             }
         }
     }
