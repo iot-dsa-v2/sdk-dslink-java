@@ -191,7 +191,9 @@ public class DSPasswordAes extends DSValue implements DSIPassword {
         try {
             cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             byte[] nameBytes = DSPasswordAes.class.getName().getBytes(DSString.UTF8);
-            key = new SecretKeySpec(DSPasswordSha256.hash(nameBytes),"AES");
+            byte[] keyBytes = new byte[16];
+            System.arraycopy(nameBytes, 0, keyBytes, 0, 16);
+            key = new SecretKeySpec(keyBytes, "AES");
         } catch (Exception x) {
             Logger.getLogger("security").log(Level.SEVERE, "AES problem", x);
         }
