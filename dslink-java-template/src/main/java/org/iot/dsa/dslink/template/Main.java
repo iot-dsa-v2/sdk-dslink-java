@@ -187,6 +187,7 @@ public class Main extends DSRootNode implements Runnable {
 
         @Override
         protected void declareDefaults() {
+            /*
             super.declareDefaults();
             declareDefault("Incrementing Int", DSInt.valueOf(1)).setReadOnly(true);
             declareDefault("Writable Boolean", DSBool.valueOf(true));
@@ -200,9 +201,9 @@ public class Main extends DSRootNode implements Runnable {
                                 DSJavaEnum.valueOf(MyEnum.Off),
                                 "My action description");
             declareDefault("Reset", action);
+            */
         }
 
-        /*
         @Override
         protected void onStable() {
             put("Number", DSInt.valueOf(1));
@@ -222,7 +223,6 @@ public class Main extends DSRootNode implements Runnable {
             action.addParameter("Arg3", DSString.valueOf("ID3"), null);
             put("action3", action);
         }
-        */
 
     }
 

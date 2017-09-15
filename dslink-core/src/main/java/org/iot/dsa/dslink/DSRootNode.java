@@ -135,6 +135,10 @@ public class DSRootNode extends DSNode implements DSResponder {
             throw new DSRequestException("Not writable: " + getPath());
         }
         //TODO verify incoming permission
+        if (info.isNode()) {
+            info.getNode().onSet(request.getValue());
+            return;
+        }
         DSIValue value = info.getValue();
         if (value == null) {
             if (info.getDefaultObject() instanceof DSIValue) {

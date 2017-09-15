@@ -893,16 +893,29 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Override point, called when a value child is being set by the responder.  The default
-     * implementation calls put(info, value).  Throw an exception to report an error to the
-     * requester.
+     * Override point, called when a value being set.  The default implementation calls put(info,
+     * value).  Throw an exception to report an error to the requester.
      *
      * @param info  The child being changed.
      * @param value The new value.
      * @see org.iot.dsa.dslink.DSResponder#onSet(InboundSetRequest)
      */
     public void onSet(DSInfo info, DSIValue value) {
-        put(info, value);
+        if (info != null) {
+            put(info, value);
+        }
+    }
+
+    /**
+     * Override point, called only when a DSNode subclass implements DSIValue is being set.  This
+     * will throw and IllegalStateException if not overridden and called. Throw an exception to
+     * report an error to the requester.
+     *
+     * @param value The new value.
+     * @see org.iot.dsa.dslink.DSResponder#onSet(InboundSetRequest)
+     */
+    public void onSet(DSIValue value) {
+        throw new IllegalStateException("DSNode.onSet(DSIValue) not overridden");
     }
 
     /**
