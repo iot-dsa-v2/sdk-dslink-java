@@ -470,7 +470,9 @@ class DS1InboundList extends DS1InboundRequest
             ApiObject child;
             while (children.hasNext()) {
                 child = children.next();
-                encodeChild(child, out);
+                if (!child.isHidden()) {
+                    encodeChild(child, out);
+                }
                 if (getSession().shouldEndMessage()) {
                     return;
                 }
