@@ -30,7 +30,7 @@ public abstract class DSProtocol extends DSLogger {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSConnection connection;
+    private DS1LinkConnection connection;
     private long lastMessageSent;
     private Logger logger;
     private Object outgoingMutex = new Object();
@@ -174,7 +174,7 @@ public abstract class DSProtocol extends DSLogger {
         }
     }
 
-    public DSConnection getConnection() {
+    public DS1LinkConnection getConnection() {
         return connection;
     }
 
@@ -256,7 +256,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * Called when the broker signifies that requests are allowed.
      */
-    public void requesterAllowed() {
+    public void setRequesterAllowed() {
         requesterAllowed = true;
         DSRuntime.run(new Runnable() {
             @Override
@@ -407,7 +407,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setConnection(DSConnection connection) {
+    public DSProtocol setConnection(DS1LinkConnection connection) {
         this.connection = connection;
         return this;
     }

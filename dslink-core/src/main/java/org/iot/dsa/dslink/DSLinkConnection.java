@@ -3,9 +3,13 @@ package org.iot.dsa.dslink;
 import org.iot.dsa.node.DSNode;
 
 /**
- * Represents an upstream connection with a broker.  Implementations must have a no-arg public
- * constructor. The default connection type can be overridden by specifying the config
- * connectionType as a Java class name dslink.json.
+ * Represents an upstream connection with a broker.
+ *
+ * Implementations must have a no-arg public constructor.  It will be dynamically added as a child
+ * of the DSLink.
+ *
+ * The default connection type can be overridden by specifying the config connectionType as a Java
+ * class name dslink.json.
  *
  * @author Aaron Hansen
  */
@@ -24,7 +28,7 @@ public abstract class DSLinkConnection extends DSNode {
     public abstract String getConnectionId();
 
     /**
-     * The parent link.
+     * The link using this connection.
      */
     public abstract DSLink getLink();
 
@@ -32,10 +36,5 @@ public abstract class DSLinkConnection extends DSNode {
      * True when a connection is established with the remote endpoint.
      */
     public abstract boolean isOpen();
-
-    /**
-     * Called by the link after creation.
-     */
-    public abstract void setLink(DSLink link);
 
 }

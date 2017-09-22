@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.DSConnection;
+import com.acuity.iot.dsa.dslink.DS1LinkConnection;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -54,8 +54,8 @@ public class DSLink extends DSNode {
     private DSKeys keys;
     private Logger logger;
     private String name;
+    private DSNode nodes;
     private DSRequester requester;
-    private DSNode root;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -86,7 +86,7 @@ public class DSLink extends DSNode {
             info(info() ? "Loading node database..." : null);
             long time = System.currentTimeMillis();
             JsonReader reader = new JsonReader(nodes);
-            root = NodeDecoder.decode(reader);
+            this.nodes = NodeDecoder.decode(reader);
             reader.close();
             time = System.currentTimeMillis() - time;
             info(info() ? ("Node database loaded: " + time + "ms"): null);
@@ -96,18 +96,14 @@ public class DSLink extends DSNode {
             if (type == null) {
                 throw new IllegalStateException("Config missing the root node type");
             }
-            config(config() ? "Root type: " + type : null);
-            DSNode tmp = (DSNode) Class.forName(type).newInstance();
-            if (!(tmp instanceof DSResponder)) {
-                throw new IllegalStateException("Root type not a responder: " + type);
-            }
-            root = tmp;
+            config(config() ? "Nodes type: " + type : null);
+            this.nodes = (DSNode) Class.forName(type).newInstance();
             saveNodes();
         }
-        if (root instanceof DSRequester) {
-            requester = (DSRequester) root;
+        if (this.nodes instanceof DSRequester) {
+            requester = (DSRequester) this.nodes;
         }
-        add("Root", root).setTransient(true);
+        add("Nodes", this.nodes).setTransient(true);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -165,8 +161,8 @@ public class DSLink extends DSNode {
      * Returns the root node if it is a responder, otherwise null.
      */
     public DSResponder getResponder() {
-        if (root instanceof DSResponder) {
-            return (DSResponder) root;
+        if (nodes instanceof DSResponder) {
+            return (DSResponder) nodes;
         }
         return null;
     }
@@ -230,10 +226,11 @@ public class DSLink extends DSNode {
                 config(config() ? "Connection type: " + type : null);
                 connection = (DSLinkConnection) Class.forName(type).newInstance();
             } else {
-                connection = new DSConnection();
+                connection = new DS1LinkConnection();
             }
-            connection.setLink(this);
-            add("Connection", connection);
+            put("Connection", connection)
+                    .setTransient(true)
+                    .setHidden(true);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
@@ -282,7 +279,7 @@ public class DSLink extends DSNode {
             long time = System.currentTimeMillis();
             info("Saving node database");
             JsonWriter writer = new JsonWriter(nodes);
-            NodeEncoder.encode(writer, root);
+            NodeEncoder.encode(writer, this.nodes);
             writer.close();
             trimBackups();
             time = System.currentTimeMillis() - time;

@@ -159,7 +159,7 @@ public class DS1Protocol extends DSProtocol {
     protected void processEnvelope(DSIReader reader) {
         finest(finest() ? printMemory() : null);
         if (!requesterAllowed) {
-            getConnection().requesterAllowed();
+            getConnection().setRequesterAllowed();
         }
         int msg = -1;
         Token next;
@@ -191,7 +191,7 @@ public class DS1Protocol extends DSProtocol {
                 }
                 if (reader.getBoolean()) {
                     config(config() ? "Requester allowed" : null);
-                    getConnection().requesterAllowed();
+                    getConnection().setRequesterAllowed();
                 }
             } else if (key.equals("salt")) {
                 if (reader.next() != Token.STRING) {

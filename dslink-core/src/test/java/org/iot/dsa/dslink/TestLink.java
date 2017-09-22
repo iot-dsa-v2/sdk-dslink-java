@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.DSConnection;
+import com.acuity.iot.dsa.dslink.DS1LinkConnection;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 
@@ -39,9 +39,8 @@ public abstract class TestLink extends DSNode implements DSResponder {
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
-    public static class MyConnection extends DSConnection {
+    public static class MyConnection extends DS1LinkConnection {
 
-        @Override
         protected DSMap initializeConnection() {
             return new DSMap()
                     .put("dsId",
