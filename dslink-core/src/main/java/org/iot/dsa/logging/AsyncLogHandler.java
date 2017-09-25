@@ -126,7 +126,9 @@ public abstract class AsyncLogHandler extends Handler {
                     Object param;
                     for (int i = params.length; --i >= 0; ) {
                         param = params[i];
-                        if (param instanceof String) {
+                        if (param == null) {
+                            continue;
+                        } else if (param instanceof String) {
                             continue;
                         } else if (param instanceof Integer) {
                             continue;

@@ -31,8 +31,8 @@ public abstract class TestLink extends DSNode implements DSResponder {
         DSLinkConfig cfg = new DSLinkConfig(args)
                 .setConfig(DSLinkConfig.CFG_CONNECTION_TYPE, MyConnection.class.getName())
                 .setConfig(DSLinkConfig.CFG_TRANSPORT_FACTORY, TestTransport.class.getName());
-        DSLink link = new DSLink(cfg);
-        link.start();
+        DSLink link = DSLink.load(cfg);
+        link.run();
     }
 
     ///////////////////////////////////////////////////////////////////////////

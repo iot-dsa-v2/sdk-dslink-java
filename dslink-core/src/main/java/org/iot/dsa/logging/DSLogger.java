@@ -59,7 +59,7 @@ public class DSLogger {
     }
 
     /**
-     * Override point, returns the runtime logger by default.
+     * Override point, returns the console logger by default.
      */
     public Logger getLogger() {
         return DSLogging.getDefaultLogger();

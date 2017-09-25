@@ -246,7 +246,7 @@ public class DS1ConnectionInit extends DSNode {
             DSMap map = new DSMap();
             map.put("publicKey", DSBase64.encodeUrl(link.getKeys().encodePublic()));
             map.put("isRequester", link.getConfig().isRequester());
-            map.put("isResponder", link.getResponder() != null);
+            map.put("isResponder", link.getConfig().isResponder());
             map.put("linkData", new DSMap());
             map.put("version", DSA_VERSION);
             DSList list = map.putList("formats");

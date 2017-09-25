@@ -64,15 +64,6 @@ public class Main extends DSRootNode implements Runnable {
     }
 
     /**
-     * Launch the link.
-     */
-    public static void main(String[] args) throws Exception {
-        DSLinkConfig cfg = new DSLinkConfig(args);
-        DSLink link = new DSLink(cfg);
-        link.run();
-    }
-
-    /**
      * Handles the reset action.
      */
     @Override
@@ -141,7 +132,7 @@ public class Main extends DSRootNode implements Runnable {
         dur = now - start;
         info("********** Add duration: " + dur);
         start = System.currentTimeMillis();
-        getLink().saveNodes();
+        getLink().save();
         now = System.currentTimeMillis();
         dur = now - start;
         info("********** Save duration: " + dur);
@@ -152,6 +143,9 @@ public class Main extends DSRootNode implements Runnable {
         info("********** Iterate duration: " + dur);
     }
 
+    /**
+     * Walk the test tree.
+     */
     private void onTestIterate(DSNode node) {
         for (DSInfo info : node) {
             if (info.isNode()) {
@@ -212,15 +206,19 @@ public class Main extends DSRootNode implements Runnable {
             action.addParameter("Arg2", DSString.valueOf("ID2"), null);
             action.addParameter("Arg3", DSString.valueOf("ID3"), null);
             put("action1", action);
+            /*
             action = new DSAction();
             action.addParameter("Arg1", DSString.valueOf("ID1"), null);
             action.addParameter("Arg2", DSString.valueOf("ID2"), null);
             action.addParameter("Arg3", DSString.valueOf("ID3"), null);
+            */
             put("action2", action);
+            /*
             action = new DSAction();
             action.addParameter("Arg1", DSString.valueOf("ID1"), null);
             action.addParameter("Arg2", DSString.valueOf("ID2"), null);
             action.addParameter("Arg3", DSString.valueOf("ID3"), null);
+            */
             put("action3", action);
         }
 

@@ -8,6 +8,7 @@ import static org.iot.dsa.node.DSIPublisher.Event.PUBLISHER_CHANGED;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.logging.DSLogging;
@@ -622,6 +623,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public DSInfo getLastInfo() {
         return lastChild;
+    }
+
+    /**
+     * Ascends the tree until a logger is found.  If overriding, call super.getLogger and set
+     * the result as the parent logger of your new logger.
+     */
+    @Override
+    public Logger getLogger() {
+        DSNode parent = getParent();
+        if (parent != null) {
+            return parent.getLogger();
+        }
+        return DSLogging.getDefaultLogger();
     }
 
     /**

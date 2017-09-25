@@ -95,7 +95,7 @@ public class DS1LinkConnection extends DSLinkConnection {
     @Override
     public Logger getLogger() {
         if (logger == null) {
-            logger = DSLogging.getLogger(getLink().getLinkName() + "-Connection");
+            logger = Logger.getLogger(getLink().getLinkName() + ".connection");
         }
         return logger;
     }

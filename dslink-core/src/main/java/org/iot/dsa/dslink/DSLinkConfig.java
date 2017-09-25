@@ -23,6 +23,7 @@ public class DSLinkConfig {
     public static final String CFG_BROKER_URL = "broker";
     public static final String CFG_CONNECTION_TYPE = "connectionType";
     public static final String CFG_IS_REQUESTER = "isRequester";
+    public static final String CFG_IS_RESPONDER = "isResponder";
     public static final String CFG_KEY_FILE = "key";
     public static final String CFG_LOG_FILE = "logFile";
     public static final String CFG_LOG_LEVEL = "log";
@@ -287,10 +288,17 @@ public class DSLinkConfig {
     }
 
     /**
-     * Looks for the isRequester config.
+     * Looks for the isRequester config, false by default.
      */
     public boolean isRequester() {
         return getConfig(CFG_IS_REQUESTER, false);
+    }
+
+    /**
+     * Looks for the isResponder config, true by default.
+     */
+    public boolean isResponder() {
+        return getConfig(CFG_IS_RESPONDER, true);
     }
 
     /**
@@ -504,6 +512,14 @@ public class DSLinkConfig {
      */
     public DSLinkConfig setRequester(boolean isRequester) {
         setConfig(CFG_IS_REQUESTER, isRequester);
+        return this;
+    }
+
+    /**
+     * Overrides dslink.json.
+     */
+    public DSLinkConfig setResponder(boolean isResponder) {
+        setConfig(CFG_IS_RESPONDER, isResponder);
         return this;
     }
 

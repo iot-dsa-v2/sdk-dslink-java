@@ -12,12 +12,24 @@ import java.util.Calendar;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.iot.dsa.DSRuntime;
+import org.iot.dsa.dslink.responder.InboundInvokeRequest;
+import org.iot.dsa.dslink.responder.InboundListRequest;
+import org.iot.dsa.dslink.responder.InboundSetRequest;
+import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
+import org.iot.dsa.dslink.responder.OutboundListResponse;
+import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.logging.DSLogging;
+import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.action.ActionInvocation;
+import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.security.DSKeys;
 import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
@@ -38,11 +50,14 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSLink extends DSNode {
+public class DSLink extends DSNode implements DSResponder, Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
     ///////////////////////////////////////////////////////////////////////////
+
+    static final String NODES = "Nodes";
+    static final String SAVE = "Save";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -54,61 +69,32 @@ public class DSLink extends DSNode {
     private DSKeys keys;
     private Logger logger;
     private String name;
-    private DSNode nodes;
+    private DSInfo save = getInfo(SAVE);
     private DSRequester requester;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSLink() {
-    }
-
     /**
-     * Loads the root node and creates the connection, this constructor can take a long time to
-     * complete, and will throw an exception if anything goes wrong.  This does not call the start
-     * method.
+     * Use the load method to create links.
      *
-     * @param config Make sure the required configs are set.
-     * @throws Exception If absolutely anything is wrong.
+     * @see #load(DSLinkConfig)
      */
-    public DSLink(DSLinkConfig config) throws Exception {
-        this.config = config;
-        DSLogging.replaceRootHandler();
-        DSLogging.setDefaultFile(config.getLogFile());
-        DSLogging.setDefaultLevel(config.getLogLevel());
-        name = config.getLinkName();
-        keys = config.getKeys();
-        logger = DSLogging.getLogger(name);
-        DSLogging.setDefaultLogger(logger);
-        File nodes = config.getNodesFile();
-        if (nodes.exists()) {
-            info(info() ? "Loading node database..." : null);
-            long time = System.currentTimeMillis();
-            JsonReader reader = new JsonReader(nodes);
-            this.nodes = NodeDecoder.decode(reader);
-            reader.close();
-            time = System.currentTimeMillis() - time;
-            info(info() ? ("Node database loaded: " + time + "ms"): null);
-        } else {
-            info(info() ? "Creating new database..." : null);
-            String type = config.getConfig(DSLinkConfig.CFG_ROOT_TYPE, null);
-            if (type == null) {
-                throw new IllegalStateException("Config missing the root node type");
-            }
-            config(config() ? "Nodes type: " + type : null);
-            this.nodes = (DSNode) Class.forName(type).newInstance();
-            saveNodes();
-        }
-        if (this.nodes instanceof DSRequester) {
-            requester = (DSRequester) this.nodes;
-        }
-        add("Nodes", this.nodes).setTransient(true);
+    public DSLink() {
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Adds the save action, overrides should call super if they want this action.
+     */
+    @Override
+    protected void declareDefaults() {
+        declareDefault(SAVE, new DSAction()).setConfig(true);
+    }
 
     public DSLinkConfig getConfig() {
         return config;
@@ -157,18 +143,176 @@ public class DSLink extends DSNode {
         return logger;
     }
 
-    /**
-     * Returns the root node if it is a responder, otherwise null.
-     */
-    public DSResponder getResponder() {
-        if (nodes instanceof DSResponder) {
-            return (DSResponder) nodes;
-        }
-        return null;
-    }
-
     public DSRequester getRequester() {
         return requester;
+    }
+
+    /**
+     * Configures a link instance, whether it is new instance or deserialized.
+     */
+    protected void init(DSLinkConfig config) {
+        this.config = config;
+        DSLogging.setDefaultLevel(config.getLogLevel());
+        name = config.getLinkName();
+        keys = config.getKeys();
+        logger = DSLogging.getLogger(name, config.getLogFile());
+    }
+
+    /**
+     * Creates a link by first testing for an existing serialized database.
+     *
+     * @param config Configuration options
+     */
+    public static DSLink load(DSLinkConfig config) {
+        Logger logger = DSLogging.getDefaultLogger();
+        DSLink ret = null;
+        File nodes = config.getNodesFile();
+        if (nodes.exists()) {
+            logger.info("Loading node database...");
+            long time = System.currentTimeMillis();
+            JsonReader reader = new JsonReader(nodes);
+            DSNode node = NodeDecoder.decode(reader);
+            reader.close();
+            if (node instanceof DSLink) {
+                ret = (DSLink) node;
+                ret.init(config);
+            } else { //TODO - remove after 10/1/17, converting early databases.
+                ret = new DSLink();
+                ret.init(config);
+                ret.put(NODES, node);
+                ret.save();
+            }
+            time = System.currentTimeMillis() - time;
+            ret.info("Node database loaded: " + time + "ms");
+        } else {
+            logger.info("Creating new database...");
+            ret = new DSLink();
+            ret.init(config);
+            String type = config.getConfig(DSLinkConfig.CFG_ROOT_TYPE, null);
+            if (type == null) {
+                throw new IllegalStateException("Config missing the root node type");
+            }
+            ret.config("Nodes type: " + type);
+            try {
+                DSNode node = (DSNode) Class.forName(type).newInstance();
+                ret.put(NODES, node);
+            } catch (Exception x) {
+                DSException.throwRuntime(x);
+            }
+            ret.save();
+        }
+        DSNode tmp = new DSNode();
+        tmp.add(ret.getLinkName(), ret);
+        return ret;
+    }
+
+    /**
+     * This is a convenience for DSLink.load(new DSLinkConfig(args)).run() and can be used as the
+     * the main class for any link.
+     */
+    public static void main(String[] args) {
+        DSLinkConfig cfg = new DSLinkConfig(args);
+        DSLink link = DSLink.load(cfg);
+        link.run();
+    }
+
+    /**
+     * Handles the save action.
+     */
+    public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {
+        if (actionInfo == save) {
+            DSRuntime.run(new Runnable() {
+                @Override
+                public void run() {
+                    save();
+                }
+            });
+            return null;
+        }
+        return super.onInvoke(actionInfo, invocation);
+    }
+
+    /**
+     * Responder implementation.  If one of the children in the path implements DSResponder, it will
+     * be given responsibility for completing the request.
+     */
+    @Override
+    public ActionResult onInvoke(InboundInvokeRequest request) {
+        RequestPath path = new RequestPath(request.getPath(), this);
+        if (path.isResponder()) {
+            DSResponder responder = (DSResponder) path.getTarget();
+            return responder.onInvoke(new InvokeWrapper(path, request));
+        }
+        DSInfo info = path.getInfo();
+        if (!info.isAction()) {
+            throw new DSRequestException("Not an action " + path.getPath());
+        }
+        DSAction action = info.getAction();
+        return action.invoke(info, request);
+    }
+
+    /**
+     * Responder implementation.  If one of the children in the path implements DSResponder, it will
+     * be given responsibility for completing the request.
+     */
+    @Override
+    public OutboundListResponse onList(InboundListRequest request) {
+        RequestPath path = new RequestPath(request.getPath(), this);
+        if (path.isResponder()) {
+            DSResponder responder = (DSResponder) path.getTarget();
+            return responder.onList(new ListWrapper(path.getPath(), request));
+        }
+        return new ListSubscriber(path, request);
+    }
+
+    /**
+     * Responder implementation.  If one of the children in the path implements DSResponder, it will
+     * be given responsibility for completing the request.
+     */
+    @Override
+    public SubscriptionCloseHandler onSubscribe(InboundSubscribeRequest request) {
+        RequestPath path = new RequestPath(request.getPath(), this);
+        if (path.isResponder()) {
+            DSResponder responder = (DSResponder) path.getTarget();
+            return responder.onSubscribe(new SubscribeWrapper(path.getPath(), request));
+        }
+        return new ValueSubscriber(path, request);
+    }
+
+
+    /**
+     * Responder implementation.  If one of the children in the path implements DSResponder, it will
+     * be given responsibility for completing the request.
+     */
+    @Override
+    public void onSet(InboundSetRequest request) {
+        RequestPath path = new RequestPath(request.getPath(), this);
+        if (path.isResponder()) {
+            DSResponder responder = (DSResponder) path.getTarget();
+            responder.onSet(new SetWrapper(path.getPath(), request));
+        }
+        DSNode parent = path.getParent();
+        DSInfo info = path.getInfo();
+        if (info.isReadOnly()) {
+            throw new DSRequestException("Not writable: " + getPath());
+        }
+        //TODO verify incoming permission
+        if (info.isNode()) {
+            info.getNode().onSet(request.getValue());
+            return;
+        }
+        DSIValue value = info.getValue();
+        if (value == null) {
+            if (info.getDefaultObject() instanceof DSIValue) {
+                value = (DSIValue) info.getDefaultObject();
+            }
+        }
+        if (value != null) {
+            value = value.valueOf(request.getValue());
+        } else {
+            value = request.getValue();
+        }
+        parent.onSet(info, value);
     }
 
     /**
@@ -198,7 +342,7 @@ public class DSLink extends DSNode {
                         warn(getPath(), x);
                     }
                     if (System.currentTimeMillis() > nextSave) {
-                        saveNodes();
+                        save();
                         nextSave = System.currentTimeMillis() + saveInterval;
                     }
                 }
@@ -210,7 +354,7 @@ public class DSLink extends DSNode {
         }
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                saveNodes();
+                save();
             }
         });
     }
@@ -228,9 +372,7 @@ public class DSLink extends DSNode {
             } else {
                 connection = new DS1LinkConnection();
             }
-            put("Connection", connection)
-                    .setTransient(true)
-                    .setHidden(true);
+            put("Connection", connection).setConfig(true).setTransient(true);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
@@ -244,15 +386,15 @@ public class DSLink extends DSNode {
     }
 
     /**
-     * Serializes the node tree.
+     * Serializes the configuration database.
      */
-    public void saveNodes() {
+    public void save() {
         ZipOutputStream zos = null;
         InputStream in = null;
         try {
             File nodes = config.getNodesFile();
             if (nodes.exists()) {
-                info("Backing up node database");
+                info("Backing up the node database");
                 StringBuilder buf = new StringBuilder();
                 buf.append(nodes.getName()).append('.');
                 Calendar cal = DSTime.getCalendar(System.currentTimeMillis());
@@ -279,7 +421,7 @@ public class DSLink extends DSNode {
             long time = System.currentTimeMillis();
             info("Saving node database");
             JsonWriter writer = new JsonWriter(nodes);
-            NodeEncoder.encode(writer, this.nodes);
+            NodeEncoder.encode(writer, this);
             writer.close();
             trimBackups();
             time = System.currentTimeMillis() - time;

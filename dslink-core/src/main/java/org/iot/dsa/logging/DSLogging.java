@@ -36,7 +36,6 @@ public class DSLogging {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private static File defaultFile;
     private static Level defaultLevel = Level.INFO;
     private static Logger defaultLogger = Logger.getLogger("");
 
@@ -57,29 +56,6 @@ public class DSLogging {
      */
     public static Logger getDefaultLogger() {
         return defaultLogger;
-    }
-
-    /**
-     * Adds a handler for the default log file to the named logger, if there isn't one already. This
-     * can be used repeatedly to acquire the same logger, but doing so would be inefficient.  Use
-     * Logger.getLogger after this has installed the handler.
-     *
-     * @param name Log name.
-     */
-    public static Logger getLogger(String name) {
-        if (defaultFile == null) {
-            return getLogger(name, System.out);
-        }
-        Logger ret = Logger.getLogger(name);
-        FileLogHandler fileLogHandler = FileLogHandler.getHandler(defaultFile);
-        for (Handler handler : ret.getHandlers()) {
-            if (handler == fileLogHandler) {
-                return ret;
-            }
-        }
-        ret.addHandler(fileLogHandler);
-        ret.setLevel(defaultLevel);
-        return ret;
     }
 
     /**
@@ -112,7 +88,7 @@ public class DSLogging {
      * @param name Log name.
      * @param out  Where to print the logging.
      */
-    public static Logger getLogger(String name, PrintStream out) {
+    static Logger getLogger(String name, PrintStream out) {
         Logger ret = Logger.getLogger(name);
         for (Handler handler : ret.getHandlers()) {
             if (handler instanceof PrintStreamLogHandler) {
@@ -127,28 +103,9 @@ public class DSLogging {
         return ret;
     }
 
-    /**
-     * Removes existing handlers from the root logger and installs a PrintStreamLogHandler for
-     * System.out.
-     */
-    public static void replaceRootHandler() {
-        Logger global = Logger.getLogger("");
-        for (Handler handler : global.getHandlers()) {
-            global.removeHandler(handler);
-        }
-        global.addHandler(new PrintStreamLogHandler("Root Logger", System.out));
-    }
-
-    public static void setDefaultFile(File file) {
-        defaultFile = file;
-    }
-
     public static void setDefaultLevel(Level level) {
         defaultLevel = level;
-    }
-
-    public static void setDefaultLogger(Logger logger) {
-        defaultLogger = logger;
+        defaultLogger.setLevel(level);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -159,4 +116,12 @@ public class DSLogging {
     // Initialization
     ///////////////////////////////////////////////////////////////////////////
 
-} //class
+    static {
+        defaultLogger = Logger.getLogger("");
+        for (Handler handler : defaultLogger.getHandlers()) {
+            defaultLogger.removeHandler(handler);
+        }
+        defaultLogger.addHandler(new PrintStreamLogHandler("Root Logger", System.out));
+    }
+
+}

@@ -188,7 +188,7 @@ public abstract class DSProtocol extends DSLogger {
     @Override
     public Logger getLogger() {
         if (logger == null) {
-            logger = DSLogging.getLogger(getConnection().getLink().getLinkName() + "-protocol");
+            logger = Logger.getLogger(getConnection().getLink().getLinkName() + ".protocol");
         }
         return logger;
     }

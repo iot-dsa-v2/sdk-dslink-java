@@ -42,6 +42,10 @@
       "desc": "Whether or not the link is a requester.",
       "value": false
     },
+    "isResponder": {
+      "desc": "Whether or not the link is a responder.",
+      "value": true
+    },
     "key": {
       "desc": "Path to public/private key pair.",
       "value": ".key"
