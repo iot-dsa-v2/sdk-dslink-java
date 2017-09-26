@@ -1,4 +1,4 @@
-package com.acuity.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class DS1ConnectionInit extends DSNode {
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    boolean canReuseSession() {
+    boolean canReuse() {
         return false;
     }
 

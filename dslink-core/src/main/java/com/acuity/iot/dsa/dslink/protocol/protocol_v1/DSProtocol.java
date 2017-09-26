@@ -1,5 +1,8 @@
-package com.acuity.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
+import com.acuity.iot.dsa.dslink.DSRequesterSession;
+import com.acuity.iot.dsa.dslink.DSResponderSession;
+import com.acuity.iot.dsa.dslink.DSTransport;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -11,7 +14,6 @@ import org.iot.dsa.dslink.DSRequester;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.logging.DSLogging;
 
 /**
  * Abstraction for different protocol versions.  Not intended for link implementors.

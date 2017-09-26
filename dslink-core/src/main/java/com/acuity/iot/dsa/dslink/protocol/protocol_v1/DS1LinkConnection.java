@@ -1,11 +1,10 @@
-package com.acuity.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Protocol;
+import com.acuity.iot.dsa.dslink.DSTransport;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.logging.DSLogging;
 import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
 
@@ -208,13 +207,14 @@ public class DS1LinkConnection extends DSLinkConnection {
                     config(config() ? "Transport type: " + transport.getClass().getName() : null);
                     transport.open();
                     if (protocol != null) {
-                        if (!connectionInit.canReuseSession()) {
+                        if (!connectionInit.canReuse()) {
                             protocol = null;
                         }
                     }
-                    protocol = makeProtocol()
-                            .setConnection(DS1LinkConnection.this)
-                            .setTransport(transport);
+                    if (protocol == null) {
+                        protocol = makeProtocol();
+                    }
+                    protocol.setConnection(DS1LinkConnection.this).setTransport(transport);
                     config(config() ? "Protocol type: " + protocol.getClass().getName() : null);
                     protocol.run();
                     reconnectRate = 1000;

@@ -483,11 +483,19 @@ public class DSLinkConfig {
     }
 
     /**
-     * Should be one of the following (case insensitive): all, getConfig, fine finer, finest, info,
-     * off, severe, warning. <p> Overrides dslink.json.
+     * Should be one of the following (case insensitive): all, finest, finer, fine, config, info,
+     * warning, severe, off. <p> Overrides dslink.json.
      */
     public DSLinkConfig setLogLevel(String level) {
-        logLevel = Level.parse(level.toUpperCase());
+        level = level.toUpperCase();
+        if (level.equals("DEBUG")) {
+            level = "FINEST";
+        } else if (level.equals("ERROR")) {
+            level = "WARNING";
+        } else if (level.equals("CRITICAL")) {
+            level = "SEVERE";
+        }
+        logLevel = Level.parse(level);
         return setConfig(CFG_LOG_LEVEL, level);
     }
 

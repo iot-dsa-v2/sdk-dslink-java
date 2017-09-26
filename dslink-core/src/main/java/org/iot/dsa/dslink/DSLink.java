@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.DS1LinkConnection;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
