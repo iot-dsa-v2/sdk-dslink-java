@@ -494,6 +494,8 @@ public class DSLinkConfig {
             level = "WARNING";
         } else if (level.equals("CRITICAL")) {
             level = "SEVERE";
+        } else if (level.equals("NONE")) {
+            level = "OFF";
         }
         logLevel = Level.parse(level);
         return setConfig(CFG_LOG_LEVEL, level);
