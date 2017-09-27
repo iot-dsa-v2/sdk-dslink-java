@@ -1,5 +1,8 @@
-package com.acuity.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
+import com.acuity.iot.dsa.dslink.DSRequesterSession;
+import com.acuity.iot.dsa.dslink.DSResponderSession;
+import com.acuity.iot.dsa.dslink.DSTransport;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -11,7 +14,6 @@ import org.iot.dsa.dslink.DSRequester;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.logging.DSLogging;
 
 /**
  * Abstraction for different protocol versions.  Not intended for link implementors.
@@ -30,7 +32,7 @@ public abstract class DSProtocol extends DSLogger {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSConnection connection;
+    private DS1LinkConnection connection;
     private long lastMessageSent;
     private Logger logger;
     private Object outgoingMutex = new Object();
@@ -174,7 +176,7 @@ public abstract class DSProtocol extends DSLogger {
         }
     }
 
-    public DSConnection getConnection() {
+    public DS1LinkConnection getConnection() {
         return connection;
     }
 
@@ -188,7 +190,7 @@ public abstract class DSProtocol extends DSLogger {
     @Override
     public Logger getLogger() {
         if (logger == null) {
-            logger = DSLogging.getLogger(getConnection().getLink().getLinkName() + "-protocol");
+            logger = Logger.getLogger(getConnection().getLink().getLinkName() + ".protocol");
         }
         return logger;
     }
@@ -256,7 +258,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * Called when the broker signifies that requests are allowed.
      */
-    public void requesterAllowed() {
+    public void setRequesterAllowed() {
         requesterAllowed = true;
         DSRuntime.run(new Runnable() {
             @Override
@@ -407,7 +409,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setConnection(DSConnection connection) {
+    public DSProtocol setConnection(DS1LinkConnection connection) {
         this.connection = connection;
         return this;
     }

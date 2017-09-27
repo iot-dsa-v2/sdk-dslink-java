@@ -1,6 +1,5 @@
-package com.acuity.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Protocol;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,14 +9,12 @@ import java.security.MessageDigest;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
-import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSBase64;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
-import org.iot.dsa.logging.DSLogging;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.time.DSTime;
+import org.iot.dsa.node.DSNode;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -26,7 +23,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSConnection extends DSLinkConnection {
+public class DS1ConnectionInit extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -42,14 +39,10 @@ public class DSConnection extends DSLinkConnection {
 
     private String authToken;
     private String brokerUri;
-    private String connectionId;
-    private DSMap connectionInitResponse;
+    private DS1LinkConnection connection;
     private DSLink link;
     private Logger logger;
-    private Object mutex = new Object();
-    private DSProtocol protocol;
-    private long reconnectRate = 1000;
-    private DSTransport transport;
+    private DSMap response;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -59,69 +52,30 @@ public class DSConnection extends DSLinkConnection {
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void close() {
-        if (isOpen()) {
-            DSTransport tpt = transport;
-            if (tpt != null) {
-                tpt.close();
-            }
-            DSProtocol ptl = protocol;
-            if (ptl != null) {
-                if (link.getRequester() != null) {
-                    link.getRequester().onDisconnected(ptl.getRequesterSession());
-                }
-                ptl.close();
-            }
-        }
+    boolean canReuse() {
+        return false;
     }
 
+    DSLink getLink() {
+        return connection.getLink();
+    }
+
+    /**
+     * Uses the connection's logger.
+     */
     @Override
-    public String getConnectionId() {
-        if (connectionId == null) {
-            StringBuilder builder = new StringBuilder();
-            builder.append(link.getLinkName()).append("-");
-            String uri = link.getConfig().getBrokerUri();
-            if ((uri != null) && !uri.isEmpty()) {
-                int idx = uri.indexOf("://") + 3;
-                if ((idx > 0) && (uri.length() > idx)) {
-                    int end = uri.indexOf("/", idx);
-                    if (end > idx) {
-                        builder.append(uri.substring(idx, end));
-                    } else {
-                        builder.append(uri.substring(idx));
-                    }
-                }
-            } else {
-                builder.append(Integer.toHexString(hashCode()));
-            }
-            connectionId = builder.toString();
-            info(info() ? "Connection ID: " + connectionId : null);
+    public Logger getLogger() {
+        if (logger == null) {
+            logger = connection.getLogger();
         }
-        return connectionId;
+        return logger;
     }
 
     /**
      * Returns the brokers response to connection initialization.
      */
-    public DSMap getConnectionInitResponse() {
-        return connectionInitResponse;
-    }
-
-    @Override
-    public DSLink getLink() {
-        return link;
-    }
-
-    /**
-     * The default logger for this connection, the logging name will be the connection ID.
-     */
-    @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = DSLogging.getLogger(getLink().getLinkName() + "-connection");
-        }
-        return logger;
+    DSMap getResponse() {
+        return response;
     }
 
     /**
@@ -130,7 +84,7 @@ public class DSConnection extends DSLinkConnection {
      * @return The json map representing the response from the server.
      * @throws Exception if there are any issues.
      */
-    protected DSMap initializeConnection() throws Exception {
+    void initializeConnection() throws Exception {
         String uri = makeBrokerUrl();
         config(config() ? "Broker URI " + uri : null);
         HttpURLConnection conn = (HttpURLConnection) new URL(uri).openConnection();
@@ -150,37 +104,14 @@ public class DSConnection extends DSLinkConnection {
         }
         JsonReader in = null;
         try {
-            /*
-            InputStream i = conn.getInputStream(); //TODO
-            int ch = i.read();
-            while (ch >= 0) {
-                System.out.print((char)ch);
-                ch = i.read();
-            }
-            if (i != null) {
-                i.close();
-                throw new IllegalStateException("Testing");
-            }
-            */
             in = new JsonReader(conn.getInputStream(), "UTF-8");
-            DSMap res = in.getMap();
-            finest(finest() ? res : null);
-            in.close();
-            return res;
+            response = in.getMap();
+            finest(finest() ? response : null);
         } finally {
             if (in != null) {
                 in.close();
             }
         }
-    }
-
-    @Override
-    public boolean isOpen() {
-        DSTransport tpt = transport;
-        if (tpt == null) {
-            return false;
-        }
-        return tpt.isOpen();
     }
 
     /**
@@ -189,7 +120,7 @@ public class DSConnection extends DSLinkConnection {
      * @see DSLinkConfig#getBrokerUri()
      * @see DSLinkConfig#getToken()
      */
-    protected String makeBrokerUrl() {
+    String makeBrokerUrl() {
         StringBuilder builder = new StringBuilder();
         String uri = brokerUri;
         if ((uri == null) || uri.isEmpty() || !uri.contains("://")) {
@@ -209,51 +140,11 @@ public class DSConnection extends DSLinkConnection {
     }
 
     /**
-     * Looks at the connection initialization response to determine the protocol implementation.
-     */
-    protected DSProtocol makeProtocol() {
-        String version = connectionInitResponse.get("version", "");
-        if (!version.startsWith("1.1.2")) {
-            throw new IllegalStateException("Unsupported version: " + version);
-        }
-        return new DS1Protocol();
-    }
-
-    /**
-     * Looks at the connection initialization response to determine the type of transport then
-     * instantiates the correct type fom the config.
-     */
-    protected DSTransport makeTransport() {
-        DSTransport.Factory factory = null;
-        DSTransport transport = null;
-        try {
-            String type = link.getConfig().getConfig(
-                    DSLinkConfig.CFG_TRANSPORT_FACTORY,
-                    "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
-            factory = (DSTransport.Factory) Class.forName(type).newInstance();
-            transport = factory.makeTransport(connectionInitResponse);
-        } catch (Exception x) {
-            DSException.throwRuntime(x);
-        }
-        String wsUri = connectionInitResponse.get("wsUri", null);
-        if (wsUri == null) {
-            throw new IllegalStateException("Only websocket transports are supported.");
-        }
-        String uri = makeWsUrl(wsUri);
-        config(config() ? "Connection URL = " + uri : null);
-        transport.setConnectionUrl(makeWsUrl(wsUri));
-        transport.setConnection(this);
-        transport.setReadTimeout(getLink().getConfig().getConfig(
-                DSLinkConfig.CFG_READ_TIMEOUT, 60000));
-        return transport;
-    }
-
-    /**
      * Adds auth and maybe authToken parameters to the websocket query string.
      *
      * @param wsPath Websocket base path returned from the broker during connection initialization.
      */
-    protected String makeWsUrl(String wsPath) {
+    String makeWsUrl(String wsPath) {
         StringBuilder buf = new StringBuilder();
         try {
             URL url = new URL(brokerUri);
@@ -266,10 +157,10 @@ public class DSConnection extends DSLinkConnection {
                 buf.append('/');
             }
             buf.append(wsPath).append("?auth=");
-            String saltStr = connectionInitResponse.getString("salt");
+            String saltStr = response.getString("salt");
             if (saltStr != null) {
                 byte[] salt = saltStr.getBytes("UTF-8");
-                String tempKey = connectionInitResponse.getString("tempKey");
+                String tempKey = response.getString("tempKey");
                 byte[] secret = getLink().getKeys().generateSharedSecret(tempKey);
                 byte[] bytes = new byte[salt.length + secret.length];
                 System.arraycopy(salt, 0, bytes, 0, salt.length);
@@ -295,36 +186,17 @@ public class DSConnection extends DSLinkConnection {
     }
 
     @Override
-    public void setLink(DSLink link) {
+    public void onStable() {
+        this.connection = (DS1LinkConnection) getParent();
+        this.link = connection.getLink();
         this.authToken = link.getConfig().getToken();
         this.brokerUri = link.getConfig().getBrokerUri();
-        this.link = link;
-    }
-
-    /**
-     * Spawns a thread to manage opening the connection and subsequent reconnections.
-     */
-    @Override
-    public void onStable() {
-        if (isOpen()) {
-            throw new IllegalStateException("Connection already open");
-        }
-        new ConnectionRunThread(new ConnectionRunner()).start();
-    }
-
-    /**
-     * Terminates the connection runner.
-     */
-    @Override
-    public void onStopped() {
-        close();
     }
 
     /**
      * Throws an exception with a useful error message.
      */
-    private void throwConnectionException(HttpURLConnection conn, int rc)
-            throws Exception {
+    void throwConnectionException(HttpURLConnection conn, int rc) throws Exception {
         StringBuilder builder = new StringBuilder();
         ByteArrayOutputStream out = null;
         InputStream in = null;
@@ -357,12 +229,8 @@ public class DSConnection extends DSLinkConnection {
         throw new IOException("HTTP " + rc);
     }
 
-    public void requesterAllowed() {
-        protocol.requesterAllowed();
-    }
-
-    public void updateSalt(String salt) {
-        DSMap map = connectionInitResponse;
+    void updateSalt(String salt) {
+        DSMap map = response;
         if (map != null) {
             map.put("salt", salt);
         }
@@ -371,14 +239,14 @@ public class DSConnection extends DSLinkConnection {
     /**
      * Writes the json map representing the connection request.
      */
-    protected void writeConnectionRequest(HttpURLConnection conn) throws Exception {
+    void writeConnectionRequest(HttpURLConnection conn) throws Exception {
         JsonWriter out = null;
         try {
             out = new JsonWriter(conn.getOutputStream());
             DSMap map = new DSMap();
             map.put("publicKey", DSBase64.encodeUrl(link.getKeys().encodePublic()));
             map.put("isRequester", link.getConfig().isRequester());
-            map.put("isResponder", link.getResponder() != null);
+            map.put("isResponder", link.getConfig().isResponder());
             map.put("linkData", new DSMap());
             map.put("version", DSA_VERSION);
             DSList list = map.putList("formats");
@@ -398,62 +266,5 @@ public class DSConnection extends DSLinkConnection {
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Daemon thread that manages connection and reconnection.
-     */
-    private class ConnectionRunner implements Runnable {
-
-        /**
-         * Runs until stop is called.
-         */
-        public void run() {
-            while (isRunning()) {
-                try {
-                    synchronized (mutex) {
-                        try {
-                            mutex.wait(reconnectRate);
-                        } catch (Exception x) {
-                            warn(warn() ? getConnectionId() : null, x);
-                        }
-                    }
-                    if (connectionInitResponse == null) {
-                        connectionInitResponse = initializeConnection();
-                    }
-                    transport = makeTransport();
-                    config(config() ? "Transport type: " + transport.getClass().getName() : null);
-                    transport.open();
-                    protocol = makeProtocol()
-                            .setConnection(DSConnection.this)
-                            .setTransport(transport);
-                    config(config() ? "Protocol type: " + protocol.getClass().getName() : null);
-                    protocol.run();
-                    reconnectRate = 1000;
-                } catch (Throwable x) {
-                    reconnectRate = Math.min(reconnectRate * 2, DSTime.MILLIS_MINUTE);
-                    severe(getConnectionId(), x);
-                }
-                try {
-                    close();
-                } catch (Exception x) {
-                    fine(fine() ? getConnectionId() : null, x);
-                }
-                protocol = null;
-                transport = null;
-            }
-        }
-    }
-
-    /**
-     * Daemon thread that manages connection and reconnection.
-     */
-    private class ConnectionRunThread extends Thread {
-
-        public ConnectionRunThread(ConnectionRunner runner) {
-            super(runner);
-            setName(getConnectionId() + " Runner");
-            setDaemon(true);
-        }
-    }
 
 }

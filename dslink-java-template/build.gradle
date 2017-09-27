@@ -7,7 +7,7 @@ targetCompatibility = 1.6
 group 'org.iot.dsa'
 version '0.1.0'
 
-mainClassName = 'org.iot.dsa.dslink.template.Main'
+mainClassName = 'org.iot.dsa.dslink.DSLink'
 
 repositories {
     mavenLocal()

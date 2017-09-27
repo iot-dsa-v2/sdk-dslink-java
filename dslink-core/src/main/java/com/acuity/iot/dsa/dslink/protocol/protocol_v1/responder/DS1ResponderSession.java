@@ -75,8 +75,8 @@ public class DS1ResponderSession extends DSLogger implements DSResponderSession 
     @Override
     public Logger getLogger() {
         if (logger == null) {
-            logger = DSLogging.getLogger(
-                    getConnection().getLink().getLinkName() + "-responderSession");
+            logger = Logger.getLogger(
+                    getConnection().getLink().getLinkName() + ".responderSession");
         }
         return logger;
     }
@@ -130,7 +130,7 @@ public class DS1ResponderSession extends DSLogger implements DSResponderSession 
      */
     public void processRequest(final Integer rid, final DSMap map) {
         if (responder == null) {
-            responder = getConnection().getLink().getResponder();
+            responder = getConnection().getLink();
         }
         if (responder == null) {
             throw new DSProtocolException("Not a responder");

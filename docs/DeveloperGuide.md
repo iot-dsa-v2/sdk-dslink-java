@@ -35,61 +35,31 @@ Key objectives of this SDK:
 These are the major steps you'll take when creating a link:
 
 1. Create link boilerplate.
-2. Create a main class.
-3. Create a root node.
-4. Create application nodes.
+2. Create a root node.
+3. Create application nodes.
 
 ## Create Link Boilerplate
 
 Copy the dslink-java-template subproject to create a new repository.  It's README provides
 further instructions for customization.
 
-## Create a Main Class
-
-All this needs to do is create a link and run it as follows.
-
-```java
-    public static void main(String[] args) throws Exception {
-        DSLinkConfig cfg = new DSLinkConfig(args);
-        DSLink link = new DSLink(cfg);
-        link.run();
-    }
-```
-
-If using the boilerplate project, the main class must be specified in build.gradle.
-
-    mainClassName = 'org.iot.dsa.dslink.template.Main'
-    
-In that project, the main class is also the root node.
-
 ## Create a Root Node
 
-If you will be modeling data as a DSNode tree, then all you need to do is subclass 
+The root node is the hook for a links specific functionality. It must be a subclass of 
 [org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html).
-
-Otherwise the root node must be subclass of 
-[org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html).
-and if your link is to be a responder, it must also implement 
-[org.iot.dsa.dslink.DSResponder](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/dslink/DSResponder.html).
 
 The fully qualified class name must be specified as the **rootType** config in _dslink.json_.
 
-If you want to proxy another model and don't need a persistent node tree, you should subclass 
-DSNode and implement DSResponder interface.
-
-You can also create a hybrid solution by subclassing DSRootNode, but implementing DSResponder in 
-nodes lower in the tree.  If a node in a request path implements DSResponder, it is their
-responsibility for processing the request.  Paths of the request will have the path leading to the
-responder removed.  This approach can be used to get some configuration persistence without 
-having to model everything as a DSNode or DSIValue.
-
 ## Create Application Nodes
 
-The hook for link functionality is the node tree.  Links will subclass 
 [org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
-and do the following:
+is the organization unit of a link.  It can contain values, actions and other nodes.  Most if not
+all a link's customer functionality will be implemented in DSNode subclasses.
 
-1. Configure the default children (nodes, values and actions).
+Subclassing DSNode requires to key steps:
+
+1. Configure the default children (nodes, values and actions).  Use default rather than dynamic
+children as much as possible.  It it much more efficient.
 2. Use various lifecycle callbacks to trigger custom functionality.
 
 ### Constructors
@@ -106,7 +76,7 @@ your node is running (started or stable).
 If a DSNode subtype needs to have specific child nodes or values (most will), it should override
 the declareDefaults method.  The method should:
 
-1. Call super.declareDefaults();
+1. Call super.declareDefaults().
 2. Call DSNode.declareDefault(String name, DSIObject child) for each non-removable child.  Do not 
 add dynamic children in declareDefaults, because if they are removed, they will be re-added the 
 next time the link is restarted.

@@ -42,13 +42,17 @@
       "desc": "Whether or not the link is a requester.",
       "value": false
     },
+    "isResponder": {
+      "desc": "Whether or not the link is a responder.",
+      "value": true
+    },
     "key": {
       "desc": "Path to public/private key pair.",
       "value": ".key"
     },
     "log": {
-      "desc": "all, finest, finer, fine, config, info, warn, severe, off",
-      "value": "all"
+      "desc": "debug, info, warn, error, none",
+      "value": "info"
     },
     "logFile": {
       "desc": "Path to the log file.",

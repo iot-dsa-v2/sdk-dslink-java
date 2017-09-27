@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.iot.dsa.util.DSUtil;
 
 /**
  * String keyed collection of elements that preserves the order of addition.  Keys and values can be
@@ -66,13 +67,23 @@ public class DSMap extends DSGroup {
     }
 
     @Override
-    public DSMap valueOf(DSElement element) {
-        return element.toMap();
-    }
-
-    @Override
-    public DSMap toElement() {
-        return this;
+    public boolean equals(Object arg) {
+        if (!(arg instanceof DSMap)) {
+            return false;
+        }
+        DSMap argMap = (DSMap) arg;
+        int size = size();
+        if (argMap.size() != size) {
+            return false;
+        }
+        Entry mine = null;
+        for (int i = size; --i >= 0; ) {
+            mine = getEntry(i);
+            if (!DSUtil.equal(mine.getValue(), argMap.get(mine.getKey()))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -481,8 +492,18 @@ public class DSMap extends DSGroup {
     }
 
     @Override
+    public DSMap toElement() {
+        return this;
+    }
+
+    @Override
     public DSMap toMap() {
         return this;
+    }
+
+    @Override
+    public DSMap valueOf(DSElement element) {
+        return element.toMap();
     }
 
     // Inner Classes

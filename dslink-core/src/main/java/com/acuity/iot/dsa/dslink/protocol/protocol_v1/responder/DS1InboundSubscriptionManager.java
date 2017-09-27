@@ -76,8 +76,8 @@ class DS1InboundSubscriptionManager extends DSLogger implements OutboundMessage 
     @Override
     public Logger getLogger() {
         if (logger == null) {
-            logger = DSLogging.getLogger(session.getConnection().getLink().getLinkName()
-                                                 + "-responderSubscriptionManager");
+            logger = Logger.getLogger(session.getConnection().getLink().getLinkName()
+                                                 + ".responderSubscriptions");
         }
         return logger;
     }

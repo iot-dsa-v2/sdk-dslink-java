@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.DSConnection;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 
@@ -31,17 +31,16 @@ public abstract class TestLink extends DSNode implements DSResponder {
         DSLinkConfig cfg = new DSLinkConfig(args)
                 .setConfig(DSLinkConfig.CFG_CONNECTION_TYPE, MyConnection.class.getName())
                 .setConfig(DSLinkConfig.CFG_TRANSPORT_FACTORY, TestTransport.class.getName());
-        DSLink link = new DSLink(cfg);
-        link.start();
+        DSLink link = DSLink.load(cfg);
+        link.run();
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
-    public static class MyConnection extends DSConnection {
+    public static class MyConnection extends DS1LinkConnection {
 
-        @Override
         protected DSMap initializeConnection() {
             return new DSMap()
                     .put("dsId",

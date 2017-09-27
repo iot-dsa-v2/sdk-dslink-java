@@ -1,8 +1,6 @@
 package org.iot.dsa.dslink.template;
 
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSRootNode;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSElement;
@@ -49,7 +47,7 @@ public class Main extends DSRootNode implements Runnable {
     protected void declareDefaults() {
         super.declareDefaults();
         declareDefault("Incrementing Int", DSInt.valueOf(1)).setReadOnly(true);
-        declareDefault("Writable Boolean", DSBool.valueOf(true));
+        declareDefault("Writable Boolean", DSBool.valueOf(true)).setConfig(true);
         declareDefault("Writable Enum",
                        DSFlexEnum.valueOf("On",
                                           DSList.valueOf("Off", "On", "Auto", "Has Space")));
@@ -61,15 +59,6 @@ public class Main extends DSRootNode implements Runnable {
                             "My action description");
         declareDefault("Reset", action);
         declareDefault("Test", new DSAction());
-    }
-
-    /**
-     * Launch the link.
-     */
-    public static void main(String[] args) throws Exception {
-        DSLinkConfig cfg = new DSLinkConfig(args);
-        DSLink link = new DSLink(cfg);
-        link.run();
     }
 
     /**
@@ -125,7 +114,7 @@ public class Main extends DSRootNode implements Runnable {
         info("********** Clear duration: " + dur);
         start = System.currentTimeMillis();
         DSNode node = new TestNode();
-        add("test", node);
+        add("test", node).setConfig(true);
         for (int i = 0; i < 10; i++) {
             DSNode iNode = new TestNode();
             node.add("test" + i, iNode);
@@ -141,7 +130,7 @@ public class Main extends DSRootNode implements Runnable {
         dur = now - start;
         info("********** Add duration: " + dur);
         start = System.currentTimeMillis();
-        getLink().saveNodes();
+        getLink().save();
         now = System.currentTimeMillis();
         dur = now - start;
         info("********** Save duration: " + dur);
@@ -152,6 +141,9 @@ public class Main extends DSRootNode implements Runnable {
         info("********** Iterate duration: " + dur);
     }
 
+    /**
+     * Walk the test tree.
+     */
     private void onTestIterate(DSNode node) {
         for (DSInfo info : node) {
             if (info.isNode()) {
@@ -212,15 +204,19 @@ public class Main extends DSRootNode implements Runnable {
             action.addParameter("Arg2", DSString.valueOf("ID2"), null);
             action.addParameter("Arg3", DSString.valueOf("ID3"), null);
             put("action1", action);
+            /*
             action = new DSAction();
             action.addParameter("Arg1", DSString.valueOf("ID1"), null);
             action.addParameter("Arg2", DSString.valueOf("ID2"), null);
             action.addParameter("Arg3", DSString.valueOf("ID3"), null);
+            */
             put("action2", action);
+            /*
             action = new DSAction();
             action.addParameter("Arg1", DSString.valueOf("ID1"), null);
             action.addParameter("Arg2", DSString.valueOf("ID2"), null);
             action.addParameter("Arg3", DSString.valueOf("ID3"), null);
+            */
             put("action3", action);
         }
 

@@ -105,7 +105,7 @@ public class TextWsTransport extends DSLogger implements DSTransport {
     @Override
     public Logger getLogger() {
         if (logger == null) {
-            logger = DSLogging.getLogger(connection.getLink().getLinkName() + "-transport");
+            logger = Logger.getLogger(connection.getLink().getLinkName() + ".transport");
         }
         return logger;
     }

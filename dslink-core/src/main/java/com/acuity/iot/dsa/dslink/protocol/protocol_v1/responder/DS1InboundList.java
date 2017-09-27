@@ -168,6 +168,8 @@ class DS1InboundList extends DS1InboundRequest
             if (!child.isReadOnly()) {
                 out.key("$writable").value(child.isConfig() ? "config" : "write");
             }
+        } else if (child.isConfig()) {
+            out.key("$permission").value("config");
         }
         out.endMap().endList();
         cacheMap.clear();
@@ -194,18 +196,11 @@ class DS1InboundList extends DS1InboundRequest
             encodeTargetAction(object.getAction(), out);
         } else if (object.isValue()) {
             encodeTargetValue(object, out);
+        } else if (object.isConfig()) {
+            out.beginList().value("$permission").value("config").endList();
         }
         encodeTargetMetadata(cacheMap, out);
         cacheMap.clear();
-    }
-
-    private void encodeType(DSIValue value, DSMetadata meta, DSIWriter out) {
-        String type = meta.getType();
-        if ((type == null) && (value != null)) {
-            meta.setType(value);
-        }
-        fixType(cacheMap);
-        out.value(cacheMap.remove(DSMetadata.TYPE));
     }
 
     /**
@@ -289,6 +284,15 @@ class DS1InboundList extends DS1InboundRequest
                    .endList();
             }
         }
+    }
+
+    private void encodeType(DSIValue value, DSMetadata meta, DSIWriter out) {
+        String type = meta.getType();
+        if ((type == null) && (value != null)) {
+            meta.setType(value);
+        }
+        fixType(cacheMap);
+        out.value(cacheMap.remove(DSMetadata.TYPE));
     }
 
     private void encodeUpdate(Update update, DSIWriter out) {
