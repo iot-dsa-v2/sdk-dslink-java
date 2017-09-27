@@ -53,12 +53,12 @@ The fully qualified class name must be specified as the **rootType** config in _
 ## Create Application Nodes
 
 [org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
-is the organization unit of a link.  It can contain values, actions and other nodes.  Most if not
-all a link's customer functionality will be implemented in DSNode subclasses.
+is the organizational unit of a link.  It can contain values, actions and other nodes.  Most if not
+all of a link's custom functionality will be implemented as DSNode subclasses.
 
 Subclassing DSNode requires to key steps:
 
-1. Configure the default children (nodes, values and actions).  Use default rather than dynamic
+1. Configure the default children (nodes, values and actions).  Use defaults rather than dynamic
 children as much as possible.  It it much more efficient.
 2. Use various lifecycle callbacks to trigger custom functionality.
 
@@ -76,22 +76,34 @@ your node is running (started or stable).
 If a DSNode subtype needs to have specific child nodes or values (most will), it should override
 the declareDefaults method.  The method should:
 
-1. Call super.declareDefaults().
+1. Call super.declareDefaults().  It's not always necessary but it's safest to do so.
 2. Call DSNode.declareDefault(String name, DSIObject child) for each non-removable child.  Do not 
 add dynamic children in declareDefaults, because if they are removed, they will be re-added the 
 next time the link is restarted.
 
+```java
+    @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault("Do Something", DSAction.DEFAULT);
+        declareDefault("An Integer Value", DSInt.valueOf(0));
+        declareDefault("Child Node", new DSNode());
+    }
+```
+
 During node serialization (configuration database, not DSA interop), children that match their 
 declared default are omitted.  This has two benefits:
 
-1. Smaller node database means faster serialization / deserialization.
-2. Default values can be modified in code and all existing databases will be automatically upgraded 
-the next time the updated class loaded.
+1. A smaller node database means faster serialization / deserialization.
+2. Default values can be modified in code and all existing databases with values at the default 
+will be automatically upgraded the next time the updated class is loaded. 
 
 ### Node Lifecycle
 
-It is important to know the application lifecycle.  Your nodes should not execute any application
-logic unless they are running (started or stable).
+It is important to know the application lifecycle.  Use lifecycle callbacks to trigger custom link
+functionality.  
+
+_Nodes should not execute any application logic unless they are running (started or stable)._
 
 **Stopped**
 
@@ -148,7 +160,7 @@ Values mostly represent leaf members of the node tree.  There are two types of v
 1. [org.io.dsa.node.DSElement](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSElement.html) - 
 These map to the JSON type system and represent leaf members of the node tree.
 2. [org.io.dsa.node.DSIValue](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSIValue.html) - 
-These don't map to the JSON type system, and it is possible for nodes to implement this 
+These don't have to map to the JSON type system, and it is possible for nodes to implement this 
 interface.  This allows for values with children.
 
 The node model encourages values to be immutable and singletons.  This is for efficiency, the same 
@@ -200,9 +212,8 @@ All node children have corresponding DSInfo instances.  This type serves serves 
 Important things for developers to know about DSInfo are:
 
 * You can configure state such as transient, readonly and hidden.
-* You can declare fields in the your Java class for default info instances to avoid
-looking up the child every time it is needed.  This is can be used to create fast getters and 
-setters.
+* You can declare fields in the your Java class for info instances to avoid looking up the child 
+every time it is needed.  This is can be used to create fast getters and setters.
 
 Without declaring fields (lookups required):
 
@@ -255,7 +266,7 @@ To simplify configuring metadata, use the utility class
 
 Use [org.iot.dsa.DSRuntime](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/DSRuntime.html).
 
-Create your own threads for long lived activities and try to make them daemon as well.
+Create your own threads for long lived activities and make them daemon as well.
 
 ## Logging
 
