@@ -1,8 +1,6 @@
 package org.iot.dsa.dslink.template;
 
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSRootNode;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSElement;
@@ -49,7 +47,7 @@ public class Main extends DSRootNode implements Runnable {
     protected void declareDefaults() {
         super.declareDefaults();
         declareDefault("Incrementing Int", DSInt.valueOf(1)).setReadOnly(true);
-        declareDefault("Writable Boolean", DSBool.valueOf(true));
+        declareDefault("Writable Boolean", DSBool.valueOf(true)).setConfig(true);
         declareDefault("Writable Enum",
                        DSFlexEnum.valueOf("On",
                                           DSList.valueOf("Off", "On", "Auto", "Has Space")));
@@ -116,7 +114,7 @@ public class Main extends DSRootNode implements Runnable {
         info("********** Clear duration: " + dur);
         start = System.currentTimeMillis();
         DSNode node = new TestNode();
-        add("test", node);
+        add("test", node).setConfig(true);
         for (int i = 0; i < 10; i++) {
             DSNode iNode = new TestNode();
             node.add("test" + i, iNode);

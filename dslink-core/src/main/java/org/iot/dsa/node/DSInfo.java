@@ -239,9 +239,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return value instanceof DSAction;
     }
 
-    /**
-     * Whether or not configuration permission is required to see the object.
-     */
+    @Override
     public boolean isConfig() {
         return getFlag(CONFIG);
     }
@@ -249,6 +247,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
     /**
      * Whether or not an object is visible to clients.
      */
+    @Override
     public boolean isHidden() {
         return getFlag(HIDDEN);
     }
