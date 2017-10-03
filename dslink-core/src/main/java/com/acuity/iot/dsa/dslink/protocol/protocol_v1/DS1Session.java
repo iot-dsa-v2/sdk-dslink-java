@@ -9,12 +9,15 @@ import static org.iot.dsa.io.DSIReader.Token.NULL;
 import com.acuity.iot.dsa.dslink.DSProtocolException;
 import com.acuity.iot.dsa.dslink.DSRequesterSession;
 import com.acuity.iot.dsa.dslink.DSResponderSession;
+import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester.DS1RequesterSession;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder.DS1ResponderSession;
 import java.io.IOException;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIReader.Token;
 import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSMap;
 
 /**
@@ -22,11 +25,14 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Aaron Hansen
  */
-public class DS1Protocol extends DSProtocol {
+public class DS1Session extends DSSession {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
     ///////////////////////////////////////////////////////////////////////////
+
+    static final String LAST_ACK_RECV = "Last Ack Recv";
+    static final String LAST_ACK_SENT = "Last Ack Sent";
 
     static final int MAX_MSG_ID = 2147483647;
     static final int MAX_MSG_IVL = 45000;
@@ -35,6 +41,8 @@ public class DS1Protocol extends DSProtocol {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private DSInfo lastAckRecv = getInfo(LAST_ACK_RECV);
+    private DSInfo lastAckSent = getInfo(LAST_ACK_SENT);
     private int nextAck = -1;
     private int nextMsg = 1;
     private DS1RequesterSession requesterSession = new DS1RequesterSession(this);
@@ -59,6 +67,7 @@ public class DS1Protocol extends DSProtocol {
         synchronized (this) {
             if (nextAck > 0) {
                 out.key("ack").value(nextAck);
+                put(lastAckSent, DSInt.valueOf(nextAck));
                 nextAck = -1;
             }
         }
@@ -74,6 +83,10 @@ public class DS1Protocol extends DSProtocol {
         getWriter().key("requests").beginList();
     }
 
+    boolean canReuse() {
+        return false;
+    }
+
     @Override
     public void close() {
         responderSession.close();
@@ -81,7 +94,13 @@ public class DS1Protocol extends DSProtocol {
     }
 
     @Override
-    protected void doRun() throws IOException {
+    protected void declareDefaults() {
+        declareDefault(LAST_ACK_RECV, DSInt.NULL).setReadOnly(true);
+        declareDefault(LAST_ACK_SENT, DSInt.NULL).setReadOnly(true);
+    }
+
+    @Override
+    protected void doRead() throws IOException {
         DSIReader reader = getReader();
         while (isOpen()) {
             switch (reader.next()) {
@@ -142,12 +161,13 @@ public class DS1Protocol extends DSProtocol {
         return super.hasSomethingToSend();
     }
 
-    private String printMemory() { //TODO temporary
-        Runtime r = Runtime.getRuntime();
-        long ttl = r.totalMemory();
-        long free = r.freeMemory();
-        return ((ttl - free) / 1024) + "KB";
+    /*
+    @Override
+    protected void onStable() {
+        put("Requester Session", requesterSession);
+        put("Responder Session", responderSession);
     }
+    */
 
     /**
      * Decomposes and processes a complete envelope which can contain multiple requests and
@@ -156,7 +176,6 @@ public class DS1Protocol extends DSProtocol {
      * @param reader lastRun() will return BEGIN_MAP
      */
     protected void processEnvelope(DSIReader reader) {
-        finest(finest() ? printMemory() : null);
         if (!requesterAllowed) {
             getConnection().setRequesterAllowed();
         }
@@ -184,6 +203,7 @@ public class DS1Protocol extends DSProtocol {
                 msg = (int) reader.getLong();
             } else if (key.equals("ack")) {
                 reader.next();
+                put(lastAckRecv, DSInt.valueOf((int) reader.getLong()));
             } else if (key.equals("allowed")) {
                 if (reader.next() != Token.BOOLEAN) {
                     throw new IllegalStateException("Allowed not a boolean");

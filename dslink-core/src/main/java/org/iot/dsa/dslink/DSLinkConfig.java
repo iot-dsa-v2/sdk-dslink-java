@@ -96,7 +96,7 @@ public class DSLinkConfig {
      */
     public String getBrokerUri() {
         if (brokerUri == null) {
-            brokerUri = getConfig(CFG_BROKER_URL, null);
+            brokerUri = getConfig(CFG_BROKER_URL, "http://localhost:8080/conn");
         }
         return brokerUri;
     }

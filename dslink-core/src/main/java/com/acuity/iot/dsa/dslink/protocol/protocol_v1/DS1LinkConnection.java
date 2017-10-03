@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
+import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.DSTransport;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLink;
@@ -20,6 +21,10 @@ public class DS1LinkConnection extends DSLinkConnection {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
+    static final String CONNECTION_INIT = "Initialization";
+    static final String SESSION = "Session";
+    static final String TRANSPORT = "Transport";
+
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
@@ -29,7 +34,7 @@ public class DS1LinkConnection extends DSLinkConnection {
     private DSLink link;
     private Logger logger;
     private Object mutex = new Object();
-    private DSProtocol protocol;
+    private DS1Session session;
     private long reconnectRate = 1000;
     private DSTransport transport;
 
@@ -48,12 +53,9 @@ public class DS1LinkConnection extends DSLinkConnection {
             if (tpt != null) {
                 tpt.close();
             }
-            DSProtocol ptl = protocol;
-            if (ptl != null) {
-                if (link.getRequester() != null) {
-                    link.getRequester().onDisconnected(ptl.getRequesterSession());
-                }
-                ptl.close();
+            DSSession ses = session;
+            if (ses != null) {
+                ses.pause();
             }
         }
     }
@@ -111,12 +113,12 @@ public class DS1LinkConnection extends DSLinkConnection {
     /**
      * Looks at the connection initialization response to determine the protocol implementation.
      */
-    protected DSProtocol makeProtocol() {
+    protected DS1Session makeSession() {
         String version = connectionInit.getResponse().get("version", "");
         if (!version.startsWith("1.1.2")) {
             throw new IllegalStateException("Unsupported version: " + version);
         }
-        return new DS1Protocol();
+        return new DS1Session();
     }
 
     /**
@@ -166,10 +168,15 @@ public class DS1LinkConnection extends DSLinkConnection {
     @Override
     public void onStopped() {
         close();
+        if (session != null) {
+            session.close();
+            session = null;
+        }
+        transport = null;
     }
 
     public void setRequesterAllowed() {
-        protocol.setRequesterAllowed();
+        session.setRequesterAllowed();
     }
 
     public void updateSalt(String salt) {
@@ -200,23 +207,27 @@ public class DS1LinkConnection extends DSLinkConnection {
                     }
                     if (connectionInit == null) {
                         connectionInit = new DS1ConnectionInit();
-                        put("Connection Init", connectionInit);
+                        put(CONNECTION_INIT, connectionInit).setTransient(true);
                         connectionInit.initializeConnection();
                     }
                     transport = makeTransport();
+                    put(TRANSPORT, transport).setTransient(true);
                     config(config() ? "Transport type: " + transport.getClass().getName() : null);
                     transport.open();
-                    if (protocol != null) {
-                        if (!connectionInit.canReuse()) {
-                            protocol = null;
+                    if (session != null) {
+                        if (!session.canReuse()) {
+                            session.close();
+                            remove(SESSION);
+                            session = null;
                         }
                     }
-                    if (protocol == null) {
-                        protocol = makeProtocol();
+                    if (session == null) {
+                        session = makeSession();
+                        put(SESSION, session).setTransient(true);
                     }
-                    protocol.setConnection(DS1LinkConnection.this).setTransport(transport);
-                    config(config() ? "Protocol type: " + protocol.getClass().getName() : null);
-                    protocol.run();
+                    session.setConnection(DS1LinkConnection.this).setTransport(transport);
+                    config(config() ? "Protocol type: " + session.getClass().getName() : null);
+                    session.run();
                     reconnectRate = 1000;
                 } catch (Throwable x) {
                     reconnectRate = Math.min(reconnectRate * 2, DSTime.MILLIS_MINUTE);
@@ -227,7 +238,9 @@ public class DS1LinkConnection extends DSLinkConnection {
                 } catch (Exception x) {
                     fine(fine() ? getConnectionId() : null, x);
                 }
-                protocol = null;
+                if (session != null) {
+                    session.pause();
+                }
                 transport = null;
             }
         }

@@ -20,7 +20,7 @@ import org.iot.dsa.node.action.DSAction;
  *
  * @author Aaron Hansen
  */
-public class Main extends DSRootNode implements Runnable {
+public class TemplateRoot extends DSRootNode implements Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -63,6 +63,10 @@ public class Main extends DSRootNode implements Runnable {
 
     /**
      * Handles the reset action.
+     *
+     * <p>
+     *
+     * {@inheritDoc}
      */
     @Override
     public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {

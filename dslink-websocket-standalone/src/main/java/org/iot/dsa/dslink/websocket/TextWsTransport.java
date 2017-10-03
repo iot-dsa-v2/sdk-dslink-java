@@ -34,7 +34,7 @@ import org.iot.dsa.util.DSException;
  * @author Aaron Hansen
  */
 @ClientEndpoint
-public class TextWsTransport extends DSLogger implements DSTransport {
+public class TextWsTransport extends DSTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -49,9 +49,7 @@ public class TextWsTransport extends DSLogger implements DSTransport {
     private DSCharBuffer buffer = new DSCharBuffer();
     private ClientManager client;
     private DSLinkConnection connection;
-    private String connectionUri;
     private int endMessageThreshold = 32768;
-    private Logger logger;
     private int messageSize;
     private boolean open = false;
     private DSIReader reader;
@@ -103,14 +101,6 @@ public class TextWsTransport extends DSLogger implements DSTransport {
     }
 
     @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(connection.getLink().getLinkName() + ".transport");
-        }
-        return logger;
-    }
-
-    @Override
     public DSIReader getReader() {
         if (reader == null) {
             reader = new JsonReader(new MyReader());
@@ -141,14 +131,14 @@ public class TextWsTransport extends DSLogger implements DSTransport {
     @OnClose
     public void onClose(Session session, CloseReason reason) {
         if (open) {
-            info(connectionUri + " remotely closed, reason = " + reason.toString());
+            info(getConnectionUrl() + " remotely closed, reason = " + reason.toString());
             getConnection().close();
         }
     }
 
     @OnError
     public void onError(Session session, Throwable err) {
-        severe(connectionUri, err);
+        severe(getConnectionUrl(), err);
         getConnection().close();
     }
 
@@ -178,7 +168,7 @@ public class TextWsTransport extends DSLogger implements DSTransport {
             if (client == null) {
                 client = ClientManager.createClient();
             }
-            client.connectToServer(this, new URI(connectionUri));
+            client.connectToServer(this, new URI(getConnectionUrl()));
             buffer.open();
             open = true;
             fine(fine() ? "Transport open" : null);
@@ -217,13 +207,8 @@ public class TextWsTransport extends DSLogger implements DSTransport {
     }
 
     @Override
-    public DSTransport setConnectionUrl(String uri) {
-        this.connectionUri = uri;
-        return this;
-    }
-
-    @Override
     public DSTransport setReadTimeout(long millis) {
+        super.setReadTimeout(millis);
         buffer.setTimeout(millis);
         return this;
     }
@@ -241,7 +226,7 @@ public class TextWsTransport extends DSLogger implements DSTransport {
      */
     public void write(String text, boolean isLast) {
         if (!open) {
-            throw new DSIoException("Closed " + connectionUri);
+            throw new DSIoException("Closed " + getConnectionUrl());
         }
         try {
             RemoteEndpoint.Basic basic = session.getBasicRemote();
@@ -252,7 +237,7 @@ public class TextWsTransport extends DSLogger implements DSTransport {
             }
             basic.sendText(text, isLast);
         } catch (IOException x) {
-            severe(connectionUri, x);
+            severe(getConnectionUrl(), x);
             connection.close();
         }
     }

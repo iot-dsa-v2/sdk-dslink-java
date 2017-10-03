@@ -15,6 +15,7 @@ import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -32,6 +33,9 @@ public class DS1ConnectionInit extends DSNode {
     private static final String DSA_VERSION = "1.1.2";
     //private static final String[] SUPPORTED_FORMATS = new String[]{"msgpack", "json"};
     private static final String[] SUPPORTED_FORMATS = new String[]{"json"};
+
+    private String BROKER_REQ = "Broker Request";
+    private String BROKER_RES = "Broker Response";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -51,10 +55,6 @@ public class DS1ConnectionInit extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    boolean canReuse() {
-        return false;
-    }
 
     DSLink getLink() {
         return connection.getLink();
@@ -106,6 +106,7 @@ public class DS1ConnectionInit extends DSNode {
         try {
             in = new JsonReader(conn.getInputStream(), "UTF-8");
             response = in.getMap();
+            put(BROKER_RES, response).setReadOnly(true);
             finest(finest() ? response : null);
         } finally {
             if (in != null) {
@@ -254,6 +255,7 @@ public class DS1ConnectionInit extends DSNode {
                 list.add(format);
             }
             map.put("enableWebSocketCompression", false);
+            put(BROKER_REQ, map).setReadOnly(true);
             finest(finest() ? map.toString() : null);
             out.value(map);
         } finally {

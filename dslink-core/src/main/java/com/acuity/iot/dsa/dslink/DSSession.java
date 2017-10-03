@@ -1,9 +1,7 @@
-package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
+package com.acuity.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.DSRequesterSession;
-import com.acuity.iot.dsa.dslink.DSResponderSession;
-import com.acuity.iot.dsa.dslink.DSTransport;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,14 +11,15 @@ import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSRequester;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.logging.DSLogger;
+import org.iot.dsa.node.DSNode;
 
 /**
- * Abstraction for different protocol versions.  Not intended for link implementors.
+ * The state of a connection to a broker as well as a protocol implementation. Not intended for link
+ * implementors.
  *
  * @author Aaron Hansen
  */
-public abstract class DSProtocol extends DSLogger {
+public abstract class DSSession extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -32,6 +31,7 @@ public abstract class DSProtocol extends DSLogger {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private boolean active = false;
     private DS1LinkConnection connection;
     private long lastMessageSent;
     private Logger logger;
@@ -40,7 +40,6 @@ public abstract class DSProtocol extends DSLogger {
     private List<OutboundMessage> outgoingResponses = new LinkedList<OutboundMessage>();
     private DSIReader reader;
     protected boolean requesterAllowed = false;
-    private boolean running = false;
     private DSTransport transport;
     private DSIWriter writer;
 
@@ -86,14 +85,62 @@ public abstract class DSProtocol extends DSLogger {
      *
      * @see #isOpen()
      */
-    protected abstract void doRun() throws IOException;
+    protected abstract void doRead() throws IOException;
+
+    /**
+     * The run method thread spawns a thread which then executes this method for writing outgoing
+     * requests and responses.
+     */
+    private void doWrite() {
+        long endTime;
+        boolean requestsFirst = false;
+        DSTransport transport = getTransport();
+        lastMessageSent = System.currentTimeMillis();
+        DSIWriter writer = getWriter();
+        try {
+            while (active) {
+                synchronized (outgoingMutex) {
+                    if (!hasSomethingToSend()) {
+                        try {
+                            outgoingMutex.wait(1000);
+                        } catch (InterruptedException ignore) {
+                        }
+                        continue;
+                    }
+                }
+                endTime = System.currentTimeMillis() + MAX_MSG_TIME;
+                //alternate the send requests or responses first each time
+                writer.reset();
+                requestsFirst = !requestsFirst;
+                transport.beginMessage();
+                beginMessage();
+                if (hasMessagesToSend()) {
+                    send(requestsFirst, endTime);
+                    if (active &&
+                            (System.currentTimeMillis() < endTime) &&
+                            !transport.shouldEndMessage()) {
+                        send(!requestsFirst, endTime);
+                    }
+                }
+                endMessage();
+                transport.endMessage();
+                lastMessageSent = System.currentTimeMillis();
+            }
+        } catch (Exception x) {
+            if (active) {
+                getLogger().log(Level.FINE, getConnection().getConnectionId(), x);
+                active = false;
+                transport.close();
+            }
+        }
+    }
 
     /**
      * Can be called by the subclass to force close the connection.
      */
     public void close() {
         try {
-            running = false;
+            active = false;
             synchronized (outgoingMutex) {
                 outgoingRequests.clear();
                 outgoingResponses.clear();
@@ -153,7 +200,7 @@ public abstract class DSProtocol extends DSLogger {
      * Add a message to the outgoing request queue.
      */
     public void enqueueOutgoingRequest(OutboundMessage arg) {
-        if (running) {
+        if (active) {
             if (!requesterAllowed) {
                 throw new IllegalStateException("Requests forbidden");
             }
@@ -168,7 +215,7 @@ public abstract class DSProtocol extends DSLogger {
      * Add a message to the outgoing response queue.
      */
     public void enqueueOutgoingResponse(OutboundMessage arg) {
-        if (running) {
+        if (active) {
             synchronized (outgoingMutex) {
                 outgoingResponses.add(arg);
                 outgoingMutex.notify();
@@ -190,7 +237,7 @@ public abstract class DSProtocol extends DSLogger {
     @Override
     public Logger getLogger() {
         if (logger == null) {
-            logger = Logger.getLogger(getConnection().getLink().getLinkName() + ".protocol");
+            logger = Logger.getLogger(getConnection().getLink().getLinkName() + ".session");
         }
         return logger;
     }
@@ -240,10 +287,10 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * The subclass check this to determine when to exit the doRun method.
      *
-     * @see #doRun()
+     * @see #doRead()
      */
     protected boolean isOpen() {
-        return running && transport.isOpen();
+        return active && transport.isOpen();
     }
 
     /**
@@ -253,6 +300,12 @@ public abstract class DSProtocol extends DSLogger {
         synchronized (outgoingMutex) {
             outgoingMutex.notify();
         }
+    }
+
+    /**
+     * Override point for reusable sessions.  Does nothing by default.
+     */
+    public void pause() {
     }
 
     /**
@@ -275,25 +328,25 @@ public abstract class DSProtocol extends DSLogger {
      * Called by the connection, this manages the running state and calls doRun for the specific
      * implementation.  A separate thread is spun off to manage writing.
      *
-     * @see #doRun()
+     * @see #doRead()
      */
     public void run() {
         synchronized (this) {
-            if (running) {
+            if (active) {
                 throw new IllegalStateException(
                         "Protocol already running " + connection.getConnectionId());
             }
-            running = true;
+            active = true;
         }
-        new WriteThread(getConnection().getConnectionId() + " Writer").start();
+        new WriteThread(getConnection().getLink().getLinkName() + " Writer").start();
         try {
-            doRun();
+            doRead();
         } catch (Exception x) {
-            if (running) {
+            if (active) {
                 fine(getConnection().getConnectionId(), x);
             }
         } finally {
-            running = false;
+            active = false;
             if (requesterAllowed) {
                 try {
                     /*
@@ -305,54 +358,6 @@ public abstract class DSProtocol extends DSLogger {
                 } catch (Exception x) {
                     fine(getConnection().getConnectionId(), x);
                 }
-            }
-        }
-    }
-
-    /**
-     * The runAt method thread spawns a thread which then executes this method for writing outgoing
-     * requests and responses.
-     */
-    private void runWriter() {
-        long endTime;
-        boolean requestsFirst = false;
-        DSTransport transport = getTransport();
-        lastMessageSent = System.currentTimeMillis();
-        DSIWriter writer = getWriter();
-        try {
-            while (running) {
-                synchronized (outgoingMutex) {
-                    if (!hasSomethingToSend()) {
-                        try {
-                            outgoingMutex.wait(1000);
-                        } catch (InterruptedException ignore) {
-                        }
-                        continue;
-                    }
-                }
-                endTime = System.currentTimeMillis() + MAX_MSG_TIME;
-                //alternate the send requests or responses first each time
-                writer.reset();
-                requestsFirst = !requestsFirst;
-                transport.beginMessage();
-                beginMessage();
-                if (hasMessagesToSend()) {
-                    send(requestsFirst, endTime);
-                    if (running &&
-                            (System.currentTimeMillis() < endTime) &&
-                            !transport.shouldEndMessage()) {
-                        send(!requestsFirst, endTime);
-                    }
-                }
-                endMessage();
-                transport.endMessage();
-                lastMessageSent = System.currentTimeMillis();
-            }
-        } catch (Exception x) {
-            if (running) {
-                getLogger().log(Level.FINE, getConnection().getConnectionId(), x);
-                running = false;
-                transport.close();
             }
         }
     }
@@ -409,7 +414,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setConnection(DS1LinkConnection connection) {
+    public DSSession setConnection(DS1LinkConnection connection) {
         this.connection = connection;
         return this;
     }
@@ -417,7 +422,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setReader(DSIReader reader) {
+    public DSSession setReader(DSIReader reader) {
         this.reader = reader;
         return this;
     }
@@ -425,7 +430,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setTransport(DSTransport transport) {
+    public DSSession setTransport(DSTransport transport) {
         this.transport = transport;
         return this;
     }
@@ -433,7 +438,7 @@ public abstract class DSProtocol extends DSLogger {
     /**
      * For use by the connection object.
      */
-    public DSProtocol setWriter(DSIWriter writer) {
+    public DSSession setWriter(DSIWriter writer) {
         this.writer = writer;
         return this;
     }
@@ -475,7 +480,7 @@ public abstract class DSProtocol extends DSLogger {
         }
 
         public void run() {
-            runWriter();
+            doWrite();
         }
     }
 

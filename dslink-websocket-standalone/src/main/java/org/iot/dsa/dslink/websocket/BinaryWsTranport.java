@@ -31,7 +31,7 @@ import org.iot.dsa.util.DSException;
  * @author Aaron Hansen
  */
 @ClientEndpoint
-public class BinaryWsTranport extends DSLogger implements DSTransport {
+public class BinaryWsTranport extends DSTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -47,7 +47,6 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
     private DSByteBuffer buffer = new DSByteBuffer();
     private ClientManager client;
     private DSLinkConnection connection;
-    private String connectionUri;
     private int endMessageThreshold = 32768;
     private int messageSize;
     private boolean open = false;
@@ -131,14 +130,14 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
     @OnClose
     public void onClose(Session session, CloseReason reason) {
         if (open) {
-            info(connectionUri + " remotely closed, reason = " + reason.toString());
+            info(getConnectionUrl() + " remotely closed, reason = " + reason.toString());
             getConnection().close();
         }
     }
 
     @OnError
     public void onError(Session session, Throwable err) {
-        severe(connectionUri, err);
+        severe(getConnectionUrl(), err);
         getConnection().close();
     }
 
@@ -164,7 +163,7 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
             if (client == null) {
                 client = ClientManager.createClient();
             }
-            client.connectToServer(this, new URI(connectionUri));
+            client.connectToServer(this, new URI(getConnectionUrl()));
             buffer.open();
             open = true;
             fine(fine() ? "Transport open" : null);
@@ -203,13 +202,8 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
     }
 
     @Override
-    public DSTransport setConnectionUrl(String uri) {
-        this.connectionUri = uri;
-        return this;
-    }
-
-    @Override
     public DSTransport setReadTimeout(long millis) {
+        super.setReadTimeout(millis);
         buffer.setTimeout(millis);
         return this;
     }
@@ -221,7 +215,7 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
     public void write(int b) {
         try {
             if (!open) {
-                throw new IOException("Closed " + connectionUri);
+                throw new IOException("Closed " + getConnectionUrl());
             }
             messageSize++;
             RemoteEndpoint.Basic basic = session.getBasicRemote();
@@ -229,7 +223,7 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
             basic.sendBinary(writeBuffer, false);
             writeBuffer.clear();
         } catch (IOException x) {
-            severe(connectionUri, x);
+            severe(getConnectionUrl(), x);
             connection.close();
         }
     }
@@ -245,7 +239,7 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
      */
     public void write(byte[] buf, int idx, int len, boolean isLast) {
         if (!open) {
-            throw new DSIoException("Closed " + connectionUri);
+            throw new DSIoException("Closed " + getConnectionUrl());
         }
         try {
             RemoteEndpoint.Basic basic = session.getBasicRemote();
@@ -263,7 +257,7 @@ public class BinaryWsTranport extends DSLogger implements DSTransport {
                 writeBuffer.clear();
             }
         } catch (IOException x) {
-            severe(connectionUri, x);
+            severe(getConnectionUrl(), x);
             connection.close();
         }
     }

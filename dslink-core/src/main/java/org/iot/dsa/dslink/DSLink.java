@@ -372,7 +372,7 @@ public class DSLink extends DSNode implements DSResponder, Runnable {
             } else {
                 connection = new DS1LinkConnection();
             }
-            put("Connection", connection).setConfig(true).setTransient(true);
+            put("Broker Connection", connection).setConfig(true).setTransient(true);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
