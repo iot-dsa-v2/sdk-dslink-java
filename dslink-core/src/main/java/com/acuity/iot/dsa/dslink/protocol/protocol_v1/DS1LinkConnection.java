@@ -125,28 +125,28 @@ public class DS1LinkConnection extends DSLinkConnection {
      * Looks at the connection initialization response to determine the type of transport then
      * instantiates the correct type fom the config.
      */
-    protected DSTransport makeTransport() {
+    protected DSTransport makeTransport(DS1ConnectionInit init) {
         DSTransport.Factory factory = null;
         DSTransport transport = null;
         try {
             String type = link.getConfig().getConfig(
-                    DSLinkConfig.CFG_TRANSPORT_FACTORY,
-                    "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
+                DSLinkConfig.CFG_TRANSPORT_FACTORY,
+                "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
             factory = (DSTransport.Factory) Class.forName(type).newInstance();
-            transport = factory.makeTransport(connectionInit.getResponse());
+            transport = factory.makeTransport(init.getResponse());
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
-        String wsUri = connectionInit.getResponse().get("wsUri", null);
+        String wsUri = init.getResponse().get("wsUri", null);
         if (wsUri == null) {
             throw new IllegalStateException("Only websocket transports are supported.");
         }
-        String uri = connectionInit.makeWsUrl(wsUri);
+        String uri = init.makeWsUrl(wsUri);
         config(config() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
         transport.setReadTimeout(getLink().getConfig().getConfig(
-                DSLinkConfig.CFG_READ_TIMEOUT, 60000));
+            DSLinkConfig.CFG_READ_TIMEOUT, 60000));
         return transport;
     }
 
@@ -205,15 +205,18 @@ public class DS1LinkConnection extends DSLinkConnection {
                             warn(warn() ? getConnectionId() : null, x);
                         }
                     }
-                    if (connectionInit == null) {
-                        connectionInit = new DS1ConnectionInit();
-                        put(CONNECTION_INIT, connectionInit).setTransient(true);
-                        connectionInit.initializeConnection();
+                    DS1ConnectionInit init = connectionInit;
+                    connectionInit = null;
+                    if (init == null) {
+                        init = new DS1ConnectionInit();
+                        put(CONNECTION_INIT, init).setTransient(true);
+                        init.initializeConnection();
                     }
-                    transport = makeTransport();
+                    transport = makeTransport(init);
                     put(TRANSPORT, transport).setTransient(true);
                     config(config() ? "Transport type: " + transport.getClass().getName() : null);
                     transport.open();
+                    connectionInit = init;
                     if (session != null) {
                         if (!session.canReuse()) {
                             session.close();
@@ -242,6 +245,11 @@ public class DS1LinkConnection extends DSLinkConnection {
                     session.pause();
                 }
                 transport = null;
+            }
+            if (session != null) {
+                session.close();
+                remove(SESSION);
+                session = null;
             }
         }
     }

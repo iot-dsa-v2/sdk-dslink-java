@@ -148,10 +148,6 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
         return ret;
     }
 
-    @Override
-    public DSList valueOf(DSElement element) {
-        return element.toList();
-    }
 
     @Override
     public DSList toElement() {
@@ -268,6 +264,11 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
     @Override
     public DSList toList() {
         return this;
+    }
+
+    @Override
+    public DSList valueOf(DSElement element) {
+        return element.toList();
     }
 
     public static DSList valueOf(DSElement... values) {

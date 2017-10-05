@@ -248,6 +248,7 @@ Without declaring fields (lookups required):
     }
 ```
 
+
 With declared fields:
 
 ```java
@@ -293,6 +294,22 @@ root logger and it also manages backups.
 Most types subclass 
 [org.iot.dsa.logging.DSLogger](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/logging/DSLogger.html) 
 as a convenience.
+
+Without DSLogger:
+
+```java
+    if (myLogger.isLoggable(Level.FINE)) {
+        myLogger.fine(someMessage());
+    }
+```
+
+
+With DSLogger
+
+```java
+  fine(fine() ? someMessage() ? null);
+```
+
 
 <b>Level Guidelines</b>
 
