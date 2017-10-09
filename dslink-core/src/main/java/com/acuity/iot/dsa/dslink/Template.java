@@ -3,7 +3,7 @@ package com.acuity.iot.dsa.dslink;
 import org.iot.dsa.logging.DSLogger;
 
 /**
- * Just a code template.
+ * Just a code test.
  *
  * @author Aaron Hansen
  */
