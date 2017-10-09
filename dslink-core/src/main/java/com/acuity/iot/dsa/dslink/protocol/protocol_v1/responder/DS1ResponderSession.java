@@ -5,7 +5,7 @@ import com.acuity.iot.dsa.dslink.DSResponderSession;
 import com.acuity.iot.dsa.dslink.protocol.message.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Protocol;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Stream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,16 +15,16 @@ import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.DSResponder;
 import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.logging.DSLogging;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSNode;
 
 /**
  * Implements DSA 1.1.2
  *
  * @author Aaron Hansen
  */
-public class DS1ResponderSession extends DSLogger implements DSResponderSession {
+public class DS1ResponderSession extends DSNode implements DSResponderSession {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -37,7 +37,7 @@ public class DS1ResponderSession extends DSLogger implements DSResponderSession 
     private ConcurrentHashMap<Integer, DS1Stream> inboundRequests =
             new ConcurrentHashMap<Integer, DS1Stream>();
     private Logger logger;
-    private DS1Protocol protocol;
+    private DS1Session protocol;
     private DSResponder responder;
     private DS1InboundSubscriptionManager subscriptions =
             new DS1InboundSubscriptionManager(this);
@@ -46,7 +46,7 @@ public class DS1ResponderSession extends DSLogger implements DSResponderSession 
     // Methods - Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DS1ResponderSession(DS1Protocol protocol) {
+    public DS1ResponderSession(DS1Session protocol) {
         this.protocol = protocol;
     }
 

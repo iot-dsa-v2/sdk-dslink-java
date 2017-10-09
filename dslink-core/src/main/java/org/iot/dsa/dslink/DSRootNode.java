@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink;
 
+import java.util.logging.Logger;
 import org.iot.dsa.node.DSNode;
 
 /**
@@ -25,6 +26,16 @@ public class DSRootNode extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Creates a child logger of the link.
+     */
+    protected Logger getLogger(String name) {
+        if (name.startsWith(".")) {
+            return Logger.getLogger(getLink().getLinkName() + name);
+        }
+        return Logger.getLogger(getLink().getLinkName() + '.' + name);
+    }
 
     /**
      * The parent link or null.

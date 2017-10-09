@@ -3,7 +3,7 @@ package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 import com.acuity.iot.dsa.dslink.DSRequesterSession;
 import com.acuity.iot.dsa.dslink.protocol.message.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Protocol;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -21,17 +21,21 @@ import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSNode;
 
-public class DS1RequesterSession extends DSLogger implements DSRequesterSession {
+public class DS1RequesterSession extends DSNode implements DSRequesterSession {
 
-    private DS1Protocol protocol;
+    private DS1Session protocol;
 
     private final Map<Integer, OutboundRequest> requests = new HashMap<Integer, OutboundRequest>();
     private final Map<Integer, OutboundSubscription> subscriptions = new HashMap<Integer, OutboundSubscription>();
     private AtomicInteger nextRid = new AtomicInteger();
     private AtomicInteger nextSid = new AtomicInteger();
 
-    public DS1RequesterSession(DS1Protocol protocol) {
+    public DS1RequesterSession() {
+    }
+
+    public DS1RequesterSession(DS1Session protocol) {
         this.protocol = protocol;
     }
 

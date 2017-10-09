@@ -11,11 +11,31 @@ import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 
 /**
- * Logging abstraction and helper.  Enables efficient logging using ternary expressions.
+ * Adds a convenience layer to Java Util Logging.
  *
  * <p>
  *
- * For example:  finer(finer() ? complexMsg() : null)
+ * Without this class:
+ *
+ * <pre>
+ *
+ * {@code
+ * if (myLogger.isLoggable(Level.FINE) {
+ *   myLogger.fine(someMessage());
+ * }
+ * }
+ *
+ * </pre>
+ *
+ * With this class:
+ *
+ * <pre>
+ *
+ * {@code
+ * fine(fine() ? someMessage() : null);
+ * }
+ *
+ * </pre>
  *
  * <p>
  *

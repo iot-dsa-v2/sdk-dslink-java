@@ -34,23 +34,41 @@ Key objectives of this SDK:
 
 These are the major steps you'll take when creating a link:
 
-1. Create link boilerplate.
-2. Create a root node.
-3. Create application nodes.
+1. Copy example link.
+2. Create nodes.
 
-## Create Link Boilerplate
+## Copy Example Link
 
-Copy the dslink-java-template subproject to create a new repository.  It's README provides
+Copy the 
+[dslink-java-v2-example](https://github.com/iot-dsa-v2/dslink-java-v2-example)
+project to create a new repository.  It's README provides
 further instructions for customization.
 
-## Create a Root Node
+The example link is a very simple but fully functioning link with a single root node.  It is 
+recommended you get that running within a broker before continuing with this documentation.
 
-The root node is the hook for a links specific functionality. It must be a subclass of 
+## Create Nodes
+
+Nodes are where application specific logic is bound to the link architecture.  Node developers
+will use various lifecycle callbacks to trigger their logic.
+
+First you must create a root node.  It is the hook for the rest of your functionality.  Then
+you will probably create additional nodes that will be descendants of tree rooted by your root
+node.
+
+### Root Node
+
+All links require a single root node.  This node must subclass 
 [org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html).
+At the moment DSRootNode does not provide any special functionality, it is a placeholder for 
+the future.
 
-The fully qualified class name must be specified as the **rootType** config in _dslink.json_.
+When a link launches the first time, the type of the root node is looked up **dslink.json**.
+The config _rootType_ must store the fully qualified class name of the root node.  After the first 
+launch, the configuration database is serialized and the _rootType_ config will longer have an 
+impact.
 
-## Create Application Nodes
+### Additional Nodes
 
 [org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
 is the organizational unit of a link.  It can contain values, actions and other nodes.  Most if not
@@ -58,8 +76,7 @@ all of a link's custom functionality will be implemented as DSNode subclasses.
 
 Subclassing DSNode requires to key steps:
 
-1. Configure the default children (nodes, values and actions).  Use defaults rather than dynamic
-children as much as possible.  It it much more efficient.
+1. Configure the default children (nodes, values and actions).
 2. Use various lifecycle callbacks to trigger custom functionality.
 
 ### Constructors
@@ -69,9 +86,9 @@ instantiated when deserializing the configuration database.
 
 ### Defaults
 
-Every subtype of DSNode has a private default instance, all other instances of any particular type 
-are copies of the default instance.  This is why you should never perform application logic unless 
-your node is running (started or stable).
+Every subtype of DSNode has a private default instance, all other instances are copies of the 
+default instance.  This is why you should never perform application logic unless 
+triggered by a callback and your node is running (started or stable).
 
 If a DSNode subtype needs to have specific child nodes or values (most will), it should override
 the declareDefaults method.  The method should:
@@ -91,7 +108,7 @@ next time the link is restarted.
     }
 ```
 
-During node serialization (configuration database, not DSA interop), children that match their 
+During node serialization (configuration database, not DSA interop), child values that match their 
 declared default are omitted.  This has two benefits:
 
 1. A smaller node database means faster serialization / deserialization.
@@ -231,6 +248,7 @@ Without declaring fields (lookups required):
     }
 ```
 
+
 With declared fields:
 
 ```java
@@ -276,6 +294,22 @@ root logger and it also manages backups.
 Most types subclass 
 [org.iot.dsa.logging.DSLogger](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/logging/DSLogger.html) 
 as a convenience.
+
+Without DSLogger:
+
+```java
+    if (myLogger.isLoggable(Level.FINE)) {
+        myLogger.fine(someMessage());
+    }
+```
+
+
+With DSLogger
+
+```java
+  fine(fine() ? someMessage() ? null);
+```
+
 
 <b>Level Guidelines</b>
 

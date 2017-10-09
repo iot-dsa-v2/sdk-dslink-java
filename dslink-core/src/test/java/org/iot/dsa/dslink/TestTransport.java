@@ -17,7 +17,7 @@ import org.iot.dsa.io.json.JsonWriter;
  *
  * @author Aaron Hansen
  */
-public class TestTransport implements DSTransport {
+public class TestTransport extends DSTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
