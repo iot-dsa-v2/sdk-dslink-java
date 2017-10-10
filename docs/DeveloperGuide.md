@@ -310,7 +310,7 @@ Without DSLogger:
 With DSLogger
 
 ```java
-  fine(fine() ? someMessage() ? null);
+  fine(fine() ? someMessage() : null);
 ```
 
 
