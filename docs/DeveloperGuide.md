@@ -52,13 +52,18 @@ recommended you get that running within a broker before continuing with this doc
 Nodes are where application specific logic is bound to the link architecture.  Node developers
 will use various lifecycle callbacks to trigger their logic.
 
-First you must create a root node.  It is the hook for the rest of your functionality.  Then
-you will probably create additional nodes that will be descendants of tree rooted by your root
+First you must create a root node.  It is the hook for the rest of your functionality.  The 
+convention is to name it RootNode, but make sure it is in a unique package so that multiple links
+can be run in the same process. 
+
+Then you will probably create additional nodes that will be descendants of tree rooted by your root
 node.
 
 ### Root Node
 
-All links require a single root node.  This node must subclass 
+All links require a single root node and the convention is to name it RootNode (but make sure 
+they're in a package that won't conflict when multiple links are run in the same process).  
+RootNode must subclass 
 [org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html).
 At the moment DSRootNode does not provide any special functionality, it is a placeholder for 
 the future.
