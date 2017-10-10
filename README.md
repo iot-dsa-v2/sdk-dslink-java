@@ -16,7 +16,7 @@ the DSA architecture, please visit
 ## Sub Projects
 
   - **/dslink-core** - The APIs used to build new links.
-  - **/dslink-java-template** - Boiler plate that can be copied to create a new DSLink repo.
+  - **/dslink-java-test** - For proof of concept and testing.
   - **/dslink-websocket-standalone** - Used by links that run in their own process, rather
     than in an environment which provides another websocket implementation.
     
