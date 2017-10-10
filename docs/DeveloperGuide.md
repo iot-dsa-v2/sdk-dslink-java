@@ -56,17 +56,15 @@ First you must create a root node.  It is the hook for the rest of your function
 convention is to name it RootNode, but make sure it is in a unique package so that multiple links
 can be run in the same process. 
 
-Then you will probably create additional nodes that will be descendants of tree rooted by your root
-node.
+Then you will probably create additional nodes that will be descendants in the tree rooted by your 
+root node.
 
 ### Root Node
 
-All links require a single root node and the convention is to name it RootNode (but make sure 
-they're in a package that won't conflict when multiple links are run in the same process).  
-RootNode must subclass 
-[org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html).
-At the moment DSRootNode does not provide any special functionality, it is a placeholder for 
-the future.
+All links require a single root node and it must subclass 
+[org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html). 
+The convention is to name the class RootNode but the package must be unique from any other 
+RootNodes so that multiple links can be run in the same process.
 
 When a link launches the first time, the type of the root node is looked up **dslink.json**.
 The config _rootType_ must store the fully qualified class name of the root node.  After the first 
