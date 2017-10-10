@@ -1,13 +1,13 @@
 # DSLink Java Developer Guide
 
-[Home](https://github.com/iot-dsa-v2/sdk-dslink-java) • [Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/)
+[Home](https://github.com/iot-dsa-v2/sdk-dslink-java-v2) • [Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/)
 
 ## Warning
 
 Only use org.iot.dsa APIs, do not use or depend on anything in the com.* packages.  
 
 Please utilize the 
-[Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/)
+[Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/)
 for the core sdk.  It's not perfect, but the more it is referenced, the better it will get.
 
 ## Overview
@@ -52,14 +52,19 @@ recommended you get that running within a broker before continuing with this doc
 Nodes are where application specific logic is bound to the link architecture.  Node developers
 will use various lifecycle callbacks to trigger their logic.
 
-First you must create a root node.  It is the hook for the rest of your functionality.  Then
-you will probably create additional nodes that will be descendants of tree rooted by your root
+First you must create a root node.  It is the hook for the rest of your functionality.  The 
+convention is to name it RootNode, but make sure it is in a unique package so that multiple links
+can be run in the same process. 
+
+Then you will probably create additional nodes that will be descendants of tree rooted by your root
 node.
 
 ### Root Node
 
-All links require a single root node.  This node must subclass 
-[org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html).
+All links require a single root node and the convention is to name it RootNode (but make sure 
+they're in a package that won't conflict when multiple links are run in the same process).  
+RootNode must subclass 
+[org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html).
 At the moment DSRootNode does not provide any special functionality, it is a placeholder for 
 the future.
 
@@ -70,7 +75,7 @@ impact.
 
 ### Additional Nodes
 
-[org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
+[org.iot.dsa.node.DSNode](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
 is the organizational unit of a link.  It can contain values, actions and other nodes.  Most if not
 all of a link's custom functionality will be implemented as DSNode subclasses.
 
@@ -154,7 +159,7 @@ When in doubt of whether to use onStarted or onStable, use onStable.
 
 When a node is stable, there are several other callbacks for various state changes.  All callbacks
 begin with **on** such as _onChildAdded()_.  See the 
-[DSNode Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
+[DSNode Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
 for a complete list.
 
 ### Subscriptions
@@ -174,9 +179,9 @@ there are multiple subscribers, this is only called when the last one unsubscrib
 
 Values mostly represent leaf members of the node tree.  There are two types of values:
 
-1. [org.io.dsa.node.DSElement](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSElement.html) - 
+1. [org.io.dsa.node.DSElement](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/DSElement.html) - 
 These map to the JSON type system and represent leaf members of the node tree.
-2. [org.io.dsa.node.DSIValue](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSIValue.html) - 
+2. [org.io.dsa.node.DSIValue](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/DSIValue.html) - 
 These don't have to map to the JSON type system, and it is possible for nodes to implement this 
 interface.  This allows for values with children.
 
@@ -192,7 +197,7 @@ a value.
 Actions allow allow responders to expose functionality that can't be modeled as values.
 
 Add actions to your node using 
-[org.iot.dsa.node.action.DSAction](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/action/DSAction.html).  
+[org.iot.dsa.node.action.DSAction](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/action/DSAction.html).  
 
 Override DSNode.onInvoke to handle invocations.
 
@@ -272,17 +277,17 @@ Metadata can be information such as units for number types and ranges for enums.
 When the system collects metadata about an object, it uses these steps:
 
 1. If the target value or node implements 
-[org.iot.dsa.node.DSIMetadata](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSIMetadata.html).
+[org.iot.dsa.node.DSIMetadata](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/DSIMetadata.html).
 it will be given the opportunity to provide metadata first.
 2. Then getMetadata on the parent node will be called with the DSInfo representing the child.
 This will be useful when nodes want to store user editable metadata.
 
 To simplify configuring metadata, use the utility class
-[org.iot.dsa.node.DSMetadata](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/node/DSMetadata.html).
+[org.iot.dsa.node.DSMetadata](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/DSMetadata.html).
 
 ## Timers and Threads
 
-Use [org.iot.dsa.DSRuntime](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/DSRuntime.html).
+Use [org.iot.dsa.DSRuntime](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/DSRuntime.html).
 
 Create your own threads for long lived activities and make them daemon as well.
 
@@ -292,7 +297,7 @@ Use Java Util Logging (JUL).  A high performance async logger is automatically i
 root logger and it also manages backups.  
 
 Most types subclass 
-[org.iot.dsa.logging.DSLogger](https://iot-dsa-v2.github.io/sdk-dslink-java/javadoc/index.html?org/iot/dsa/logging/DSLogger.html) 
+[org.iot.dsa.logging.DSLogger](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/logging/DSLogger.html) 
 as a convenience.
 
 Without DSLogger:

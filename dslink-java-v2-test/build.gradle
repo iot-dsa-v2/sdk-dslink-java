@@ -3,10 +3,7 @@ apply plugin: 'application'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
-
 group 'org.iot.dsa'
-version '0.1.0'
-
 mainClassName = 'org.iot.dsa.dslink.DSLink'
 
 repositories {
@@ -18,10 +15,8 @@ repositories {
 }
 
 dependencies {
-    compile project (':dslink-core')  //replace this with the next line
-    //compile 'org.iot.dsa:dslink-core:+'
-    compile project (':dslink-websocket-standalone')  //replace this with the next line
-    //compile 'org.iot.dsa:dslink-websocket-standalone:+'
+    compile project(':dslink-core')
+    compile project(':dslink-websocket-standalone')
     testCompile 'junit:junit:+'
 }
 

@@ -1,4 +1,4 @@
-package org.iot.dsa.dslink.template;
+package org.iot.dsa.dslink.test;
 
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSRootNode;
@@ -20,7 +20,7 @@ import org.iot.dsa.node.action.DSAction;
  *
  * @author Aaron Hansen
  */
-public class TemplateRoot extends DSRootNode implements Runnable {
+public class RootNode extends DSRootNode implements Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
