@@ -35,7 +35,7 @@ import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
 
 /**
- * Represents an upstream connection, a node hierarchy, and manages the lifecycle of both.
+ * Represents an upstream connection, a node tree, and manages the lifecycle of both.
  *
  * <p>
  *
@@ -50,7 +50,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSLink extends DSNode implements DSResponder, Runnable {
+public class DSLink extends DSNode implements DSIResponder, Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -69,8 +69,8 @@ public class DSLink extends DSNode implements DSResponder, Runnable {
     private DSKeys keys;
     private Logger logger;
     private String name;
+    private DSInfo nodes = getInfo(NODES);
     private DSInfo save = getInfo(SAVE);
-    private DSRequester requester;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -94,6 +94,7 @@ public class DSLink extends DSNode implements DSResponder, Runnable {
     @Override
     protected void declareDefaults() {
         declareDefault(SAVE, new DSAction()).setConfig(true);
+        declareDefault(NODES, new DSNode()).setTransient(true);
     }
 
     public DSLinkConfig getConfig() {
@@ -143,8 +144,11 @@ public class DSLink extends DSNode implements DSResponder, Runnable {
         return logger;
     }
 
-    public DSRequester getRequester() {
-        return requester;
+    /**
+     * Returns the root of the node tree.
+     */
+    public DSNode getNodes() {
+        return nodes.getNode();
     }
 
     /**
@@ -176,18 +180,13 @@ public class DSLink extends DSNode implements DSResponder, Runnable {
             if (node instanceof DSLink) {
                 ret = (DSLink) node;
                 ret.init(config);
-            } else { //TODO - remove after 10/1/17, converting early databases.
-                ret = new DSLink();
-                ret.init(config);
-                ret.put(NODES, node);
-                ret.save();
             }
             time = System.currentTimeMillis() - time;
             ret.info("Node database loaded: " + time + "ms");
         } else {
-            logger.info("Creating new database...");
             ret = new DSLink();
             ret.init(config);
+            ret.info("Creating new database...");
             String type = config.getConfig(DSLinkConfig.CFG_ROOT_TYPE, null);
             if (type == null) {
                 throw new IllegalStateException("Config missing the root node type");
@@ -240,13 +239,14 @@ public class DSLink extends DSNode implements DSResponder, Runnable {
     public ActionResult onInvoke(InboundInvokeRequest request) {
         RequestPath path = new RequestPath(request.getPath(), this);
         if (path.isResponder()) {
-            DSResponder responder = (DSResponder) path.getTarget();
+            DSIResponder responder = (DSIResponder) path.getTarget();
             return responder.onInvoke(new InvokeWrapper(path, request));
         }
         DSInfo info = path.getInfo();
         if (!info.isAction()) {
             throw new DSRequestException("Not an action " + path.getPath());
         }
+        //TODO verify incoming permission
         DSAction action = info.getAction();
         return action.invoke(info, request);
     }
@@ -259,7 +259,7 @@ public class DSLink extends DSNode implements DSResponder, Runnable {
     public OutboundListResponse onList(InboundListRequest request) {
         RequestPath path = new RequestPath(request.getPath(), this);
         if (path.isResponder()) {
-            DSResponder responder = (DSResponder) path.getTarget();
+            DSIResponder responder = (DSIResponder) path.getTarget();
             return responder.onList(new ListWrapper(path.getPath(), request));
         }
         return new ListSubscriber(path, request);
@@ -273,7 +273,7 @@ public class DSLink extends DSNode implements DSResponder, Runnable {
     public SubscriptionCloseHandler onSubscribe(InboundSubscribeRequest request) {
         RequestPath path = new RequestPath(request.getPath(), this);
         if (path.isResponder()) {
-            DSResponder responder = (DSResponder) path.getTarget();
+            DSIResponder responder = (DSIResponder) path.getTarget();
             return responder.onSubscribe(new SubscribeWrapper(path.getPath(), request));
         }
         return new ValueSubscriber(path, request);
@@ -288,7 +288,7 @@ public class DSLink extends DSNode implements DSResponder, Runnable {
     public void onSet(InboundSetRequest request) {
         RequestPath path = new RequestPath(request.getPath(), this);
         if (path.isResponder()) {
-            DSResponder responder = (DSResponder) path.getTarget();
+            DSIResponder responder = (DSIResponder) path.getTarget();
             responder.onSet(new SetWrapper(path.getPath(), request));
         }
         DSNode parent = path.getParent();

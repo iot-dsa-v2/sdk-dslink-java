@@ -9,7 +9,7 @@ import org.iot.dsa.node.DSNode;
  *
  * @author Aaron Hansen
  */
-public abstract class TestLink extends DSNode implements DSResponder {
+public abstract class TestLink extends DSNode implements DSIResponder {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants

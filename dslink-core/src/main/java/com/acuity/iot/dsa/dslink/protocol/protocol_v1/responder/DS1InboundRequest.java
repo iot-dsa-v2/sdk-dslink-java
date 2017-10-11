@@ -1,7 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
-import org.iot.dsa.dslink.DSResponder;
+import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSMap;
@@ -25,7 +25,7 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
     private DS1Session protocol;
     private DSMap request;
     private Integer requestId;
-    private DSResponder responder;
+    private DSIResponder responder;
     private DS1ResponderSession session;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return request;
     }
 
-    public DSResponder getResponder() {
+    public DSIResponder getResponder() {
         return responder;
     }
 
@@ -78,7 +78,7 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return this;
     }
 
-    public DS1InboundRequest setResponder(DSResponder responder) {
+    public DS1InboundRequest setResponder(DSIResponder responder) {
         this.responder = responder;
         return this;
     }

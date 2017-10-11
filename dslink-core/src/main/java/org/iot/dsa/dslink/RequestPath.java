@@ -90,7 +90,7 @@ class RequestPath {
                     throw new DSInvalidPathException(path);
                 }
                 target = info.getObject();
-                if (target instanceof DSResponder) {
+                if (target instanceof DSIResponder) {
                     StringBuilder buf = new StringBuilder();
                     while (++i < len) {
                         buf.append('/');
@@ -108,7 +108,7 @@ class RequestPath {
     }
 
     boolean isResponder() {
-        return target instanceof DSResponder;
+        return target instanceof DSIResponder;
     }
 
     ///////////////////////////////////////////////////////////////////////////
