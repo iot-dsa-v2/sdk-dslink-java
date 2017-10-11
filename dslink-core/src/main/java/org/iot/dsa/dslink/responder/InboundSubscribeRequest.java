@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink.responder;
 
+import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSQuality;
 
@@ -7,7 +8,7 @@ import org.iot.dsa.node.DSQuality;
  * The details about an incoming subscribe request passed to the responder.
  *
  * @author Aaron Hansen
- * @see org.iot.dsa.dslink.DSResponder#onSubscribe(InboundSubscribeRequest)
+ * @see DSIResponder#onSubscribe(InboundSubscribeRequest)
  */
 public interface InboundSubscribeRequest extends InboundRequest {
 

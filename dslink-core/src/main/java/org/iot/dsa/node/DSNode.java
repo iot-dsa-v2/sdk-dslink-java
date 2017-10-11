@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.logging.DSLogging;
@@ -426,7 +427,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         dsInit();
         DSInfo info = firstChild;
         while (info != null) {
-            if (!info.isPermanent()) {
+            if (info.isDynamic()) {
                 remove(info);
             }
             info = info.next();
@@ -608,6 +609,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     public DSInfo getFirstInfo() {
         dsInit();
         return firstChild;
+    }
+
+    /**
+     * The first info for a child node, or null.
+     */
+    public DSInfo getFirstNodeInfo() {
+        if (firstChild == null) {
+            return null;
+        }
+        if (firstChild.isNode()) {
+            return firstChild;
+        }
+        return firstChild.nextNode();
     }
 
     /**
@@ -860,7 +874,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      *
      * @param info  The child being changed.
      * @param value The new value.
-     * @see org.iot.dsa.dslink.DSResponder#onSet(InboundSetRequest)
+     * @see DSIResponder#onSet(InboundSetRequest)
      */
     public void onSet(DSInfo info, DSIValue value) {
         if (info != null) {
@@ -874,7 +888,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * report an error to the requester.
      *
      * @param value The new value.
-     * @see org.iot.dsa.dslink.DSResponder#onSet(InboundSetRequest)
+     * @see DSIResponder#onSet(InboundSetRequest)
      */
     public void onSet(DSIValue value) {
         throw new IllegalStateException("DSNode.onSet(DSIValue) not overridden");
@@ -978,7 +992,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @throws IllegalStateException If the info is permanent or not a child of this node.
      */
     public DSNode remove(DSInfo info) {
-        if (info.isPermanent()) {
+        if (!info.isDynamic()) {
             throw new IllegalStateException("Can not be removed");
         }
         if (info.getParent() != this) {

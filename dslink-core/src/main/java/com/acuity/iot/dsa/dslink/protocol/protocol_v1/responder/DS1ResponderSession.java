@@ -13,8 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.dslink.DSResponder;
-import org.iot.dsa.logging.DSLogger;
+import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
@@ -38,7 +37,7 @@ public class DS1ResponderSession extends DSNode implements DSResponderSession {
             new ConcurrentHashMap<Integer, DS1Stream>();
     private Logger logger;
     private DS1Session protocol;
-    private DSResponder responder;
+    private DSIResponder responder;
     private DS1InboundSubscriptionManager subscriptions =
             new DS1InboundSubscriptionManager(this);
 

@@ -245,6 +245,13 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     /**
+     * Whether or not this info represents a declared default.
+     */
+    public boolean isDynamic() {
+        return !getFlag(PERMANENT);
+    }
+
+    /**
      * Whether or not an object is visible to clients.
      */
     @Override
@@ -262,10 +269,10 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     /**
      * Whether or not an object can be removed.
-     */
     public boolean isPermanent() {
         return getFlag(PERMANENT);
     }
+     */
 
     /**
      * Quick test for a proxy info.

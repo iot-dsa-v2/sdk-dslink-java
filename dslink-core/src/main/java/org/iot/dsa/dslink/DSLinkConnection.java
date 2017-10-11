@@ -32,6 +32,8 @@ public abstract class DSLinkConnection extends DSNode {
      */
     public abstract DSLink getLink();
 
+    public abstract DSIRequester getRequester();
+
     /**
      * True when a connection is established with the remote endpoint.
      */

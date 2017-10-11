@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSRequester;
+import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSNode;
@@ -316,7 +316,7 @@ public abstract class DSSession extends DSNode {
         DSRuntime.run(new Runnable() {
             @Override
             public void run() {
-                DSRequester requester = getConnection().getLink().getRequester();
+                DSIRequester requester = getConnection().getLink().getRequester();
                 if (requester != null) {
                     requester.onConnected(getRequesterSession());
                 }

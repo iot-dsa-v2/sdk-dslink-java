@@ -5,10 +5,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
-import org.iot.dsa.dslink.DSResponder;
+import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.logging.DSLogging;
 
 /**
  * Subscribe implementation for the responder.
@@ -85,7 +84,7 @@ class DS1InboundSubscriptionManager extends DSLogger implements OutboundMessage 
     /**
      * Create or update a subscription.
      */
-    void subscribe(DSResponder responder, Integer sid, String path, int qos) {
+    void subscribe(DSIResponder responder, Integer sid, String path, int qos) {
         finest(finest() ? "Subscribing " + path : null);
         DS1InboundSubscription subscription = sidMap.get(sid);
         if (subscription == null) {

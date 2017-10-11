@@ -6,23 +6,16 @@ import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.security.DSPermission;
 
 /**
- * Interface for nodes in the node tree to manually handle requests.  The first implementation
- * encountered in the path of a request will be given the responsibility for processing the
- * request.
- *
- * For error handling, simply throw an exception from any of these methods to have the error
- * reported to the requester and the stream closed.  There are a few predefined exceptions to be
- * aware of listed below.  Non DSRequestExceptions will be reported as server errors.
+ * Session object used by requesters.
  *
  * @author Aaron Hansen
- * @see DSInvalidPathException
- * @see DSPermissionException
- * @see DSRequestException
  */
-public interface DSResponder {
+public interface DSIRequester {
 
     /**
      * The implementation should quickly create an object for responding to the request, but do no
@@ -33,7 +26,10 @@ public interface DSResponder {
      * @return The initial response and close notification mechanism, can be null if the if the
      * result type is void.
      */
-    public ActionResult onInvoke(InboundInvokeRequest request);
+    public void invoke(String path,
+                       DSMap parameters,
+                       DSPermission permission,
+                       InvokeResponseHandler handler);
 
     /**
      * The implementation should quickly create an object for responding to the request, but do no
@@ -43,7 +39,7 @@ public interface DSResponder {
      * @param request The details of the request and the mechanism for providing updates.
      * @return The initial response and close mechanism.
      */
-    public OutboundListResponse onList(InboundListRequest request);
+    public void list(InboundListRequest request);
 
     /**
      * The implementation should quickly create an object for responding to the request, but do no
@@ -53,7 +49,7 @@ public interface DSResponder {
      * @param request The details of the request and the mechanism for sending updates.
      * @return Who to notify when the subscription is closed.
      */
-    public SubscriptionCloseHandler onSubscribe(InboundSubscribeRequest request);
+    public void subscribe(InboundSubscribeRequest request);
 
 
     /**
@@ -62,6 +58,6 @@ public interface DSResponder {
      *
      * @param request The details of the request.
      */
-    public void onSet(InboundSetRequest request);
+    public void set(InboundSetRequest request);
 
 }
