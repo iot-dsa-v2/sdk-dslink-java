@@ -307,6 +307,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Adds the info to internal collections, sets parent related fields on child nodes.
      */
     void add(final DSInfo info) {
+        dsInit();
         synchronized (this) {
             if (lastChild != null) {
                 lastChild.next = info;
@@ -360,7 +361,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             argAsNode = toNode(object);
             argAsNode.validateParent(this);
         }
-        dsInit();
         if (argIsNode) {
             if (argAsNode.infoInParent != null) {
                 throw new IllegalArgumentException("Already parented");
@@ -423,6 +423,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @return this
      */
     public DSNode clear() {
+        dsInit();
         DSInfo info = firstChild;
         while (info != null) {
             if (!info.isPermanent()) {
@@ -593,6 +594,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * The first child, or null.
      */
     public DSIObject getFirst() {
+        dsInit();
         DSInfo info = firstChild;
         if (info == null) {
             return null;
@@ -604,6 +606,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * The first child info, or null.
      */
     public DSInfo getFirstInfo() {
+        dsInit();
         return firstChild;
     }
 
@@ -611,6 +614,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * The last child, or null.
      */
     public DSIObject getLast() {
+        dsInit();
         DSInfo info = lastChild;
         if (info == null) {
             return null;
@@ -622,6 +626,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * The last child info, or null.
      */
     public DSInfo getLastInfo() {
+        dsInit();
         return lastChild;
     }
 
@@ -683,6 +688,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     @Override
     public int hashCode() {
+        dsInit();
         int hc = 1;
         DSInfo info = firstChild;
         while (info != null) {
@@ -781,6 +787,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Returns an iterator of child DSIValues.
      */
     public Iterator<DSInfo> iterateValues() {
+        dsInit();
         return new ValueIterator();
     }
 
@@ -788,6 +795,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Returns an iterator of all info children.
      */
     public Iterator<DSInfo> iterator() {
+        dsInit();
         return new ChildIterator();
     }
 
@@ -1119,6 +1127,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Sets the state to starting.  Calls onStarted once the entire subtree is started.
      */
     public final void start() {
+        dsInit();
         if (isRunning()) {
             throw new IllegalStateException("Already running: " + getPath());
         }
