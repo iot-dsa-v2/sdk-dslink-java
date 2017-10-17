@@ -5,12 +5,12 @@ import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIPublisher;
 import org.iot.dsa.node.DSIPublisher.Event;
-import org.iot.dsa.node.DSIQuality;
+import org.iot.dsa.node.DSIStatus;
 import org.iot.dsa.node.DSISubscriber;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSQuality;
+import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
 
 /**
@@ -86,9 +86,9 @@ class ValueSubscriber implements DSISubscriber, SubscriptionCloseHandler {
             } else {
                 value = DSString.valueOf(publisher.toString());
             }
-            DSQuality quality = DSQuality.ok;
-            if (value instanceof DSIQuality) {
-                quality = ((DSIQuality) value).toQuality();
+            DSStatus quality = DSStatus.ok;
+            if (value instanceof DSIStatus) {
+                quality = ((DSIStatus) value).toStatus();
             }
             request.update(System.currentTimeMillis(), value, quality);
         }
@@ -119,9 +119,9 @@ class ValueSubscriber implements DSISubscriber, SubscriptionCloseHandler {
             } else {
                 value = DSString.valueOf(publisher.toString());
             }
-            DSQuality quality = DSQuality.ok;
-            if (value instanceof DSIQuality) {
-                quality = ((DSIQuality) value).toQuality();
+            DSStatus quality = DSStatus.ok;
+            if (value instanceof DSIStatus) {
+                quality = ((DSIStatus) value).toStatus();
             }
             request.update(System.currentTimeMillis(), value, quality);
         }
@@ -130,9 +130,9 @@ class ValueSubscriber implements DSISubscriber, SubscriptionCloseHandler {
     private void onValueEvent(DSIObject publisher, DSInfo child, DSIPublisher.Event event) {
         if (event == Event.CHILD_CHANGED) {
             DSIValue value = child.getValue();
-            DSQuality quality = DSQuality.ok;
-            if (value instanceof DSIQuality) {
-                quality = ((DSIQuality) value).toQuality();
+            DSStatus quality = DSStatus.ok;
+            if (value instanceof DSIStatus) {
+                quality = ((DSIStatus) value).toStatus();
             }
             request.update(System.currentTimeMillis(), value, quality);
         }

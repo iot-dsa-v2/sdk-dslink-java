@@ -86,7 +86,7 @@ public class DS1ResponderSession extends DSNode implements DSResponderSession {
     private String getPath(DSMap req) {
         String path = req.get("path", null);
         if (path == null) {
-            throw new DSProtocolException("Invoke request missing path");
+            throw new DSProtocolException("Request missing path");
         }
         return path;
     }

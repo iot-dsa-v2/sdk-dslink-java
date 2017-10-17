@@ -136,7 +136,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return false;
     }
 
-    public boolean equivalent(DSInfo arg) {
+    private boolean equivalent(DSInfo arg) {
         if (getFlags() != arg.getFlags()) {
             return false;
         } else if (!DSUtil.equal(arg.getName(), getName())) {
@@ -171,6 +171,13 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return value;
     }
 
+    /**
+     * A convenience that casts getObject().
+     */
+    public DSElement getElement() {
+        return (DSElement) value;
+    }
+
     boolean getFlag(int position) {
         return DSUtil.getBit(flags, position);
     }
@@ -193,6 +200,9 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return name;
     }
 
+    /**
+     * A convenience that casts getObject().
+     */
     public DSNode getNode() {
         return (DSNode) value;
     }
@@ -205,6 +215,9 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return parent;
     }
 
+    /**
+     * A convenience that casts getObject().
+     */
     @Override
     public DSIValue getValue() {
         return (DSIValue) value;
@@ -266,13 +279,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
     public boolean isNode() {
         return value instanceof DSNode;
     }
-
-    /**
-     * Whether or not an object can be removed.
-    public boolean isPermanent() {
-        return getFlag(PERMANENT);
-    }
-     */
 
     /**
      * Quick test for a proxy info.
