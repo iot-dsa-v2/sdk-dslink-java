@@ -17,7 +17,6 @@ import org.iot.dsa.dslink.requester.OutboundSubscribeRequest;
 import org.iot.dsa.dslink.requester.OutboundSubscription;
 import org.iot.dsa.dslink.requester.OutboundUnsubscribeRequest;
 import org.iot.dsa.dslink.requester.StreamState;
-import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -144,9 +143,9 @@ public class DS1RequesterSession extends DSNode implements DSRequesterSession {
     private void processInvokeResponse(int rid, DSMap map, OutboundInvokeRequest req) {
         String stream = map.getString("stream");
         if (stream != null) {
-            req.setLatestStreamState(StreamState.valueOf(stream.toUpperCase()));
+            req.setStreamState(StreamState.valueOf(stream.toUpperCase()));
         }
-        StreamState streamState = req.getLatestStreamState();
+        StreamState streamState = req.getStreamState();
         if (streamState.isClosed()) {
             requests.remove(rid);
         }

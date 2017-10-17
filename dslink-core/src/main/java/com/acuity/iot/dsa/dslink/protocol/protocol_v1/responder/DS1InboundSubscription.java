@@ -6,9 +6,8 @@ import java.util.logging.Logger;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSQuality;
+import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -104,7 +103,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
      * The responder should call this whenever the value or status changes.
      */
     @Override
-    public void update(long timestamp, DSIValue value, DSQuality quality) {
+    public void update(long timestamp, DSIValue value, DSStatus quality) {
         if (!open) {
             return;
         }
@@ -204,9 +203,9 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
         Update next;
         long timestamp;
         DSIValue value;
-        DSQuality quality;
+        DSStatus quality;
 
-        Update set(long timestamp, DSIValue value, DSQuality quality) {
+        Update set(long timestamp, DSIValue value, DSStatus quality) {
             this.timestamp = timestamp;
             this.value = value;
             this.quality = quality;

@@ -5,8 +5,8 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public interface DSIQuality {
+public interface DSIStatus {
 
-    public DSQuality toQuality();
+    public DSStatus toStatus();
 
 }
