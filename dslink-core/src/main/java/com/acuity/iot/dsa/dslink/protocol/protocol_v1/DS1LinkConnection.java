@@ -3,6 +3,7 @@ package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.DSTransport;
 import java.util.logging.Logger;
+import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
@@ -99,6 +100,11 @@ public class DS1LinkConnection extends DSLinkConnection {
             logger = Logger.getLogger(getLink().getLinkName() + ".connection");
         }
         return logger;
+    }
+
+    @Override
+    public DSIRequester getRequester() {
+        return session.getRequester();
     }
 
     @Override

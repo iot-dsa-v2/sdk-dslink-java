@@ -249,9 +249,7 @@ public abstract class DSSession extends DSNode {
         return reader;
     }
 
-    protected abstract DSRequesterSession getRequesterSession();
-
-    protected abstract DSResponderSession getResponderSession();
+    protected abstract DSIRequester getRequester();
 
     protected DSTransport getTransport() {
         return transport;
@@ -313,15 +311,6 @@ public abstract class DSSession extends DSNode {
      */
     public void setRequesterAllowed() {
         requesterAllowed = true;
-        DSRuntime.run(new Runnable() {
-            @Override
-            public void run() {
-                DSIRequester requester = getConnection().getLink().getRequester();
-                if (requester != null) {
-                    requester.onConnected(getRequesterSession());
-                }
-            }
-        });
     }
 
     /**
@@ -347,18 +336,6 @@ public abstract class DSSession extends DSNode {
             }
         } finally {
             active = false;
-            if (requesterAllowed) {
-                try {
-                    /*
-                    DSRequester requester = getConnection().getLink().getRequester();
-                    if (requester != null) {
-                        requester.onDisconnected(getRequesterSession());
-                    }
-                    */
-                } catch (Exception x) {
-                    fine(getConnection().getConnectionId(), x);
-                }
-            }
         }
     }
 

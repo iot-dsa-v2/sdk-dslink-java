@@ -1,27 +1,19 @@
 package org.iot.dsa.dslink.requester;
 
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.security.DSPermission;
+
+/**
+ * Parameter to invoke method on DSIRequester.  Provides details about the invocation as well as
+ * callbacks for various state changes.
+ *
+ * @author Daniel Shapiro, Aaron Hansen
+ */
 public abstract class OutboundListRequest extends OutboundRequest {
 
-    private StreamState latestStreamState = StreamState.INITIALIZED;
-
-    public StreamState getLatestStreamState() {
-        return latestStreamState;
-    }
-
-    public void setLatestStreamState(StreamState latestStreamState) {
-        this.latestStreamState = latestStreamState;
-    }
-
-
     /**
-     * The requested path.
+     * Callback - single entry point for all responses to the request.
      */
-    public abstract String getPath();
+    public abstract void onResponse(DSMap response);
 
-    /**
-     * Called when a response/update to this request comes in from the broker
-     *
-     * @return true if the stream should be kept open
-     */
-    public abstract boolean onResponse(InboundListResponse response);
 }

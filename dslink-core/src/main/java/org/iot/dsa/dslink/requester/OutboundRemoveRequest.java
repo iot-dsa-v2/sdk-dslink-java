@@ -1,10 +1,11 @@
 package org.iot.dsa.dslink.requester;
 
-public abstract class OutboundRemoveRequest extends OutboundRequest {
-
-    /**
-     * The requested path.
-     */
-    public abstract String getPath();
+/**
+ * Place hold just in case addition fields are added.  The V2 protocol might use additional
+ * parameters.
+ *
+ * @author Daniel Shapiro, Aaron Hansen
+ */
+public class OutboundRemoveRequest extends OutboundRequest {
 
 }

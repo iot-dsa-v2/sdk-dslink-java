@@ -32,7 +32,7 @@ class DS1InboundSubscriptionManager extends DSLogger implements OutboundMessage 
             new ConcurrentLinkedQueue<DS1InboundSubscription>();
     private Map<String, DS1InboundSubscription> pathMap =
             new ConcurrentHashMap<String, DS1InboundSubscription>();
-    private DS1ResponderSession session;
+    private DS1Responder session;
     private Map<Integer, DS1InboundSubscription> sidMap =
             new ConcurrentHashMap<Integer, DS1InboundSubscription>();
     private StringBuilder timestampBuffer = new StringBuilder();
@@ -41,7 +41,7 @@ class DS1InboundSubscriptionManager extends DSLogger implements OutboundMessage 
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1InboundSubscriptionManager(DS1ResponderSession session) {
+    DS1InboundSubscriptionManager(DS1Responder session) {
         this.session = session;
     }
 

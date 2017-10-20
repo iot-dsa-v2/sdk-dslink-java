@@ -6,21 +6,17 @@ import org.iot.dsa.security.DSPermission;
 /**
  * Parameter to invoke method on DSIRequester.  Provides details about the invocation as well as
  * callbacks for various state changes.
+ *
+ * @author Daniel Shapiro, Aaron Hansen
  */
 public abstract class OutboundInvokeRequest extends OutboundRequest {
-
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private String path;
     private DSMap parameters;
     private DSPermission permission;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods in alphabetical order
@@ -34,23 +30,10 @@ public abstract class OutboundInvokeRequest extends OutboundRequest {
     }
 
     /**
-     * The requested path.
-     */
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * The maximum permission level of this invoke, or null
+     * The maximum permission level of the invoker, or null.
      */
     public DSPermission getPermission() {
         return permission;
-    }
-
-    /**
-     * Called no matter how the stream is closed.  Does nothing by default.
-     */
-    public void onClose() {
     }
 
     /**
@@ -60,11 +43,6 @@ public abstract class OutboundInvokeRequest extends OutboundRequest {
 
     public OutboundInvokeRequest setParameters(DSMap parameters) {
         this.parameters = parameters;
-        return this;
-    }
-
-    public OutboundInvokeRequest setPath(String path) {
-        this.path = path;
         return this;
     }
 
