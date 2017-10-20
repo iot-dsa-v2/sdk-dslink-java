@@ -321,7 +321,7 @@ class DS1InboundInvoke extends DS1InboundRequest
             if (rows == null) {
                 rows = ((ActionTable) result).getRows();
             }
-            DS1ResponderSession session = getSession();
+            DS1Responder session = getSession();
             while (rows.hasNext()) {
                 out.value(rows.next());
                 if (session.shouldEndMessage()) {
@@ -355,7 +355,7 @@ class DS1InboundInvoke extends DS1InboundRequest
                .endMap();
         }
         out.key("updates").beginList();
-        DS1ResponderSession session = getSession();
+        DS1Responder session = getSession();
         while (true) {
             update = dequeueUpdate();
             if (update.rows != null) {

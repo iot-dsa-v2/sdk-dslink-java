@@ -26,7 +26,7 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
     private DSMap request;
     private Integer requestId;
     private DSIResponder responder;
-    private DS1ResponderSession session;
+    private DS1Responder session;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -59,7 +59,7 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return requestId;
     }
 
-    public DS1ResponderSession getSession() {
+    public DS1Responder getSession() {
         return session;
     }
 
@@ -88,7 +88,7 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return this;
     }
 
-    public DS1InboundRequest setSession(DS1ResponderSession session) {
+    public DS1InboundRequest setSession(DS1Responder session) {
         this.session = session;
         return this;
     }

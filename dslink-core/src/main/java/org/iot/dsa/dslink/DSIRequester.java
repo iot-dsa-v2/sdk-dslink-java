@@ -1,65 +1,63 @@
 package org.iot.dsa.dslink;
 
 import org.iot.dsa.dslink.requester.OutboundInvokeRequest;
+import org.iot.dsa.dslink.requester.OutboundInvokeStub;
 import org.iot.dsa.dslink.requester.OutboundListRequest;
+import org.iot.dsa.dslink.requester.OutboundListStub;
+import org.iot.dsa.dslink.requester.OutboundRemoveRequest;
 import org.iot.dsa.dslink.requester.OutboundSetRequest;
 import org.iot.dsa.dslink.requester.OutboundSubscribeRequest;
-import org.iot.dsa.dslink.requester.OutboundSubscription;
-import org.iot.dsa.dslink.responder.InboundInvokeRequest;
-import org.iot.dsa.dslink.responder.InboundListRequest;
-import org.iot.dsa.dslink.responder.InboundSetRequest;
-import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
-import org.iot.dsa.dslink.responder.OutboundListResponse;
-import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
-import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.security.DSPermission;
+import org.iot.dsa.dslink.requester.OutboundSubscribeStub;
 
 /**
  * Interface for submitting outgoing requests.  Accessible via the connection object.
- * Session object used by requesters.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
 public interface DSIRequester {
 
     /**
-     * The implementation should quickly create an object for responding to the request, but do no
-     * processing of it on the calling thread. Simply throw a descriptive exception to report an
-     * error with the request.
+     * Submits an invoke request.
      *
-     * @param request The details of the request and the mechanism for providing updates.
-     * @return The initial response and close notification mechanism, can be null if the if the
-     * result type is void.
+     * @param request The details of the request and the mechanism for receiving updates.
+     * @return The mechanism to close the stream.
      */
-    public void invoke(OutboundInvokeRequest request);
+    public OutboundInvokeStub invoke(OutboundInvokeRequest request);
 
     /**
-     * The implementation should quickly create an object for responding to the request, but do no
-     * processing of it on the calling thread. Simply throw a descriptive exception to report an
-     * error with the request.
+     * Submits a list request.
      *
-     * @param request The details of the request and the mechanism for providing updates.
-     * @return The initial response and close mechanism.
+     * @param request The details of the request and the mechanism for receiving updates.
+     * @return The mechanism to close the stream.
      */
-    public void list(OutboundListRequest request);
+    public OutboundListStub list(OutboundListRequest request);
 
     /**
-     * The implementation should quickly create an object for responding to the request, but do no
-     * processing of it on the calling thread. Simply throw a descriptive exception to report an
-     * error with the request.
+     * Submits a remove request.
      *
-     * @param request The details of the request and the mechanism for sending updates.
-     * @return Who to notify when the subscription is closed.
+     * @param request The details of the request.  onError will be called for any problems, then
+     *                onClose will be called to indicate the request is complete, whether or not
+     *                there was an error.
      */
-    public void subscribe(OutboundSubscribeRequest request);
+    public void remove(OutboundRemoveRequest request);
+
+    /**
+     * Submits a subscribe request.
+     *
+     * @param request The details of the request.  onError will be called for any problems, then
+     *                onClose will be called to indicate the subscription is closed, whether or not
+     *                there was an error.
+     * @return The mechanism to close the subscription.
+     */
+    public OutboundSubscribeStub subscribe(OutboundSubscribeRequest request);
 
 
     /**
-     * The implementation should do no processing of it on the calling thread. Simply throw a
-     * descriptive exception to report an error with the request.
+     * Submits a set request.
      *
-     * @param request The details of the request.
+     * @param request The details of the request.  onError will be called for any problems, then
+     *                onClose will be called to indicate the request is complete, whether or not
+     *                there was an error.
      */
     public void set(OutboundSetRequest request);
 

@@ -23,7 +23,7 @@ import org.iot.dsa.node.DSNode;
  *
  * @author Aaron Hansen
  */
-public class DS1ResponderSession extends DSNode implements DSResponderSession {
+public class DS1Responder extends DSNode implements DSResponderSession {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -45,7 +45,7 @@ public class DS1ResponderSession extends DSNode implements DSResponderSession {
     // Methods - Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DS1ResponderSession(DS1Session protocol) {
+    public DS1Responder(DS1Session protocol) {
         this.protocol = protocol;
     }
 
@@ -299,13 +299,5 @@ public class DS1ResponderSession extends DSNode implements DSResponderSession {
         finest(finest() ? (msg + ": " + request.toString()) : null);
         throw new DSProtocolException(msg).setType("invalidMethod");
     }
-
-    /////////////////////////////////////////////////////////////////
-    // Inner Classes
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
 
 }

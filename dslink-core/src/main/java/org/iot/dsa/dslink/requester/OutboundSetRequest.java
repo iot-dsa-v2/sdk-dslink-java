@@ -3,20 +3,41 @@ package org.iot.dsa.dslink.requester;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.security.DSPermission;
 
-public abstract class OutboundSetRequest extends OutboundRequest {
+/**
+ * @author Daniel Shapiro, Aaron Hansen
+ */
+public class OutboundSetRequest extends OutboundRequest {
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Fields
+    ///////////////////////////////////////////////////////////////////////////
+
+    private DSElement value;
+    private DSPermission permission;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Methods in alphabetical order
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * The maximum permission level of this invoke, or null
+     * The maximum permission level of the requester, or null.
      */
-    public abstract DSPermission getPermission();
+    public DSPermission getPermission() {
+        return permission;
+    }
 
-    /**
-     * The requested path.
-     */
-    public abstract String getPath();
+    public DSElement getValue() {
+        return value;
+    }
 
-    /**
-     * The value being written
-     */
-    public abstract DSElement getValue();
+    public OutboundSetRequest setPermission(DSPermission permission) {
+        this.permission = permission;
+        return this;
+    }
+
+    public OutboundSetRequest setValue(DSElement value) {
+        this.value = value;
+        return this;
+    }
+
 }

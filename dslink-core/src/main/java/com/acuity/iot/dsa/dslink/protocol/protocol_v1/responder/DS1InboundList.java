@@ -342,7 +342,7 @@ class DS1InboundList extends DS1InboundRequest
     }
 
     /**
-     * Combines boolean and enum ranges into the type.
+     * Combines boolean and enum ranges into the type name.
      */
     private DSMap fixType(DSMap arg) {
         String type = arg.getString(DSMetadata.TYPE);
@@ -501,7 +501,7 @@ class DS1InboundList extends DS1InboundRequest
 
     private void writeUpdates(DSIWriter out) {
         Update update;
-        DS1ResponderSession session = getSession();
+        DS1Responder session = getSession();
         while (!session.shouldEndMessage()) {
             update = dequeue();
             if (update == null) {
