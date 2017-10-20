@@ -58,7 +58,7 @@ public class DSNull extends DSElement {
 
     @Override
     public DSValueType getValueType() {
-        return null;
+        return DSValueType.DYNAMIC;
     }
 
     /**
