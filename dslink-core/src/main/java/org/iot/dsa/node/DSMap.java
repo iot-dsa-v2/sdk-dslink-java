@@ -550,11 +550,4 @@ public class DSMap extends DSGroup {
         }
     }
 
-    // Initialization
-    // --------------
-
-    static {
-        DSRegistry.registerDecoder(DSMap.class, new DSMap());
-    }
-
 }

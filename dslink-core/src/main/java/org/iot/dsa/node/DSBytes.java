@@ -4,8 +4,7 @@ import java.util.Arrays;
 import org.iot.dsa.io.DSBase64;
 
 /**
- * A Java float.  Try not to use, floats can only be converted to doubles by first converting them
- * to strings.
+ * Byte array that gets encoded as a base64 string.
  *
  * @author Aaron Hansen
  */
@@ -15,6 +14,7 @@ public class DSBytes extends DSValue {
     // ---------
 
     public static final DSBytes NULL = new DSBytes(new byte[0]);
+    private static final String PREFIX = "\u001Bbytes:";
 
     // Fields
     // ------
@@ -91,7 +91,7 @@ public class DSBytes extends DSValue {
         if (isNull()) {
             return "null";
         }
-        return DSBase64.encodeUrl(value);
+        return PREFIX + DSBase64.encodeUrl(value);
     }
 
     @Override
@@ -115,6 +115,9 @@ public class DSBytes extends DSValue {
             return NULL;
         } else if (arg.equalsIgnoreCase("null")) {
             return NULL;
+        }
+        if (arg.startsWith(PREFIX)) {
+            arg = arg.substring(PREFIX.length());
         }
         return new DSBytes(DSBase64.decode(arg));
     }

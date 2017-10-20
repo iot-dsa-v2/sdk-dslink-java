@@ -10,6 +10,8 @@ import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.node.DSFloat;
 import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 import org.junit.Assert;
@@ -76,6 +78,29 @@ public class SerializationTest {
         debug(orig);
         decoded = decode(encode(orig));
         Assert.assertTrue(orig.equals(decoded));
+    }
+
+    /**
+     * Testing an "Already parented" bug that cropped up.
+     */
+    @Test
+    public void testMultipleGroups() throws Exception {
+        DSNode node = new MyNode();
+        DSList list = new DSList();
+        list.add("a").add("b").add("c");
+        node.put("first", list);
+        list = new DSList();
+        list.add("d").add("e").add("f");
+        node.put("second", list);
+        node = decode(encode(node));
+        list = (DSList) node.get("first");
+        Assert.assertTrue(list.getString(0).equals("a"));
+        Assert.assertTrue(list.getString(1).equals("b"));
+        Assert.assertTrue(list.getString(2).equals("c"));
+        list = (DSList) node.get("second");
+        Assert.assertTrue(list.getString(0).equals("d"));
+        Assert.assertTrue(list.getString(1).equals("e"));
+        Assert.assertTrue(list.getString(2).equals("f"));
     }
 
     // Inner Classes
