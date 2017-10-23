@@ -44,7 +44,7 @@ public class DS1Session extends DSSession {
     private DSInfo lastAckSent = getInfo(LAST_ACK_SENT);
     private int nextAck = -1;
     private int nextMsg = 1;
-    private DS1Requester requester = null; //TODO new DS1Requester(this);
+    private DS1Requester requester = new DS1Requester(this);
     private DS1Responder responder = new DS1Responder(this);
 
     /////////////////////////////////////////////////////////////////
@@ -80,16 +80,6 @@ public class DS1Session extends DSSession {
     @Override
     protected void beginRequests() {
         getWriter().key("requests").beginList();
-    }
-
-    boolean canReuse() {
-        return false;
-    }
-
-    @Override
-    public void close() {
-        responder.close();
-        super.close();
     }
 
     @Override
@@ -162,6 +152,24 @@ public class DS1Session extends DSSession {
         put("Responder Session", responderSession);
     }
     */
+
+    @Override
+    public void onConnect() {
+        requester.onConnect();
+        responder.onConnect();
+    }
+
+    @Override
+    public void onConnectFail() {
+        requester.onConnectFail();
+        responder.onConnectFail();
+    }
+
+    @Override
+    public void onDisconnect() {
+        requester.onDisconnect();
+        responder.onDisconnect();
+    }
 
     /**
      * Decomposes and processes a complete envelope which can contain multiple requests and
@@ -265,13 +273,5 @@ public class DS1Session extends DSSession {
     public boolean shouldEndMessage() {
         return getTransport().shouldEndMessage();
     }
-
-    /////////////////////////////////////////////////////////////////
-    // Inner Classes
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
 
 }

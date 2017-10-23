@@ -34,9 +34,6 @@ public class DS1Requester extends DSNode implements DSIRequester {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DS1Requester() {
-    }
-
     public DS1Requester(DS1Session session) {
         this.session = session;
     }
@@ -81,6 +78,18 @@ public class DS1Requester extends DSNode implements DSIRequester {
         requests.put(stub.getRequestId(), stub);
         session.enqueueOutgoingRequest(stub);
         return stub;
+    }
+
+    public void onConnect() {
+        subscriptions.onConnect();
+    }
+
+    public void onConnectFail() {
+        subscriptions.onConnectFail();
+    }
+
+    public void onDisconnect() {
+        subscriptions.onDisconnect();
     }
 
     /**
@@ -128,27 +137,6 @@ public class DS1Requester extends DSNode implements DSIRequester {
     void sendRequest(OutboundMessage res) {
         session.enqueueOutgoingRequest(res);
     }
-
-    /*
-    private void sendSubscribeRequest(OutboundSubscribeRequest req) {
-        Iterator<OutboundSubscription> iter = req.getPaths();
-        while (iter.hasNext()) {
-            OutboundSubscription sub = iter.next();
-            int sid = getNextSid();
-            sub.setSubscriptionId(sid);
-            subscriptions.put(sid, sub);
-        }
-    }
-
-    private void sendUnsubscribeRequest(OutboundUnsubscribeRequest req) {
-        Iterator<OutboundSubscription> iter = req.getSids();
-        while (iter.hasNext()) {
-            OutboundSubscription sub = iter.next();
-            int sid = sub.getSubscriptionId();
-            subscriptions.remove(sid);
-        }
-    }
-    */
 
     @Override
     public void set(OutboundSetRequest req) {

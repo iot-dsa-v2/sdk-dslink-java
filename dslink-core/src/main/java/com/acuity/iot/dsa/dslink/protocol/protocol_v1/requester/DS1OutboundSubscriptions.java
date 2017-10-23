@@ -62,13 +62,6 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Unsubscribes all.
-     */
-    void close() {
-        //TODO who calls and why
-    }
-
     @Override
     public Logger getLogger() {
         if (logger == null) {
@@ -90,6 +83,15 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
 
     DS1Requester getRequester() {
         return requester;
+    }
+
+    public void onConnect() {
+    }
+
+    public void onConnectFail() {
+    }
+
+    public void onDisconnect() {
     }
 
     void processUpdate(DSElement updateElement) {
@@ -237,10 +239,12 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
             Iterator<DS1OutboundSubscribeStubs> it = pendingSubscribe.iterator();
             while (it.hasNext() && !session.shouldEndMessage()) {
                 DS1OutboundSubscribeStubs stubs = it.next();
-                if (stubs.getState() == State.PENDING_SUBSCRIBE) {
-                    out.value(stubs.getSid());
-                    stubs.setState(State.UNSUBSCRIBED);
-                    //TODO close?
+                synchronized (pathMap) {
+                    if (stubs.size() == 0) {
+                        pathMap.remove(stubs.getPath());
+                        sidMap.remove(stubs.getSid());
+                        out.value(stubs.getSid());
+                    }
                 }
                 it.remove();
             }
