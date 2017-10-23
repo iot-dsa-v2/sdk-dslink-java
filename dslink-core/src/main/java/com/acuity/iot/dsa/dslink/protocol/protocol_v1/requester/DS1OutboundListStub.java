@@ -9,7 +9,7 @@ import org.iot.dsa.node.DSMap;
 /**
  * @author Daniel Shapiro, Aaron Hansen
  */
-public class DS1OutboundListStub extends DS1OutboundRequestStub implements OutboundListStub {
+class DS1OutboundListStub extends DS1OutboundRequestStub implements OutboundListStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

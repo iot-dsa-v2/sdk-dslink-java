@@ -14,7 +14,7 @@ import org.iot.dsa.logging.DSLogger;
  *
  * @author Aaron Hansen
  */
-class DS1InboundSubscriptionManager extends DSLogger implements OutboundMessage {
+class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -41,7 +41,7 @@ class DS1InboundSubscriptionManager extends DSLogger implements OutboundMessage 
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1InboundSubscriptionManager(DS1Responder session) {
+    DS1InboundSubscriptions(DS1Responder session) {
         this.session = session;
     }
 

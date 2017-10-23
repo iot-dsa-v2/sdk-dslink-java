@@ -6,7 +6,10 @@ import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;
 
-public class DS1OutboundSetStub extends DS1OutboundRequestStub {
+/**
+ * @author Daniel Shapiro, Aaron Hansen
+ */
+class DS1OutboundSetStub extends DS1OutboundRequestStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

@@ -48,6 +48,13 @@ public class DSDateTime extends DSValue {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
+     * The current time.
+     */
+    public static DSDateTime currentTime() {
+        return new DSDateTime(System.currentTimeMillis());
+    }
+
+    /**
      * String.
      */
     @Override

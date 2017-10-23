@@ -10,7 +10,7 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-public abstract class DS1OutboundRequestStub implements OutboundMessage {
+abstract class DS1OutboundRequestStub implements OutboundMessage {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

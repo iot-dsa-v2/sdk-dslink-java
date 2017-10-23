@@ -1,6 +1,8 @@
 package org.iot.dsa.dslink.requester;
 
-import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSStatus;
+import org.iot.dsa.time.DSDateTime;
 
 /**
  * Parameter to the subscribe method on DSIRequester.  Provides details about the subscription as
@@ -8,17 +10,23 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-public abstract class OutboundSubscribeRequest extends OutboundRequest {
+public abstract class OutboundSubscribeRequest {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private String path;
     private int qos;
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
+
+
+    public String getPath() {
+        return path;
+    }
 
     /**
      * The quality of service.
@@ -28,9 +36,14 @@ public abstract class OutboundSubscribeRequest extends OutboundRequest {
     }
 
     /**
-     * Callback - single entry point for all responses to the request.
+     * Subscription callback.
      */
-    public abstract void onUpdate(DSMap response);
+    public abstract void update(DSDateTime dateTime, DSElement value, DSStatus status);
+
+    public OutboundSubscribeRequest setPath(String path) {
+        this.path = path;
+        return this;
+    }
 
     public OutboundSubscribeRequest setQos(int qos) {
         this.qos = qos;

@@ -4,7 +4,10 @@ import org.iot.dsa.dslink.requester.OutboundRemoveRequest;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
 
-public class DS1OutboundRemoveStub extends DS1OutboundRequestStub {
+/**
+ * @author Daniel Shapiro, Aaron Hansen
+ */
+class DS1OutboundRemoveStub extends DS1OutboundRequestStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

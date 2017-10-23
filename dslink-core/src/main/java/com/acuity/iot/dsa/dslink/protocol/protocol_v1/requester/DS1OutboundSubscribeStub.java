@@ -1,13 +1,12 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
-import java.util.Iterator;
 import org.iot.dsa.dslink.requester.OutboundSubscribeRequest;
-import org.iot.dsa.dslink.requester.OutboundSubscription;
-import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.node.DSList;
-import org.iot.dsa.node.DSMap;
+import org.iot.dsa.dslink.requester.OutboundSubscribeStub;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSStatus;
+import org.iot.dsa.time.DSDateTime;
 
-public class DS1OutboundSubscribeStub extends DS1OutboundRequestStub {
+public class DS1OutboundSubscribeStub implements OutboundSubscribeStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -15,12 +14,15 @@ public class DS1OutboundSubscribeStub extends DS1OutboundRequestStub {
 
     private DS1OutboundSubscribeStub next;
     private OutboundSubscribeRequest request;
+    private DS1OutboundSubscriptions subscriptions;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DS1OutboundSubscribeStub(OutboundSubscribeRequest request) {
+    public DS1OutboundSubscribeStub(DS1OutboundSubscriptions subscriptions,
+                                    OutboundSubscribeRequest request) {
+        this.subscriptions = subscriptions;
         this.request = request;
     }
 
@@ -30,53 +32,31 @@ public class DS1OutboundSubscribeStub extends DS1OutboundRequestStub {
 
     @Override
     public void close() {
-        //TODO send unsubscribe
+        subscriptions.unsubscribe(this);
     }
 
-    DS1OutboundSubscribeStub getNext() {
+    public DS1OutboundSubscribeStub getNext() {
         return next;
     }
 
-    @Override
     public OutboundSubscribeRequest getRequest() {
         return request;
     }
 
-    @Override
-    public void handleClose() {
-        //TODO ???
+    public int getQos() {
+        return request.getQos();
     }
 
-    @Override
-    public void handleResponse(DSMap map) {
+    public void process(DSDateTime ts, DSElement value, DSStatus status) {
         try {
-            request.onUpdate(map);
+            request.update(ts, value, status);
         } catch (Exception x) {
-            getRequester().severe(getRequester().getPath(), x);
+            subscriptions.severe(request.getPath(), x);
         }
     }
 
     void setNext(DS1OutboundSubscribeStub next) {
         this.next = next;
-    }
-
-    @Override
-    public void write(DSIWriter out) {
-        out.beginMap();
-        out.key("rid").value(getRequestId());
-        out.key("method").value("subscribe");
-        Iterator<OutboundSubscription> it = request.getPath();
-        DSList paths = new DSList();
-        while (it.hasNext()) {
-            OutboundSubscription sub = it.next();
-            DSMap m = paths.addMap().put("path", sub.getPath()).put("sid", sub.getSubscriptionId());
-            Integer qos = sub.getQos();
-            if (qos != null) {
-                m.put("qos", qos);
-            }
-        }
-        out.key("paths").value(paths);
-        out.endMap();
     }
 
 }
