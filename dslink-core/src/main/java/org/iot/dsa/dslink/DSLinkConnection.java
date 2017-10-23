@@ -16,13 +16,6 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSLinkConnection extends DSNode {
 
     /**
-     * Closes the current established connection, does not stop this object.  There are many places
-     * and reasons for closing the actual connection (such as errors and timeouts),  all of them
-     * should just call this for comprehensive cleanup.
-     */
-    public abstract void close();
-
-    /**
      * A unique descriptive tag such as a combination of the link name and the broker host.
      */
     public abstract String getConnectionId();

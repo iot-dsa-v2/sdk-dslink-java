@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
@@ -301,9 +300,21 @@ public abstract class DSSession extends DSNode {
     }
 
     /**
-     * Override point for reusable sessions.  Does nothing by default.
+     * Override point, the transport will have already been set.
      */
-    public void pause() {
+    public void onConnect() {
+    }
+
+    /**
+     * Override point, when a connection cannot be established.
+     */
+    public void onConnectFail() {
+    }
+
+    /**
+     * Override point, the connection was closed.
+     */
+    public void onDisconnect() {
     }
 
     /**

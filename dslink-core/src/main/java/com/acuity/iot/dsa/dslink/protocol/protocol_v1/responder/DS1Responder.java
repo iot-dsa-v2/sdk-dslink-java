@@ -12,8 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
@@ -36,7 +36,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     private ConcurrentHashMap<Integer, DS1Stream> inboundRequests =
             new ConcurrentHashMap<Integer, DS1Stream>();
     private Logger logger;
-    private DS1Session protocol;
+    private DS1Session session;
     private DSIResponder responder;
     private DS1InboundSubscriptions subscriptions =
             new DS1InboundSubscriptions(this);
@@ -45,30 +45,17 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     // Methods - Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DS1Responder(DS1Session protocol) {
-        this.protocol = protocol;
+    public DS1Responder(DS1Session session) {
+        this.session = session;
     }
 
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
 
-    public void close() {
-        finer(finer() ? "Close" : null);
-        subscriptions.close();
-        for (Map.Entry<Integer, DS1Stream> entry : inboundRequests.entrySet()) {
-            try {
-                entry.getValue().onClose(entry.getKey());
-            } catch (Exception x) {
-                finer(finer() ? "Close" : null, x);
-            }
-        }
-        inboundRequests.clear();
-    }
-
     @Override
     public DSLinkConnection getConnection() {
-        return protocol.getConnection();
+        return session.getConnection();
     }
 
     @Override
@@ -95,13 +82,32 @@ public class DS1Responder extends DSNode implements DSResponderSession {
         return subscriptions;
     }
 
+    public void onConnect() {
+    }
+
+    public void onConnectFail() {
+    }
+
+    public void onDisconnect() {
+        finer(finer() ? "Close" : null);
+        subscriptions.close();
+        for (Map.Entry<Integer, DS1Stream> entry : inboundRequests.entrySet()) {
+            try {
+                entry.getValue().onClose(entry.getKey());
+            } catch (Exception x) {
+                finer(finer() ? "Close" : null, x);
+            }
+        }
+        inboundRequests.clear();
+    }
+
     /**
      * Handles an invoke request.
      */
     private void processInvoke(Integer rid, DSMap req) {
         DS1InboundInvoke invokeImpl = new DS1InboundInvoke(req);
         invokeImpl.setPath(getPath(req))
-                  .setProtocol(protocol)
+                  .setProtocol(session)
                   .setRequestId(rid)
                   .setResponder(responder)
                   .setSession(this);
@@ -115,7 +121,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     private void processList(Integer rid, DSMap req) {
         DS1InboundList listImpl = new DS1InboundList();
         listImpl.setPath(getPath(req))
-                .setProtocol(protocol)
+                .setProtocol(session)
                 .setRequest(req)
                 .setRequestId(rid)
                 .setResponder(responder)
@@ -226,7 +232,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     private void processSet(Integer rid, DSMap req) {
         DS1InboundSet setImpl = new DS1InboundSet(req);
         setImpl.setPath(getPath(req))
-               .setProtocol(protocol)
+               .setProtocol(session)
                .setRequestId(rid)
                .setResponder(responder)
                .setSession(this);
@@ -283,12 +289,12 @@ public class DS1Responder extends DSNode implements DSResponderSession {
 
     @Override
     public boolean shouldEndMessage() {
-        return protocol.shouldEndMessage();
+        return session.shouldEndMessage();
     }
 
     @Override
     public void sendResponse(OutboundMessage res) {
-        protocol.enqueueOutgoingResponse(res);
+        session.enqueueOutgoingResponse(res);
     }
 
     /**

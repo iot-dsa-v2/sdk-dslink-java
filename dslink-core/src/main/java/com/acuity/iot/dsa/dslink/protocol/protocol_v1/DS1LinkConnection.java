@@ -48,20 +48,6 @@ public class DS1LinkConnection extends DSLinkConnection {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void close() {
-        if (isOpen()) {
-            DSTransport tpt = transport;
-            if (tpt != null) {
-                tpt.close();
-            }
-            DSSession ses = session;
-            if (ses != null) {
-                ses.pause();
-            }
-        }
-    }
-
-    @Override
     public String getConnectionId() {
         if (connectionId == null) {
             StringBuilder builder = new StringBuilder();
@@ -168,19 +154,6 @@ public class DS1LinkConnection extends DSLinkConnection {
         new ConnectionRunThread(new ConnectionRunner()).start();
     }
 
-    /**
-     * Terminates the connection runner.
-     */
-    @Override
-    public void onStopped() {
-        close();
-        if (session != null) {
-            session.close();
-            session = null;
-        }
-        transport = null;
-    }
-
     public void setRequesterAllowed() {
         session.setRequesterAllowed();
     }
@@ -211,6 +184,8 @@ public class DS1LinkConnection extends DSLinkConnection {
                             warn(warn() ? getConnectionId() : null, x);
                         }
                     }
+                    //We need to reinitialize if there are any connection failures, so
+                    //only hold the init reference after successfully connected.
                     DS1ConnectionInit init = connectionInit;
                     connectionInit = null;
                     if (init == null) {
@@ -221,41 +196,33 @@ public class DS1LinkConnection extends DSLinkConnection {
                     transport = makeTransport(init);
                     put(TRANSPORT, transport).setTransient(true);
                     config(config() ? "Transport type: " + transport.getClass().getName() : null);
-                    transport.open();
-                    connectionInit = init;
-                    if (session != null) {
-                        if (!session.canReuse()) {
-                            session.close();
-                            remove(SESSION);
-                            session = null;
-                        }
-                    }
                     if (session == null) {
                         session = makeSession();
+                        config(config() ? "Session type: " + session.getClass().getName() : null);
                         put(SESSION, session).setTransient(true);
+                        session.setConnection(DS1LinkConnection.this);
                     }
-                    session.setConnection(DS1LinkConnection.this).setTransport(transport);
-                    config(config() ? "Protocol type: " + session.getClass().getName() : null);
+                    try {
+                        transport.open();
+                        connectionInit = init;
+                        session.onConnect();
+                    } catch (Exception x) {
+                        session.onConnectFail();
+                        throw x;
+                    }
                     session.run();
                     reconnectRate = 1000;
                 } catch (Throwable x) {
                     reconnectRate = Math.min(reconnectRate * 2, DSTime.MILLIS_MINUTE);
                     severe(getConnectionId(), x);
                 }
-                try {
-                    close();
-                } catch (Exception x) {
-                    fine(fine() ? getConnectionId() : null, x);
-                }
                 if (session != null) {
-                    session.pause();
+                    session.onDisconnect();
                 }
-                transport = null;
-            }
-            if (session != null) {
-                session.close();
-                remove(SESSION);
-                session = null;
+                if (transport != null) {
+                    remove(TRANSPORT);
+                    transport = null;
+                }
             }
         }
     }
