@@ -160,7 +160,7 @@ public class NodeEncoder {
         }
         if (!arg.equalsDefaultType()) {
             DSIObject obj = arg.getObject();
-            if (obj != null) {
+            if ((obj != null) && !(obj instanceof DSElement)) {
                 out.key("t").value(getToken(obj));
             }
         }
@@ -179,7 +179,9 @@ public class NodeEncoder {
         if (!arg.equalsDefaultType()) {
             DSIValue v = (DSIValue) arg.getObject();
             if (v != null) {
-                out.key("t").value(getToken(v));
+                if (!(v instanceof DSElement)) {
+                    out.key("t").value(getToken(v));
+                }
                 out.key("v").value(v.store());
             } else {
                 out.key("v").value((String) null);
@@ -194,13 +196,5 @@ public class NodeEncoder {
         }
         out.endMap();
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
 
 }

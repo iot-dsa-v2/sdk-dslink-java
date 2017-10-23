@@ -321,20 +321,12 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
         }
 
         /**
-         * Not implements, throws an exception.
+         * Not implemented, throws an exception.
          */
         @Override
         public void remove() {
             throw new IllegalStateException("Not implemented");
         }
     }
-
-    // Initialization
-    // --------------
-
-    static {
-        DSRegistry.registerDecoder(DSList.class, new DSList());
-    }
-
 
 }

@@ -10,6 +10,7 @@ public enum DSValueType {
 
     BINARY("binary"),
     BOOL("bool"),
+    DYNAMIC("dynamic"),
     ENUM("enum"),
     LIST("array"),
     MAP("map"),

@@ -54,7 +54,8 @@ public class NodeDecoder {
     }
 
     /**
-     * Will create new instances for DSNodes, or return the NULL instance for DSIValues.
+     * Will create new instances for anything without a decoder, otherwise returns the decoder
+     * instance.
      */
     private DSIObject getInstance(String type) {
         DSIObject ret = null;
