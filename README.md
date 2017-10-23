@@ -41,5 +41,5 @@ under a [Creative Commons Attribute 2.5 License](http://creativecommons.org/lice
 
 ## History
 
-* 0.0.0
+* 1.0.0
   - Hello World.
