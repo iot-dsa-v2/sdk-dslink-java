@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSTime;
@@ -28,7 +27,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
 
     private SubscriptionCloseHandler closeHandler;
     private boolean enqueued = false;
-    private DS1InboundSubscriptionManager manager;
+    private DS1InboundSubscriptions manager;
     private boolean open = true;
     private Integer sid;
     private int qos = 0;
@@ -39,7 +38,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1InboundSubscription(DS1InboundSubscriptionManager manager) {
+    DS1InboundSubscription(DS1InboundSubscriptions manager) {
         this.manager = manager;
     }
 

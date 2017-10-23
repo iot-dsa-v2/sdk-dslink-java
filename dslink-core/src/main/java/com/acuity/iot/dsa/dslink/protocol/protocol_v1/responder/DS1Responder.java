@@ -38,8 +38,8 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     private Logger logger;
     private DS1Session protocol;
     private DSIResponder responder;
-    private DS1InboundSubscriptionManager subscriptions =
-            new DS1InboundSubscriptionManager(this);
+    private DS1InboundSubscriptions subscriptions =
+            new DS1InboundSubscriptions(this);
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -91,7 +91,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
         return path;
     }
 
-    public DS1InboundSubscriptionManager getSubscriptions() {
+    public DS1InboundSubscriptions getSubscriptions() {
         return subscriptions;
     }
 

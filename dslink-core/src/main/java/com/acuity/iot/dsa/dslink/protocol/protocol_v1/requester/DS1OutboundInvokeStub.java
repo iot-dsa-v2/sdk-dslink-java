@@ -9,7 +9,7 @@ import org.iot.dsa.security.DSPermission;
 /**
  * @author Daniel Shapiro, Aaron Hansen
  */
-public class DS1OutboundInvokeStub extends DS1OutboundRequestStub implements OutboundInvokeStub {
+class DS1OutboundInvokeStub extends DS1OutboundRequestStub implements OutboundInvokeStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

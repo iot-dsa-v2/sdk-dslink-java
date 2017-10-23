@@ -6,7 +6,7 @@ import org.iot.dsa.dslink.requester.OutboundUnsubscribeRequest;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSList;
 
-public class DS1OutboundUnsubscribeStub extends DS1OutboundRequestStub {
+class DS1OutboundUnsubscribeStub extends DS1OutboundRequestStub {
 
     private OutboundUnsubscribeRequest request;
     protected static final String method = "unsubscribe";
