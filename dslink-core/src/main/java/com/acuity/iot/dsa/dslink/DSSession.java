@@ -79,6 +79,22 @@ public abstract class DSSession extends DSNode {
     protected abstract void beginRequests();
 
     /**
+     * Can be called by the subclass to force exit the run method.
+     */
+    public void close() {
+        try {
+            active = false;
+            synchronized (outgoingMutex) {
+                outgoingRequests.clear();
+                outgoingResponses.clear();
+                outgoingMutex.notify();
+            }
+        } catch (Exception x) {
+            fine(connection.getConnectionId(), x);
+        }
+    }
+
+    /**
      * The protocol implementation should read messages and do something with them. The
      * implementation should call isOpen() to determine when to exit this method.
      *
@@ -131,22 +147,6 @@ public abstract class DSSession extends DSNode {
                 active = false;
                 transport.close();
             }
-        }
-    }
-
-    /**
-     * Can be called by the subclass to force close the connection.
-     */
-    public void close() {
-        try {
-            active = false;
-            synchronized (outgoingMutex) {
-                outgoingRequests.clear();
-                outgoingResponses.clear();
-                outgoingMutex.notify();
-            }
-        } catch (Exception x) {
-            fine(connection.getConnectionId(), x);
         }
     }
 
@@ -300,13 +300,14 @@ public abstract class DSSession extends DSNode {
     }
 
     /**
-     * Override point, the transport will have already been set.
+     * Override point, called when the previous connection can be resumed. The the transport will
+     * have already been set.
      */
     public void onConnect() {
     }
 
     /**
-     * Override point, when a connection cannot be established.
+     * Override point, when a connection attempt failed.
      */
     public void onConnectFail() {
     }

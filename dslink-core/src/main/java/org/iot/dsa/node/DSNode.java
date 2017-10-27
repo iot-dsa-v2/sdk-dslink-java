@@ -955,8 +955,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         DSIObject old = info.getObject();
         if (isNode(old)) {
             DSNode node = toNode(old);
-            node.infoInParent = null;
             node.stop();
+            node.infoInParent = null;
         } else if (old instanceof DSGroup) {
             ((DSGroup) object).setParent(null);
         }
@@ -1167,7 +1167,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public final void stop() {
         if (isStopped()) {
-            throw new IllegalStateException("Not stable: " + getPath());
+            return;
         }
         path = null;
         DSInfo info = getFirstInfo();

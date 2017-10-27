@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
-import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.DSTransport;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIRequester;
@@ -93,6 +92,13 @@ public class DS1LinkConnection extends DSLinkConnection {
         return session.getRequester();
     }
 
+    protected DS1ConnectionInit initializeConnection() throws Exception {
+        DS1ConnectionInit init = new DS1ConnectionInit();
+        put(CONNECTION_INIT, init).setTransient(true);
+        init.initializeConnection();
+        return init;
+    }
+
     @Override
     public boolean isOpen() {
         DSTransport tpt = transport;
@@ -105,8 +111,8 @@ public class DS1LinkConnection extends DSLinkConnection {
     /**
      * Looks at the connection initialization response to determine the protocol implementation.
      */
-    protected DS1Session makeSession() {
-        String version = connectionInit.getResponse().get("version", "");
+    protected DS1Session makeSession(DS1ConnectionInit init) {
+        String version = init.getResponse().get("version", "");
         if (!version.startsWith("1.1.2")) {
             throw new IllegalStateException("Unsupported version: " + version);
         }
@@ -122,8 +128,8 @@ public class DS1LinkConnection extends DSLinkConnection {
         DSTransport transport = null;
         try {
             String type = link.getConfig().getConfig(
-                DSLinkConfig.CFG_TRANSPORT_FACTORY,
-                "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
+                    DSLinkConfig.CFG_TRANSPORT_FACTORY,
+                    "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
             factory = (DSTransport.Factory) Class.forName(type).newInstance();
             transport = factory.makeTransport(init.getResponse());
         } catch (Exception x) {
@@ -138,8 +144,17 @@ public class DS1LinkConnection extends DSLinkConnection {
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
         transport.setReadTimeout(getLink().getConfig().getConfig(
-            DSLinkConfig.CFG_READ_TIMEOUT, 60000));
+                DSLinkConfig.CFG_READ_TIMEOUT, 60000));
         return transport;
+    }
+
+    /**
+     * Called by the transport when the network connection is closed.
+     */
+    public void onClose() {
+        if (session != null) {
+            session.close();
+        }
     }
 
     /**
@@ -189,21 +204,20 @@ public class DS1LinkConnection extends DSLinkConnection {
                     DS1ConnectionInit init = connectionInit;
                     connectionInit = null;
                     if (init == null) {
-                        init = new DS1ConnectionInit();
-                        put(CONNECTION_INIT, init).setTransient(true);
-                        init.initializeConnection();
+                        init = initializeConnection();
                     }
                     transport = makeTransport(init);
                     put(TRANSPORT, transport).setTransient(true);
                     config(config() ? "Transport type: " + transport.getClass().getName() : null);
                     if (session == null) {
-                        session = makeSession();
+                        session = makeSession(init);
                         config(config() ? "Session type: " + session.getClass().getName() : null);
                         put(SESSION, session).setTransient(true);
                         session.setConnection(DS1LinkConnection.this);
                     }
                     try {
                         transport.open();
+                        session.setTransport(transport);
                         connectionInit = init;
                         session.onConnect();
                     } catch (Exception x) {

@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink.requester;
 
+import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;
 
@@ -41,6 +42,13 @@ public abstract class OutboundInvokeRequest extends OutboundRequest {
      */
     public abstract void onResponse(DSMap response);
 
+    public abstract void onColumns(DSList list);
+    public abstract void onInsert(int index, DSList rows);
+    public abstract void onMode(String mode);//stream/append/refresh
+    public abstract void onReplace(int start, int end, DSList rows);
+    public abstract void onTableMeta(DSMap map);
+    public abstract void onUpdate(DSList row);
+
     public OutboundInvokeRequest setParameters(DSMap parameters) {
         this.parameters = parameters;
         return this;
@@ -51,4 +59,9 @@ public abstract class OutboundInvokeRequest extends OutboundRequest {
         return this;
     }
 
+    public static enum Mode {
+        APPEND,
+        REFRESH,
+        STREAM,
+    }
 }

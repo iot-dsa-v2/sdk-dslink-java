@@ -100,20 +100,21 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
         String ts, sts = null;
         if (updateElement instanceof DSList) {
             DSList updateList = (DSList) updateElement;
-            if (updateList.size() < 3) {
+            int cols = updateList.size();
+            if (cols < 3) {
                 finest(finest() ? "Update incomplete: " + updateList.toString() : null);
                 return;
             }
             sid = updateList.get(0, -1);
             value = updateList.get(1);
             ts = updateList.getString(2);
-            //TODO status
+            sts = updateList.get(3, (String) null);
         } else if (updateElement instanceof DSMap) {
             DSMap updateMap = (DSMap) updateElement;
             sid = updateMap.get("sid", -1);
             value = updateMap.get("value");
             ts = updateMap.getString("ts");
-            //TODO status
+            sts = updateMap.get("status", (String) null);
         } else {
             return;
         }
@@ -123,7 +124,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
         }
         DS1OutboundSubscribeStubs stub = sidMap.get(sid);
         if (stub == null) {
-            //TODO unsubscribe?
+            finer(finer() ? ("Unexpected subscription update " + sidMap.toString()) : null);
             return;
         }
         DSDateTime timestamp = null;

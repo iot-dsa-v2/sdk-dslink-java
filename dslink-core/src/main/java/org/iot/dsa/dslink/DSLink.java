@@ -187,7 +187,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             ret = new DSLink();
             ret.init(config);
             ret.info("Creating new database...");
-            String type = config.getConfig(DSLinkConfig.CFG_ROOT_TYPE, null);
+            String type = config.getRootType();
             if (type == null) {
                 throw new IllegalStateException("Config missing the root node type");
             }

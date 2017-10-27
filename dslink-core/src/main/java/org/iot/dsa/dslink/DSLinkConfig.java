@@ -534,6 +534,14 @@ public class DSLinkConfig {
     }
 
     /**
+     * The type of the root node.
+     */
+    public DSLinkConfig setRootType(Class clazz) {
+        rootType = clazz.getName();
+        return this;
+    }
+
+    /**
      * Overrides dslink.json.
      */
     public DSLinkConfig setToken(String arg) {

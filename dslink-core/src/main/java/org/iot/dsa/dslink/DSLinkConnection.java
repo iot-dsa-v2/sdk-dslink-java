@@ -32,4 +32,10 @@ public abstract class DSLinkConnection extends DSNode {
      */
     public abstract boolean isOpen();
 
+    /**
+     * Called the when network connection has been closed.
+     */
+    public abstract void onClose();
+
+
 }

@@ -20,35 +20,122 @@ public class DSStatus extends DSValue implements DSIStatus {
 
     public static final DSStatus NULL = new DSStatus(0xFFFF);
 
-    //The bit for each unique status
-    public static final int OK = 0;
-    public static final int GOOD_OVERRIDE = 0x0001;
-    public static final int GOOD_ALARM = 0x0002;
-    public static final int BAD_COMMS_DOWN = 0x0004;
-    public static final int BAD_CONFIG_FAULT = 0x0008;
-    public static final int BAD_FAILURE = 0x0010;
-    public static final int BAD_DISABLED = 0x0020;
-    public static final int BAD_UNKNOWN = 0x0040;
+    /**
+     * Good, no other status applies.
+     */
+    public static final int OK = 0; //"ok"
+
+    /**
+     * Good, the value is overridden within DSA.
+     */
+    public static final int OK_OVERRIDE = 0x00000001; //"override"
+
+    /**
+     * Good, the value is overridden outside of DSA.
+     */
+    public static final int OK_REMOTE_OVERRIDE = 0x00000002; //"remoteOverride"
+
+    /**
+     * Good, the connection was recently lost and reconnecting is in progress.
+     */
+    public static final int OK_RETRYING = 0x00000010; //"retrying"
+
+    /**
+     * Bad, the value hasn't updated in a reasonable amount of time (user configurable on a per
+     * point basis) within DSA.
+     */
+    public static final int STALE = 0x00000100; //"stale"
+
+    /**
+     * Bad, communications are down within DSA.
+     */
+    public static final int DOWN = 0x00000200; //"down"
+
+    /**
+     * Bad, an operational error (exception) has occurred within DSA.
+     */
+    public static final int FAULT = 0x00000400; //"fault"
+
+    /**
+     * Bad, a configuration error has been indentified within DSA.
+     */
+    public static final int CONFIG_FAULT = 0x00000800; //"configFault"
+
+    /**
+     * Bad, the object has been disabled within DSA.
+     */
+    public static final int DISABLED = 0x00001000; //"disabled"
+
+    /**
+     * Bad, the status is unknown within DSA, typically the initial state at boot.
+     */
+    public static final int UNKNOWN = 0x00002000; //"unknown"
+
+    /**
+     * Bad, a stale value is being reported by the foreign system.
+     */
+    public static final int REMOTE_STALE = 0x00010000; //"remoteStale"
+
+    /**
+     * Bad, down communications are being reported by the foreign system.
+     */
+    public static final int REMOTE_DOWN = 0x00020000; //"remoteDown"
+
+    /**
+     * Bad, an operational error is being reported by the foreign system.
+     */
+    public static final int REMOTE_FAULT = 0x00040000; //"remoteFault"
+
+    /**
+     * Bad, a configuration error is being reported by the foreign system.
+     */
+    public static final int REMOTE_CONFIG_FAULT = 0x00080000; //"remoteConfigFault"
+
+    /**
+     * Bad, the foreign system is reporting the object is disabled.
+     */
+    public static final int REMOTE_DISABLED = 0x00100000; //"remoteDisabled"
+
+    /**
+     * Bad, the foreign system is reporting the status is unknown.
+     */
+    public static final int REMOTE_UNKNOWN = 0x00200000; //"remoteUnknown"
 
     //The string for each unique status.
-    public static final String OK_STR = "OK";
-    public static final String GOOD_OVERRIDE_STR = "Override";
-    public static final String GOOD_ALARM_STR = "Alarm";
-    public static final String BAD_COMMS_DOWN_STR = "Comms Down";
-    public static final String BAD_CONFIG_FAULT_STR = "Config Fault";
-    public static final String BAD_FAILURE_STR = "Failure";
-    public static final String BAD_DISABLED_STR = "Disabled";
-    public static final String BAD_UNKNOWN_STR = "Unknown";
+    public static final String OK_STR = "ok";
+    public static final String OK_OVERRIDE_STR = "override";
+    public static final String OK_REMOTE_OVERRIDE_STR = "remoteOverride";
+    public static final String OK_RETRYING_STR = "retrying";
+    public static final String STALE_STR = "stale";
+    public static final String DOWN_STR = "down";
+    public static final String CONFIG_FAULT_STR = "configFault";
+    public static final String FAULT_STR = "fault";
+    public static final String DISABLED_STR = "disabled";
+    public static final String UNKNOWN_STR = "unknown";
+    public static final String REMOTE_STALE_STR = "remoteStale";
+    public static final String REMOTE_DOWN_STR = "remoteDown";
+    public static final String REMOTE_FAULT_STR = "remoteFault";
+    public static final String REMOTE_CONFIG_FAULT_STR = "remoteConfigFault";
+    public static final String REMOTE_DISABLED_STR = "remoteDisabled";
+    public static final String REMOTE_UNKNOWN_STR = "remoteUnknown";
 
     //The instance for each unique status.
     public static final DSStatus ok = new DSStatus(0);
-    public static final DSStatus goodOverride = valueOf(GOOD_OVERRIDE);
-    public static final DSStatus goodAlarm = valueOf(GOOD_ALARM);
-    public static final DSStatus badCommsDown = valueOf(BAD_COMMS_DOWN);
-    public static final DSStatus badConfigFault = valueOf(BAD_CONFIG_FAULT);
-    public static final DSStatus badFailure = valueOf(BAD_FAILURE);
-    public static final DSStatus badDisabled = valueOf(BAD_DISABLED);
-    public static final DSStatus badUnknown = valueOf(BAD_UNKNOWN);
+    public static final DSStatus okOverride = valueOf(OK_OVERRIDE);
+    public static final DSStatus okRemoteOverride = valueOf(OK_REMOTE_OVERRIDE);
+    public static final DSStatus okRetrying = valueOf(OK_RETRYING);
+    public static final DSStatus stale = valueOf(STALE);
+    public static final DSStatus down = valueOf(DOWN);
+    public static final DSStatus fault = valueOf(FAULT);
+    public static final DSStatus configFault = valueOf(CONFIG_FAULT);
+    public static final DSStatus disabled = valueOf(DISABLED);
+    public static final DSStatus unknown = valueOf(UNKNOWN);
+    public static final DSStatus remoteStale = valueOf(REMOTE_STALE);
+    public static final DSStatus remoteDown = valueOf(REMOTE_DOWN);
+    public static final DSStatus remoteFault = valueOf(REMOTE_FAULT);
+    public static final DSStatus remoteConfigFault = valueOf(REMOTE_CONFIG_FAULT);
+    public static final DSStatus remoteDisabled = valueOf(REMOTE_DISABLED);
+    public static final DSStatus remoteUnknown = valueOf(REMOTE_UNKNOWN);
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -68,14 +155,11 @@ public class DSStatus extends DSValue implements DSIStatus {
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Inserts commas and spaces if necessary.
-     */
-    private void append(StringBuilder buf, String str) {
+    private void append(StringBuilder buf, String status) {
         if (buf.length() > 0) {
-            buf.append(',').append(' ');
+            buf.append(",");
         }
-        buf.append(str);
+        buf.append(status);
     }
 
     /**
@@ -116,42 +200,35 @@ public class DSStatus extends DSValue implements DSIStatus {
      * If any of the bad flags are set, or is null.
      */
     public boolean isBad() {
-        return (bits & 0x1110) != 0;
-    }
-
-    /**
-     * True if the associate bit is set.
-     */
-    public boolean isCommsDown() {
-        return (BAD_COMMS_DOWN & bits) != 0;
+        return (bits & 0x11111100) != 0;
     }
 
     /**
      * True if the associate bit is set.
      */
     public boolean isConfigFault() {
-        return (BAD_CONFIG_FAULT & bits) != 0;
-    }
-
-    /**
-     * True if the associate bit is set.
-     */
-    public boolean isFailure() {
-        return (BAD_FAILURE & bits) != 0;
+        return (CONFIG_FAULT & bits) != 0;
     }
 
     /**
      * True if the associate bit is set.
      */
     public boolean isDisabled() {
-        return (BAD_DISABLED & bits) != 0;
+        return (DISABLED & bits) != 0;
     }
 
     /**
      * True if the associate bit is set.
      */
-    public boolean isUnknown() {
-        return (BAD_UNKNOWN & bits) != 0;
+    public boolean isDown() {
+        return (DOWN & bits) != 0;
+    }
+
+    /**
+     * True if the associate bit is set.
+     */
+    public boolean isFault() {
+        return (FAULT & bits) != 0;
     }
 
     /**
@@ -161,20 +238,6 @@ public class DSStatus extends DSValue implements DSIStatus {
         return !isBad();
     }
 
-    /**
-     * True if the associate bit is set.
-     */
-    public boolean isOverride() {
-        return (GOOD_OVERRIDE & bits) != 0;
-    }
-
-    /**
-     * True if the associate bit is set.
-     */
-    public boolean isAlarm() {
-        return (GOOD_ALARM & bits) != 0;
-    }
-
     @Override
     public boolean isNull() {
         return this == NULL;
@@ -182,6 +245,53 @@ public class DSStatus extends DSValue implements DSIStatus {
 
     public boolean isOk() {
         return bits == 0;
+    }
+
+    /**
+     * True if the associate bit is set.
+     */
+    public boolean isOverride() {
+        return (OK_OVERRIDE & bits) != 0;
+    }
+
+    public boolean isRemoteConfigFault() {
+        return (REMOTE_CONFIG_FAULT & bits) != 0;
+    }
+
+    public boolean isRemoteDisabled() {
+        return (REMOTE_DISABLED & bits) != 0;
+    }
+
+    public boolean isRemoteDown() {
+        return (REMOTE_DOWN & bits) != 0;
+    }
+
+    public boolean isRemoteFault() {
+        return (REMOTE_FAULT & bits) != 0;
+    }
+
+    public boolean isRemoteOverride() {
+        return (OK_REMOTE_OVERRIDE & bits) != 0;
+    }
+
+    public boolean isRemoteStale() {
+        return (REMOTE_STALE & bits) != 0;
+    }
+
+    public boolean isRemoteUnknown() {
+        return (REMOTE_UNKNOWN & bits) != 0;
+    }
+
+    public boolean isRetrying() {
+        return (OK_RETRYING & bits) != 0;
+    }
+
+    public boolean isStale() {
+        return (STALE & bits) != 0;
+    }
+
+    public boolean isUnknown() {
+        return (UNKNOWN & bits) != 0;
     }
 
     @Override
@@ -204,33 +314,56 @@ public class DSStatus extends DSValue implements DSIStatus {
         if (isNull()) {
             return "null";
         }
+        if (isOk()) {
+            return OK_STR;
+        }
         StringBuilder buf = new StringBuilder();
-        if (isBad()) {
-            if (isUnknown()) {
-                append(buf, BAD_UNKNOWN_STR);
-            }
-            if (isDisabled()) {
-                append(buf, BAD_DISABLED_STR);
-            }
-            if (isFailure()) {
-                append(buf, BAD_FAILURE_STR);
-            }
-            if (isConfigFault()) {
-                append(buf, BAD_CONFIG_FAULT_STR);
-            }
-            if (isCommsDown()) {
-                append(buf, BAD_COMMS_DOWN_STR);
-            }
+        if (isOverride()) {
+            append(buf, OK_OVERRIDE_STR);
         }
-        if (isGood()) {
-            if (isAlarm()) {
-                append(buf, GOOD_ALARM_STR);
-            }
-            if (isOverride()) {
-                append(buf, GOOD_OVERRIDE_STR);
-            }
+        if (isRemoteOverride()) {
+            append(buf, OK_REMOTE_OVERRIDE_STR);
         }
-        return null;
+        if (isRetrying()) {
+            append(buf, OK_RETRYING_STR);
+        }
+        if (isStale()) {
+            append(buf, STALE_STR);
+        }
+        if (isDown()) {
+            append(buf, DOWN_STR);
+        }
+        if (isFault()) {
+            append(buf, FAULT_STR);
+        }
+        if (isConfigFault()) {
+            append(buf, CONFIG_FAULT_STR);
+        }
+        if (isDisabled()) {
+            append(buf, DISABLED_STR);
+        }
+        if (isUnknown()) {
+            append(buf, UNKNOWN_STR);
+        }
+        if (isRemoteStale()) {
+            append(buf, REMOTE_STALE_STR);
+        }
+        if (isRemoteDown()) {
+            append(buf, REMOTE_DOWN_STR);
+        }
+        if (isRemoteFault()) {
+            append(buf, REMOTE_FAULT_STR);
+        }
+        if (isRemoteConfigFault()) {
+            append(buf, REMOTE_CONFIG_FAULT_STR);
+        }
+        if (isRemoteDisabled()) {
+            append(buf, REMOTE_DISABLED_STR);
+        }
+        if (isRemoteUnknown()) {
+            append(buf, REMOTE_UNKNOWN_STR);
+        }
+        return buf.toString();
     }
 
     @Override
@@ -266,7 +399,7 @@ public class DSStatus extends DSValue implements DSIStatus {
         return valueOf(string.split(","));
     }
 
-    public static DSStatus valueOf(String[] strings) {
+    public static DSStatus valueOf(String... strings) {
         int tmp = 0;
         for (String s : strings) {
             tmp = tmp | getBit(s);
@@ -285,23 +418,23 @@ public class DSStatus extends DSValue implements DSIStatus {
     static {
         DSRegistry.registerDecoder(DSStatus.class, NULL);
         stringCache.put("null", NULL.bits);
+        stringCache.put("disconnected", DOWN); //DSAv1
         stringCache.put(OK_STR, OK);
-        stringCache.put(GOOD_OVERRIDE_STR, GOOD_OVERRIDE);
-        stringCache.put(GOOD_ALARM_STR, GOOD_ALARM);
-        stringCache.put(BAD_COMMS_DOWN_STR, BAD_COMMS_DOWN);
-        stringCache.put(BAD_CONFIG_FAULT_STR, BAD_CONFIG_FAULT);
-        stringCache.put(BAD_FAILURE_STR, BAD_FAILURE);
-        stringCache.put(BAD_DISABLED_STR, BAD_DISABLED);
-        stringCache.put(BAD_UNKNOWN_STR, BAD_UNKNOWN);
-        //toLowerCase
-        stringCache.put(OK_STR.toLowerCase(), OK);
-        stringCache.put(GOOD_OVERRIDE_STR.toLowerCase(), GOOD_OVERRIDE);
-        stringCache.put(GOOD_ALARM_STR.toLowerCase(), GOOD_ALARM);
-        stringCache.put(BAD_COMMS_DOWN_STR.toLowerCase(), BAD_COMMS_DOWN);
-        stringCache.put(BAD_CONFIG_FAULT_STR.toLowerCase(), BAD_CONFIG_FAULT);
-        stringCache.put(BAD_FAILURE_STR.toLowerCase(), BAD_FAILURE);
-        stringCache.put(BAD_DISABLED_STR.toLowerCase(), BAD_DISABLED);
-        stringCache.put(BAD_UNKNOWN_STR.toLowerCase(), BAD_UNKNOWN);
+        stringCache.put(OK_OVERRIDE_STR, OK_OVERRIDE);
+        stringCache.put(OK_REMOTE_OVERRIDE_STR, OK_REMOTE_OVERRIDE);
+        stringCache.put(OK_RETRYING_STR, OK_RETRYING);
+        stringCache.put(STALE_STR, STALE);
+        stringCache.put(DOWN_STR, DOWN);
+        stringCache.put(FAULT_STR, FAULT);
+        stringCache.put(CONFIG_FAULT_STR, CONFIG_FAULT);
+        stringCache.put(DISABLED_STR, DISABLED);
+        stringCache.put(UNKNOWN_STR, UNKNOWN);
+        stringCache.put(REMOTE_STALE_STR, REMOTE_STALE);
+        stringCache.put(REMOTE_DOWN_STR, REMOTE_DOWN);
+        stringCache.put(REMOTE_FAULT_STR, REMOTE_FAULT);
+        stringCache.put(REMOTE_CONFIG_FAULT_STR, REMOTE_CONFIG_FAULT);
+        stringCache.put(REMOTE_DISABLED_STR, REMOTE_DISABLED);
+        stringCache.put(REMOTE_UNKNOWN_STR, REMOTE_UNKNOWN);
     }
 
 }
