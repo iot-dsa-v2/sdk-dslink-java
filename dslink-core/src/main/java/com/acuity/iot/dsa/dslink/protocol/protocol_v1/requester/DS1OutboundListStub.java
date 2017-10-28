@@ -1,31 +1,32 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
 import org.iot.dsa.dslink.DSRequestException;
-import org.iot.dsa.dslink.requester.OutboundListRequest;
-import org.iot.dsa.dslink.requester.OutboundListStub;
+import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.util.DSException;
 
 /**
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundListStub extends DS1OutboundRequestStub implements OutboundListStub {
+class DS1OutboundListStub extends DS1OutboundRequestStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private boolean open = true;
-    private OutboundListRequest request;
+    private OutboundListHandler request;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DS1OutboundListStub(OutboundListRequest request) {
+    public DS1OutboundListStub(DS1Requester requester,
+                               Integer requestId,
+                               String path,
+                               OutboundListHandler request) {
+        super(requester, requestId, path);
         this.request = request;
     }
 
@@ -34,7 +35,7 @@ class DS1OutboundListStub extends DS1OutboundRequestStub implements OutboundList
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public OutboundListRequest getRequest() {
+    public OutboundListHandler getHandler() {
         return request;
     }
 
@@ -65,7 +66,7 @@ class DS1OutboundListStub extends DS1OutboundRequestStub implements OutboundList
                 }
             }
             if ("open".equals(response.getString("stream"))) {
-                request.onOpen();
+                request.onInitialized();
             }
         } catch (Exception x) {
             getRequester().severe(getRequester().getPath(), x);
@@ -98,7 +99,7 @@ class DS1OutboundListStub extends DS1OutboundRequestStub implements OutboundList
         out.beginMap();
         out.key("rid").value(getRequestId());
         out.key("method").value("list");
-        out.key("path").value(request.getPath());
+        out.key("path").value(getPath());
         out.endMap();
     }
 

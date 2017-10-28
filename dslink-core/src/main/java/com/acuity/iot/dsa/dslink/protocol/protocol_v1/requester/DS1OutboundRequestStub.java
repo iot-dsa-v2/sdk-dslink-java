@@ -1,7 +1,8 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import org.iot.dsa.dslink.requester.OutboundRequest;
+import org.iot.dsa.dslink.requester.OutboundRequestHandler;
+import org.iot.dsa.dslink.requester.OutboundRequestStub;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSMap;
 
@@ -10,22 +11,34 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-abstract class DS1OutboundRequestStub implements OutboundMessage {
+abstract class DS1OutboundRequestStub implements OutboundMessage, OutboundRequestStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private long created = System.currentTimeMillis();
+    private String path;
     private boolean open = true;
     private DS1Requester requester;
     private Integer requestId;
 
     ///////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ///////////////////////////////////////////////////////////////////////////
+
+    DS1OutboundRequestStub(DS1Requester requester, Integer requestId, String path) {
+        this.requester = requester;
+        this.requestId = requestId;
+        this.path =  path;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    public void close() {
+    @Override
+    public void closeRequest() {
         if (!open) {
             return;
         }
@@ -40,7 +53,11 @@ abstract class DS1OutboundRequestStub implements OutboundMessage {
         return created;
     }
 
-    public abstract OutboundRequest getRequest();
+    public abstract OutboundRequestHandler getHandler();
+
+    public String getPath() {
+        return path;
+    }
 
     public DS1Requester getRequester() {
         return requester;
@@ -56,7 +73,7 @@ abstract class DS1OutboundRequestStub implements OutboundMessage {
         }
         open = false;
         try {
-            getRequest().onClose();
+            getHandler().onClose();
         } catch (Exception x) {
             getRequester().severe(getRequester().getPath(), x);
         }
@@ -68,7 +85,7 @@ abstract class DS1OutboundRequestStub implements OutboundMessage {
             return;
         }
         try {
-            getRequest().onError(details);
+            getHandler().onError(details);
         } catch (Exception x) {
             getRequester().severe(getRequester().getPath(), x);
         }
@@ -76,18 +93,8 @@ abstract class DS1OutboundRequestStub implements OutboundMessage {
 
     protected abstract void handleResponse(DSMap map);
 
-    public boolean isOpen() {
+    public boolean isRequestOpen() {
         return open;
-    }
-
-    public DS1OutboundRequestStub setRequester(DS1Requester requester) {
-        this.requester = requester;
-        return this;
-    }
-
-    public DS1OutboundRequestStub setRequestId(Integer requestId) {
-        this.requestId = requestId;
-        return this;
     }
 
 }

@@ -1,10 +1,9 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
-import org.iot.dsa.dslink.requester.OutboundSetRequest;
+import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.security.DSPermission;
 
 /**
  * @author Daniel Shapiro, Aaron Hansen
@@ -15,14 +14,20 @@ class DS1OutboundSetStub extends DS1OutboundRequestStub {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private boolean open = true;
-    private OutboundSetRequest request;
+    private OutboundRequestHandler request;
+    private DSElement value;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DS1OutboundSetStub(OutboundSetRequest request) {
+    public DS1OutboundSetStub(DS1Requester requester,
+                              Integer requestId,
+                              String path,
+                              DSElement value,
+                              OutboundRequestHandler request) {
+        super(requester, requestId, path);
+        this.value = value;
         this.request = request;
     }
 
@@ -30,7 +35,7 @@ class DS1OutboundSetStub extends DS1OutboundRequestStub {
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    public OutboundSetRequest getRequest() {
+    public OutboundRequestHandler getHandler() {
         return request;
     }
 
@@ -43,12 +48,9 @@ class DS1OutboundSetStub extends DS1OutboundRequestStub {
         out.beginMap();
         out.key("rid").value(getRequestId());
         out.key("method").value("set");
-        DSPermission permit = request.getPermission();
-        if (permit != null) {
-            out.key("permit").value(permit.toString());
-        }
-        out.key("path").value(request.getPath());
-        out.key("value").value(request.getValue());
+        out.key("permit").value("config");
+        out.key("path").value(getPath());
+        out.key("value").value(value);
         out.endMap();
     }
 

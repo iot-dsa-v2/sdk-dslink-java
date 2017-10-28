@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.requester.OutboundInvokeRequest;
-import org.iot.dsa.dslink.requester.OutboundListRequest;
+import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
+import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundRemoveRequest;
 import org.iot.dsa.dslink.requester.OutboundSetRequest;
 import org.iot.dsa.dslink.requester.OutboundSubscribeRequest;
@@ -51,12 +51,12 @@ public class DS1Requester extends DSNode implements DSIRequester {
     }
 
     @Override
-    public DS1OutboundInvokeStub invoke(OutboundInvokeRequest req) {
-        DS1OutboundInvokeStub stub = new DS1OutboundInvokeStub(req);
-        stub.setRequester(this).setRequestId(getNextRid());
+    public OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler req) {
+        DS1OutboundInvokeStub stub = new DS1OutboundInvokeStub(this, getNextRid(), path, params, req);
         requests.put(stub.getRequestId(), stub);
+        req.onInit(path, params, stub);
         session.enqueueOutgoingRequest(stub);
-        return stub;
+        return req;
     }
 
     boolean isError(DSMap message) {
@@ -72,7 +72,7 @@ public class DS1Requester extends DSNode implements DSIRequester {
     }
 
     @Override
-    public DS1OutboundListStub list(OutboundListRequest req) {
+    public DS1OutboundListStub list(OutboundListHandler req) {
         DS1OutboundListStub stub = new DS1OutboundListStub(req);
         stub.setRequester(this).setRequestId(getNextRid());
         requests.put(stub.getRequestId(), stub);

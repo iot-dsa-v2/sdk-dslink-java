@@ -10,7 +10,9 @@ import org.iot.dsa.time.DSDateTime;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-public abstract class OutboundSubscribeRequest {
+public class AbstractSubscribeHandler
+        extends AbstractRequestHandler
+        implements OutboundSubscribeHandler {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -18,36 +20,57 @@ public abstract class OutboundSubscribeRequest {
 
     private String path;
     private int qos;
+    private OutboundRequestStub stub;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods in alphabetical order
+    // Methods
     ///////////////////////////////////////////////////////////////////////////
 
 
+    /**
+     * Returns the value passed to onInit.
+     */
     public String getPath() {
         return path;
     }
 
     /**
-     * The quality of service.
+     * Returns the value passed to onInit.
      */
     public int getQos() {
         return qos;
     }
 
     /**
-     * Subscription callback.
+     * Returns the value passed to onInit.
      */
-    public abstract void update(DSDateTime dateTime, DSElement value, DSStatus status);
-
-    public OutboundSubscribeRequest setPath(String path) {
-        this.path = path;
-        return this;
+    public OutboundRequestStub getStub() {
+        return stub;
     }
 
-    public OutboundSubscribeRequest setQos(int qos) {
+    /**
+     * Sets the fields so they can be accessed via the corresponding getters.
+     *
+     * <p>
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public void onInit(String path, int qos, OutboundRequestStub stub) {
+        this.path = path;
         this.qos = qos;
-        return this;
+        this.stub = stub;
+    }
+
+    /**
+     * Does nothing.
+     *
+     * <p>
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
     }
 
 }

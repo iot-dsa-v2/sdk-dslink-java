@@ -71,6 +71,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
     private String name;
     private DSInfo nodes = getInfo(NODES);
     private DSInfo save = getInfo(SAVE);
+    private boolean saveEnabled = true;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -147,19 +148,34 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
     /**
      * Returns the root of the node tree.
      */
-    public DSNode getNodes() {
-        return nodes.getNode();
+    public DSRootNode getNodes() {
+        return (DSRootNode) nodes.getNode();
     }
 
     /**
-     * Configures a link instance, whether it is new instance or deserialized.
+     * Configures a link instance including creating the appropriate connection.
+     *
+     * @return This
      */
-    protected void init(DSLinkConfig config) {
+    protected DSLink init(DSLinkConfig config) {
         this.config = config;
         DSLogging.setDefaultLevel(config.getLogLevel());
         name = config.getLinkName();
         keys = config.getKeys();
         logger = DSLogging.getLogger(name, config.getLogFile());
+        try {
+            String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
+            if (type != null) {
+                config(config() ? "Connection type: " + type : null);
+                connection = (DSLinkConnection) Class.forName(type).newInstance();
+            } else {
+                connection = new DS1LinkConnection();
+            }
+            put("Broker Connection", connection).setConfig(true).setTransient(true);
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
+        return this;
     }
 
     /**
@@ -179,8 +195,11 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             reader.close();
             if (node instanceof DSLink) {
                 ret = (DSLink) node;
-                ret.init(config);
+            } else {
+                ret = new DSLink();
+                ret.setNodes((DSRootNode)node);
             }
+            ret.init(config);
             time = System.currentTimeMillis() - time;
             ret.info("Node database loaded: " + time + "ms");
         } else {
@@ -389,6 +408,9 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
      * Serializes the configuration database.
      */
     public void save() {
+        if (!saveEnabled) {
+            return;
+        }
         ZipOutputStream zos = null;
         InputStream in = null;
         try {
@@ -445,8 +467,21 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         }
     }
 
+    public DSLink setNodes(DSRootNode root) {
+        put(nodes, root);
+        return this;
+    }
+
     /**
-     * Called by saveDatabase, no need to explicitly call.
+     * This is a transient option intended for unit tests. True by default.
+     */
+    public DSLink setSaveEnabled(boolean enabled) {
+        saveEnabled = enabled;
+        return this;
+    }
+
+    /**
+     * Called by save, no need to explicitly call.
      */
     private void trimBackups() {
         final File nodes = config.getNodesFile();

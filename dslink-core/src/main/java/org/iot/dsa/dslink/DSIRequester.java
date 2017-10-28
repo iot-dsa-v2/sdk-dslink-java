@@ -1,16 +1,14 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.dslink.requester.OutboundInvokeRequest;
-import org.iot.dsa.dslink.requester.OutboundInvokeStub;
-import org.iot.dsa.dslink.requester.OutboundListRequest;
-import org.iot.dsa.dslink.requester.OutboundListStub;
-import org.iot.dsa.dslink.requester.OutboundRemoveRequest;
-import org.iot.dsa.dslink.requester.OutboundSetRequest;
-import org.iot.dsa.dslink.requester.OutboundSubscribeRequest;
-import org.iot.dsa.dslink.requester.OutboundSubscribeStub;
+import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
+import org.iot.dsa.dslink.requester.OutboundListHandler;
+import org.iot.dsa.dslink.requester.OutboundRequestHandler;
+import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSMap;
 
 /**
- * Interface for submitting outgoing requests.  Accessible via the connection object.
+ * Interface for submitting outbound requests.  Accessible via the connection object.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
@@ -19,46 +17,42 @@ public interface DSIRequester {
     /**
      * Submits an invoke request.
      *
-     * @param request The details of the request and the mechanism for receiving updates.
-     * @return The mechanism to close the stream.
+     * @param handler Callback mechanism.
+     * @return The handler parameter.
      */
-    public OutboundInvokeStub invoke(OutboundInvokeRequest request);
+    public OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler handler);
 
     /**
      * Submits a list request.
      *
-     * @param request The details of the request and the mechanism for receiving updates.
-     * @return The mechanism to close the stream.
+     * @param handler Callback mechanism.
+     * @return The handler parameter.
      */
-    public OutboundListStub list(OutboundListRequest request);
+    public OutboundListHandler list(String path, OutboundListHandler handler);
 
     /**
      * Submits a remove request.
      *
-     * @param request The details of the request.  onError will be called for any problems, then
-     *                onClose will be called to indicate the request is complete, whether or not
-     *                there was an error.
+     * @param handler Callback mechanism.
+     * @return The handler parameter.
      */
-    public void remove(OutboundRemoveRequest request);
+    public OutboundRequestHandler remove(String path, OutboundRequestHandler handler);
 
     /**
      * Submits a subscribe request.
      *
-     * @param request The details of the request.  onError will be called for any problems, then
-     *                onClose will be called to indicate the subscription is closed, whether or not
-     *                there was an error.
-     * @return The mechanism to close the subscription.
+     * @param handler Callback mechanism.
+     * @return The handler parameter.
      */
-    public OutboundSubscribeStub subscribe(OutboundSubscribeRequest request);
-
+    public OutboundSubscribeHandler subscribe(String path, int qos,
+                                              OutboundSubscribeHandler handler);
 
     /**
      * Submits a set request.
      *
-     * @param request The details of the request.  onError will be called for any problems, then
-     *                onClose will be called to indicate the request is complete, whether or not
-     *                there was an error.
+     * @param handler Callback mechanism.
+     * @return The handler parameter.
      */
-    public void set(OutboundSetRequest request);
+    public OutboundRequestHandler set(String path, DSElement value, OutboundRequestHandler handler);
 
 }

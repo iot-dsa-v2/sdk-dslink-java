@@ -1,29 +1,33 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
-import org.iot.dsa.dslink.requester.OutboundInvokeRequest;
-import org.iot.dsa.dslink.requester.OutboundInvokeStub;
+import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.security.DSPermission;
 
 /**
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundInvokeStub extends DS1OutboundRequestStub implements OutboundInvokeStub {
+class DS1OutboundInvokeStub extends DS1OutboundRequestStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private boolean open = true;
-    private OutboundInvokeRequest request;
+    private OutboundInvokeHandler handler;
+    private DSMap params;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DS1OutboundInvokeStub(OutboundInvokeRequest request) {
-        this.request = request;
+    public DS1OutboundInvokeStub(DS1Requester requester,
+                                 Integer requestId,
+                                 String path,
+                                 DSMap params,
+                                 OutboundInvokeHandler handler) {
+        super(requester, requestId, path);
+        this.params = params;
+        this.handler = handler;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -31,14 +35,14 @@ class DS1OutboundInvokeStub extends DS1OutboundRequestStub implements OutboundIn
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public OutboundInvokeRequest getRequest() {
-        return request;
+    public OutboundInvokeHandler getHandler() {
+        return handler;
     }
 
     @Override
     protected void handleResponse(DSMap response) {
         try {
-            request.onResponse(response);
+            //handler.onResponse(response);
         } catch (Exception x) {
             getRequester().severe(getRequester().getPath(), x);
         }
@@ -83,12 +87,8 @@ class DS1OutboundInvokeStub extends DS1OutboundRequestStub implements OutboundIn
         out.beginMap();
         out.key("rid").value(getRequestId());
         out.key("method").value("invoke");
-        DSPermission permit = request.getPermission();
-        if (permit != null) {
-            out.key("permit").value(permit.toString());
-        }
-        out.key("path").value(request.getPath());
-        DSMap params = request.getParameters();
+        out.key("permit").value("config");
+        out.key("path").value(getPath());
         if (params == null) {
             params = new DSMap();
         }
