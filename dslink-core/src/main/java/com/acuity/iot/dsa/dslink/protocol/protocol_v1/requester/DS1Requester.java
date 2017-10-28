@@ -52,7 +52,11 @@ public class DS1Requester extends DSNode implements DSIRequester {
 
     @Override
     public OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler req) {
-        DS1OutboundInvokeStub stub = new DS1OutboundInvokeStub(this, getNextRid(), path, params, req);
+        DS1OutboundInvokeStub stub = new DS1OutboundInvokeStub(this,
+                                                               getNextRid(),
+                                                               path,
+                                                               params,
+                                                               req);
         requests.put(stub.getRequestId(), stub);
         req.onInit(path, params, stub);
         session.enqueueOutgoingRequest(stub);
@@ -72,10 +76,10 @@ public class DS1Requester extends DSNode implements DSIRequester {
     }
 
     @Override
-    public DS1OutboundListStub list(OutboundListHandler req) {
-        DS1OutboundListStub stub = new DS1OutboundListStub(req);
-        stub.setRequester(this).setRequestId(getNextRid());
+    public OutboundListHandler list(String path, OutboundListHandler req) {
+        DS1OutboundListStub stub = new DS1OutboundListStub(this, getNextRid(), path, req);
         requests.put(stub.getRequestId(), stub);
+        req.onInit(path, stub);
         session.enqueueOutgoingRequest(stub);
         return stub;
     }
