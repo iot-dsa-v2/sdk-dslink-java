@@ -2,20 +2,22 @@ package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSMap;
 
 /**
+ * Manages the lifecycle of a set request and is also the close stub passed to the requester.
+ *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundSetStub extends DS1OutboundRequestStub {
+class DS1OutboundSetStub extends DS1OutboundStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private OutboundRequestHandler request;
-    private DSElement value;
+    private DSIValue value;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -24,7 +26,7 @@ class DS1OutboundSetStub extends DS1OutboundRequestStub {
     public DS1OutboundSetStub(DS1Requester requester,
                               Integer requestId,
                               String path,
-                              DSElement value,
+                              DSIValue value,
                               OutboundRequestHandler request) {
         super(requester, requestId, path);
         this.value = value;
@@ -50,7 +52,7 @@ class DS1OutboundSetStub extends DS1OutboundRequestStub {
         out.key("method").value("set");
         out.key("permit").value("config");
         out.key("path").value(getPath());
-        out.key("value").value(value);
+        out.key("value").value(value.toElement());
         out.endMap();
     }
 

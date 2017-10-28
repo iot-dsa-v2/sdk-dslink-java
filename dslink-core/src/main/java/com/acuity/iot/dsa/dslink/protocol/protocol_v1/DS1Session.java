@@ -155,6 +155,7 @@ public class DS1Session extends DSSession {
 
     @Override
     public void onConnect() {
+        super.onConnect();
         requester.onConnect();
         responder.onConnect();
     }
@@ -167,6 +168,7 @@ public class DS1Session extends DSSession {
 
     @Override
     public void onDisconnect() {
+        super.onDisconnect();
         requester.onDisconnect();
         responder.onDisconnect();
     }

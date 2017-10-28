@@ -1,11 +1,15 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
-import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
 
-public class DS1OutboundSubscribeStubs {
+/**
+ * Contains one or more subscription stubs for the same path.
+ *
+ * @author Daniel Shapiro, Aaron Hansen
+ */
+class DS1OutboundSubscribeStubs {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -28,19 +32,21 @@ public class DS1OutboundSubscribeStubs {
     ///////////////////////////////////////////////////////////////////////////
 
     public DS1OutboundSubscribeStubs(
+            String path,
             Integer sid,
-            DS1OutboundSubscribeStub stub,
             DS1OutboundSubscriptions subscriptions) {
+        this.path = path;
         this.sid = sid;
         this.subscriptions = subscriptions;
-        path = stub.getRequest().getPath();
-        add(stub);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * If already subscribed, will pass the last update to the new subscriber.
+     */
     void add(DS1OutboundSubscribeStub stub) {
         if (stub.getQos() > qos) {
             qos = stub.getQos();
@@ -55,6 +61,7 @@ public class DS1OutboundSubscribeStubs {
             last.setNext(stub);
             last = stub;
         }
+        //Send the last update to the new subscription
         if (++size > 1) {
             if (lastValue != null) {
                 try {
@@ -160,26 +167,6 @@ public class DS1OutboundSubscribeStubs {
 
     int size() {
         return size;
-    }
-
-    public void write(DSIWriter out) {
-        /*
-        out.beginMap();
-        out.key("rid").value(getRequestId());
-        out.key("method").value("subscribe");
-        Iterator<OutboundSubscription> it = request.getPath();
-        DSList paths = new DSList();
-        while (it.hasNext()) {
-            OutboundSubscription sub = it.next();
-            DSMap m = paths.addMap().put("path", sub.getPath()).put("sid", sub.getSubscriptionId());
-            Integer qos = sub.getQos();
-            if (qos != null) {
-                m.put("qos", qos);
-            }
-        }
-        out.key("paths").value(paths);
-        out.endMap();
-        */
     }
 
     ///////////////////////////////////////////////////////////////////////////

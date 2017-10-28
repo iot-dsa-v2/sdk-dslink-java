@@ -1,6 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
 import com.acuity.iot.dsa.dslink.DSTransport;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
@@ -32,6 +33,7 @@ public class DS1LinkConnection extends DSLinkConnection {
     private String connectionId;
     private DS1ConnectionInit connectionInit;
     private DSLink link;
+    private ConcurrentHashMap<Listener, Listener> listeners;
     private Logger logger;
     private Object mutex = new Object();
     private DS1Session session;
@@ -45,6 +47,16 @@ public class DS1LinkConnection extends DSLinkConnection {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void addListener(Listener listener) {
+        synchronized (this) {
+            if (listeners == null) {
+                listeners = new ConcurrentHashMap<Listener, Listener>();
+            }
+        }
+        listeners.put(listener, listener);
+    }
 
     @Override
     public String getConnectionId() {
@@ -169,6 +181,13 @@ public class DS1LinkConnection extends DSLinkConnection {
         new ConnectionRunThread(new ConnectionRunner()).start();
     }
 
+    @Override
+    public void removeListener(Listener listener) {
+        if (listeners != null) {
+            listeners.remove(listener);
+        }
+    }
+
     public void setRequesterAllowed() {
         session.setRequesterAllowed();
     }
@@ -224,11 +243,27 @@ public class DS1LinkConnection extends DSLinkConnection {
                         session.onConnectFail();
                         throw x;
                     }
+                    if (listeners != null) {
+                        for (Listener listener : listeners.keySet()) {
+                            try {
+                                listener.onConnect(DS1LinkConnection.this);
+                            } catch (Exception x) {
+                                severe(listener.toString(), x);
+                            }
+                        }
+                    }
                     session.run();
                     reconnectRate = 1000;
                 } catch (Throwable x) {
                     reconnectRate = Math.min(reconnectRate * 2, DSTime.MILLIS_MINUTE);
                     severe(getConnectionId(), x);
+                }
+                for (Listener listener : listeners.keySet()) {
+                    try {
+                        listener.onDisconnect(DS1LinkConnection.this);
+                    } catch (Exception x) {
+                        severe(listener.toString(), x);
+                    }
                 }
                 if (session != null) {
                     session.onDisconnect();

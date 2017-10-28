@@ -5,15 +5,20 @@ import org.iot.dsa.node.DSElement;
 /**
  * Callback mechanism passed to the list method on DSIRequester.
  *
- * <p>
+ * <ul>
  *
- * onUpdate will be called until the initial state is fully loaded.  After which onOpen will be
- * called.  After that, onUpdate and onRemove will be called for state changes.
+ * <li>onInit will be called first, before the list method returns.
  *
- * <p>
+ * <li>onUpdate will be called until the initial state is fully loaded.
  *
- * Configs, or node metadata names start with $.  Attributes start with @.  Anything else represents
- * a child.  Child maps will only contain configs/node metadata.
+ * <li>onInitialized when the initial state of the target has been fully loaded.
+ *
+ * <li>onRemove and onUpdate will be called for subsequent changed to the target.
+ *
+ * </ul>
+ *
+ * Configs, or node metadata names, start with $.  Attributes start with @.  Anything else
+ * represents a child.  Child maps will only contain configs/node metadata.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
@@ -22,10 +27,10 @@ public interface OutboundListHandler extends OutboundRequestHandler {
     /**
      * Called by the requester before returning from the list method.
      *
-     * @param path   Parameter to the list method.
-     * @param stub Mechanism to close the request stream.
+     * @param path Parameter to the list method.
+     * @param stream Mechanism to close the request stream.
      */
-    public void onInit(String path, OutboundRequestStub stub);
+    public void onInit(String path, OutboundStream stream);
 
     /**
      * Called once the initial state of the target has been transmitted.  This is a good place to

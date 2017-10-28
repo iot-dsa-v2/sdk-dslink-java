@@ -5,14 +5,11 @@ import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
 
 /**
- * Parameter to the subscribe method on DSIRequester.  Provides details about the subscription as
- * well as callbacks for various state changes.
+ * Convenience implementation of the callback passed to the subscribe method in the requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-public class AbstractSubscribeHandler
-        extends AbstractRequestHandler
-        implements OutboundSubscribeHandler {
+public abstract class AbstractSubscribeHandler implements OutboundSubscribeHandler {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -20,12 +17,11 @@ public class AbstractSubscribeHandler
 
     private String path;
     private int qos;
-    private OutboundRequestStub stub;
+    private OutboundStream stream;
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
-
 
     /**
      * Returns the value passed to onInit.
@@ -44,8 +40,8 @@ public class AbstractSubscribeHandler
     /**
      * Returns the value passed to onInit.
      */
-    public OutboundRequestStub getStub() {
-        return stub;
+    public OutboundStream getStub() {
+        return stream;
     }
 
     /**
@@ -56,10 +52,10 @@ public class AbstractSubscribeHandler
      * {@inheritDoc}
      */
     @Override
-    public void onInit(String path, int qos, OutboundRequestStub stub) {
+    public void onInit(String path, int qos, OutboundStream stream) {
         this.path = path;
         this.qos = qos;
-        this.stub = stub;
+        this.stream = stream;
     }
 
     /**
@@ -68,9 +64,9 @@ public class AbstractSubscribeHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
     }
+     */
 
 }

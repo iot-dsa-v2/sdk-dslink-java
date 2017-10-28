@@ -9,14 +9,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
-import org.iot.dsa.dslink.requester.OutboundRemoveRequest;
-import org.iot.dsa.dslink.requester.OutboundSetRequest;
-import org.iot.dsa.dslink.requester.OutboundSubscribeRequest;
-import org.iot.dsa.dslink.requester.OutboundSubscribeStub;
+import org.iot.dsa.dslink.requester.OutboundRequestHandler;
+import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 
+/**
+ * DSA V1 requester implementation.
+ *
+ * @author Daniel Shapiro, Aaron Hansen
+ */
 public class DS1Requester extends DSNode implements DSIRequester {
 
     ///////////////////////////////////////////////////////////////////////////
@@ -25,8 +29,8 @@ public class DS1Requester extends DSNode implements DSIRequester {
 
     private final AtomicInteger nextRid = new AtomicInteger();
     private DS1Session session;
-    private final Map<Integer, DS1OutboundRequestStub> requests =
-            new ConcurrentHashMap<Integer, DS1OutboundRequestStub>();
+    private final Map<Integer, DS1OutboundStream> requests =
+            new ConcurrentHashMap<Integer, DS1OutboundStream>();
     private final DS1OutboundSubscriptions subscriptions =
             new DS1OutboundSubscriptions(this);
 
@@ -52,11 +56,8 @@ public class DS1Requester extends DSNode implements DSIRequester {
 
     @Override
     public OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler req) {
-        DS1OutboundInvokeStub stub = new DS1OutboundInvokeStub(this,
-                                                               getNextRid(),
-                                                               path,
-                                                               params,
-                                                               req);
+        DS1OutboundInvokeStub stub = new DS1OutboundInvokeStub(this, getNextRid(),
+                                                               path, params, req);
         requests.put(stub.getRequestId(), stub);
         req.onInit(path, params, stub);
         session.enqueueOutgoingRequest(stub);
@@ -81,7 +82,7 @@ public class DS1Requester extends DSNode implements DSIRequester {
         requests.put(stub.getRequestId(), stub);
         req.onInit(path, stub);
         session.enqueueOutgoingRequest(stub);
-        return stub;
+        return req;
     }
 
     public void onConnect() {
@@ -103,7 +104,7 @@ public class DS1Requester extends DSNode implements DSIRequester {
         if (rid == 0) {
             subscriptions.processUpdates(map);
         } else {
-            DS1OutboundRequestStub stub = requests.get(rid);
+            DS1OutboundStream stub = requests.get(rid);
             if (stub != null) {
                 stub.handleResponse(map);
                 if (isError(map)) {
@@ -122,18 +123,19 @@ public class DS1Requester extends DSNode implements DSIRequester {
     }
 
     @Override
-    public void remove(OutboundRemoveRequest req) {
-        DS1OutboundRemoveStub stub = new DS1OutboundRemoveStub(req);
-        stub.setRequester(this).setRequestId(getNextRid());
+    public OutboundRequestHandler remove(String path, OutboundRequestHandler req) {
+        DS1OutboundRemoveStub stub = new DS1OutboundRemoveStub(this,
+                                                               getNextRid(), path, req);
         requests.put(stub.getRequestId(), stub);
         session.enqueueOutgoingRequest(stub);
+        return req;
     }
 
     void removeRequest(Integer rid) {
         requests.remove(rid);
     }
 
-    void sendClose(int rid) {
+    void sendClose(Integer rid) {
         requests.remove(rid);
         sendRequest(new CloseMessage(rid));
     }
@@ -143,16 +145,17 @@ public class DS1Requester extends DSNode implements DSIRequester {
     }
 
     @Override
-    public void set(OutboundSetRequest req) {
-        DS1OutboundSetStub stub = new DS1OutboundSetStub(req);
-        stub.setRequester(this).setRequestId(getNextRid());
+    public OutboundRequestHandler set(String path, DSIValue value, OutboundRequestHandler req) {
+        DS1OutboundSetStub stub = new DS1OutboundSetStub(this, getNextRid(),
+                                                         path, value, req);
         requests.put(stub.getRequestId(), stub);
         session.enqueueOutgoingRequest(stub);
+        return req;
     }
 
     @Override
-    public OutboundSubscribeStub subscribe(OutboundSubscribeRequest request) {
-        return subscriptions.subscribe(request);
+    public OutboundSubscribeHandler subscribe(String path, int qos, OutboundSubscribeHandler req) {
+        return subscriptions.subscribe(path, qos, req);
     }
 
 }

@@ -4,17 +4,22 @@ import com.acuity.iot.dsa.dslink.DSTransport;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1ConnectionInit;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
+import java.util.logging.Level;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.requester.OutboundListHandler;
-import org.iot.dsa.dslink.requester.OutboundListStub;
+import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
+import org.iot.dsa.dslink.requester.BasicRequestHandler;
+import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSStatus;
+import org.iot.dsa.time.DSDateTime;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Aaron Hansen
  */
-public class LinkTest {
+public class RequesterTest implements DSLinkConnection.Listener {
 
     // Constants
     // ---------
@@ -22,7 +27,9 @@ public class LinkTest {
     // Fields
     // ------
 
+    private boolean success = false;
     private DSLink link;
+    private MyRoot root;
 
     // Constructors
     // ------------
@@ -30,10 +37,31 @@ public class LinkTest {
     // Methods
     // -------
 
-    public void onConnectionClose(DSLinkConnection connection) {
+    public void onConnect(DSLinkConnection connection) {
+        DSIRequester requester = link.getConnection().getRequester();
+        requester.subscribe("/Nodes/int", 0, new AbstractSubscribeHandler() {
+            @Override
+            public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
+                System.out.println("onUpdate!");
+                success = value.equals(DSInt.valueOf(10));
+                synchronized (RequesterTest.this) {
+                    RequesterTest.this.notify();
+                }
+            }
+
+            @Override
+            public void onClose() {
+            }
+
+            @Override
+            public void onError(DSElement details) {
+                Thread.dumpStack();
+            }
+        });
+        requester.set("/Nodes/int", DSInt.valueOf(10), BasicRequestHandler.DEFAULT);
     }
 
-    public void onConnectionOpen(DSLinkConnection connection) {
+    public void onDisconnect(DSLinkConnection connection) {
     }
 
     @Test
@@ -42,53 +70,21 @@ public class LinkTest {
         cfg.setDslinkJson(new DSMap().put("configs", new DSMap()));
         cfg.setLinkName("dslink-java-testing");
         cfg.setRequester(true);
+        cfg.setLogLevel(Level.FINEST);
         cfg.setConfig(DSLinkConfig.CFG_CONNECTION_TYPE, MyConnection.class.getName());
         cfg.setConfig(DSLinkConfig.CFG_STABLE_DELAY, 1);
-        DSLink link = new DSLink()
+        link = new DSLink()
                 .setSaveEnabled(false)
-                .setNodes(new MyRoot())
+                .setNodes(root = new MyRoot())
                 .init(cfg);
         link.getConnection().addListener(this);
         DSRuntime.run(link);
-        //TODO how know when link is connected?
-        Thread.sleep(2000);
-        DSIRequester requester = link.getConnection().getRequester();
-
-        OutboundListHandler req = new OutboundListHandler() {
-            @Override
-            public void onClose() {
-                System.out.println("Success!");
-            }
-
-            @Override
-            public void onResponse(DSMap response) {
-                handleList(response);
-            }
-        };
-        req.setPath("/Nodes");
-        OutboundListStub stub = requester.list(req);
         synchronized (this) {
-            try {
-                wait(10000);
-            } catch (Exception x) {
-            }
+            this.wait(5000);
         }
-        stub.close();
-        synchronized (this) {
-            try {
-                wait(10000);
-            } catch (Exception x) {
-            }
-        }
+        Assert.assertTrue(success);
         link.stop();
-    }
-
-    private synchronized void handleList(DSMap response) {
-        System.out.println(response.toString());
-        notify();
-    }
-
-    private void testMine() {
+        link = null;
     }
 
     // Inner Classes

@@ -1,10 +1,11 @@
 package org.iot.dsa.dslink;
 
+import org.iot.dsa.dslink.requester.BasicRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
-import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSMap;
 
 /**
@@ -19,6 +20,7 @@ public interface DSIRequester {
      *
      * @param handler Callback mechanism.
      * @return The handler parameter.
+     * @see org.iot.dsa.dslink.requester.AbstractInvokeHandler
      */
     public OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler handler);
 
@@ -27,32 +29,37 @@ public interface DSIRequester {
      *
      * @param handler Callback mechanism.
      * @return The handler parameter.
+     * @see org.iot.dsa.dslink.requester.AbstractListHandler
      */
     public OutboundListHandler list(String path, OutboundListHandler handler);
 
     /**
-     * Submits a remove request.
+     * Submits request to remove an attribute.
      *
      * @param handler Callback mechanism.
      * @return The handler parameter.
+     * @see BasicRequestHandler
      */
     public OutboundRequestHandler remove(String path, OutboundRequestHandler handler);
-
-    /**
-     * Submits a subscribe request.
-     *
-     * @param handler Callback mechanism.
-     * @return The handler parameter.
-     */
-    public OutboundSubscribeHandler subscribe(String path, int qos,
-                                              OutboundSubscribeHandler handler);
 
     /**
      * Submits a set request.
      *
      * @param handler Callback mechanism.
      * @return The handler parameter.
+     * @see BasicRequestHandler
      */
-    public OutboundRequestHandler set(String path, DSElement value, OutboundRequestHandler handler);
+    public OutboundRequestHandler set(String path, DSIValue value, OutboundRequestHandler handler);
+
+    /**
+     * Submits a subscribe request.
+     *
+     * @param handler Callback mechanism.
+     * @return The handler parameter.
+     * @see org.iot.dsa.dslink.requester.AbstractSubscribeHandler
+     */
+    public OutboundSubscribeHandler subscribe(String path, int qos,
+                                              OutboundSubscribeHandler handler);
 
 }
+

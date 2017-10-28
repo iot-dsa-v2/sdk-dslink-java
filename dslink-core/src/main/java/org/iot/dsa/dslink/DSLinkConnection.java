@@ -16,6 +16,11 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSLinkConnection extends DSNode {
 
     /**
+     * Adds a listener for connection events.
+     */
+    public abstract void addListener(Listener listener);
+
+    /**
      * A unique descriptive tag such as a combination of the link name and the broker host.
      */
     public abstract String getConnectionId();
@@ -37,5 +42,23 @@ public abstract class DSLinkConnection extends DSNode {
      */
     public abstract void onClose();
 
+    /**
+     * Removes a listener for connection events.
+     */
+    public abstract void removeListener(Listener listener);
+
+    public static interface Listener {
+
+        /**
+         * Called when the connection with the endpoint is closed.
+         */
+        public void onConnect(DSLinkConnection connection);
+
+        /**
+         * Called when the connection with the endpoint is established.
+         */
+        public void onDisconnect(DSLinkConnection connection);
+
+    }
 
 }

@@ -3,12 +3,12 @@ package org.iot.dsa.dslink.requester;
 import org.iot.dsa.node.DSElement;
 
 /**
- * Callback mechanism passed to the list method on DSIRequester.
+ * Convenience implementation of the callback passed to the invoke method in the requester.
  *
  * <p>
  *
- * onUpdate will be called until the initial state is fully loaded.  After which onOpen will be
- * called.  After that, onUpdate and onRemove will be called for state changes.
+ * onUpdate will be called until the initial state is fully loaded.  After which onInitialized will
+ * be called.  After that, onUpdate and onRemove will be called for state changes.
  *
  * <p>
  *
@@ -17,16 +17,14 @@ import org.iot.dsa.node.DSElement;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-public class AbstractListHandler
-        extends AbstractRequestHandler
-        implements OutboundListHandler {
+public abstract class AbstractListHandler implements OutboundListHandler {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private String path;
-    private OutboundRequestStub stub;
+    private OutboundStream stream;
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
@@ -42,21 +40,21 @@ public class AbstractListHandler
     /**
      * Returns the value passed to onInit.
      */
-    public OutboundRequestStub getStub() {
-        return stub;
+    public OutboundStream getStub() {
+        return stream;
     }
 
     /**
-     * Sets the fields so they can be access via the corresponding getters.
+     * Sets the fields so they can be accessed with the corresponding getters.
      *
      * <p>
      *
      * {@inheritDoc}
      */
     @Override
-    public void onInit(String path, OutboundRequestStub stub) {
+    public void onInit(String path, OutboundStream stream) {
         this.path = path;
-        this.stub = stub;
+        this.stream = stream;
     }
 
     /**
@@ -65,10 +63,10 @@ public class AbstractListHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onInitialized() {
     }
+     */
 
     /**
      * Does nothing.
@@ -76,10 +74,10 @@ public class AbstractListHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onRemove(String name) {
     }
+     */
 
     /**
      * Does nothing.
@@ -87,10 +85,10 @@ public class AbstractListHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onUpdate(String name, DSElement value) {
     }
+     */
 
 }
 

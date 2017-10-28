@@ -8,8 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
-import org.iot.dsa.dslink.requester.OutboundSubscribeRequest;
-import org.iot.dsa.dslink.requester.OutboundSubscribeStub;
+import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSElement;
@@ -20,7 +19,7 @@ import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
 
 /**
- * Subscribe implementation for the requester.
+ * Manages all subscriptions for a requester.
  *
  * @author Aaron Hansen
  */
@@ -164,17 +163,19 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
     /**
      * Create or update a subscription.
      */
-    OutboundSubscribeStub subscribe(OutboundSubscribeRequest request) {
-        DS1OutboundSubscribeStub stub = new DS1OutboundSubscribeStub(this, request);
+    OutboundSubscribeHandler subscribe(String path, int qos, OutboundSubscribeHandler req) {
+        DS1OutboundSubscribeStub stub = new DS1OutboundSubscribeStub(this,
+                                                                     path, qos, req);
         boolean send = true;
         synchronized (pathMap) {
-            DS1OutboundSubscribeStubs stubs = pathMap.get(request.getPath());
+            DS1OutboundSubscribeStubs stubs = pathMap.get(path);
             if (stubs == null) {
-                stubs = new DS1OutboundSubscribeStubs(getNextSid(), stub, this);
-                pathMap.put(request.getPath(), stubs);
+                stubs = new DS1OutboundSubscribeStubs(path, getNextSid(), this);
+                stubs.add(stub);
                 pendingSubscribe.add(stubs);
+                pathMap.put(path, stubs);
             } else {
-                send = request.getQos() > stubs.getQos();
+                send = qos > stubs.getQos();
                 stubs.add(stub);
                 if (send) {
                     stubs.setState(State.PENDING_SUBSCRIBE);
@@ -185,7 +186,12 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
         if (send) {
             sendMessage();
         }
-        return stub;
+        try {
+            req.onInit(path, qos, stub);
+        } catch (Exception x) {
+            severe(path, x);
+        }
+        return req;
     }
 
     /**
@@ -193,7 +199,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
      */
     void unsubscribe(DS1OutboundSubscribeStub stub) {
         synchronized (pathMap) {
-            DS1OutboundSubscribeStubs stubs = pathMap.get(stub.getRequest().getPath());
+            DS1OutboundSubscribeStubs stubs = pathMap.get(stub.getPath());
             if (stubs == null) {
                 return;
             } else {
@@ -226,6 +232,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
                         out.key("qos").value(stubs.getQos());
                     }
                     stubs.setState(State.SUBSCRIBED);
+                    out.endMap();
                 }
                 it.remove();
             }

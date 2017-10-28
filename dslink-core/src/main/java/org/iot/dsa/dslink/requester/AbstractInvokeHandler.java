@@ -4,14 +4,11 @@ import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 
 /**
- * Parameter to invoke method on DSIRequester.  Provides details about the invocation as well as
- * callbacks for various state changes.
+ * Convenience implementation of the callback passed to the invoke method in the requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-public class AbstractInvokeHandler
-        extends AbstractRequestHandler
-        implements OutboundInvokeHandler {
+public abstract class AbstractInvokeHandler implements OutboundInvokeHandler {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -19,7 +16,7 @@ public class AbstractInvokeHandler
 
     private DSMap params;
     private String path;
-    private OutboundRequestStub stub;
+    private OutboundStream stream;
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
@@ -42,8 +39,8 @@ public class AbstractInvokeHandler
     /**
      * Returns the value passed to onInit.
      */
-    public OutboundRequestStub getStub() {
-        return stub;
+    public OutboundStream getStub() {
+        return stream;
     }
 
     /**
@@ -52,10 +49,10 @@ public class AbstractInvokeHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onColumns(DSList list) {
     }
+     */
 
     /**
      * Sets the fields so they can be access via the corresponding getters.
@@ -65,10 +62,10 @@ public class AbstractInvokeHandler
      * {@inheritDoc}
      */
     @Override
-    public void onInit(String path, DSMap params, OutboundRequestStub stub) {
+    public void onInit(String path, DSMap params, OutboundStream stream) {
         this.path = path;
         this.params = params;
-        this.stub = stub;
+        this.stream = stream;
     }
 
     /**
@@ -77,10 +74,10 @@ public class AbstractInvokeHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onInsert(int index, DSList rows) {
     }
+     */
 
     /**
      * Does nothing.
@@ -88,10 +85,10 @@ public class AbstractInvokeHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onMode(Mode mode) {
     }
+     */
 
     /**
      * Does nothing.
@@ -99,10 +96,10 @@ public class AbstractInvokeHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onReplace(int start, int end, DSList rows) {
     }
+     */
 
     /**
      * Does nothing.
@@ -110,10 +107,10 @@ public class AbstractInvokeHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onTableMeta(DSMap map) {
     }
+     */
 
     /**
      * Does nothing.
@@ -121,9 +118,9 @@ public class AbstractInvokeHandler
      * <p>
      *
      * {@inheritDoc}
-     */
     @Override
     public void onUpdate(DSList row) {
     }
+     */
 
 }

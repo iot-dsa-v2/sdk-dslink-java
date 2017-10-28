@@ -3,7 +3,7 @@ package org.iot.dsa.dslink.requester;
 import org.iot.dsa.node.DSElement;
 
 /**
- * Data and callbacks common to all outbound requests.
+ * Callbacks common to all outbound requests.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */

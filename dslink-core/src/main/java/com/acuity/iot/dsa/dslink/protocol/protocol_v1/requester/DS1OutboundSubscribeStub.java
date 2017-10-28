@@ -1,19 +1,33 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
-import org.iot.dsa.dslink.requester.OutboundSubscribeRequest;
-import org.iot.dsa.dslink.requester.OutboundSubscribeStub;
+import org.iot.dsa.dslink.requester.OutboundStream;
+import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
 
-public class DS1OutboundSubscribeStub implements OutboundSubscribeStub {
+/**
+ * Manages the lifecycle of a single subscription to a path and is also the close handler passed to
+ * the requester.
+ *
+ * <p>
+ *
+ * There can be multiple subscriptions to a single path.  They are all contained in a
+ * DS1OutboundSubscribeStubs object.
+ *
+ * @author Daniel Shapiro, Aaron Hansen
+ */
+class DS1OutboundSubscribeStub implements OutboundStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DS1OutboundSubscribeStub next;
-    private OutboundSubscribeRequest request;
+    private DS1OutboundSubscribeStub next; //linked list in stubs object
+    private boolean open = true;
+    private String path;
+    private int qos = 0;
+    private OutboundSubscribeHandler request;
     private DS1OutboundSubscriptions subscriptions;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -21,8 +35,12 @@ public class DS1OutboundSubscribeStub implements OutboundSubscribeStub {
     ///////////////////////////////////////////////////////////////////////////
 
     public DS1OutboundSubscribeStub(DS1OutboundSubscriptions subscriptions,
-                                    OutboundSubscribeRequest request) {
+                                    String path,
+                                    int qos,
+                                    OutboundSubscribeHandler request) {
         this.subscriptions = subscriptions;
+        this.path = path;
+        this.qos = qos;
         this.request = request;
     }
 
@@ -31,7 +49,13 @@ public class DS1OutboundSubscribeStub implements OutboundSubscribeStub {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void close() {
+    public void closeStream() {
+        synchronized (this) {
+            if (!open) {
+                return;
+            }
+            open = false;
+        }
         subscriptions.unsubscribe(this);
     }
 
@@ -39,22 +63,34 @@ public class DS1OutboundSubscribeStub implements OutboundSubscribeStub {
         return next;
     }
 
-    public OutboundSubscribeRequest getRequest() {
+    public OutboundSubscribeHandler getHandler() {
         return request;
     }
 
+    public String getPath() {
+        return path;
+    }
+
     public int getQos() {
-        return request.getQos();
+        return qos;
+    }
+
+    @Override
+    public boolean isStreamOpen() {
+        return open;
     }
 
     public void process(DSDateTime ts, DSElement value, DSStatus status) {
         try {
-            request.update(ts, value, status);
+            request.onUpdate(ts, value, status);
         } catch (Exception x) {
-            subscriptions.severe(request.getPath(), x);
+            subscriptions.severe(path, x);
         }
     }
 
+    /**
+     * The next stub in the parents stubs object.
+     */
     void setNext(DS1OutboundSubscribeStub next) {
         this.next = next;
     }

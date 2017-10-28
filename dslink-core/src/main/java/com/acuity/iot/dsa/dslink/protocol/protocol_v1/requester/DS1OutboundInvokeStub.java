@@ -5,9 +5,11 @@ import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
 
 /**
+ * Manages the lifecycle of an invoke request and is also the close stub passed to the requester.
+ *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundInvokeStub extends DS1OutboundRequestStub {
+class DS1OutboundInvokeStub extends DS1OutboundStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

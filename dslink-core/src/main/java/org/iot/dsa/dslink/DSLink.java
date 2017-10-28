@@ -339,16 +339,16 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
      * stopped.
      */
     public void run() {
-        info(info() ? "Starting root node" : null);
+        info(info() ? "Starting nodes" : null);
         start();
         long stableDelay = config.getConfig(DSLinkConfig.CFG_STABLE_DELAY, 5000l);
         try {
             Thread.sleep(stableDelay);
         } catch (Exception x) {
-            warn("Interrupted", x);
+            warn("Interrupted stable delay", x);
         }
         try {
-            info(info() ? "Stabilizing root node" : null);
+            info(info() ? "Stabilizing nodes" : null);
             stable();
             long saveInterval = config.getConfig(DSLinkConfig.CFG_SAVE_INTERVAL, 60);
             saveInterval *= 60000;
@@ -376,25 +376,6 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
                 save();
             }
         });
-    }
-
-    /**
-     * Creates a connection using the config object.
-     */
-    @Override
-    protected void onStarted() {
-        try {
-            String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
-            if (type != null) {
-                config(config() ? "Connection type: " + type : null);
-                connection = (DSLinkConnection) Class.forName(type).newInstance();
-            } else {
-                connection = new DS1LinkConnection();
-            }
-            put("Broker Connection", connection).setConfig(true).setTransient(true);
-        } catch (Exception x) {
-            DSException.throwRuntime(x);
-        }
     }
 
     @Override

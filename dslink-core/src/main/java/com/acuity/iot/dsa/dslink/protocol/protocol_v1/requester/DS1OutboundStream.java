@@ -2,22 +2,22 @@ package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
-import org.iot.dsa.dslink.requester.OutboundRequestStub;
+import org.iot.dsa.dslink.requester.OutboundStream;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSMap;
 
 /**
- * Common to all return values from DSIRequester.
+ * All stubs manages the lifecycle of a request and are also the close stub passed back to the
+ * requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-abstract class DS1OutboundRequestStub implements OutboundMessage, OutboundRequestStub {
+abstract class DS1OutboundStream implements OutboundMessage, OutboundStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private long created = System.currentTimeMillis();
     private String path;
     private boolean open = true;
     private DS1Requester requester;
@@ -27,7 +27,7 @@ abstract class DS1OutboundRequestStub implements OutboundMessage, OutboundReques
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1OutboundRequestStub(DS1Requester requester, Integer requestId, String path) {
+    DS1OutboundStream(DS1Requester requester, Integer requestId, String path) {
         this.requester = requester;
         this.requestId = requestId;
         this.path =  path;
@@ -38,19 +38,12 @@ abstract class DS1OutboundRequestStub implements OutboundMessage, OutboundReques
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void closeRequest() {
+    public void closeStream() {
         if (!open) {
             return;
         }
         getRequester().sendClose(getRequestId());
         handleClose();
-    }
-
-    /**
-     * Can be used to clean up very old requests that should have been short lived.
-     */
-    public long getCreatedTime() {
-        return created;
     }
 
     public abstract OutboundRequestHandler getHandler();
@@ -93,7 +86,7 @@ abstract class DS1OutboundRequestStub implements OutboundMessage, OutboundReques
 
     protected abstract void handleResponse(DSMap map);
 
-    public boolean isRequestOpen() {
+    public boolean isStreamOpen() {
         return open;
     }
 

@@ -8,9 +8,11 @@ import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 
 /**
+ * Manages the lifecycle of an list request and is also the close stub passed to the requester.
+ *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundListStub extends DS1OutboundRequestStub {
+class DS1OutboundListStub extends DS1OutboundStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -72,27 +74,6 @@ class DS1OutboundListStub extends DS1OutboundRequestStub {
             getRequester().severe(getRequester().getPath(), x);
         }
     }
-
-    /*
-    private void processListResponse(int rid, DSMap map, OutboundListStub req) {
-        String stream = map.getString("stream");
-        if (stream != null) {
-            req.setLatestStreamState(StreamState.valueOf(stream.toUpperCase()));
-        }
-        StreamState streamState = req.getLatestStreamState();
-        if (streamState.isClosed()) {
-            requests.remove(rid);
-        }
-        DSList updates = map.getList("updates");
-        DS1InboundListResponse response = new DS1InboundListResponse();
-        response.setStreamState(streamState);
-        response.setUpdates(updates);
-        boolean keepOpen = req.onResponse(response);
-        if (!streamState.isClosed() && !keepOpen) {
-            sendClose(rid);
-        }
-    }
-    */
 
     @Override
     public void write(DSIWriter out) {

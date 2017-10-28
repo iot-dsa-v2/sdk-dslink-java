@@ -5,9 +5,11 @@ import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
 
 /**
+ * Manages the lifecycle of a remove request and is also the close stub passed to the requester.
+ *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundRemoveStub extends DS1OutboundRequestStub {
+class DS1OutboundRemoveStub extends DS1OutboundStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

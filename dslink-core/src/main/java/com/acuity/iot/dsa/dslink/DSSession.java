@@ -304,6 +304,7 @@ public abstract class DSSession extends DSNode {
      * have already been set.
      */
     public void onConnect() {
+        active = true;
     }
 
     /**
@@ -316,6 +317,7 @@ public abstract class DSSession extends DSNode {
      * Override point, the connection was closed.
      */
     public void onDisconnect() {
+        active = false;
     }
 
     /**
@@ -332,13 +334,6 @@ public abstract class DSSession extends DSNode {
      * @see #doRead()
      */
     public void run() {
-        synchronized (this) {
-            if (active) {
-                throw new IllegalStateException(
-                        "Protocol already running " + connection.getConnectionId());
-            }
-            active = true;
-        }
         new WriteThread(getConnection().getLink().getLinkName() + " Writer").start();
         try {
             doRead();
@@ -346,8 +341,6 @@ public abstract class DSSession extends DSNode {
             if (active) {
                 fine(getConnection().getConnectionId(), x);
             }
-        } finally {
-            active = false;
         }
     }
 
