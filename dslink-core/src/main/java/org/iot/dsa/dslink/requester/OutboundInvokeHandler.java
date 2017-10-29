@@ -4,7 +4,7 @@ import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 
 /**
- * Callback mechanism pass to the invoke method on DSIRequester.
+ * Callback mechanism passed to the invoke method on DSIRequester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */

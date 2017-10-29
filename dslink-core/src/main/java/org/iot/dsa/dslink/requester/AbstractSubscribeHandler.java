@@ -1,11 +1,7 @@
 package org.iot.dsa.dslink.requester;
 
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSStatus;
-import org.iot.dsa.time.DSDateTime;
-
 /**
- * Convenience implementation of the callback passed to the subscribe method in the requester.
+ * Convenience implementation of the handler passed to the subscribe method in the requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
@@ -40,7 +36,7 @@ public abstract class AbstractSubscribeHandler implements OutboundSubscribeHandl
     /**
      * Returns the value passed to onInit.
      */
-    public OutboundStream getStub() {
+    public OutboundStream getStream() {
         return stream;
     }
 
@@ -57,16 +53,5 @@ public abstract class AbstractSubscribeHandler implements OutboundSubscribeHandl
         this.qos = qos;
         this.stream = stream;
     }
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
-    }
-     */
 
 }

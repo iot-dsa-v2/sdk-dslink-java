@@ -8,11 +8,12 @@ import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 
 /**
- * Manages the lifecycle of an list request and is also the close stub passed to the requester.
+ * Manages the lifecycle of an list request and is also the outbound stream passed to the
+ * requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundListStub extends DS1OutboundStream {
+class DS1OutboundListStub extends DS1OutboundStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

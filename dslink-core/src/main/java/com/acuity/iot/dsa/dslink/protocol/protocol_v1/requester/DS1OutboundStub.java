@@ -7,12 +7,12 @@ import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSMap;
 
 /**
- * All stubs manages the lifecycle of a request and are also the close stub passed back to the
+ * All stubs manage the lifecycle of a request and are also the outbound stream passed back to the
  * requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-abstract class DS1OutboundStream implements OutboundMessage, OutboundStream {
+abstract class DS1OutboundStub implements OutboundMessage, OutboundStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -27,10 +27,10 @@ abstract class DS1OutboundStream implements OutboundMessage, OutboundStream {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1OutboundStream(DS1Requester requester, Integer requestId, String path) {
+    DS1OutboundStub(DS1Requester requester, Integer requestId, String path) {
         this.requester = requester;
         this.requestId = requestId;
-        this.path =  path;
+        this.path = path;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -78,7 +78,18 @@ abstract class DS1OutboundStream implements OutboundMessage, OutboundStream {
             return;
         }
         try {
-            getHandler().onError(details);
+            String type = null;
+            String msg = null;
+            String detail = null;
+            if (details.isMap()) {
+                DSMap map = details.toMap();
+                type = map.getString("type");
+                msg = map.getString("msg");
+                detail = map.getString("detail");
+            } else {
+                msg = details.toString();
+            }
+            getHandler().onError(type, msg, detail);
         } catch (Exception x) {
             getRequester().severe(getRequester().getPath(), x);
         }

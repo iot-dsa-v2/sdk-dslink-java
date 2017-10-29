@@ -6,11 +6,11 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSMap;
 
 /**
- * Manages the lifecycle of a set request and is also the close stub passed to the requester.
+ * Manages the lifecycle of a set request and is also the outbound stream passed to the requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundSetStub extends DS1OutboundStream {
+class DS1OutboundSetStub extends DS1OutboundStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

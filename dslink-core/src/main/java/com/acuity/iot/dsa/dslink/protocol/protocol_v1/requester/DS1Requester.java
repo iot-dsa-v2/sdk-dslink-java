@@ -29,8 +29,8 @@ public class DS1Requester extends DSNode implements DSIRequester {
 
     private final AtomicInteger nextRid = new AtomicInteger();
     private DS1Session session;
-    private final Map<Integer, DS1OutboundStream> requests =
-            new ConcurrentHashMap<Integer, DS1OutboundStream>();
+    private final Map<Integer, DS1OutboundStub> requests =
+            new ConcurrentHashMap<Integer, DS1OutboundStub>();
     private final DS1OutboundSubscriptions subscriptions =
             new DS1OutboundSubscriptions(this);
 
@@ -104,7 +104,7 @@ public class DS1Requester extends DSNode implements DSIRequester {
         if (rid == 0) {
             subscriptions.processUpdates(map);
         } else {
-            DS1OutboundStream stub = requests.get(rid);
+            DS1OutboundStub stub = requests.get(rid);
             if (stub != null) {
                 stub.handleResponse(map);
                 if (isError(map)) {

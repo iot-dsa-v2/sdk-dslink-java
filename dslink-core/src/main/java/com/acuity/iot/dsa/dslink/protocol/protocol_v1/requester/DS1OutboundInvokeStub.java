@@ -1,15 +1,18 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
+import org.iot.dsa.dslink.requester.OutboundInvokeHandler.Mode;
 import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 
 /**
- * Manages the lifecycle of an invoke request and is also the close stub passed to the requester.
+ * Manages the lifecycle of an invoke request and is also the outbound stream passed to the
+ * requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundInvokeStub extends DS1OutboundStream {
+class DS1OutboundInvokeStub extends DS1OutboundStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -44,45 +47,51 @@ class DS1OutboundInvokeStub extends DS1OutboundStream {
     @Override
     protected void handleResponse(DSMap response) {
         try {
-            //handler.onResponse(response);
+            DSList updates = response.getList("updates");
+            DSMap meta = response.getMap("meta");
+            if (meta != null) {
+                String mode = meta.getString("mode");
+                if (mode != null) {
+                    if ("refresh".equals(mode)) {
+                        handler.onMode(Mode.REFRESH);
+                    } else if ("append".equals(mode)) {
+                        handler.onMode(Mode.APPEND);
+                    } else if ("stream".equals(mode)) {
+                        handler.onMode(Mode.STREAM);
+                    }
+                }
+            }
+            DSList columns = response.getList("columns");
+            if (columns != null) {
+                handler.onColumns(columns);
+            }
+            if (meta != null) {
+                String modify = meta.get("modify", "");
+                if (modify != null) {
+                    String[] parts = toString().split(" ");
+                    if (modify.startsWith("replace")) {
+                        parts = parts[1].split("-");
+                        int start = Integer.parseInt(parts[0]);
+                        int end = Integer.parseInt(parts[1]);
+                        handler.onReplace(start, end, updates);
+                        return;
+                    } else if (modify.startsWith("insert")) {
+                        int idx = Integer.parseInt(parts[1]);
+                        handler.onInsert(idx, updates);
+                        return;
+                    }
+                }
+            }
+            if (updates == null) {
+                return;
+            }
+            for (int i = 0, len = updates.size(); i < len; i++) {
+                handler.onUpdate(updates.get(i).toList());
+            }
         } catch (Exception x) {
             getRequester().severe(getRequester().getPath(), x);
         }
     }
-
-    /*
-    private void processInvokeResponse(int rid, DSMap map, OutboundInvokeRequest req) {
-       String stream = map.getString("stream");
-       if (stream != null) {
-           req.setLatestStreamState(StreamState.valueOf(stream.toUpperCase()));
-       }
-       StreamState streamState = req.getLatestStreamState();
-       if (streamState.isClosed()) {
-           requests.remove(rid);
-       }
-       DSList columns = map.getList("columns");
-       DSList updates = map.getList("updates");
-       DSMap meta = map.getMap("meta");
-       DS1InboundInvokeResponse response = new DS1InboundInvokeResponse();
-       response.setStreamState(streamState);
-       response.setMetadata(meta);
-       if (columns != null) {
-           for (int i = 0; i < columns.size(); i++) {
-               response.addColumn(columns.getMap(i));
-           }
-       }
-       if (updates != null) {
-           for (int i = 0; i < updates.size(); i++) {
-               DSList row = updates.getList(i);
-               response.addRow(row);
-           }
-       }
-       boolean keepOpen = req.onResponse(response);
-       if (!streamState.isClosed() && !keepOpen) {
-           sendClose(rid);
-       }
-   }
-   */
 
     @Override
     public void write(DSIWriter out) {

@@ -54,6 +54,7 @@ class DS1OutboundSubscribeStubs {
         if (contains(stub)) {
             return;
         }
+        stub.setStubs(this);
         if (last == null) {
             first = stub;
             last = stub;
@@ -107,6 +108,10 @@ class DS1OutboundSubscribeStubs {
         return state;
     }
 
+    public DS1OutboundSubscriptions getSubscriptions() {
+        return subscriptions;
+    }
+
     /**
      * Null if the arg is the first in the list, last if stub is not contained.
      */
@@ -143,21 +148,23 @@ class DS1OutboundSubscribeStubs {
     }
 
     void remove(DS1OutboundSubscribeStub stub) {
+        DS1OutboundSubscribeStub pred = predecessor(stub);
+        if (pred == last) { //not contained
+            return;
+        }
         if (stub == first) {
             if (first == last) {
                 first = last = null;
             } else {
                 first = first.getNext();
             }
-            size--;
-        }
-        DS1OutboundSubscribeStub pred = predecessor(stub);
-        if (pred == last) { //not contained
-            return;
         }
         if (stub == last) {
             last = pred;
             pred.setNext(null);
+        }
+        if (--size == 0) {
+            subscriptions.unsubscribe(this);
         }
     }
 

@@ -1,7 +1,5 @@
 package org.iot.dsa.dslink.requester;
 
-import org.iot.dsa.node.DSElement;
-
 /**
  * Callbacks common to all outbound requests.
  *
@@ -10,8 +8,8 @@ import org.iot.dsa.node.DSElement;
 public interface OutboundRequestHandler {
 
     /**
-     * Callback for when the request stream is closed, no matter how or by who.  Will be called
-     * if there is an error as well.
+     * Callback for when the request stream is closed, no matter how or by who.  Will be called if
+     * there is an error as well.
      */
     public void onClose();
 
@@ -19,6 +17,6 @@ public interface OutboundRequestHandler {
      * Callback for when an error is received.  If the stream is also closed, onClose will also be
      * closed.  Does nothing by default.
      */
-    public void onError(DSElement details);
+    public void onError(String type, String msg, String detail);
 
 }

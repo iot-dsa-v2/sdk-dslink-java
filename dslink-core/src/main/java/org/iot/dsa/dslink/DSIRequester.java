@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.dslink.requester.BasicRequestHandler;
+import org.iot.dsa.dslink.requester.SimpleRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
@@ -38,7 +38,7 @@ public interface DSIRequester {
      *
      * @param handler Callback mechanism.
      * @return The handler parameter.
-     * @see BasicRequestHandler
+     * @see SimpleRequestHandler
      */
     public OutboundRequestHandler remove(String path, OutboundRequestHandler handler);
 
@@ -47,7 +47,7 @@ public interface DSIRequester {
      *
      * @param handler Callback mechanism.
      * @return The handler parameter.
-     * @see BasicRequestHandler
+     * @see SimpleRequestHandler
      */
     public OutboundRequestHandler set(String path, DSIValue value, OutboundRequestHandler handler);
 

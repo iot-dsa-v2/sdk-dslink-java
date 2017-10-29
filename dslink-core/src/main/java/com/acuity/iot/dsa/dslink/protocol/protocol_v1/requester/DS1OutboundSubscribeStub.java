@@ -7,8 +7,8 @@ import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
 
 /**
- * Manages the lifecycle of a single subscription to a path and is also the close handler passed to
- * the requester.
+ * Manages the lifecycle of a single subscription and is also the outbound stream passed to the
+ * requester.
  *
  * <p>
  *
@@ -28,17 +28,13 @@ class DS1OutboundSubscribeStub implements OutboundStream {
     private String path;
     private int qos = 0;
     private OutboundSubscribeHandler request;
-    private DS1OutboundSubscriptions subscriptions;
+    private DS1OutboundSubscribeStubs stubs;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DS1OutboundSubscribeStub(DS1OutboundSubscriptions subscriptions,
-                                    String path,
-                                    int qos,
-                                    OutboundSubscribeHandler request) {
-        this.subscriptions = subscriptions;
+    public DS1OutboundSubscribeStub(String path, int qos, OutboundSubscribeHandler request) {
         this.path = path;
         this.qos = qos;
         this.request = request;
@@ -56,15 +52,16 @@ class DS1OutboundSubscribeStub implements OutboundStream {
             }
             open = false;
         }
-        subscriptions.unsubscribe(this);
+        stubs.remove(this);
+        try {
+            request.onClose();
+        } catch (Exception x) {
+            stubs.getSubscriptions().severe(path, x);
+        }
     }
 
     public DS1OutboundSubscribeStub getNext() {
         return next;
-    }
-
-    public OutboundSubscribeHandler getHandler() {
-        return request;
     }
 
     public String getPath() {
@@ -81,10 +78,13 @@ class DS1OutboundSubscribeStub implements OutboundStream {
     }
 
     public void process(DSDateTime ts, DSElement value, DSStatus status) {
+        if (!open) {
+            return;
+        }
         try {
             request.onUpdate(ts, value, status);
         } catch (Exception x) {
-            subscriptions.severe(path, x);
+            stubs.getSubscriptions().severe(path, x);
         }
     }
 
@@ -93,6 +93,10 @@ class DS1OutboundSubscribeStub implements OutboundStream {
      */
     void setNext(DS1OutboundSubscribeStub next) {
         this.next = next;
+    }
+
+    void setStubs(DS1OutboundSubscribeStubs stubs) {
+        this.stubs = stubs;
     }
 
 }

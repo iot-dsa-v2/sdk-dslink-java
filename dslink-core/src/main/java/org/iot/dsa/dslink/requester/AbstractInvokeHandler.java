@@ -1,6 +1,5 @@
 package org.iot.dsa.dslink.requester;
 
-import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 
 /**
@@ -39,20 +38,9 @@ public abstract class AbstractInvokeHandler implements OutboundInvokeHandler {
     /**
      * Returns the value passed to onInit.
      */
-    public OutboundStream getStub() {
+    public OutboundStream getStream() {
         return stream;
     }
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onColumns(DSList list) {
-    }
-     */
 
     /**
      * Sets the fields so they can be access via the corresponding getters.
@@ -67,60 +55,5 @@ public abstract class AbstractInvokeHandler implements OutboundInvokeHandler {
         this.params = params;
         this.stream = stream;
     }
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onInsert(int index, DSList rows) {
-    }
-     */
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onMode(Mode mode) {
-    }
-     */
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onReplace(int start, int end, DSList rows) {
-    }
-     */
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onTableMeta(DSMap map) {
-    }
-     */
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onUpdate(DSList row) {
-    }
-     */
 
 }

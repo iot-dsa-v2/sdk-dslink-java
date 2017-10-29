@@ -164,8 +164,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
      * Create or update a subscription.
      */
     OutboundSubscribeHandler subscribe(String path, int qos, OutboundSubscribeHandler req) {
-        DS1OutboundSubscribeStub stub = new DS1OutboundSubscribeStub(this,
-                                                                     path, qos, req);
+        DS1OutboundSubscribeStub stub = new DS1OutboundSubscribeStub(path, qos, req);
         boolean send = true;
         synchronized (pathMap) {
             DS1OutboundSubscribeStubs stubs = pathMap.get(path);
@@ -174,6 +173,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
                 stubs.add(stub);
                 pendingSubscribe.add(stubs);
                 pathMap.put(path, stubs);
+                sidMap.put(stubs.getSid(), stubs);
             } else {
                 send = qos > stubs.getQos();
                 stubs.add(stub);
@@ -197,18 +197,12 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
     /**
      * Remove the subscription and call onClose.
      */
-    void unsubscribe(DS1OutboundSubscribeStub stub) {
+    void unsubscribe(DS1OutboundSubscribeStubs stubs) {
         synchronized (pathMap) {
-            DS1OutboundSubscribeStubs stubs = pathMap.get(stub.getPath());
-            if (stubs == null) {
-                return;
-            } else {
-                stubs.remove(stub);
-                if (stubs.size() == 0) {
-                    stubs.setState(State.PENDING_UNSUBSCRIBE);
-                    pendingUnsubscribe.add(stubs);
-                    sendMessage();
-                }
+            if (stubs.size() == 0) {
+                stubs.setState(State.PENDING_UNSUBSCRIBE);
+                pendingUnsubscribe.add(stubs);
+                sendMessage();
             }
         }
     }
@@ -244,7 +238,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
             out.key("rid").value(requester.getNextRid());
             out.key("method").value("unsubscribe");
             out.key("sids").beginList();
-            Iterator<DS1OutboundSubscribeStubs> it = pendingSubscribe.iterator();
+            Iterator<DS1OutboundSubscribeStubs> it = pendingUnsubscribe.iterator();
             while (it.hasNext() && !session.shouldEndMessage()) {
                 DS1OutboundSubscribeStubs stubs = it.next();
                 synchronized (pathMap) {

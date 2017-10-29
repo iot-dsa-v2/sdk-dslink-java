@@ -1,9 +1,7 @@
 package org.iot.dsa.dslink.requester;
 
-import org.iot.dsa.node.DSElement;
-
 /**
- * Convenience implementation of the callback passed to the invoke method in the requester.
+ * Convenience implementation of the handler passed to the invoke method in the requester.
  *
  * <p>
  *
@@ -40,7 +38,7 @@ public abstract class AbstractListHandler implements OutboundListHandler {
     /**
      * Returns the value passed to onInit.
      */
-    public OutboundStream getStub() {
+    public OutboundStream getStream() {
         return stream;
     }
 
@@ -56,39 +54,6 @@ public abstract class AbstractListHandler implements OutboundListHandler {
         this.path = path;
         this.stream = stream;
     }
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onInitialized() {
-    }
-     */
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onRemove(String name) {
-    }
-     */
-
-    /**
-     * Does nothing.
-     *
-     * <p>
-     *
-     * {@inheritDoc}
-    @Override
-    public void onUpdate(String name, DSElement value) {
-    }
-     */
 
 }
 
