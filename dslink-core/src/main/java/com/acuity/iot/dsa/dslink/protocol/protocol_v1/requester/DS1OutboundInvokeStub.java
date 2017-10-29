@@ -60,6 +60,10 @@ class DS1OutboundInvokeStub extends DS1OutboundStub {
                         handler.onMode(Mode.STREAM);
                     }
                 }
+                meta = meta.getMap("meta");
+                if ((meta != null) && (meta.size() > 0)) {
+                    handler.onTableMeta(meta);
+                }
             }
             DSList columns = response.getList("columns");
             if (columns != null) {
