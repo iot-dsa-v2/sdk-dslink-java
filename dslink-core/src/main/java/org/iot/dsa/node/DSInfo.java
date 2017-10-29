@@ -274,7 +274,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     /**
      * Whether or not the object is a DSNode.
-     * @return
      */
     public boolean isNode() {
         return value instanceof DSNode;

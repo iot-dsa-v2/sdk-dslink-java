@@ -643,8 +643,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Ascends the tree until a logger is found.  If overriding, call super.getLogger and set
-     * the result as the parent logger of your new logger.
+     * Ascends the tree until a logger is found.  If overriding, call super.getLogger and set the
+     * result as the parent logger of your new logger.
      */
     @Override
     public Logger getLogger() {

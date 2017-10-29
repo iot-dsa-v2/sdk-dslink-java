@@ -31,8 +31,8 @@ import org.iot.dsa.node.DSElement;
  * <p>
  *
  * Be aware that if the underlying encoding (such as JSON) doesn't provide a mechanism to
- * differentiate between data types (such as numbers), values might not get as the same type
- * they were encoded.
+ * differentiate between data types (such as numbers), values might not get as the same type they
+ * were encoded.
  *
  * @author Aaron Hansen
  */

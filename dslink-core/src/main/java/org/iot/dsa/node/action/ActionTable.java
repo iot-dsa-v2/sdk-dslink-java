@@ -6,8 +6,8 @@ import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
 
 /**
- * Provides access to the columns and rows of a table.  Not thread safe and only represents
- * the result of a single action invocation.
+ * Provides access to the columns and rows of a table.  Not thread safe and only represents the
+ * result of a single action invocation.
  *
  * @author Aaron Hansen
  */

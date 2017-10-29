@@ -197,7 +197,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
                 ret = (DSLink) node;
             } else {
                 ret = new DSLink();
-                ret.setNodes((DSRootNode)node);
+                ret.setNodes((DSRootNode) node);
             }
             ret.init(config);
             time = System.currentTimeMillis() - time;

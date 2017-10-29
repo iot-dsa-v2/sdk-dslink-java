@@ -14,8 +14,8 @@ public interface OutboundSubscribeHandler extends OutboundRequestHandler {
     /**
      * Called by the requester before returning from the subscribe method.
      *
-     * @param path Who is being subscribed.
-     * @param qos  Quality of service, 0-3.
+     * @param path   Who is being subscribed.
+     * @param qos    Quality of service, 0-3.
      * @param stream Mechanism to close the request stream.
      */
     public void onInit(String path, int qos, OutboundStream stream);

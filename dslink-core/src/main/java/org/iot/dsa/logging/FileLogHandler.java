@@ -19,8 +19,8 @@ import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
 
 /**
- * Logs records to a file.  When the file exceeds a certain size, it'll be zipped to a backup,
- * and excess backups will be deleted.
+ * Logs records to a file.  When the file exceeds a certain size, it'll be zipped to a backup, and
+ * excess backups will be deleted.
  *
  * @author Aaron Hansen
  */

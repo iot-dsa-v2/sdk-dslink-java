@@ -27,7 +27,7 @@ public interface OutboundListHandler extends OutboundRequestHandler {
     /**
      * Called by the requester before returning from the list method.
      *
-     * @param path Parameter to the list method.
+     * @param path   Parameter to the list method.
      * @param stream Mechanism to close the request stream.
      */
     public void onInit(String path, OutboundStream stream);
