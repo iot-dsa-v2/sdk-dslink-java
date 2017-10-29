@@ -107,10 +107,10 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     private void processInvoke(Integer rid, DSMap req) {
         DS1InboundInvoke invokeImpl = new DS1InboundInvoke(req);
         invokeImpl.setPath(getPath(req))
-                  .setProtocol(session)
+                  .setSession(session)
                   .setRequestId(rid)
-                  .setResponder(responder)
-                  .setSession(this);
+                  .setResponderImpl(responder)
+                  .setResponder(this);
         inboundRequests.put(rid, invokeImpl);
         DSRuntime.run(invokeImpl);
     }
@@ -121,11 +121,11 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     private void processList(Integer rid, DSMap req) {
         DS1InboundList listImpl = new DS1InboundList();
         listImpl.setPath(getPath(req))
-                .setProtocol(session)
+                .setSession(session)
                 .setRequest(req)
                 .setRequestId(rid)
-                .setResponder(responder)
-                .setSession(this);
+                .setResponderImpl(responder)
+                .setResponder(this);
         inboundRequests.put(listImpl.getRequestId(), listImpl);
         DSRuntime.run(listImpl);
     }
@@ -232,10 +232,10 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     private void processSet(Integer rid, DSMap req) {
         DS1InboundSet setImpl = new DS1InboundSet(req);
         setImpl.setPath(getPath(req))
-               .setProtocol(session)
+               .setSession(session)
                .setRequestId(rid)
-               .setResponder(responder)
-               .setSession(this);
+               .setResponderImpl(responder)
+               .setResponder(this);
         DSRuntime.run(setImpl);
     }
 

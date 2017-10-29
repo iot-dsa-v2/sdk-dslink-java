@@ -32,14 +32,14 @@ class DS1InboundSet extends DS1InboundRequest implements InboundSetRequest, Runn
     @Override
     public void run() {
         try {
-            getResponder().onSet(this);
-            getSession().sendResponse(
+            getResponderImpl().onSet(this);
+            getResponder().sendResponse(
                     new CloseMessage(getRequestId()).setMethod(null).setStream("closed"));
         } catch (Exception x) {
             severe(getPath(), x);
             ErrorResponse err = new ErrorResponse(x);
             err.parseRequest(getRequest());
-            getSession().sendResponse(err);
+            getResponder().sendResponse(err);
         }
     }
 

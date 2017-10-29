@@ -109,7 +109,7 @@ class DS1InboundInvoke extends DS1InboundRequest
      */
     private void doClose() {
         state = STATE_CLOSED;
-        getSession().removeInboundRequest(getRequestId());
+        getResponder().removeInboundRequest(getRequestId());
         if (result == null) {
             return;
         }
@@ -141,7 +141,7 @@ class DS1InboundInvoke extends DS1InboundRequest
                 return;
             }
         }
-        getSession().sendResponse(this);
+        getResponder().sendResponse(this);
     }
 
     /**
@@ -154,7 +154,7 @@ class DS1InboundInvoke extends DS1InboundRequest
             }
             enqueued = true;
         }
-        getSession().sendResponse(this);
+        getResponder().sendResponse(this);
     }
 
     /**
@@ -162,7 +162,7 @@ class DS1InboundInvoke extends DS1InboundRequest
      */
     public void run() {
         try {
-            result = getResponder().onInvoke(this);
+            result = getResponderImpl().onInvoke(this);
             if (result == null) {
                 close();
             }
@@ -265,7 +265,7 @@ class DS1InboundInvoke extends DS1InboundRequest
             if (closeReason != null) {
                 ErrorResponse res = new ErrorResponse(closeReason);
                 res.parseRequest(getRequest());
-                getSession().sendResponse(res);
+                getResponder().sendResponse(res);
             } else {
                 out.key("stream").value("closed");
             }
@@ -321,7 +321,7 @@ class DS1InboundInvoke extends DS1InboundRequest
             if (rows == null) {
                 rows = ((ActionTable) result).getRows();
             }
-            DS1Responder session = getSession();
+            DS1Responder session = getResponder();
             while (rows.hasNext()) {
                 out.value(rows.next());
                 if (session.shouldEndMessage()) {
@@ -355,7 +355,7 @@ class DS1InboundInvoke extends DS1InboundRequest
                .endMap();
         }
         out.key("updates").beginList();
-        DS1Responder session = getSession();
+        DS1Responder session = getResponder();
         while (true) {
             update = dequeueUpdate();
             if (update.rows != null) {

@@ -65,8 +65,8 @@ class ListWrapper implements InboundListRequest {
     }
 
     @Override
-    public DSLinkSession getSession() {
-        return request.getSession();
+    public DSLinkSession getResponder() {
+        return request.getResponder();
     }
 
     @Override

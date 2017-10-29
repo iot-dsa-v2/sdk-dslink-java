@@ -22,7 +22,7 @@ public interface InboundRequest {
     /**
      * The corresponding session.
      */
-    public DSLinkSession getSession();
+    public DSLinkSession getResponder();
 
 
 }

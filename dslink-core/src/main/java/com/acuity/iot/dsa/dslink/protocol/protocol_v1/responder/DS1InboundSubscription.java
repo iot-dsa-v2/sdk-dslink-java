@@ -163,7 +163,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
      */
     void write(DSIWriter out, StringBuilder buf) {
         //Don't check open state - forcefully closing will send an update
-        DSResponderSession session = getSession();
+        DSResponderSession session = getResponder();
         Update update = dequeue();
         while (update != null) {
             out.beginMap();
