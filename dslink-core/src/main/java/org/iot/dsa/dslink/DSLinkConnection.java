@@ -16,11 +16,9 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSLinkConnection extends DSNode {
 
     /**
-     * Closes the current established connection, does not stop this object.  There are many places
-     * and reasons for closing the actual connection (such as errors and timeouts),  all of them
-     * should just call this for comprehensive cleanup.
+     * Adds a listener for connection events.
      */
-    public abstract void close();
+    public abstract void addListener(Listener listener);
 
     /**
      * A unique descriptive tag such as a combination of the link name and the broker host.
@@ -32,9 +30,35 @@ public abstract class DSLinkConnection extends DSNode {
      */
     public abstract DSLink getLink();
 
+    public abstract DSIRequester getRequester();
+
     /**
      * True when a connection is established with the remote endpoint.
      */
     public abstract boolean isOpen();
+
+    /**
+     * Called the when network connection has been closed.
+     */
+    public abstract void onClose();
+
+    /**
+     * Removes a listener for connection events.
+     */
+    public abstract void removeListener(Listener listener);
+
+    public static interface Listener {
+
+        /**
+         * Called when the connection with the endpoint is closed.
+         */
+        public void onConnect(DSLinkConnection connection);
+
+        /**
+         * Called when the connection with the endpoint is established.
+         */
+        public void onDisconnect(DSLinkConnection connection);
+
+    }
 
 }

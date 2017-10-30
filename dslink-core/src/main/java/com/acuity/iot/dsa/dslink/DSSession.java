@@ -7,8 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSRequester;
+import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSNode;
@@ -80,6 +79,22 @@ public abstract class DSSession extends DSNode {
     protected abstract void beginRequests();
 
     /**
+     * Can be called by the subclass to force exit the run method.
+     */
+    public void close() {
+        try {
+            active = false;
+            synchronized (outgoingMutex) {
+                outgoingRequests.clear();
+                outgoingResponses.clear();
+                outgoingMutex.notify();
+            }
+        } catch (Exception x) {
+            fine(connection.getConnectionId(), x);
+        }
+    }
+
+    /**
      * The protocol implementation should read messages and do something with them. The
      * implementation should call isOpen() to determine when to exit this method.
      *
@@ -132,22 +147,6 @@ public abstract class DSSession extends DSNode {
                 active = false;
                 transport.close();
             }
-        }
-    }
-
-    /**
-     * Can be called by the subclass to force close the connection.
-     */
-    public void close() {
-        try {
-            active = false;
-            synchronized (outgoingMutex) {
-                outgoingRequests.clear();
-                outgoingResponses.clear();
-                outgoingMutex.notify();
-            }
-        } catch (Exception x) {
-            fine(connection.getConnectionId(), x);
         }
     }
 
@@ -249,9 +248,7 @@ public abstract class DSSession extends DSNode {
         return reader;
     }
 
-    protected abstract DSRequesterSession getRequesterSession();
-
-    protected abstract DSResponderSession getResponderSession();
+    protected abstract DSIRequester getRequester();
 
     protected DSTransport getTransport() {
         return transport;
@@ -303,9 +300,24 @@ public abstract class DSSession extends DSNode {
     }
 
     /**
-     * Override point for reusable sessions.  Does nothing by default.
+     * Override point, called when the previous connection can be resumed. The the transport will
+     * have already been set.
      */
-    public void pause() {
+    public void onConnect() {
+        active = true;
+    }
+
+    /**
+     * Override point, when a connection attempt failed.
+     */
+    public void onConnectFail() {
+    }
+
+    /**
+     * Override point, the connection was closed.
+     */
+    public void onDisconnect() {
+        active = false;
     }
 
     /**
@@ -313,15 +325,6 @@ public abstract class DSSession extends DSNode {
      */
     public void setRequesterAllowed() {
         requesterAllowed = true;
-        DSRuntime.run(new Runnable() {
-            @Override
-            public void run() {
-                DSRequester requester = getConnection().getLink().getRequester();
-                if (requester != null) {
-                    requester.onConnected(getRequesterSession());
-                }
-            }
-        });
     }
 
     /**
@@ -331,33 +334,12 @@ public abstract class DSSession extends DSNode {
      * @see #doRead()
      */
     public void run() {
-        synchronized (this) {
-            if (active) {
-                throw new IllegalStateException(
-                        "Protocol already running " + connection.getConnectionId());
-            }
-            active = true;
-        }
         new WriteThread(getConnection().getLink().getLinkName() + " Writer").start();
         try {
             doRead();
         } catch (Exception x) {
             if (active) {
                 fine(getConnection().getConnectionId(), x);
-            }
-        } finally {
-            active = false;
-            if (requesterAllowed) {
-                try {
-                    /*
-                    DSRequester requester = getConnection().getLink().getRequester();
-                    if (requester != null) {
-                        requester.onDisconnected(getRequesterSession());
-                    }
-                    */
-                } catch (Exception x) {
-                    fine(getConnection().getConnectionId(), x);
-                }
             }
         }
     }

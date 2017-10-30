@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.logging.DSLogging;
@@ -423,10 +424,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @return this
      */
     public DSNode clear() {
-        dsInit();
-        DSInfo info = firstChild;
+        DSInfo info = getFirstInfo();
         while (info != null) {
-            if (!info.isPermanent()) {
+            if (info.isDynamic()) {
                 remove(info);
             }
             info = info.next();
@@ -529,7 +529,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (argNode.childCount() != childCount()) {
             return false;
         }
-        DSInfo mine = firstChild;
+        DSInfo mine = getFirstInfo();
         while (mine != null) {
             if (!DSUtil.equal(mine.getObject(), argNode.get(mine.getName()))) {
                 return false;
@@ -611,11 +611,23 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
+     * The info for the first child node, or null.
+     */
+    public DSInfo getFirstNodeInfo() {
+        if (firstChild == null) {
+            return null;
+        }
+        if (firstChild.isNode()) {
+            return firstChild;
+        }
+        return firstChild.nextNode();
+    }
+
+    /**
      * The last child, or null.
      */
     public DSIObject getLast() {
-        dsInit();
-        DSInfo info = lastChild;
+        DSInfo info = getLastInfo();
         if (info == null) {
             return null;
         }
@@ -631,8 +643,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Ascends the tree until a logger is found.  If overriding, call super.getLogger and set
-     * the result as the parent logger of your new logger.
+     * Ascends the tree until a logger is found.  If overriding, call super.getLogger and set the
+     * result as the parent logger of your new logger.
      */
     @Override
     public Logger getLogger() {
@@ -688,9 +700,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     @Override
     public int hashCode() {
-        dsInit();
         int hc = 1;
-        DSInfo info = firstChild;
+        DSInfo info = getFirstInfo();
         while (info != null) {
             hc = 31 * hc + (info.hashCode());
             info = info.next();
@@ -777,25 +788,23 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Returns an iterator of child DSNodes.
+     * Returns an info iterator of child DSNodes.
      */
     public Iterator<DSInfo> iterateNodes() {
         return new NodeIterator();
     }
 
     /**
-     * Returns an iterator of child DSIValues.
+     * Returns an info iterator of child DSIValues.
      */
     public Iterator<DSInfo> iterateValues() {
-        dsInit();
         return new ValueIterator();
     }
 
     /**
-     * Returns an iterator of all info children.
+     * Returns an info iterator of all children.
      */
     public Iterator<DSInfo> iterator() {
-        dsInit();
         return new ChildIterator();
     }
 
@@ -860,7 +869,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      *
      * @param info  The child being changed.
      * @param value The new value.
-     * @see org.iot.dsa.dslink.DSResponder#onSet(InboundSetRequest)
+     * @see DSIResponder#onSet(InboundSetRequest)
      */
     public void onSet(DSInfo info, DSIValue value) {
         if (info != null) {
@@ -874,7 +883,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * report an error to the requester.
      *
      * @param value The new value.
-     * @see org.iot.dsa.dslink.DSResponder#onSet(InboundSetRequest)
+     * @see DSIResponder#onSet(InboundSetRequest)
      */
     public void onSet(DSIValue value) {
         throw new IllegalStateException("DSNode.onSet(DSIValue) not overridden");
@@ -946,8 +955,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         DSIObject old = info.getObject();
         if (isNode(old)) {
             DSNode node = toNode(old);
-            node.infoInParent = null;
             node.stop();
+            node.infoInParent = null;
         } else if (old instanceof DSGroup) {
             ((DSGroup) object).setParent(null);
         }
@@ -978,7 +987,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @throws IllegalStateException If the info is permanent or not a child of this node.
      */
     public DSNode remove(DSInfo info) {
-        if (info.isPermanent()) {
+        if (!info.isDynamic()) {
             throw new IllegalStateException("Can not be removed");
         }
         if (info.getParent() != this) {
@@ -1107,7 +1116,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (!isStarted()) {
             throw new IllegalStateException("Not starting: " + getPath());
         }
-        DSInfo info = firstChild;
+        DSInfo info = getFirstInfo();
         while (info != null) {
             if (info.isNode()) {
                 info.getNode().stable();
@@ -1127,17 +1136,20 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Sets the state to starting.  Calls onStarted once the entire subtree is started.
      */
     public final void start() {
-        dsInit();
         if (isRunning()) {
             throw new IllegalStateException("Already running: " + getPath());
         }
         path = null;
-        DSInfo info = firstChild;
+        DSInfo info = getFirstInfo();
         while (info != null) {
             if (info.isNode()) {
                 info.getNode().start();
             }
-            info.subscribe();
+            try {
+                info.subscribe();
+            } catch (Exception x) {
+                severe(getPath(), x);
+            }
             info = info.next();
         }
         state = DSUtil.setBit(state, STATE_STOPPED, false);
@@ -1155,10 +1167,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public final void stop() {
         if (isStopped()) {
-            throw new IllegalStateException("Not stable: " + getPath());
+            return;
         }
         path = null;
-        DSInfo info = firstChild;
+        DSInfo info = getFirstInfo();
         while (info != null) {
             info.unsubscribe();
             if (info.isNode()) {
@@ -1234,7 +1246,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         private DSInfo next;
 
         ChildIterator() {
-            next = firstChild;
+            next = getFirstInfo();
         }
 
         public boolean hasNext() {

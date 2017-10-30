@@ -2,7 +2,7 @@ package org.iot.dsa.dslink;
 
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSQuality;
+import org.iot.dsa.node.DSStatus;
 
 /**
  * Used by DSRootNode to handle subscribe requests.
@@ -51,8 +51,8 @@ class SubscribeWrapper implements InboundSubscribeRequest {
     }
 
     @Override
-    public DSLinkSession getSession() {
-        return request.getSession();
+    public DSLinkSession getResponder() {
+        return request.getResponder();
     }
 
     @Override
@@ -61,7 +61,7 @@ class SubscribeWrapper implements InboundSubscribeRequest {
     }
 
     @Override
-    public void update(long timestamp, DSIValue value, DSQuality quality) {
+    public void update(long timestamp, DSIValue value, DSStatus quality) {
         request.update(timestamp, value, quality);
     }
 

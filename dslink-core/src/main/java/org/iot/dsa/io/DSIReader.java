@@ -6,9 +6,9 @@ import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 
 /**
- * A decoder that can be used to get an entire graph in pieces, or one large group, or somewhere
- * in between. To get an entire graph, call getElement(), getMap() or getList(). Otherwise, use
- * the next() method to iterate the elements of the input document.
+ * A decoder that can be used to get an entire graph in pieces, or one large group, or somewhere in
+ * between. To get an entire graph, call getElement(), getMap() or getList(). Otherwise, use the
+ * next() method to iterate the elements of the input document.
  *
  * <p>
  *
@@ -21,8 +21,8 @@ import org.iot.dsa.node.DSMap;
  * <li>BEGIN_LIST - Call getList() to decodeKeys the entire list, or call next again to get the
  * first element of the list (or END_LIST if empty).
  *
- * <li>BEGIN_MAP - Call getMap() to decodeKeys the entire map, or call next again to get the
- * first key of the map (or END_MAP if empty).
+ * <li>BEGIN_MAP - Call getMap() to decodeKeys the entire map, or call next again to get the first
+ * key of the map (or END_MAP if empty).
  *
  * <li>END_INPUT - Parsing is finished, close the reader.
  *
@@ -39,8 +39,8 @@ import org.iot.dsa.node.DSMap;
  * <p>
  *
  * Be aware that if the underlying encoding (such as JSON) doesn't provide a mechanism to
- * differentiate between data types (such as numbers), values might not get as the same type
- * they were encoded.
+ * differentiate between data types (such as numbers), values might not get as the same type they
+ * were encoded.
  *
  * @author Aaron Hansen
  */
@@ -95,14 +95,13 @@ public interface DSIReader extends Closeable {
     public String getString();
 
     /**
-     * The lastRun value returned from next(). At the beginning of a document, before next has
-     * been called, this will return ROOT.
+     * The lastRun value returned from next(). At the beginning of a document, before next has been
+     * called, this will return ROOT.
      */
     public Token last();
 
     /**
-     * Advances the reader to the next item and returns the token representing it's current
-     * state.
+     * Advances the reader to the next item and returns the token representing it's current state.
      */
     public Token next();
 

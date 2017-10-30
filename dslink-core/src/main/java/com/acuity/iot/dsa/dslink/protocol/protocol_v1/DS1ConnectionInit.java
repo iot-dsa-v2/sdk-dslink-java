@@ -15,7 +15,6 @@ import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSString;
 import org.iot.dsa.util.DSException;
 
 /**

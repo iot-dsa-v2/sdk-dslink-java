@@ -40,14 +40,14 @@ public interface DSIValue extends DSIObject {
     public boolean isNull();
 
     /**
-     * Deserialize a value from the configuration database, these will be values returned
-     * from the store() method.
+     * Deserialize a value from the configuration database, these will be values returned from the
+     * store() method.
      */
     public DSIValue restore(DSElement element);
 
     /**
-     * Serialize the value for the configuration database.  Can be a different element
-     * type than toElement().
+     * Serialize the value for the configuration database.  Can be a different element type than
+     * toElement().
      */
     public DSElement store();
 

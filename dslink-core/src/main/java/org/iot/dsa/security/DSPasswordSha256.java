@@ -88,8 +88,8 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword {
      * Hashes the string value of the given element and compares against the hash stored in this
      * object.
      *
-     * @param clearText If null, isNull, or is the empty string, this will on return true if this
-     *                     is the NULL instance.
+     * @param clearText If null, isNull, or is the empty string, this will on return true if this is
+     *                  the NULL instance.
      */
     public boolean isValid(DSElement clearText) {
         if (clearText == null) {
@@ -104,8 +104,8 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword {
     /**
      * Hashes the given string and compares against the value stored in this object.
      *
-     * @param clearText If null, or the empty string, this will on return true if this is
-     *                  the NULL instance.
+     * @param clearText If null, or the empty string, this will on return true if this is the NULL
+     *                  instance.
      */
     public boolean isValid(String clearText) {
         if ((clearText == null) || clearText.isEmpty()) {

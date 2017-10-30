@@ -132,14 +132,14 @@ public class TextWsTransport extends DSTransport {
     public void onClose(Session session, CloseReason reason) {
         if (open) {
             info(getConnectionUrl() + " remotely closed, reason = " + reason.toString());
-            getConnection().close();
+            getConnection().onClose();
         }
     }
 
     @OnError
     public void onError(Session session, Throwable err) {
         severe(getConnectionUrl(), err);
-        getConnection().close();
+        getConnection().onClose();
     }
 
     @OnMessage
@@ -148,7 +148,7 @@ public class TextWsTransport extends DSTransport {
             finest(finest() ? "Recv: " + msgPart : null);
             buffer.put(msgPart);
         } catch (Exception x) {
-            getConnection().close();
+            getConnection().onClose();
             DSException.throwRuntime(x);
         }
     }
@@ -238,7 +238,7 @@ public class TextWsTransport extends DSTransport {
             basic.sendText(text, isLast);
         } catch (IOException x) {
             severe(getConnectionUrl(), x);
-            connection.close();
+            connection.onClose();
         }
     }
 
@@ -250,7 +250,7 @@ public class TextWsTransport extends DSTransport {
 
         @Override
         public void close() {
-            getConnection().close();
+            getConnection().onClose();
         }
 
         @Override
@@ -279,7 +279,7 @@ public class TextWsTransport extends DSTransport {
 
         @Override
         public void close() {
-            getConnection().close();
+            getConnection().onClose();
         }
 
         @Override

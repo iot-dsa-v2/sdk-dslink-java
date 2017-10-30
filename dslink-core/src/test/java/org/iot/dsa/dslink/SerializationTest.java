@@ -94,13 +94,13 @@ public class SerializationTest {
         node.put("second", list);
         node = decode(encode(node));
         list = (DSList) node.get("first");
-        Assert.assertTrue(list.getString(0).equals("a"));
-        Assert.assertTrue(list.getString(1).equals("b"));
-        Assert.assertTrue(list.getString(2).equals("c"));
+        Assert.assertTrue("a".equals(list.getString(0)));
+        Assert.assertTrue("b".equals(list.getString(1)));
+        Assert.assertTrue("c".equals(list.getString(2)));
         list = (DSList) node.get("second");
-        Assert.assertTrue(list.getString(0).equals("d"));
-        Assert.assertTrue(list.getString(1).equals("e"));
-        Assert.assertTrue(list.getString(2).equals("f"));
+        Assert.assertTrue("d".equals(list.getString(0)));
+        Assert.assertTrue("e".equals(list.getString(1)));
+        Assert.assertTrue("f".equals(list.getString(2)));
     }
 
     // Inner Classes

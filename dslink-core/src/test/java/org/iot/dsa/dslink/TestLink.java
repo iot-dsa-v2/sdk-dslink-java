@@ -1,67 +1,63 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.DSTransport;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1ConnectionInit;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
+import java.util.logging.Level;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSNode;
 
 /**
- * Standalone link, routes requests and responses back to self.
+ * Routes requests and responses back to self.
  *
  * @author Aaron Hansen
  */
-public abstract class TestLink extends DSNode implements DSResponder {
+public class TestLink extends DSLink {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////
-
-    public static void main(String[] args) throws Exception {
-        DSLinkConfig cfg = new DSLinkConfig(args)
-                .setConfig(DSLinkConfig.CFG_CONNECTION_TYPE, MyConnection.class.getName())
-                .setConfig(DSLinkConfig.CFG_TRANSPORT_FACTORY, TestTransport.class.getName());
-        DSLink link = DSLink.load(cfg);
-        link.run();
+    public TestLink() {
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
+    public TestLink(DSRootNode rootNode) {
+        setSaveEnabled(false);
+        setNodes(rootNode);
+        DSLinkConfig cfg = new DSLinkConfig();
+        cfg.setDslinkJson(new DSMap().put("configs", new DSMap()));
+        cfg.setLinkName("dslink-java-testing");
+        cfg.setRequester(true);
+        cfg.setLogLevel(Level.FINEST);
+        cfg.setConfig(DSLinkConfig.CFG_CONNECTION_TYPE, TestConnection.class.getName());
+        cfg.setConfig(DSLinkConfig.CFG_STABLE_DELAY, 1);
+        init(cfg);
+    }
 
-    public static class MyConnection extends DS1LinkConnection {
+    public static class TestConnection extends DS1LinkConnection {
 
-        protected DSMap initializeConnection() {
-            return new DSMap()
-                    .put("dsId",
-                         "broker-dsa-FEuG-dsvoy3Mfh-DY4ZLqxWdcjA9mky2MyCd0DmqTMw")
-                    .put("publicKey",
-                         "BG4OYopcM2q09amKRKsc8N99ns5dybnBYG4Fi8bQVf6fKjyT_KRlPMJCs-3zvnSbBCXzS5fZfi88JuiLYwJY0gc")
-                    .put("wsUri", "/ws")
-                    .put("httpUri", "/http")
-                    .put("tempKey",
-                         "BARngwlfjwD7goZHCh_4iWsP0e3JszsvOtovn1UyPnqZLlSOyoUH1v_Lop0oUFClpVhlzsWAAqur6S8apZaBe4I")
-                    .put("salt", "0x205")
-                    .put("path", "/downstream/link")
-                    .put("version", "1.1.2")
-                    .put("updateInterval", 200)
-                    .put("format", "json");
+        protected DS1ConnectionInit initializeConnection() throws Exception {
+            DS1ConnectionInit init = new DS1ConnectionInit();
+            return init;
+        }
+
+        /**
+         * Looks at the connection initialization response to determine the protocol
+         * implementation.
+         */
+        protected DS1Session makeSession(DS1ConnectionInit init) {
+            DS1Session ret = new DS1Session();
+            ret.setRequesterAllowed();
+            return ret;
+        }
+
+        /**
+         * Looks at the connection initialization response to determine the type of transport then
+         * instantiates the correct type fom the config.
+         */
+        protected DSTransport makeTransport(DS1ConnectionInit init) {
+            TestTransport transport = new TestTransport();
+            transport.setConnection(this);
+            transport.setReadTimeout(getLink().getConfig().getConfig(
+                    DSLinkConfig.CFG_READ_TIMEOUT, 60000));
+            return transport;
         }
 
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
-
-} //class
+}

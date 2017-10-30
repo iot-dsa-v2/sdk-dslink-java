@@ -1,13 +1,14 @@
 package org.iot.dsa.dslink.responder;
 
+import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSQuality;
+import org.iot.dsa.node.DSStatus;
 
 /**
  * The details about an incoming subscribe request passed to the responder.
  *
  * @author Aaron Hansen
- * @see org.iot.dsa.dslink.DSResponder#onSubscribe(InboundSubscribeRequest)
+ * @see DSIResponder#onSubscribe(InboundSubscribeRequest)
  */
 public interface InboundSubscribeRequest extends InboundRequest {
 
@@ -25,6 +26,6 @@ public interface InboundSubscribeRequest extends InboundRequest {
      * The responder should call this when first received and then whenever the value or status
      * changes.
      */
-    public void update(long timestamp, DSIValue value, DSQuality quality);
+    public void update(long timestamp, DSIValue value, DSStatus quality);
 
 }

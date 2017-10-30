@@ -7,12 +7,11 @@ import static org.iot.dsa.io.DSIReader.Token.END_MAP;
 import static org.iot.dsa.io.DSIReader.Token.NULL;
 
 import com.acuity.iot.dsa.dslink.DSProtocolException;
-import com.acuity.iot.dsa.dslink.DSRequesterSession;
-import com.acuity.iot.dsa.dslink.DSResponderSession;
 import com.acuity.iot.dsa.dslink.DSSession;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester.DS1RequesterSession;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder.DS1ResponderSession;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester.DS1Requester;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder.DS1Responder;
 import java.io.IOException;
+import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIReader.Token;
 import org.iot.dsa.io.DSIWriter;
@@ -45,8 +44,8 @@ public class DS1Session extends DSSession {
     private DSInfo lastAckSent = getInfo(LAST_ACK_SENT);
     private int nextAck = -1;
     private int nextMsg = 1;
-    private DS1RequesterSession requesterSession = new DS1RequesterSession(this);
-    private DS1ResponderSession responderSession = new DS1ResponderSession(this);
+    private DS1Requester requester = new DS1Requester(this);
+    private DS1Responder responder = new DS1Responder(this);
 
     /////////////////////////////////////////////////////////////////
     // Constructors
@@ -81,16 +80,6 @@ public class DS1Session extends DSSession {
     @Override
     protected void beginRequests() {
         getWriter().key("requests").beginList();
-    }
-
-    boolean canReuse() {
-        return false;
-    }
-
-    @Override
-    public void close() {
-        responderSession.close();
-        super.close();
     }
 
     @Override
@@ -135,13 +124,8 @@ public class DS1Session extends DSSession {
     }
 
     @Override
-    public DSRequesterSession getRequesterSession() {
-        return requesterSession;
-    }
-
-    @Override
-    public DSResponderSession getResponderSession() {
-        return responderSession;
+    public DSIRequester getRequester() {
+        return requester;
     }
 
     private boolean hasPingToSend() {
@@ -168,6 +152,26 @@ public class DS1Session extends DSSession {
         put("Responder Session", responderSession);
     }
     */
+
+    @Override
+    public void onConnect() {
+        super.onConnect();
+        requester.onConnect();
+        responder.onConnect();
+    }
+
+    @Override
+    public void onConnectFail() {
+        requester.onConnectFail();
+        responder.onConnectFail();
+    }
+
+    @Override
+    public void onDisconnect() {
+        super.onDisconnect();
+        requester.onDisconnect();
+        responder.onDisconnect();
+    }
 
     /**
      * Decomposes and processes a complete envelope which can contain multiple requests and
@@ -249,9 +253,9 @@ public class DS1Session extends DSSession {
                 throw new DSProtocolException("Response missing rid");
             }
             if (areRequests) {
-                responderSession.processRequest(rid, req);
+                responder.processRequest(rid, req);
             } else {
-                requesterSession.processResponse(rid, req);
+                requester.processResponse(rid, req);
             }
 
         }
@@ -271,13 +275,5 @@ public class DS1Session extends DSSession {
     public boolean shouldEndMessage() {
         return getTransport().shouldEndMessage();
     }
-
-    /////////////////////////////////////////////////////////////////
-    // Inner Classes
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
 
 }

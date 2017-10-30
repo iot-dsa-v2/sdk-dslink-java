@@ -1,10 +1,12 @@
 package org.iot.dsa.dslink.responder;
 
+import org.iot.dsa.dslink.DSIResponder;
+
 /**
  * The details about an incoming list request passed to the responder.
  *
  * @author Aaron Hansen
- * @see org.iot.dsa.dslink.DSResponder#onList(InboundListRequest)
+ * @see DSIResponder#onList(InboundListRequest)
  */
 public interface InboundListRequest extends InboundRequest {
 

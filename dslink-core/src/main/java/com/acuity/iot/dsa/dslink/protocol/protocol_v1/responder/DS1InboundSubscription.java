@@ -6,9 +6,8 @@ import java.util.logging.Logger;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSQuality;
+import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -28,7 +27,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
 
     private SubscriptionCloseHandler closeHandler;
     private boolean enqueued = false;
-    private DS1InboundSubscriptionManager manager;
+    private DS1InboundSubscriptions manager;
     private boolean open = true;
     private Integer sid;
     private int qos = 0;
@@ -39,7 +38,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1InboundSubscription(DS1InboundSubscriptionManager manager) {
+    DS1InboundSubscription(DS1InboundSubscriptions manager) {
         this.manager = manager;
     }
 
@@ -49,7 +48,6 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
 
     @Override
     public void close() {
-        //TODO update(System.currentTimeMillis(), DSElement.makeNull, 0); //need unknown status
         manager.unsubscribe(sid);
     }
 
@@ -104,7 +102,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
      * The responder should call this whenever the value or status changes.
      */
     @Override
-    public void update(long timestamp, DSIValue value, DSQuality quality) {
+    public void update(long timestamp, DSIValue value, DSStatus quality) {
         if (!open) {
             return;
         }
@@ -165,7 +163,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
      */
     void write(DSIWriter out, StringBuilder buf) {
         //Don't check open state - forcefully closing will send an update
-        DSResponderSession session = getSession();
+        DSResponderSession session = getResponder();
         Update update = dequeue();
         while (update != null) {
             out.beginMap();
@@ -204,9 +202,9 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
         Update next;
         long timestamp;
         DSIValue value;
-        DSQuality quality;
+        DSStatus quality;
 
-        Update set(long timestamp, DSIValue value, DSQuality quality) {
+        Update set(long timestamp, DSIValue value, DSStatus quality) {
             this.timestamp = timestamp;
             this.value = value;
             this.quality = quality;

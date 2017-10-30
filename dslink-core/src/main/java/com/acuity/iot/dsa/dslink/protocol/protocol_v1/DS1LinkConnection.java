@@ -1,8 +1,9 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
-import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.DSTransport;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
@@ -32,6 +33,7 @@ public class DS1LinkConnection extends DSLinkConnection {
     private String connectionId;
     private DS1ConnectionInit connectionInit;
     private DSLink link;
+    private ConcurrentHashMap<Listener, Listener> listeners;
     private Logger logger;
     private Object mutex = new Object();
     private DS1Session session;
@@ -47,17 +49,13 @@ public class DS1LinkConnection extends DSLinkConnection {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void close() {
-        if (isOpen()) {
-            DSTransport tpt = transport;
-            if (tpt != null) {
-                tpt.close();
-            }
-            DSSession ses = session;
-            if (ses != null) {
-                ses.pause();
+    public void addListener(Listener listener) {
+        synchronized (this) {
+            if (listeners == null) {
+                listeners = new ConcurrentHashMap<Listener, Listener>();
             }
         }
+        listeners.put(listener, listener);
     }
 
     @Override
@@ -102,6 +100,18 @@ public class DS1LinkConnection extends DSLinkConnection {
     }
 
     @Override
+    public DSIRequester getRequester() {
+        return session.getRequester();
+    }
+
+    protected DS1ConnectionInit initializeConnection() throws Exception {
+        DS1ConnectionInit init = new DS1ConnectionInit();
+        put(CONNECTION_INIT, init).setTransient(true);
+        init.initializeConnection();
+        return init;
+    }
+
+    @Override
     public boolean isOpen() {
         DSTransport tpt = transport;
         if (tpt == null) {
@@ -113,8 +123,8 @@ public class DS1LinkConnection extends DSLinkConnection {
     /**
      * Looks at the connection initialization response to determine the protocol implementation.
      */
-    protected DS1Session makeSession() {
-        String version = connectionInit.getResponse().get("version", "");
+    protected DS1Session makeSession(DS1ConnectionInit init) {
+        String version = init.getResponse().get("version", "");
         if (!version.startsWith("1.1.2")) {
             throw new IllegalStateException("Unsupported version: " + version);
         }
@@ -130,8 +140,8 @@ public class DS1LinkConnection extends DSLinkConnection {
         DSTransport transport = null;
         try {
             String type = link.getConfig().getConfig(
-                DSLinkConfig.CFG_TRANSPORT_FACTORY,
-                "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
+                    DSLinkConfig.CFG_TRANSPORT_FACTORY,
+                    "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
             factory = (DSTransport.Factory) Class.forName(type).newInstance();
             transport = factory.makeTransport(init.getResponse());
         } catch (Exception x) {
@@ -146,8 +156,17 @@ public class DS1LinkConnection extends DSLinkConnection {
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
         transport.setReadTimeout(getLink().getConfig().getConfig(
-            DSLinkConfig.CFG_READ_TIMEOUT, 60000));
+                DSLinkConfig.CFG_READ_TIMEOUT, 60000));
         return transport;
+    }
+
+    /**
+     * Called by the transport when the network connection is closed.
+     */
+    public void onClose() {
+        if (session != null) {
+            session.close();
+        }
     }
 
     /**
@@ -162,17 +181,11 @@ public class DS1LinkConnection extends DSLinkConnection {
         new ConnectionRunThread(new ConnectionRunner()).start();
     }
 
-    /**
-     * Terminates the connection runner.
-     */
     @Override
-    public void onStopped() {
-        close();
-        if (session != null) {
-            session.close();
-            session = null;
+    public void removeListener(Listener listener) {
+        if (listeners != null) {
+            listeners.remove(listener);
         }
-        transport = null;
     }
 
     public void setRequesterAllowed() {
@@ -205,51 +218,60 @@ public class DS1LinkConnection extends DSLinkConnection {
                             warn(warn() ? getConnectionId() : null, x);
                         }
                     }
+                    //We need to reinitialize if there are any connection failures, so
+                    //only hold the init reference after successfully connected.
                     DS1ConnectionInit init = connectionInit;
                     connectionInit = null;
                     if (init == null) {
-                        init = new DS1ConnectionInit();
-                        put(CONNECTION_INIT, init).setTransient(true);
-                        init.initializeConnection();
+                        init = initializeConnection();
                     }
                     transport = makeTransport(init);
                     put(TRANSPORT, transport).setTransient(true);
                     config(config() ? "Transport type: " + transport.getClass().getName() : null);
-                    transport.open();
-                    connectionInit = init;
-                    if (session != null) {
-                        if (!session.canReuse()) {
-                            session.close();
-                            remove(SESSION);
-                            session = null;
+                    if (session == null) {
+                        session = makeSession(init);
+                        config(config() ? "Session type: " + session.getClass().getName() : null);
+                        put(SESSION, session).setTransient(true);
+                        session.setConnection(DS1LinkConnection.this);
+                    }
+                    try {
+                        transport.open();
+                        session.setTransport(transport);
+                        connectionInit = init;
+                        session.onConnect();
+                    } catch (Exception x) {
+                        session.onConnectFail();
+                        throw x;
+                    }
+                    if (listeners != null) {
+                        for (Listener listener : listeners.keySet()) {
+                            try {
+                                listener.onConnect(DS1LinkConnection.this);
+                            } catch (Exception x) {
+                                severe(listener.toString(), x);
+                            }
                         }
                     }
-                    if (session == null) {
-                        session = makeSession();
-                        put(SESSION, session).setTransient(true);
-                    }
-                    session.setConnection(DS1LinkConnection.this).setTransport(transport);
-                    config(config() ? "Protocol type: " + session.getClass().getName() : null);
                     session.run();
                     reconnectRate = 1000;
                 } catch (Throwable x) {
                     reconnectRate = Math.min(reconnectRate * 2, DSTime.MILLIS_MINUTE);
                     severe(getConnectionId(), x);
                 }
-                try {
-                    close();
-                } catch (Exception x) {
-                    fine(fine() ? getConnectionId() : null, x);
+                for (Listener listener : listeners.keySet()) {
+                    try {
+                        listener.onDisconnect(DS1LinkConnection.this);
+                    } catch (Exception x) {
+                        severe(listener.toString(), x);
+                    }
                 }
                 if (session != null) {
-                    session.pause();
+                    session.onDisconnect();
                 }
-                transport = null;
-            }
-            if (session != null) {
-                session.close();
-                remove(SESSION);
-                session = null;
+                if (transport != null) {
+                    remove(TRANSPORT);
+                    transport = null;
+                }
             }
         }
     }

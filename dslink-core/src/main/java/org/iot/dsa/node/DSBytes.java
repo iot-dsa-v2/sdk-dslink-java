@@ -72,7 +72,7 @@ public class DSBytes extends DSValue {
      * The number of bytes in the array.
      */
     public int length() {
-        if (value == null){
+        if (value == null) {
             return 0;
         }
         return value.length;

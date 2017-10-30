@@ -1,7 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
-import org.iot.dsa.dslink.DSResponder;
+import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSMap;
@@ -22,11 +22,11 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
     ///////////////////////////////////////////////////////////////////////////
 
     private String path;
-    private DS1Session protocol;
+    private DS1Session session;
     private DSMap request;
     private Integer requestId;
-    private DSResponder responder;
-    private DS1ResponderSession session;
+    private DSIResponder responderImpl;
+    private DS1Responder responder;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -43,23 +43,23 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return path;
     }
 
-    public DS1Session getProtocol() {
-        return protocol;
-    }
-
     public DSMap getRequest() {
         return request;
     }
 
-    public DSResponder getResponder() {
+    public DS1Responder getResponder() {
         return responder;
+    }
+
+    public DSIResponder getResponderImpl() {
+        return responderImpl;
     }
 
     public Integer getRequestId() {
         return requestId;
     }
 
-    public DS1ResponderSession getSession() {
+    public DS1Session getSession() {
         return session;
     }
 
@@ -68,8 +68,8 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return this;
     }
 
-    public DS1InboundRequest setProtocol(DS1Session protocol) {
-        this.protocol = protocol;
+    public DS1InboundRequest setSession(DS1Session session) {
+        this.session = session;
         return this;
     }
 
@@ -78,8 +78,8 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return this;
     }
 
-    public DS1InboundRequest setResponder(DSResponder responder) {
-        this.responder = responder;
+    public DS1InboundRequest setResponderImpl(DSIResponder responderImpl) {
+        this.responderImpl = responderImpl;
         return this;
     }
 
@@ -88,8 +88,8 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return this;
     }
 
-    public DS1InboundRequest setSession(DS1ResponderSession session) {
-        this.session = session;
+    public DS1InboundRequest setResponder(DS1Responder responder) {
+        this.responder = responder;
         return this;
     }
 
