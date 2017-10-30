@@ -456,7 +456,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
     /**
      * This is a transient option intended for unit tests. True by default.
      */
-    public DSLink setSaveEnabled(boolean enabled) {
+    protected DSLink setSaveEnabled(boolean enabled) {
         saveEnabled = enabled;
         return this;
     }
