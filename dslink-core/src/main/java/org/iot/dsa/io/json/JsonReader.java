@@ -80,7 +80,7 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
                         if (last() != Token.STRING) {
                             throw new IllegalStateException("Invalid key");
                         }
-                        return setNextKey();
+                        return last();
                     case ',':
                         if ((last() == Token.END_LIST) || (last() == Token.END_MAP)) {
                             break;

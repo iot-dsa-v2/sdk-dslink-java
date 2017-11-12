@@ -8,6 +8,7 @@ package org.iot.dsa.node;
 public enum DSElementType {
 
     BOOLEAN,
+    BYTES,
     DOUBLE,
     LIST,
     LONG,

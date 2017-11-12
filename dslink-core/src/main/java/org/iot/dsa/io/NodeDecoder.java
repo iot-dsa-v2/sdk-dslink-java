@@ -84,7 +84,7 @@ public class NodeDecoder {
         validateEqual(in.next(), Token.BEGIN_MAP);
         DSNode ret = null;
         while (in.next() != Token.END_MAP) {
-            validateEqual(in.last(), Token.KEY);
+            validateEqual(in.last(), Token.STRING);
             String key = in.getString();
             if ("t".equals(key)) {
                 validateEqual(in.next(), Token.STRING);
@@ -109,7 +109,7 @@ public class NodeDecoder {
         String type = null;
         DSInfo info = null;
         while (in.next() != Token.END_MAP) {
-            validateEqual(in.last(), Token.KEY);
+            validateEqual(in.last(), Token.STRING);
             String key = in.getString();
             if ("t".equals(key)) {
                 validateEqual(in.next(), Token.STRING);

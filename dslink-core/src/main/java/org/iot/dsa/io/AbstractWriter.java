@@ -2,6 +2,7 @@ package org.iot.dsa.io;
 
 import java.io.Closeable;
 import java.io.IOException;
+import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -246,6 +247,11 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             throw new RuntimeException(x);
         }
         return this;
+    }
+
+    @Override
+    public AbstractWriter value(byte[] arg) {
+        return value(DSBytes.encode(arg));
     }
 
     @Override

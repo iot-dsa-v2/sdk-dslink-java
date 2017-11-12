@@ -8,7 +8,7 @@ import org.iot.dsa.node.DSMap;
 /**
  * A decoder that can be used to get an entire graph in pieces, or one large group, or somewhere in
  * between. To get an entire graph, call getElement(), getMap() or getList(). Otherwise, use the
- * next() method to iterate the elements of the input document.
+ * next() method to iterate the elements of the input.
  *
  * <p>
  *
@@ -30,8 +30,6 @@ import org.iot.dsa.node.DSMap;
  *
  * <li>END_MAP - The current map is complete, call next again.
  *
- * <li>KEY - Call getString() to get the next key, then call next to determine its value.
- *
  * <li>BOOLEAN,DOUBLE,LONG,NULL,STRING - Call getElement() or the corresponding getter.
  *
  * </ul>
@@ -46,56 +44,55 @@ import org.iot.dsa.node.DSMap;
  */
 public interface DSIReader extends Closeable {
 
-    // Constants
-    // ---------
-
-    // Public Methods
-    // --------------
-
     /**
      * Close the input.
      */
     public void close();
 
     /**
-     * Returns the value when lastRun() == BOOLEAN.
+     * Returns the value when last() == BOOLEAN.
      */
     public boolean getBoolean();
 
     /**
-     * Returns the value when lastRun() == DOUBLE.
+     * Returns the value when last() == BYTES.
+     */
+    public byte[] getBytes();
+
+    /**
+     * Returns the value when last() == DOUBLE.
      */
     public double getDouble();
 
     /**
-     * Returns the DSElement when lastRun() == raw type, KEY or ROOT.
+     * Returns the DSElement when last() == raw type or ROOT.
      */
     public DSElement getElement();
 
     /**
-     * Returns the value when lastRun() == LONG.
+     * Returns the value when last() == LONG.
      */
     public long getLong();
 
     /**
-     * This should only be called when lastRun() == BEGIN_LIST and it will decodeKeys the entire
+     * This should only be called when last() == BEGIN_LIST and it will decodeKeys the entire
      * list.  Call next rather than this method to get the list in pieces.
      */
     public DSList getList();
 
     /**
-     * This should only be called when lastRun() == BEGIN_MAP and it will decodeKeys the entire map.
+     * This should only be called when last() == BEGIN_MAP and it will decodeKeys the entire map.
      * Call next rather than this method get the map in pieces.
      */
     public DSMap getMap();
 
     /**
-     * Returns the value when lastRun() == STRING or KEY.
+     * Returns the value when last() == STRING.
      */
     public String getString();
 
     /**
-     * The lastRun value returned from next(). At the beginning of a document, before next has been
+     * The last value returned from next(). At the beginning of a document, before next has been
      * called, this will return ROOT.
      */
     public Token last();
@@ -106,7 +103,7 @@ public interface DSIReader extends Closeable {
     public Token next();
 
     /**
-     * Sets lastRun() == ROOT.
+     * Sets last() == ROOT.
      */
     public DSIReader reset();
 
@@ -117,12 +114,12 @@ public interface DSIReader extends Closeable {
         BEGIN_LIST,
         BEGIN_MAP,
         BOOLEAN,
+        BYTES,
         END_INPUT,
         END_LIST,
         END_MAP,
         DOUBLE,
         LONG,
-        KEY,
         NULL,
         ROOT,
         STRING,

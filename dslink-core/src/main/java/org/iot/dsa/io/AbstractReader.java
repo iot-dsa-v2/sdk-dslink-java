@@ -1,5 +1,6 @@
 package org.iot.dsa.io;
 
+import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -18,6 +19,7 @@ public abstract class AbstractReader implements DSIReader {
 
     private Token last = Token.ROOT;
     protected boolean valBoolean;
+    protected byte[] valBytes;
     protected double valReal;
     protected long valLong;
     protected String valString;
@@ -31,6 +33,14 @@ public abstract class AbstractReader implements DSIReader {
             throw new IllegalStateException("Not a boolean");
         }
         return valBoolean;
+    }
+
+    @Override
+    public byte[] getBytes() {
+        if (last != Token.BYTES) {
+            throw new IllegalStateException("Not a boolean");
+        }
+        return valBytes;
     }
 
     @Override
@@ -52,8 +62,8 @@ public abstract class AbstractReader implements DSIReader {
             next();
         }
         switch (last) {
-            case KEY:
-                return DSElement.make(valString);
+            case BYTES:
+                return DSElement.make(valBytes);
             case BOOLEAN:
                 return DSElement.make(valBoolean);
             case DOUBLE:
@@ -89,8 +99,6 @@ public abstract class AbstractReader implements DSIReader {
                     return ret;
                 case END_MAP:
                     throw new IllegalStateException("Unexpected end of map in list");
-                case KEY:
-                    throw new IllegalStateException("Unexpected key in list");
                 case BOOLEAN:
                     ret.add(valBoolean);
                     break;
@@ -144,7 +152,7 @@ public abstract class AbstractReader implements DSIReader {
         String key = null;
         while (true) {
             switch (next()) {
-                case KEY:
+                case STRING:
                     key = valString;
                     break;
                 case END_MAP:
@@ -160,8 +168,6 @@ public abstract class AbstractReader implements DSIReader {
                     throw new IllegalStateException("Unexpected end of list in map");
                 case END_MAP:
                     return ret;
-                case KEY:
-                    throw new IllegalStateException("Unexpected key in map");
                 case BOOLEAN:
                     ret.put(key, DSElement.make(valBoolean));
                     break;
@@ -191,7 +197,7 @@ public abstract class AbstractReader implements DSIReader {
 
     @Override
     public String getString() {
-        if ((last != Token.STRING) && (last != Token.KEY)) {
+        if (last != Token.STRING) {
             throw new IllegalStateException("Not a string");
         }
         return valString;
@@ -233,18 +239,14 @@ public abstract class AbstractReader implements DSIReader {
         return last = Token.END_INPUT;
     }
 
-    /**
-     * Call setNextValue(String) before calling this.
-     *
-     * @see #setNextValue(String)
-     */
-    protected Token setNextKey() {
-        return last = Token.KEY;
-    }
-
     protected Token setNextValue(boolean arg) {
         valBoolean = arg;
         return last = Token.BOOLEAN;
+    }
+
+    protected Token setNextValue(byte[] arg) {
+        valBytes = arg;
+        return last = Token.BYTES;
     }
 
     protected Token setNextValue(double arg) {
@@ -252,11 +254,6 @@ public abstract class AbstractReader implements DSIReader {
         return last = Token.DOUBLE;
     }
 
-    /**
-     * If this is a key, call this immediately followed by setNextKey()
-     *
-     * @see #setNextKey()
-     */
     protected Token setNextValue(long arg) {
         valLong = arg;
         return last = Token.LONG;

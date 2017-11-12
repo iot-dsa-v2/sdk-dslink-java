@@ -33,6 +33,13 @@ public abstract class DSElement extends DSValue {
     }
 
     /**
+     * Whether or not the object represents a byte array.
+     */
+    public boolean isBytes() {
+        return false;
+    }
+
+    /**
      * Whether or not the object represents a double.
      */
     public boolean isDouble() {
@@ -112,6 +119,13 @@ public abstract class DSElement extends DSValue {
     /**
      * Creates an DSIObject representation of the primitive.
      */
+    public static DSElement make(byte[] arg) {
+        return DSBytes.valueOf(arg);
+    }
+
+    /**
+     * Creates an DSIObject representation of the primitive.
+     */
     public static DSElement make(double arg) {
         return DSDouble.valueOf(arg);
     }
@@ -156,6 +170,15 @@ public abstract class DSElement extends DSValue {
      */
     public boolean toBoolean() {
         throw new ClassCastException(getClass().getName() + " not boolean");
+    }
+
+    /**
+     * Returns the raw byte array for DSBytes only, which should not be modified.
+     *
+     * @throws ClassCastException If not DSBytes.
+     */
+    public byte[] toBytes() {
+        throw new ClassCastException(getClass().getName() + " not bytes");
     }
 
     /**

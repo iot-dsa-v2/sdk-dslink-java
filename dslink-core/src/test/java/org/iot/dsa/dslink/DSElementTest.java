@@ -42,7 +42,7 @@ public class DSElementTest {
         test(DSElement.make(""), "");
         test(DSElement.make("0"), "0");
         test(DSElement.make("abc"), "abc");
-        testNull(DSElement.make(null));
+        testNull(DSElement.make((String)null));
         testNull(DSElement.makeNull());
         testMap();
     }

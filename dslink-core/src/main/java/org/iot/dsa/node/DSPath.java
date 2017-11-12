@@ -135,7 +135,7 @@ public class DSPath {
         StringBuilder builder = new StringBuilder();
         for (int i = nodes.size(); --i >= 0; ) {
             builder.append('/');
-            encodeName(node.getName(), builder);
+            encodeName(nodes.get(i).getName(), builder);
         }
         return builder.toString();
     }

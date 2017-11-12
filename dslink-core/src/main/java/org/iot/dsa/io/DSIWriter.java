@@ -114,6 +114,14 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
+    public DSIWriter value(byte[] arg);
+
+    /**
+     * Write a value to the map or list.  If in a map, this must have been preceded by a call to
+     * key(String).
+     *
+     * @throws IllegalStateException when improperly called.
+     */
     public DSIWriter value(double arg);
 
     /**
