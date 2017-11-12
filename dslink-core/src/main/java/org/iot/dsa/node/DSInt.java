@@ -66,6 +66,11 @@ public class DSInt extends DSValue implements DSINumber {
     }
 
     @Override
+    public boolean isEqual(Object obj) {
+        return equals(obj);
+    }
+
+    @Override
     public boolean isFloat() {
         return false;
     }

@@ -11,6 +11,7 @@ public abstract class DSElement extends DSValue {
      * If an object is mutable (list or map) then this should clone it, immutable objects can simply
      * return themselves.
      */
+    @Override
     public DSElement copy() {
         return this;
     }
@@ -44,6 +45,11 @@ public abstract class DSElement extends DSValue {
      */
     public boolean isDouble() {
         return false;
+    }
+
+    @Override
+    public boolean isEqual(Object obj) {
+        return equals(obj);
     }
 
     /**
@@ -91,6 +97,7 @@ public abstract class DSElement extends DSValue {
     /**
      * Whether or not the object represents null.
      */
+    @Override
     public boolean isNull() {
         return false;
     }

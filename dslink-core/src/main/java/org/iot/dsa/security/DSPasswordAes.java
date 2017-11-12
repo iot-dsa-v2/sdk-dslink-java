@@ -89,6 +89,14 @@ public class DSPasswordAes extends DSValue implements DSIPassword {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof DSPasswordAes) {
+            return value.equals(obj.toString());
+        }
+        return false;
+    }
+
+    @Override
     public DSValueType getValueType() {
         return DSValueType.STRING;
     }
@@ -96,6 +104,11 @@ public class DSPasswordAes extends DSValue implements DSIPassword {
     @Override
     public int hashCode() {
         return value.hashCode();
+    }
+
+    @Override
+    public boolean isEqual(Object obj) {
+        return equals(obj);
     }
 
     @Override

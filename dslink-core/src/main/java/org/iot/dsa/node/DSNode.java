@@ -711,6 +711,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * True if the argument is a node with the same children, although their order can be
      * different.
      */
+    @Override
     public boolean isEqual(Object arg) {
         if (arg == this) {
             return true;
@@ -724,7 +725,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
         DSInfo mine = getFirstInfo();
         while (mine != null) {
-            if (mine.isEqual(argNode.getInfo(mine.getName()))) {
+            if (!mine.isEqual(argNode.getInfo(mine.getName()))) {
                 return false;
             }
             mine = mine.next();
@@ -749,11 +750,17 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         DSInfo mine = getFirstInfo();
         DSInfo argInfo = argNode.getFirstInfo();
         while (mine != null) {
-            if (!DSUtil.equal(mine, argInfo)) {
+            if (argInfo == null) {
+                return false;
+            }
+            if (!mine.isIdentical(argInfo)) {
                 return false;
             }
             mine = mine.next();
             argInfo = argInfo.next();
+        }
+        if (argInfo != null) {
+            return false;
         }
         return true;
     }
