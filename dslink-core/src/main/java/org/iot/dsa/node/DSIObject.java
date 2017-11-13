@@ -10,7 +10,13 @@ public interface DSIObject {
     /**
      * Return a copy if it makes sense, but return this otherwise.
      */
-    public abstract DSIObject copy();
+    public DSIObject copy();
+
+    /**
+     * Equals implementation that doesn't require hashCodes to equal, primarily intended
+     * so for comparing nodes.
+     */
+    public boolean isEqual(Object obj);
 
     public boolean isNull();
 

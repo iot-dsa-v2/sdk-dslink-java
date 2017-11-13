@@ -54,12 +54,34 @@ public class DSDateTime extends DSValue {
         return new DSDateTime(System.currentTimeMillis());
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof DSDateTime) {
+            DSDateTime dt = (DSDateTime) obj;
+            return dt.millis == millis;
+        }
+        return false;
+    }
+
     /**
      * String.
      */
     @Override
     public DSValueType getValueType() {
         return DSValueType.STRING;
+    }
+
+    @Override
+    public int hashCode() {
+        return millis.hashCode();
+    }
+
+    /**
+     * Defaults to the equals method.
+     */
+    @Override
+    public boolean isEqual(Object obj) {
+        return equals(obj);
     }
 
     @Override

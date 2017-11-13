@@ -210,6 +210,11 @@ public class DSStatus extends DSValue implements DSIStatus {
         buf.append(status);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return isEqual(obj);
+    }
+
     /**
      * Finds the bit representation for the given status string.
      *
@@ -244,6 +249,11 @@ public class DSStatus extends DSValue implements DSIStatus {
         return DSValueType.STRING;
     }
 
+    @Override
+    public int hashCode() {
+        return bits;
+    }
+
     /**
      * If any of the bad flags are set, or is null.
      */
@@ -270,6 +280,14 @@ public class DSStatus extends DSValue implements DSIStatus {
      */
     public boolean isDown() {
         return (DOWN & bits) != 0;
+    }
+
+    @Override
+    public boolean isEqual(Object obj) {
+        if (obj instanceof DSStatus) {
+            return hashCode() == obj.hashCode();
+        }
+        return false;
     }
 
     /**

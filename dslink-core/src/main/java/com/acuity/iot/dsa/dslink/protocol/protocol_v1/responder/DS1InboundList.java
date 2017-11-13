@@ -478,6 +478,7 @@ class DS1InboundList extends DS1InboundRequest
                     encodeChild(child, out);
                 }
                 if (getResponder().shouldEndMessage()) {
+                    enqueueResponse();
                     return;
                 }
             }
@@ -500,14 +501,15 @@ class DS1InboundList extends DS1InboundRequest
     }
 
     private void writeUpdates(DSIWriter out) {
-        Update update;
         DS1Responder session = getResponder();
-        while (!session.shouldEndMessage()) {
-            update = dequeue();
-            if (update == null) {
+        Update update = dequeue();
+        while (update != null) {
+            encodeUpdate(update, out);
+            if (session.shouldEndMessage()) {
+                enqueueResponse();
                 break;
             }
-            encodeUpdate(update, out);
+            update = dequeue();
         }
     }
 

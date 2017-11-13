@@ -520,25 +520,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
     }
 
-    @Override
-    public boolean equals(Object arg) {
-        if (!isNode(arg)) {
-            return false;
-        }
-        DSNode argNode = toNode(arg);
-        if (argNode.childCount() != childCount()) {
-            return false;
-        }
-        DSInfo mine = getFirstInfo();
-        while (mine != null) {
-            if (!DSUtil.equal(mine.getObject(), argNode.get(mine.getName()))) {
-                return false;
-            }
-            mine = mine.next();
-        }
-        return true;
-    }
-
     /**
      * Returns the child value with the given name, or null.
      *
@@ -698,17 +679,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         return path;
     }
 
-    @Override
-    public int hashCode() {
-        int hc = 1;
-        DSInfo info = getFirstInfo();
-        while (info != null) {
-            hc = 31 * hc + (info.hashCode());
-            info = info.next();
-        }
-        return hc;
-    }
-
     /**
      * Called by the info when it detects a change.  Will propagate the event asynchronously.
      */
@@ -735,6 +705,64 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     protected final boolean isDefaultInstance() {
         return defaultInstance == defaultDefaultInstance;
+    }
+
+    /**
+     * True if the argument is a node with the same children, although their order can be
+     * different.
+     */
+    @Override
+    public boolean isEqual(Object arg) {
+        if (arg == this) {
+            return true;
+        }
+        if (!isNode(arg)) {
+            return false;
+        }
+        DSNode argNode = toNode(arg);
+        if (argNode.childCount() != childCount()) {
+            return false;
+        }
+        DSInfo mine = getFirstInfo();
+        while (mine != null) {
+            if (!mine.isEqual(argNode.getInfo(mine.getName()))) {
+                return false;
+            }
+            mine = mine.next();
+        }
+        return true;
+    }
+
+    /**
+     * True if the argument is a node with the same children in the exact same order.
+     */
+    public boolean isIdentical(Object arg) {
+        if (arg == this) {
+            return true;
+        }
+        if (!isNode(arg)) {
+            return false;
+        }
+        DSNode argNode = toNode(arg);
+        if (argNode.childCount() != childCount()) {
+            return false;
+        }
+        DSInfo mine = getFirstInfo();
+        DSInfo argInfo = argNode.getFirstInfo();
+        while (mine != null) {
+            if (argInfo == null) {
+                return false;
+            }
+            if (!mine.isIdentical(argInfo)) {
+                return false;
+            }
+            mine = mine.next();
+            argInfo = argInfo.next();
+        }
+        if (argInfo != null) {
+            return false;
+        }
+        return true;
     }
 
     /**

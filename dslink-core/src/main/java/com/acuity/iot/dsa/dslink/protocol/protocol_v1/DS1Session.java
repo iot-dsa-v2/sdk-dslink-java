@@ -188,7 +188,7 @@ public class DS1Session extends DSSession {
         switch (reader.next()) {
             case END_MAP:
                 return;
-            case KEY:
+            case STRING:
                 break;
             default:
                 throw new IllegalStateException("Poorly formatted request");

@@ -233,6 +233,14 @@ public class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
+     * Defaults to the equals method.
+     */
+    @Override
+    public boolean isEqual(Object obj) {
+        return equals(obj);
+    }
+
+    /**
      * False
      */
     @Override

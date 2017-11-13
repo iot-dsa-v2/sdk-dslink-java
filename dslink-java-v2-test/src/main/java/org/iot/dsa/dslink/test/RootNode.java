@@ -9,6 +9,7 @@ import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSJavaEnum;
 import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.ActionInvocation;
@@ -46,7 +47,7 @@ public class RootNode extends DSRootNode implements Runnable {
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
-        declareDefault("Incrementing Int", DSInt.valueOf(1)).setReadOnly(true);
+        declareDefault("Incrementing Int", DSLong.valueOf(1)).setReadOnly(true);
         declareDefault("Writable Boolean", DSBool.valueOf(true)).setConfig(true);
         declareDefault("Writable Enum",
                        DSFlexEnum.valueOf("On",
@@ -111,6 +112,12 @@ public class RootNode extends DSRootNode implements Runnable {
      * Build a large database
      */
     private void onTest() {
+        /*
+        for (int i = 0; i < 1000; i++) {
+            put("test"+i, DSInt.valueOf(i));
+        }
+        */
+        /*
         long start = System.currentTimeMillis();
         clear();
         long now = System.currentTimeMillis();
@@ -143,6 +150,7 @@ public class RootNode extends DSRootNode implements Runnable {
         now = System.currentTimeMillis();
         dur = now - start;
         info("********** Iterate duration: " + dur);
+        */
     }
 
     /**
@@ -171,8 +179,8 @@ public class RootNode extends DSRootNode implements Runnable {
      */
     @Override
     public void run() {
-        DSInt value = (DSInt) incrementingInt.getValue();
-        put(incrementingInt, DSInt.valueOf(value.toInt() + 1));
+        DSElement value = incrementingInt.getElement();
+        put(incrementingInt, DSElement.make(value.toInt() + 1));
     }
 
     ///////////////////////////////////////////////////////////////////////////

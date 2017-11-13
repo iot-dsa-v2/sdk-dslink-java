@@ -95,7 +95,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
     @Override
     protected void declareDefaults() {
         declareDefault(SAVE, new DSAction()).setConfig(true);
-        declareDefault(NODES, new DSNode()).setTransient(true);
+        declareDefault(NODES, new DSNode());
     }
 
     public DSLinkConfig getConfig() {

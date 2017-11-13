@@ -83,6 +83,11 @@ public class DSJavaEnum extends DSValue implements DSIEnum, DSIMetadata {
     }
 
     @Override
+    public boolean isEqual(Object obj) {
+        return equals(obj);
+    }
+
+    @Override
     public boolean isNull() {
         return this == NULL;
     }

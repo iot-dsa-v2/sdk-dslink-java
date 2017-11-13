@@ -103,7 +103,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
     @Override
     public boolean equals(Object arg) {
         if (arg instanceof DSInfo) {
-            return equivalent((DSInfo) arg);
+            return isEqual((DSInfo) arg);
         }
         return false;
     }
@@ -240,11 +240,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     @Override
     public int hashCode() {
-        int hc = flags;
-        hc ^= getName().hashCode();
-        Object obj = getObject();
-        hc ^= (obj == null) ? 0 : obj.hashCode();
-        return hc;
+        return System.identityHashCode(this);
     }
 
     @Override
@@ -265,11 +261,52 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     /**
+     * True if the flags and target object are equal (not identical if the target is a node).  Two
+     * nodes are considered equal if they have the same children, although they may be ordered
+     * differently.
+     */
+    public boolean isEqual(DSInfo arg) {
+        if (arg == this) {
+            return true;
+        } else if (arg == null) {
+            return false;
+        } else if (getFlags() != arg.getFlags()) {
+            return false;
+        } else if (!DSUtil.equal(arg.getName(), getName())) {
+            return false;
+        }
+        if (isNode()) {
+            return getNode().isEqual(arg.getObject());
+        }
+        return DSUtil.equal(getObject(), arg.getObject());
+    }
+
+    /**
      * Whether or not an object is visible to clients.
      */
     @Override
     public boolean isHidden() {
         return getFlag(HIDDEN);
+    }
+
+    /**
+     * True if the flags and target object are identical.  Two nodes are identical
+     * if their children are in the same order.
+     */
+    public boolean isIdentical(DSInfo arg) {
+        if (arg == this) {
+            return true;
+        } else if (arg == null) {
+            return false;
+        } else if (getFlags() != arg.getFlags()) {
+            return false;
+        } else if (!DSUtil.equal(arg.getName(), getName())) {
+            return false;
+        }
+        if (isNode()) {
+            return getNode().isIdentical(arg.getObject());
+        }
+        return DSUtil.equal(getObject(), arg.getObject());
     }
 
     /**

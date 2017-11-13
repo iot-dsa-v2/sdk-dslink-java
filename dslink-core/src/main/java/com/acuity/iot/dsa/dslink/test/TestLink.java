@@ -1,10 +1,13 @@
-package org.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.test;
 
 import com.acuity.iot.dsa.dslink.DSTransport;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1ConnectionInit;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
 import java.util.logging.Level;
+import org.iot.dsa.dslink.DSLink;
+import org.iot.dsa.dslink.DSLinkConfig;
+import org.iot.dsa.dslink.DSRootNode;
 import org.iot.dsa.node.DSMap;
 
 /**

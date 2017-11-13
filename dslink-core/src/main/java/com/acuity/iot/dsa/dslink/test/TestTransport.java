@@ -1,10 +1,11 @@
-package org.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.test;
 
 import com.acuity.iot.dsa.dslink.DSTransport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
+import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSByteBuffer;
 import org.iot.dsa.io.DSIoException;
 import org.iot.dsa.io.DSIReader;
