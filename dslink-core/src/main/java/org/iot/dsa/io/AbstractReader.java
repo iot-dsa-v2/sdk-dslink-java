@@ -102,6 +102,9 @@ public abstract class AbstractReader implements DSIReader {
                 case BOOLEAN:
                     ret.add(valBoolean);
                     break;
+                case BYTES:
+                    ret.add(DSElement.make(valBytes));
+                    break;
                 case DOUBLE:
                     ret.add(valReal);
                     break;
@@ -170,6 +173,9 @@ public abstract class AbstractReader implements DSIReader {
                     return ret;
                 case BOOLEAN:
                     ret.put(key, DSElement.make(valBoolean));
+                    break;
+                case BYTES:
+                    ret.put(key, DSElement.make(valBytes));
                     break;
                 case DOUBLE:
                     ret.put(key, DSElement.make(valReal));

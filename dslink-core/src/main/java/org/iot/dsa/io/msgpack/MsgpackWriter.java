@@ -12,16 +12,11 @@ import org.iot.dsa.util.DSException;
 /**
  * @author Aaron Hansen
  */
-public abstract class MsgpackWriter extends AbstractWriter
-        implements MsgpackConstants {
-
-    // Constants
-    // ---------
+public abstract class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
 
     // Fields
     // ------
 
-    private byte[] byteArray;
     private ByteBuffer byteBuffer = ByteBuffer.allocate(1024 * 64);
     private CharBuffer charBuffer;
     private Frame frame;
@@ -31,14 +26,11 @@ public abstract class MsgpackWriter extends AbstractWriter
     // Constructors
     // ------------
 
-    // Public Methods
-    // --------------
-
-    // Protected Methods
-    // -----------------
+    // Methods
+    // -------
 
     /**
-     * Used byte writeString, returns the string wrapped in a charbuffer that is ready for reading
+     * Used by writeString(), returns the string wrapped in a charbuffer that is ready for reading
      * (getting).  Attempts to reuse the same buffer as much as possible.
      */
     private CharBuffer getCharBuffer(CharSequence arg) {
@@ -64,7 +56,7 @@ public abstract class MsgpackWriter extends AbstractWriter
     }
 
     /**
-     * Used byte writeString, returns a bytebuffer for the given capacity ready for writing
+     * Called by writeString(), returns a bytebuffer for the given capacity ready for writing
      * (putting).  Attempts to reuse the same buffer as much as possible.
      */
     private ByteBuffer getStringBuffer(int len) {
@@ -90,6 +82,7 @@ public abstract class MsgpackWriter extends AbstractWriter
     protected void writeSeparator() throws IOException {
     }
 
+    @Override
     public void writeNewLineIndent() {
     }
 
@@ -99,6 +92,31 @@ public abstract class MsgpackWriter extends AbstractWriter
             frame.increment();
         }
         byteBuffer.put(arg ? TRUE : FALSE);
+    }
+
+    @Override
+    protected void write(byte[] arg) throws IOException {
+        if (frame != null) {
+            frame.increment();
+        }
+        if (arg == null) {
+            writeNull();
+            return;
+        }
+        int len = arg.length;
+        if (len < (1 << 8)) {
+            byteBuffer.put(BIN8);
+            byteBuffer.put((byte) len);
+        }
+        else if (len < (1 << 16)) {
+            byteBuffer.put(BIN16);
+            byteBuffer.putShort((short) len);
+        }
+        else {
+            byteBuffer.put(BIN32);
+            byteBuffer.putInt(len);
+        }
+        byteBuffer.put(arg);
     }
 
     @Override
@@ -272,7 +290,7 @@ public abstract class MsgpackWriter extends AbstractWriter
     /**
      * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
      */
-    public void writeTo(ByteBuffer out) {
+    protected void writeTo(ByteBuffer out) {
         byteBuffer.flip();
         out.put(byteBuffer);
         byteBuffer.clear();
@@ -283,9 +301,10 @@ public abstract class MsgpackWriter extends AbstractWriter
      *
      * @throws DSException if there is an IOException.
      */
-    public void writeTo(OutputStream out) {
+    protected void writeTo(OutputStream out) {
         try {
             byteBuffer.flip();
+            //TODO - performance opt, write buffer to byte[], then byte[] to stream?
             while (byteBuffer.hasRemaining()) {
                 out.write(byteBuffer.get());
             }

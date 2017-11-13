@@ -187,6 +187,9 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             case BOOLEAN:
                 value(arg.toBoolean());
                 break;
+            case BYTES:
+                value(arg.toBytes());
+                break;
             case LONG:
                 value(arg.toLong());
                 break;
@@ -251,7 +254,30 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
 
     @Override
     public AbstractWriter value(byte[] arg) {
-        return value(DSBytes.encode(arg));
+        try {
+            switch (last) {
+                case LAST_DONE:
+                    throw new IllegalStateException("Nesting error");
+                case LAST_INIT:
+                    throw new IllegalStateException("Not expecting byte[] value");
+                case LAST_VAL:
+                case LAST_END:
+                    writeSeparator();
+                    if (prettyPrint) {
+                        writeNewLineIndent();
+                    }
+                    break;
+                case LAST_LIST:
+                    if (prettyPrint) {
+                        writeNewLineIndent();
+                    }
+            }
+            write(arg);
+            last = LAST_VAL;
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        }
+        return this;
     }
 
     @Override
@@ -374,6 +400,11 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
      * Write the value.
      */
     protected abstract void write(boolean arg) throws IOException;
+
+    /**
+     * Write the value.
+     */
+    protected abstract void write(byte[] arg) throws IOException;
 
     /**
      * Write the value.

@@ -12,16 +12,13 @@ import org.iot.dsa.node.DSString;
 import org.iot.dsa.util.DSException;
 
 /**
- * Json implementation of DSReader.  The same instance can be re-used with the setInput methods.
+ * MsgPack implementation of DSReader.  The same instance can be re-used with the setInput method.
  * This class is not thread safe.
  *
  * @author Aaron Hansen
  * @see DSIReader
  */
 public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackConstants {
-
-    // Constants
-    // ---------
 
     // Fields
     // ---------
@@ -43,6 +40,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
     public MsgpackReader(InputStream in) {
         setInput(in);
     }
+
 
     // Public Methods
     // --------------
@@ -93,7 +91,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
     }
 
     public static final boolean isFixInt(byte b) {
-        int v = b & 0xFF;
+        int v = b & 0xff;
         return v <= 0x7f || v >= 0xe0;
     }
 
@@ -112,7 +110,9 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
     @Override
     public Token next() {
         if (frame != null) {
+            //check to see if we've read all the children of the parent list/map.
             if (frame.map) {
+                //don't count keys, only values
                 if (wasValue) {
                     if (!frame.next()) {
                         frame = frame.parent;
@@ -224,17 +224,17 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
                 size = in.read() & 0xFF;
                 break;
             case BIN16:
-                size = DSBytes.readShort(in, true);//readNextLength16();
+                size = DSBytes.readShort(in, true);
                 break;
             case BIN32:
-                size = DSBytes.readInt(in, true);//readNextLength32();
+                size = DSBytes.readInt(in, true);
                 break;
             default:
                 throw new IllegalStateException("Unknown bytes: " + b);
         }
         byte[] bytes = new byte[size];
         in.read(bytes);
-        return setNextValue(1L); //TODO need to add bytes to DSReader/Writer
+        return setNextValue(bytes);
     }
 
     private Token readList(byte b) throws IOException {

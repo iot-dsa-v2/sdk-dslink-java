@@ -35,6 +35,13 @@ public class DSBytes extends DSElement {
     // Public Methods
     // --------------
 
+    public static byte[] decode(String encoded) {
+        if (encoded.startsWith(PREFIX)) {
+            encoded = encoded.substring(PREFIX.length());
+        }
+        return DSBase64.decode(encoded);
+    }
+
     public static String encode(byte[] bytes) {
         return PREFIX + DSBase64.encodeUrl(bytes);
     }

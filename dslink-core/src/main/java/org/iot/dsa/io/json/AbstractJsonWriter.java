@@ -3,6 +3,8 @@ package org.iot.dsa.io.json;
 import java.io.IOException;
 import org.iot.dsa.io.AbstractWriter;
 import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.node.DSBytes;
+import org.iot.dsa.node.DSElement;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -27,11 +29,6 @@ public abstract class AbstractJsonWriter extends AbstractWriter
     private static final char[] C_U = new char[]{'\\', 'u'};
     private static final char[] HEX =
             {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-    // Fields
-    // ------
-
-    // Constructors
-    // ------------
 
     // Public Methods
     // --------------
@@ -44,6 +41,14 @@ public abstract class AbstractJsonWriter extends AbstractWriter
     public AbstractJsonWriter setPrettyPrint(boolean arg) {
         prettyPrint = arg;
         return this;
+    }
+
+    @Override
+    public AbstractWriter value(DSElement arg) {
+        if ((arg != null) && arg.isBoolean()) {
+            return value(arg.toString());
+        }
+        return super.value(arg);
     }
 
     // Protected Methods
@@ -75,6 +80,11 @@ public abstract class AbstractJsonWriter extends AbstractWriter
         } else {
             append(C_FALSE, 0, 5);
         }
+    }
+
+    @Override
+    protected void write(byte[] arg) throws IOException {
+        writeValue(DSBytes.encode(arg));
     }
 
     @Override
@@ -197,9 +207,5 @@ public abstract class AbstractJsonWriter extends AbstractWriter
         append(HEX[(ch >>> 4) & 0xf]);
         append(HEX[(ch) & 0xf]);
     }
-
-    // Inner Classes
-    // -------------
-
 
 }

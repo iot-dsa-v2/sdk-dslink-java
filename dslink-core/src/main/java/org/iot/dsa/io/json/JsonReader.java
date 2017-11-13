@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import org.iot.dsa.io.AbstractReader;
 import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.node.DSBytes;
 
 /**
  * Json implementation of DSReader.  The same instance can be re-used with the setInput methods.
@@ -107,8 +108,13 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
                     // values
                     case '"':
                         readString();
-                        String str = bufToString();
+                        String str = valString;
+                        hasValue = true;
                         if ((str.length() > 0) && (str.charAt(0) == '\u001B')) {
+                            if (DSBytes.isBytes(str)) {
+                                setNextValue(DSBytes.decode(str));
+                                break;
+                            }
                             if (str.equals(DBL_NEG_INF)) {
                                 setNextValue(Double.NEGATIVE_INFINITY);
                                 break;
@@ -123,7 +129,6 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
                             }
                         }
                         setNextValue(valString);
-                        hasValue = true;
                         break;
                     case 't':
                         validate(in.read(), 'r');
@@ -323,7 +328,8 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
             if (ch == '\\') {
                 ch = (char) in.read();
                 switch (ch) {
-                    case 'u': // case 'U' :
+                    case 'u':
+                    case 'U' :
                         ch = readUnicode();
                         break;
                     case 'b':

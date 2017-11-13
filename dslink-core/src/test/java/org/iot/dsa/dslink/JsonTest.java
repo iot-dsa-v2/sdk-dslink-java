@@ -49,14 +49,15 @@ public class JsonTest {
                        .endMap();
                     out.value(true).value(3.0d).endList();
                 }
-                out.key("fifth")
-                   .beginMap()
-                   .key("first").value("first")
-                   .key("second").value(true)
-                   .key("third").value(3)
-                   .endMap();
-                out.endMap();
             }
+            out.key("fifth")
+               .beginMap()
+               .key("first").value("first")
+               .key("second").value(true)
+               .key("third").value(3)
+               .endMap();
+            out.key("sixth").value("somebytes".getBytes());
+            out.endMap();
         }
         out.endList();
         out.close();
@@ -72,7 +73,8 @@ public class JsonTest {
         Assert.assertTrue(decoded.isList());
         Assert.assertTrue(decoded.size() == 1);
         Assert.assertTrue(decoded.get(0).isMap());
-        Assert.assertTrue(decoded.get(0).toMap().size() == 5);
+        Assert.assertTrue(decoded.get(0).toMap().size() == 6);
+        Assert.assertTrue(decoded.get(0).toMap().get("sixth").isBytes());
     }
 
 // Inner Classes

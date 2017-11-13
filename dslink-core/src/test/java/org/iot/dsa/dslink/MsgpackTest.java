@@ -126,66 +126,28 @@ public class MsgpackTest {
             out.value(new DSList());
             out.endList();
         }
+        out.key("seventh").value("somebytes".getBytes());
         out.endMap();
         out.reset();
         encoded = baos2.toByteArray();
         parser = new MsgpackReader(new ByteArrayInputStream(encoded));
         DSMap map = parser.getElement().toMap();
-        Assert.assertTrue(map.size() == 6);
+        Assert.assertTrue(map.size() == 7);
         Assert.assertTrue(map.get("first").toString().equals("abc"));
         Assert.assertTrue(map.get(1).toInt() == 10);
         Assert.assertTrue(map.get("third").toBoolean());
         Assert.assertTrue(map.get("fourth").toDouble() == 10.1d);
         Assert.assertTrue(map.get("fifth").isMap());
         Assert.assertTrue(map.get(5).isList());
+        Assert.assertTrue(map.get("seventh").isBytes());
+        Assert.assertTrue(
+                new String(map.get("seventh").toBytes(), "UTF-8").equals("somebytes"));
         list = map.getList(5);
         Assert.assertTrue(list.size() == 6);
         Assert.assertTrue(list.get(0).toString().equals("abc"));
         Assert.assertTrue(list.get(1).toInt() == 10);
         Assert.assertTrue(list.get(2).toBoolean());
         Assert.assertTrue(list.get(3).toDouble() == 10.1d);
-        /*
-        out.beginList();
-        {
-            out.beginMap()
-               .key("first").value("first")
-               .key("second").value(true)
-               .key("third").value(3)
-               .key("fourth");
-            {
-                out.beginList();
-                {
-                    out.beginMap()
-                       .key("first").value("first")
-                       .key("second").value(true)
-                       .key("third").value(3)
-                       .endMap();
-                    out.value(true).value(3.0d).endList();
-                }
-                out.key("fifth")
-                   .beginMap()
-                   .key("first").value("first")
-                   .key("second").value(true)
-                   .key("third").value(3)
-                   .endMap();
-                out.endMap();
-            }
-        }
-        out.endList();
-        out.close();
-        byte[] encoded = baos.toByteArray();
-        DSIReader parser = new MsgpackReader(new ByteArrayInputStream(encoded));
-        DSList decoded = parser.getElement().toList();
-        parser.close();
-        parser = new MsgpackReader(new ByteArrayInputStream(encoded));
-        DSElement tmp = parser.getElement();
-        parser.close();
-        Assert.assertTrue(decoded.equals(tmp));
-        Assert.assertTrue(decoded.isList());
-        Assert.assertTrue(decoded.size() == 1);
-        Assert.assertTrue(decoded.get(0).isMap());
-        Assert.assertTrue(decoded.get(0).toMap().size() == 5);
-        */
     }
 
 }
