@@ -38,7 +38,7 @@ public abstract class AbstractReader implements DSIReader {
     @Override
     public byte[] getBytes() {
         if (last != Token.BYTES) {
-            throw new IllegalStateException("Not a boolean");
+            throw new IllegalStateException("Not bytes");
         }
         return valBytes;
     }
