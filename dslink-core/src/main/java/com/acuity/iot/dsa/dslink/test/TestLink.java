@@ -1,4 +1,4 @@
-package com.acuity.iot.dsa.dslink.testLink;
+package com.acuity.iot.dsa.dslink.test;
 
 import com.acuity.iot.dsa.dslink.DSTransport;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1ConnectionInit;

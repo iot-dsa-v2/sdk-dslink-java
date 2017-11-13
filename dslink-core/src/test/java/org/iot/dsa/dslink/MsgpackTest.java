@@ -10,7 +10,6 @@ import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.msgpack.MsgpackReader;
 import org.iot.dsa.io.msgpack.MsgpackWriter;
-import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSString;
@@ -91,11 +90,11 @@ public class MsgpackTest {
         DSIReader parser = new MsgpackReader(new ByteArrayInputStream(encoded));
         DSList list = parser.getElement().toList();
         parser.close();
-        Assert.assertTrue(list.size() == 6);
-        Assert.assertTrue(list.get(0).toString().equals("abc"));
-        Assert.assertTrue(list.get(1).toInt() == 10);
+        Assert.assertEquals(list.size(), 6);
+        Assert.assertEquals(list.get(0).toString(), "abc");
+        Assert.assertEquals(list.get(1).toInt(), 10);
         Assert.assertTrue(list.get(2).toBoolean());
-        Assert.assertTrue(list.get(3).toDouble() == 10.1d);
+        Assert.assertEquals(list.get(3).toDouble(), 10.1d, 0);
         final ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
         out = new MsgpackWriter() {
             @Override
@@ -132,22 +131,22 @@ public class MsgpackTest {
         encoded = baos2.toByteArray();
         parser = new MsgpackReader(new ByteArrayInputStream(encoded));
         DSMap map = parser.getElement().toMap();
-        Assert.assertTrue(map.size() == 7);
-        Assert.assertTrue(map.get("first").toString().equals("abc"));
-        Assert.assertTrue(map.get(1).toInt() == 10);
+        Assert.assertEquals(map.size(), 7);
+        Assert.assertEquals(map.get("first").toString(), "abc");
+        Assert.assertEquals(map.get(1).toInt(), 10);
         Assert.assertTrue(map.get("third").toBoolean());
-        Assert.assertTrue(map.get("fourth").toDouble() == 10.1d);
+        Assert.assertEquals(map.get("fourth").toDouble(), 10.1d, 0);
         Assert.assertTrue(map.get("fifth").isMap());
         Assert.assertTrue(map.get(5).isList());
         Assert.assertTrue(map.get("seventh").isBytes());
-        Assert.assertTrue(
-                new String(map.get("seventh").toBytes(), "UTF-8").equals("somebytes"));
+        Assert.assertEquals(
+                new String(map.get("seventh").toBytes(), "UTF-8"), "somebytes");
         list = map.getList(5);
-        Assert.assertTrue(list.size() == 6);
-        Assert.assertTrue(list.get(0).toString().equals("abc"));
-        Assert.assertTrue(list.get(1).toInt() == 10);
+        Assert.assertEquals(list.size(), 6);
+        Assert.assertEquals(list.get(0).toString(), "abc");
+        Assert.assertEquals(list.get(1).toInt(), 10);
         Assert.assertTrue(list.get(2).toBoolean());
-        Assert.assertTrue(list.get(3).toDouble() == 10.1d);
+        Assert.assertEquals(list.get(3).toDouble(), 10.1d, 0);
     }
 
 }

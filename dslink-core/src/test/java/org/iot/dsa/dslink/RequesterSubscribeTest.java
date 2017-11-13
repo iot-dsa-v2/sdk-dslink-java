@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.testLink.TestLink;
+import com.acuity.iot.dsa.dslink.test.TestLink;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
 import org.iot.dsa.dslink.requester.SimpleRequestHandler;
