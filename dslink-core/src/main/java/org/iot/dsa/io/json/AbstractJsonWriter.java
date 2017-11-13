@@ -45,7 +45,7 @@ public abstract class AbstractJsonWriter extends AbstractWriter
 
     @Override
     public AbstractWriter value(DSElement arg) {
-        if ((arg != null) && arg.isBoolean()) {
+        if ((arg != null) && arg.isBytes()) {
             return value(arg.toString());
         }
         return super.value(arg);

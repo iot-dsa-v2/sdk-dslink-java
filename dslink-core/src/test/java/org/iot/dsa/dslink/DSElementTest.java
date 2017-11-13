@@ -224,6 +224,7 @@ public class DSElementTest {
         Assert.assertTrue(map.get(6).isMap());
         Assert.assertTrue(map.get(7).isList());
         testMap(map);
+        testPrimitiveMap(map.getMap("map"));
         //encode and reconstitute
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         new JsonWriter(out, "UTF-8").value(map).close();
