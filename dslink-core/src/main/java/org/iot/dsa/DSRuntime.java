@@ -69,15 +69,18 @@ public class DSRuntime {
             current = next;
         }
         //Add the tasks that have future work back to the main linked list.
-        if (keepHead != null) {
-            synchronized (DSRuntime.class) {
+        synchronized (DSRuntime.class) {
+            if (keepHead != null) {
                 if (timerHead == null) {
                     timerHead = keepHead;
                     timerTail = keepTail;
                 } else {
                     timerTail.next = keepHead;
                     timerTail = keepTail;
+                    nextCycle = -1;
                 }
+            } else if (timerHead != null) {
+                nextCycle = -1;
             }
         }
         return nextCycle;
@@ -302,7 +305,7 @@ public class DSRuntime {
                 }
             }
         }
-    } //RuntimeThread.
+    } //RuntimeThread
 
     private static class ShutdownThread extends Thread {
 

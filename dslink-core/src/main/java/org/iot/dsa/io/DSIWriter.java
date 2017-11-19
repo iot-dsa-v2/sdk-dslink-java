@@ -88,6 +88,11 @@ public interface DSIWriter extends Closeable {
     public DSIWriter key(CharSequence key);
 
     /**
+     * If the writer is buffering output, this returns the size of that buffer.
+     */
+    public int length();
+
+    /**
      * Clears the state of the writer.
      */
     public DSIWriter reset();

@@ -44,17 +44,17 @@ class ValueSubscriber implements DSISubscriber, SubscriptionCloseHandler {
         DSIObject obj = path.getTarget();
         this.target = obj;
         this.request = request;
-        if (info.isValue()) { //most common case here
+        if (info.isNode()) {
+            info.getNode().subscribe(this);
+            subscriptionType = SubscriptionType.CONTAINER;
+            onEvent(obj, info, Event.PUBLISHER_CHANGED);
+        } else if (info.isValue()) {
             parent.subscribe(this);
             subscriptionType = SubscriptionType.VALUE;
             onEvent(obj, info, Event.CHILD_CHANGED);
         } else if (obj instanceof DSIPublisher) {
             ((DSIPublisher) obj).subscribe(this);
             subscriptionType = SubscriptionType.PUBLISHER;
-            onEvent(obj, info, Event.PUBLISHER_CHANGED);
-        } else if (obj instanceof DSNode) {
-            ((DSNode) obj).subscribe(this);
-            subscriptionType = SubscriptionType.CONTAINER;
             onEvent(obj, info, Event.PUBLISHER_CHANGED);
         }
     }

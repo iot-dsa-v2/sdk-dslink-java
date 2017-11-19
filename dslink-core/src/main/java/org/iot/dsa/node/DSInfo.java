@@ -448,14 +448,18 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     void subscribe() {
-        if (value instanceof DSIPublisher) {
-            ((DSIPublisher) value).subscribe(this);
+        if (!isNode()) {
+            if (value instanceof DSIPublisher) {
+                ((DSIPublisher) value).subscribe(this);
+            }
         }
     }
 
     void unsubscribe() {
-        if (value instanceof DSIPublisher) {
-            ((DSIPublisher) value).unsubscribe(this);
+        if (!isNode()) {
+            if (value instanceof DSIPublisher) {
+                ((DSIPublisher) value).unsubscribe(this);
+            }
         }
     }
 

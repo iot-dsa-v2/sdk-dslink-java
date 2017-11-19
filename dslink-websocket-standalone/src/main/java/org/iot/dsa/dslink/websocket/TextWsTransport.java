@@ -37,12 +37,6 @@ import org.iot.dsa.util.DSException;
 public class TextWsTransport extends DSTransport {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    private static final int BUF_SIZE = 8192;
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
@@ -214,7 +208,7 @@ public class TextWsTransport extends DSTransport {
     }
 
     public boolean shouldEndMessage() {
-        return messageSize > endMessageThreshold;
+        return (messageSize + writer.length()) > endMessageThreshold;
     }
 
     /**
@@ -273,7 +267,7 @@ public class TextWsTransport extends DSTransport {
             return buffer.available() > 0;
         }
 
-    }
+    }//MyReader
 
     private class MyWriter extends Writer {
 
@@ -307,10 +301,6 @@ public class TextWsTransport extends DSTransport {
             TextWsTransport.this.write(str, false);
         }
 
-    }
+    }//MyWriter
 
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
-
-}//TyrusTransportFactory
+}

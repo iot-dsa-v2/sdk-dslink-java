@@ -78,6 +78,13 @@ public abstract class MsgpackWriter extends AbstractWriter implements MsgpackCon
         return strBuffer;
     }
 
+    /**
+     * Returns the number of bytes in the outgoing byte buffer.
+     */
+    public int length() {
+        return byteBuffer.position();
+    }
+
     @Override
     protected void writeSeparator() throws IOException {
     }
