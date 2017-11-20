@@ -82,6 +82,7 @@ public class DSRuntime {
             } else if (timerHead != null) {
                 nextCycle = -1;
             }
+            DSRuntime.class.notifyAll();
         }
         return nextCycle;
     }
@@ -111,7 +112,7 @@ public class DSRuntime {
                 timerTail.next = f;
                 timerTail = f;
             }
-            DSRuntime.class.notify();
+            DSRuntime.class.notifyAll();
         }
         return f;
     }
@@ -133,7 +134,7 @@ public class DSRuntime {
                 timerTail.next = f;
                 timerTail = f;
             }
-            DSRuntime.class.notify();
+            DSRuntime.class.notifyAll();
         }
         return f;
     }
