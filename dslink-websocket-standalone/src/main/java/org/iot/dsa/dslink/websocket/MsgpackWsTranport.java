@@ -45,7 +45,6 @@ public class MsgpackWsTranport extends DSTransport {
     private ClientManager client;
     private DSLinkConnection connection;
     private int endMessageThreshold = 32768;
-    private int messageSize;
     private boolean open = false;
     private MsgpackReader reader = new MsgpackReader(new MyInputStream());
     private Session session;
@@ -62,7 +61,6 @@ public class MsgpackWsTranport extends DSTransport {
 
     @Override
     public DSTransport beginMessage() {
-        messageSize = 0;
         return this;
     }
 
@@ -91,7 +89,6 @@ public class MsgpackWsTranport extends DSTransport {
             writeBuffer.flip();
             basic.sendBinary(writeBuffer, true);
             writeBuffer.clear();
-            messageSize = 0;
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
@@ -212,7 +209,7 @@ public class MsgpackWsTranport extends DSTransport {
     }
 
     public boolean shouldEndMessage() {
-        return messageSize > endMessageThreshold;
+        return writer.length() > endMessageThreshold;
     }
 
     /////////////////////////////////////////////////////////////////
