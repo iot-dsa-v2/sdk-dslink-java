@@ -12,7 +12,7 @@ import org.iot.dsa.util.DSException;
 /**
  * @author Aaron Hansen
  */
-public abstract class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
+public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
 
     // Fields
     // ------
@@ -26,8 +26,30 @@ public abstract class MsgpackWriter extends AbstractWriter implements MsgpackCon
     // Constructors
     // ------------
 
+    public MsgpackWriter() {
+    }
+
+    public MsgpackWriter(ByteBuffer buffer) {
+        this.byteBuffer = buffer;
+    }
+
     // Methods
     // -------
+
+    /**
+     * Does nothing.
+     */
+    @Override
+    public void close() {
+    }
+
+    /**
+     * Does nothing.
+     */
+    @Override
+    public MsgpackWriter flush() {
+        return this;
+    }
 
     /**
      * Used by writeString(), returns the string wrapped in a charbuffer that is ready for reading
@@ -297,7 +319,7 @@ public abstract class MsgpackWriter extends AbstractWriter implements MsgpackCon
     /**
      * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
      */
-    protected void writeTo(ByteBuffer out) {
+    public void writeTo(ByteBuffer out) {
         byteBuffer.flip();
         out.put(byteBuffer);
         byteBuffer.clear();
@@ -308,10 +330,9 @@ public abstract class MsgpackWriter extends AbstractWriter implements MsgpackCon
      *
      * @throws DSException if there is an IOException.
      */
-    protected void writeTo(OutputStream out) {
+    public void writeTo(OutputStream out) {
         try {
             byteBuffer.flip();
-            //TODO - performance opt, write buffer to byte[], then byte[] to stream?
             while (byteBuffer.hasRemaining()) {
                 out.write(byteBuffer.get());
             }

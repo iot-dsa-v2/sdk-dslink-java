@@ -2,10 +2,9 @@ package org.iot.dsa.dslink.websocket;
 
 import com.acuity.iot.dsa.dslink.DSTransport;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.InputStream;
 import java.net.URI;
-import java.util.logging.Logger;
+import java.nio.ByteBuffer;
 import javax.websocket.ClientEndpoint;
 import javax.websocket.CloseReason;
 import javax.websocket.EndpointConfig;
@@ -17,38 +16,41 @@ import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
 import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.io.DSCharBuffer;
-import org.iot.dsa.io.DSIoException;
+import org.iot.dsa.io.DSByteBuffer;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.json.JsonAppender;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.logging.DSLogging;
+import org.iot.dsa.io.DSIoException;
+import org.iot.dsa.io.msgpack.MsgpackReader;
+import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.util.DSException;
 
 /**
- * Websocket client implementation of DSTransport based on Tyrus, the reference
- * implementation of JSR 356.
+ * Websocket client implementation of DSTransport based on Tyrus, the reference implementation of
+ * JSR 356.
  *
  * @author Aaron Hansen
  */
 @ClientEndpoint
-public class TextWsTransport extends DSTransport {
+public class MsgpackWsTranport extends DSTransport {
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Constants
+    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSCharBuffer buffer = new DSCharBuffer();
+    private DSByteBuffer buffer = new DSByteBuffer();
     private ClientManager client;
     private DSLinkConnection connection;
     private int endMessageThreshold = 32768;
     private int messageSize;
     private boolean open = false;
-    private DSIReader reader;
+    private MsgpackReader reader = new MsgpackReader(new MyInputStream());
     private Session session;
-    private DSIWriter writer;
+    private ByteBuffer writeBuffer = ByteBuffer.allocate(1024 * 64);
+    private MsgpackWriter writer = new MsgpackWriter(writeBuffer);
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -84,8 +86,15 @@ public class TextWsTransport extends DSTransport {
 
     @Override
     public DSTransport endMessage() {
-        write("", true);
-        messageSize = 0;
+        try {
+            RemoteEndpoint.Basic basic = session.getBasicRemote();
+            writeBuffer.flip();
+            basic.sendBinary(writeBuffer, true);
+            writeBuffer.clear();
+            messageSize = 0;
+        } catch (IOException x) {
+            DSException.throwRuntime(x);
+        }
         return this;
     }
 
@@ -97,9 +106,17 @@ public class TextWsTransport extends DSTransport {
     @Override
     public DSIReader getReader() {
         if (reader == null) {
-            reader = new JsonReader(new MyReader());
+            reader = null; //TODO
         }
         return reader;
+    }
+
+    @Override
+    public DSIWriter getWriter() {
+        if (writer == null) {
+            writer = null; //TODO
+        }
+        return writer;
     }
 
     /**
@@ -107,14 +124,6 @@ public class TextWsTransport extends DSTransport {
      */
     public Session getSession() {
         return session;
-    }
-
-    @Override
-    public DSIWriter getWriter() {
-        if (writer == null) {
-            writer = new JsonAppender(new MyWriter()).setPrettyPrint(false);
-        }
-        return writer;
     }
 
     @Override
@@ -137,14 +146,9 @@ public class TextWsTransport extends DSTransport {
     }
 
     @OnMessage
-    public void onMessage(Session session, String msgPart, boolean isLast) {
-        try {
-            finest(finest() ? "Recv: " + msgPart : null);
-            buffer.put(msgPart);
-        } catch (Exception x) {
-            getConnection().onClose();
-            DSException.throwRuntime(x);
-        }
+    public void onMessage(Session session, byte[] msgPart, boolean isLast) {
+        //isLast is ignored because we treat the incoming bytes as a pure stream.
+        buffer.put(msgPart, 0, msgPart.length);
     }
 
     @OnOpen
@@ -190,7 +194,7 @@ public class TextWsTransport extends DSTransport {
      * @return The number of bytes read or -1 for end of stream.
      * @throws DSIoException if there are any issues.
      */
-    private int read(char[] buf, int off, int len) {
+    private int read(byte[] buf, int off, int len) {
         return buffer.read(buf, off, len);
     }
 
@@ -208,39 +212,19 @@ public class TextWsTransport extends DSTransport {
     }
 
     public boolean shouldEndMessage() {
-        return (messageSize + writer.length()) > endMessageThreshold;
-    }
-
-    /**
-     * Send the buffer and indicate whether it represents the end of the message.
-     *
-     * @param text   The characters to send
-     * @param isLast Whether or not this completes the message.
-     * @throws DSIoException If there are any issue.
-     */
-    public void write(String text, boolean isLast) {
-        if (!open) {
-            throw new DSIoException("Closed " + getConnectionUrl());
-        }
-        try {
-            RemoteEndpoint.Basic basic = session.getBasicRemote();
-            int len = text.length();
-            messageSize += len;
-            if (len > 0) {
-                finest(finest() ? "Send: " + text : null);
-            }
-            basic.sendText(text, isLast);
-        } catch (IOException x) {
-            severe(getConnectionUrl(), x);
-            connection.onClose();
-        }
+        return messageSize > endMessageThreshold;
     }
 
     /////////////////////////////////////////////////////////////////
     // Inner Classes
     /////////////////////////////////////////////////////////////////
 
-    private class MyReader extends Reader {
+    private class MyInputStream extends InputStream {
+
+        @Override
+        public int available() {
+            return buffer.available();
+        }
 
         @Override
         public void close() {
@@ -253,54 +237,18 @@ public class TextWsTransport extends DSTransport {
         }
 
         @Override
-        public int read(char[] buf) throws IOException {
+        public int read(byte[] buf) throws IOException {
             return buffer.read(buf, 0, buf.length);
         }
 
         @Override
-        public int read(char[] buf, int off, int len) throws IOException {
+        public int read(byte[] buf, int off, int len) throws IOException {
             return buffer.read(buf, off, len);
         }
+    }
 
-        @Override
-        public boolean ready() {
-            return buffer.available() > 0;
-        }
-
-    }//MyReader
-
-    private class MyWriter extends Writer {
-
-        @Override
-        public void close() {
-            getConnection().onClose();
-        }
-
-        @Override
-        public void flush() {
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            char ch = (char) b;
-            TextWsTransport.this.write(ch + "", false);
-        }
-
-        @Override
-        public void write(char[] buf) throws IOException {
-            write(buf, 0, buf.length);
-        }
-
-        @Override
-        public void write(char[] buf, int off, int len) throws IOException {
-            TextWsTransport.this.write(new String(buf, off, len), false);
-        }
-
-        @Override
-        public void write(String str) throws IOException {
-            TextWsTransport.this.write(str, false);
-        }
-
-    }//MyWriter
+    /////////////////////////////////////////////////////////////////
+    // Initialization
+    /////////////////////////////////////////////////////////////////
 
 }
