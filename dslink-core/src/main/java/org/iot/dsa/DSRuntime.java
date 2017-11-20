@@ -16,6 +16,7 @@ public class DSRuntime {
     ///////////////////////////////////////////////////////////////////////////
 
     private static boolean alive = true;
+    private static long nextCycle = -1;
     private static RuntimeThread runtimeThread;
     private static Timer timerHead;
     private static Timer timerTail;
@@ -35,27 +36,25 @@ public class DSRuntime {
     /**
      * Returns the next time execution is needed.
      */
-    private static long executeTimers() {
+    private static void executeTimers() {
         Timer current = null;
-        Timer next = null;
         Timer keepHead = null;
         Timer keepTail = null;
         long tmp;
-        long now = System.currentTimeMillis();
-        long nextCycle = now + 60000;
+        long tmpCycleTime = System.currentTimeMillis() + 60000;
         //Take the task link list.
         synchronized (DSRuntime.class) {
+            nextCycle = tmpCycleTime;
             current = timerHead;
             timerHead = null;
             timerTail = null;
         }
         //Execute items (if needed) and retains tasks with future work.
         while (alive && (current != null)) {
-            tmp = current.run(now);
-            next = current.next;
+            tmp = current.run(System.currentTimeMillis());
             if (tmp > 0) {
-                if (tmp < nextCycle) {
-                    nextCycle = tmp;
+                if (tmp < tmpCycleTime) {
+                    tmpCycleTime = tmp;
                 }
                 if (keepHead == null) {
                     keepHead = current;
@@ -66,10 +65,13 @@ public class DSRuntime {
                 }
                 current.next = null;
             }
-            current = next;
+            current = current.next;
         }
         //Add the tasks that have future work back to the main linked list.
         synchronized (DSRuntime.class) {
+            if (tmpCycleTime < nextCycle) {
+                nextCycle = tmpCycleTime;
+            }
             if (keepHead != null) {
                 if (timerHead == null) {
                     timerHead = keepHead;
@@ -77,14 +79,9 @@ public class DSRuntime {
                 } else {
                     timerTail.next = keepHead;
                     timerTail = keepTail;
-                    nextCycle = -1;
                 }
-            } else if (timerHead != null) {
-                nextCycle = -1;
             }
-            DSRuntime.class.notifyAll();
         }
-        return nextCycle;
     }
 
     /**
@@ -112,7 +109,10 @@ public class DSRuntime {
                 timerTail.next = f;
                 timerTail = f;
             }
-            DSRuntime.class.notifyAll();
+            if (start < nextCycle) {
+                nextCycle = start;
+                DSRuntime.class.notifyAll();
+            }
         }
         return f;
     }
@@ -134,7 +134,10 @@ public class DSRuntime {
                 timerTail.next = f;
                 timerTail = f;
             }
-            DSRuntime.class.notifyAll();
+            if (at < nextCycle) {
+                nextCycle = at;
+                DSRuntime.class.notifyAll();
+            }
         }
         return f;
     }
@@ -290,18 +293,19 @@ public class DSRuntime {
         }
 
         public void run() {
-            long delta, nextCycle;
+            long delta;
             while (alive) {
-                nextCycle = executeTimers();
-                delta = nextCycle - System.currentTimeMillis();
-                if (delta > 0) {
-                    synchronized (DSRuntime.class) {
+                executeTimers();
+                synchronized (DSRuntime.class) {
+                    delta = nextCycle - System.currentTimeMillis();
+                    if (delta > 0) {
                         try {
                             DSRuntime.class.wait(delta);
                         } catch (Exception ignore) {
                         }
                     }
-                } else {
+                }
+                if (delta < 0) {
                     Thread.yield();
                 }
             }

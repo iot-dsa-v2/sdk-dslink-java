@@ -32,7 +32,6 @@ public class StandaloneTransportFactory extends DSLogger implements Factory {
     @Override
     public DSTransport makeTransport(DSMap connectionInitResponse) {
         String format = connectionInitResponse.getString("format");
-        System.out.println("format: " + format);//TODO
         if ("msgpack".equals(format)) {
             return new MsgpackWsTranport();
         }

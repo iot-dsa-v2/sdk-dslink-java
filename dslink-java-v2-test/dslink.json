@@ -39,7 +39,7 @@
     "log": {
       "desc": "debug, info, warn, error, none",
       "type": "enum",
-      "value": "debug"
+      "value": "info"
     },
     "logFile": {
       "desc": "Path to the log file.",
