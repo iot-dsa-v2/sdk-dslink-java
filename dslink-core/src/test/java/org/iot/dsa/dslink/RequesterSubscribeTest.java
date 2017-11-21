@@ -61,7 +61,6 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
                         Thread.dumpStack();
                     }
                 });
-        //requester.set("/Nodes/int", DSInt.valueOf(10), SimpleRequestHandler.DEFAULT);
     }
 
     public void onDisconnect(DSLinkConnection connection) {
@@ -88,7 +87,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
             this.wait(5000);
         }
         Assert.assertTrue(success);
-        Assert.assertTrue(root.getInfo("int").getElement().toInt() == 10);
+        Assert.assertEquals(root.get("int"),DSInt.valueOf(10));
         success = false;
         //Close stream, validate onClose called
         handler.getStream().closeStream();
