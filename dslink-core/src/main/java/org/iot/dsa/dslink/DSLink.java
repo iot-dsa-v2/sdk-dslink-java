@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.logging.Logger;
@@ -339,6 +340,12 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
      * stopped.
      */
     public void run() {
+        Class clazz = DSLink.class;
+        try {
+            URL src = clazz.getProtectionDomain().getCodeSource().getLocation();
+            info(info() ? "Core source: " + src : null);
+        } catch (Throwable securityIssueIgnore) {
+        }
         info(info() ? "Starting nodes" : null);
         start();
         long stableDelay = config.getConfig(DSLinkConfig.CFG_STABLE_DELAY, 5000l);

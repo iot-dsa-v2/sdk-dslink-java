@@ -102,7 +102,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
         Assert.assertFalse(node.subscribeCalled);
         Assert.assertFalse(node.unsubscribeCalled);
         AbstractSubscribeHandler handler = (AbstractSubscribeHandler) requester.subscribe(
-                "/Nodes/aNode/int", 0, new AbstractSubscribeHandler() {
+                "/Nodes/aNode", 0, new AbstractSubscribeHandler() {
                     @Override
                     public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
                     }
