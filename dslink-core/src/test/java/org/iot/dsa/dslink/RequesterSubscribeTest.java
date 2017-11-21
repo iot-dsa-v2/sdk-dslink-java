@@ -34,9 +34,15 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
         success = !root.isSubscribed();
         handler = (AbstractSubscribeHandler) requester.subscribe(
                 "/Nodes/int", 0, new AbstractSubscribeHandler() {
+                    boolean first = true;
                     @Override
                     public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
-                        success = value.equals(DSInt.valueOf(10));
+                        if (first) {
+                            success = value.equals(DSInt.valueOf(0));
+                            first = false;
+                        } else {
+                            success = value.equals(DSInt.valueOf(10));
+                        }
                         synchronized (RequesterSubscribeTest.this) {
                             RequesterSubscribeTest.this.notify();
                         }
@@ -55,7 +61,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
                         Thread.dumpStack();
                     }
                 });
-        requester.set("/Nodes/int", DSInt.valueOf(10), SimpleRequestHandler.DEFAULT);
+        //requester.set("/Nodes/int", DSInt.valueOf(10), SimpleRequestHandler.DEFAULT);
     }
 
     public void onDisconnect(DSLinkConnection connection) {
@@ -67,22 +73,35 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
         link.getConnection().addListener(this);
         DSRuntime.run(link);
         Assert.assertFalse(root.isSubscribed());
+        Assert.assertFalse(success);
+        //Wait for onConnected to subscribe and receive the first update value of 0
         synchronized (this) {
             this.wait(5000);
         }
         Assert.assertTrue(success);
         Assert.assertTrue(root.isSubscribed());
+        //Set the value to 10 and wait for the update
         success = false;
+        DSIRequester requester = link.getConnection().getRequester();
+        requester.set("/Nodes/int", DSInt.valueOf(10), SimpleRequestHandler.DEFAULT);
+        synchronized (this) {
+            this.wait(5000);
+        }
+        Assert.assertTrue(success);
+        Assert.assertTrue(root.getInfo("int").getElement().toInt() == 10);
+        success = false;
+        //Close stream, validate onClose called
         handler.getStream().closeStream();
         Assert.assertTrue(success);
         synchronized (root) {
             root.wait(5000);
         }
+        //Validate that the root was unsubscribed
         Assert.assertFalse(root.isSubscribed());
+        //Subscribe a lower value, validate onSubscribe.
         ANode node = (ANode) root.getNode("aNode");
         Assert.assertFalse(node.subscribeCalled);
         Assert.assertFalse(node.unsubscribeCalled);
-        DSIRequester requester = link.getConnection().getRequester();
         AbstractSubscribeHandler handler = (AbstractSubscribeHandler) requester.subscribe(
                 "/Nodes/aNode/int", 0, new AbstractSubscribeHandler() {
                     @Override
@@ -103,6 +122,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
             }
         }
         Assert.assertTrue(node.subscribeCalled);
+        //Now close the stream and validate unsubscribed.
         Assert.assertFalse(node.unsubscribeCalled);
         handler.getStream().closeStream();
         synchronized (node) {
