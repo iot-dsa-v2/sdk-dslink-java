@@ -1,15 +1,13 @@
 package org.iot.dsa;
 
+import org.iot.dsa.time.DSTime;
+
 /**
  * DSA thread pool and timers.
  *
  * @author Aaron Hansen
  */
 public class DSRuntime {
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -37,24 +35,28 @@ public class DSRuntime {
      * Returns the next time execution is needed.
      */
     private static void executeTimers() {
+        long now = System.currentTimeMillis();
+        long nextCycleTmp = now + 60000;
         Timer current = null;
+        Timer next = null;
         Timer keepHead = null;
         Timer keepTail = null;
         long tmp;
-        long tmpCycleTime = System.currentTimeMillis() + 60000;
         //Take the task link list.
         synchronized (DSRuntime.class) {
-            nextCycle = tmpCycleTime;
+            nextCycle = nextCycleTmp;
             current = timerHead;
             timerHead = null;
             timerTail = null;
         }
         //Execute items (if needed) and retains tasks with future work.
         while (alive && (current != null)) {
-            tmp = current.run(System.currentTimeMillis());
+            tmp = current.run(now);
+            next = current.next;
+            current.next = null;
             if (tmp > 0) {
-                if (tmp < tmpCycleTime) {
-                    tmpCycleTime = tmp;
+                if (tmp < nextCycleTmp) {
+                    nextCycleTmp = tmp;
                 }
                 if (keepHead == null) {
                     keepHead = current;
@@ -63,14 +65,13 @@ public class DSRuntime {
                     keepTail.next = current;
                     keepTail = current;
                 }
-                current.next = null;
             }
-            current = current.next;
+            current = next;
         }
         //Add the tasks that have future work back to the main linked list.
         synchronized (DSRuntime.class) {
-            if (tmpCycleTime < nextCycle) {
-                nextCycle = tmpCycleTime;
+            if (nextCycleTmp < nextCycle) {
+                nextCycle = nextCycleTmp;
             }
             if (keepHead != null) {
                 if (timerHead == null) {
@@ -121,7 +122,7 @@ public class DSRuntime {
      * Run once at the given time.
      *
      * @param arg What to runAt.
-     * @param at  Execution time.  If the time is past, it'll runAt right away.
+     * @param at  Execution time.  If the time is past, it'll run right away.
      * @return For inspecting and cancel execution.
      */
     public static Timer runAt(Runnable arg, long at) {
@@ -168,7 +169,7 @@ public class DSRuntime {
     /**
      * Can be used to inspect and cancel tasks passed to the run methods in DSRuntime.
      */
-    public static class Timer {
+    public static class Timer implements Runnable {
 
         private long count = 0;
         private long interval = 0;
@@ -223,7 +224,7 @@ public class DSRuntime {
         }
 
         /**
-         * Trun only when the runnable is actually being run.
+         * True when the runnable is being actually being executed.
          */
         public boolean isRunning() {
             return running;
@@ -246,6 +247,17 @@ public class DSRuntime {
         }
 
         /**
+         * Do not call.
+         */
+        public void run() {
+            try {
+                runnable.run();
+            } finally {
+                running = false;
+            }
+        }
+
+        /**
          * Executes the task if it is time.
          *
          * @param now The current time, just an efficiency.
@@ -258,10 +270,12 @@ public class DSRuntime {
             if (now < nextRun) {
                 return nextRun;
             }
+            if (running) {
+                return nextRun;
+            }
             running = true;
-            DSRuntime.run(runnable);
+            DSRuntime.run(this);
             count++;
-            running = false;
             lastRun = nextRun;
             if (interval > 0) {
                 while (nextRun <= now) {
@@ -278,6 +292,13 @@ public class DSRuntime {
          */
         public long runCount() {
             return count;
+        }
+
+        public String toString() {
+            StringBuilder buf = new StringBuilder();
+            DSTime.encode(nextRun, false, buf);
+            buf.append(" - ").append(runnable.toString());
+            return buf.toString();
         }
 
     } //Timer
@@ -305,7 +326,7 @@ public class DSRuntime {
                         }
                     }
                 }
-                if (delta < 0) {
+                if (delta <= 0) {
                     Thread.yield();
                 }
             }
