@@ -343,8 +343,9 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         Class clazz = DSLink.class;
         try {
             URL src = clazz.getProtectionDomain().getCodeSource().getLocation();
-            info(info() ? "Core source: " + src : null);
-        } catch (Throwable securityIssueIgnore) {
+            info(info() ? src : null);
+        } catch (Throwable t) {
+            warn("Reporting source of DSLink.class", t);
         }
         info(info() ? "Starting nodes" : null);
         start();
