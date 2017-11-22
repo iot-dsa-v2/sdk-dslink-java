@@ -221,14 +221,10 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         }
     }
 
-    @Override
-    protected void writeListStart() throws IOException {
-        writeListStart(-1);
-    }
-
     /**
      * A negative size implies dynamic and will be written when the list is closed.
      */
+    @Override
     protected void writeListStart(int len) throws IOException {
         if (frame != null) {
             frame.increment();
@@ -258,14 +254,10 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         }
     }
 
-    @Override
-    protected void writeMapStart() throws IOException {
-        writeMapStart(-1);
-    }
-
     /**
      * A negative size implies dynamic and will be written when the map is closed.
      */
+    @Override
     protected void writeMapStart(int len) throws IOException {
         if (frame != null) {
             frame.increment();
