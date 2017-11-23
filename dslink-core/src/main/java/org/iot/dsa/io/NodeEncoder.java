@@ -4,6 +4,7 @@ import java.util.HashMap;
 import org.iot.dsa.io.json.AbstractJsonWriter;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSIStorable;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
@@ -176,22 +177,21 @@ public class NodeEncoder {
         if (!arg.equalsDefaultState()) {
             out.key("i").value(arg.encodeState());
         }
+        DSIValue v = (DSIValue) arg.getObject();
+        if (v == null) {
+            out.key("v").value((String) null);
+            return;
+        }
         if (!arg.equalsDefaultType()) {
-            DSIValue v = (DSIValue) arg.getObject();
-            if (v != null) {
-                if (!(v instanceof DSElement)) {
-                    out.key("t").value(getToken(v));
-                }
-                out.key("v").value(v.store());
-            } else {
-                out.key("v").value((String) null);
+            if (!(v instanceof DSElement)) {
+                out.key("t").value(getToken(v));
             }
-        } else if (!arg.equalsDefaultValue()) {
-            DSIValue v = (DSIValue) arg.getObject();
-            if (v != null) {
-                out.key("v").value(v.store());
+        }
+        if (!arg.equalsDefaultValue()) {
+            if (v instanceof DSIStorable) {
+                out.key("v").value(((DSIStorable)v).store());
             } else {
-                out.key("v").value((String) null);
+                out.key("v").value(v.toElement());
             }
         }
         out.endMap();

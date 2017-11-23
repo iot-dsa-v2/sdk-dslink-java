@@ -7,7 +7,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSJavaEnum extends DSValue implements DSIEnum, DSIMetadata {
+public class DSJavaEnum extends DSValue implements DSIEnum, DSIMetadata, DSIStorable {
 
     // Constants
     // ---------

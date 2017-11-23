@@ -40,7 +40,6 @@ class DS1InboundList extends DS1InboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     private StringBuilder cacheBuf = new StringBuilder();
-    private DSList cacheList = new DSList();
     private DSMap cacheMap = new DSMap();
     private DSMetadata cacheMeta = new DSMetadata(cacheMap);
     private Iterator<ApiObject> children;
@@ -529,8 +528,4 @@ class DS1InboundList extends DS1InboundRequest
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
-
-} //Template
+}

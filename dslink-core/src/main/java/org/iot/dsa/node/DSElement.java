@@ -1,7 +1,7 @@
 package org.iot.dsa.node;
 
 /**
- * The primitives of the node model.  These map JSON types without additional meta-data.
+ * The primitives of the node model.  These map to JSON types without additional meta-data.
  *
  * @author Aaron Hansen
  */

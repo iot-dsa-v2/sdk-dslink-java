@@ -178,6 +178,7 @@ public class DSRuntime {
         private long nextRun = 1; //0 == canceled, <0 == done
         private Runnable runnable;
         private boolean running = false;
+        private boolean skipMissed = true;
 
         Timer(Runnable runnable, long start, long interval) {
             this.interval = interval;
@@ -196,6 +197,20 @@ public class DSRuntime {
             if (nextRun > 0) {
                 nextRun = 0;
             }
+        }
+
+        private long computeNextRun(long now) {
+            if (interval <= 0) {
+                return nextRun = -1;
+            }
+            if (skipMissed) {
+                while (nextRun <= now) {
+                    nextRun += interval;
+                }
+            } else {
+                nextRun += interval;
+            }
+            return nextRun;
         }
 
         /**
@@ -277,14 +292,7 @@ public class DSRuntime {
             DSRuntime.run(this);
             count++;
             lastRun = nextRun;
-            if (interval > 0) {
-                while (nextRun <= now) {
-                    nextRun += interval;
-                }
-            } else {
-                nextRun = -1;
-            }
-            return nextRun;
+            return computeNextRun(now);
         }
 
         /**
@@ -292,6 +300,18 @@ public class DSRuntime {
          */
         public long runCount() {
             return count;
+        }
+
+        /**
+         * The default is true, set this to false if all intervals should be run, even if they run
+         * later than scheduled.
+         *
+         * @param skipMissed False if intervals should be run after they were scheduled to.
+         * @return this
+         */
+        public Timer setSkipMissedIntervals(boolean skipMissed) {
+            this.skipMissed = skipMissed;
+            return this;
         }
 
         public String toString() {

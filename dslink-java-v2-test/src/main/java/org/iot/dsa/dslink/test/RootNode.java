@@ -118,12 +118,6 @@ public class RootNode extends DSRootNode implements Runnable {
      * Build a large database
      */
     private void onTest() {
-        /*
-        for (int i = 0; i < 1000; i++) {
-            put("test"+i, DSInt.valueOf(i));
-        }
-        */
-        /*
         long start = System.currentTimeMillis();
         clear();
         long now = System.currentTimeMillis();
@@ -156,7 +150,6 @@ public class RootNode extends DSRootNode implements Runnable {
         now = System.currentTimeMillis();
         dur = now - start;
         info("********** Iterate duration: " + dur);
-        */
     }
 
     /**

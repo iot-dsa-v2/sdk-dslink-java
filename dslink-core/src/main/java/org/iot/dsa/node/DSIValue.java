@@ -13,9 +13,10 @@ package org.iot.dsa.node;
  *
  * <li>Have a NULL instance if possible.
  *
- * <li>Try to maintain singleton instances when possible.
+ * <li>Try to maintain singleton instances when possible, especially for common instances.
  *
- * <li>Use static valueOf methods to ensure singleton values such as NULL are used.
+ * <li>Instead of constructors, use static valueOf methods to ensure singleton values such as NULL
+ * are used.
  *
  * <li>Register an instance for decoding with DSRegistry.registerDecoder(YourValue.class, instance)
  * in a static initializer. If you have a NULL instance, use that.
@@ -38,18 +39,6 @@ public interface DSIValue extends DSIObject {
      * but the null instance can be used to properly decode incoming values such as set requests.
      */
     public boolean isNull();
-
-    /**
-     * Deserialize a value from the configuration database, these will be values returned from the
-     * store() method.
-     */
-    public DSIValue restore(DSElement element);
-
-    /**
-     * Serialize the value for the configuration database.  Can be a different element type than
-     * toElement().
-     */
-    public DSElement store();
 
     /**
      * The current value should convert itself to an element for DSA interop such as subscription
