@@ -7,6 +7,7 @@ import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIStorable;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 
 /**
@@ -32,6 +33,7 @@ public class NodeEncoder {
 
     private int nextToken = 1;
     private DSIWriter out;
+    private DSMap cacheMap;
     private HashMap<Class, String> classMap = new HashMap<Class, String>();
 
     ///////////////////////////////////////////////////////////////////////////
@@ -146,6 +148,15 @@ public class NodeEncoder {
                 out.key("t").value(getToken(node));
             }
         }
+        if (!arg.equalsDefaultMetadata()) {
+            if (cacheMap == null) {
+                cacheMap = new DSMap();
+            } else {
+                cacheMap.clear();
+            }
+            arg.getMetadata(cacheMap);
+            out.key("m").value(cacheMap);
+        }
         writeChildren((DSNode) arg.getObject());
         out.endMap();
     }
@@ -164,6 +175,15 @@ public class NodeEncoder {
             if ((obj != null) && !(obj instanceof DSElement)) {
                 out.key("t").value(getToken(obj));
             }
+        }
+        if (!arg.equalsDefaultMetadata()) {
+            if (cacheMap == null) {
+                cacheMap = new DSMap();
+            } else {
+                cacheMap.clear();
+            }
+            arg.getMetadata(cacheMap);
+            out.key("m").value(cacheMap);
         }
         out.endMap();
     }
@@ -186,6 +206,15 @@ public class NodeEncoder {
             if (!(v instanceof DSElement)) {
                 out.key("t").value(getToken(v));
             }
+        }
+        if (!arg.equalsDefaultMetadata()) {
+            if (cacheMap == null) {
+                cacheMap = new DSMap();
+            } else {
+                cacheMap.clear();
+            }
+            arg.getMetadata(cacheMap);
+            out.key("m").value(cacheMap);
         }
         if (!arg.equalsDefaultValue()) {
             if (v instanceof DSIStorable) {

@@ -9,13 +9,16 @@ import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
 import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMap.Entry;
 import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.action.ActionSpec;
+import org.iot.dsa.node.action.DSAction;
 
 /**
  * List implementation for a responder.
@@ -145,30 +148,50 @@ class DS1InboundList extends DS1InboundRequest
         }
         cacheBuf.setLength(0);
         out.beginMap();
-        if (displayName != null) {
+        child.getMetadata(cacheMap.clear());
+        DSElement e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
+        if (e != null) {
+            out.key("$name").value(e);
+        } else if (displayName != null) {
             out.key("$name").value(displayName);
         }
-        child.getMetadata(cacheMap.clear());
-        if (cacheMap.contains("is")) {
-            out.key("$is").value(cacheMap.getString("is"));
+        e = cacheMap.remove("is");
+        if (e != null) {
+            out.key("$is").value(e);
         } else {
             out.key("$is").value("node");
         }
         if (child.isAction()) {
             ActionSpec action = child.getAction();
-            if (cacheMap.contains("invokable")) {
-                out.key("$invokable").value(cacheMap.get("invokable"));
+            e = cacheMap.remove("invokable");
+            if (e != null) {
+                out.key("$invokable").value(e);
             } else {
                 out.key("$invokable").value(action.getPermission().toString());
             }
         } else if (child.isValue()) {
             out.key("$type");
-            encodeType(child.getValue(), cacheMeta, out);
+            e = cacheMap.remove("type");
+            if (e != null) {
+                out.value(e);
+            } else {
+                encodeType(child.getValue(), cacheMeta, out);
+            }
             if (!child.isReadOnly()) {
-                out.key("$writable").value(child.isConfig() ? "config" : "write");
+                e = cacheMap.remove("writable");
+                if (e != null) {
+                    out.key("$writable").value(e);
+                } else {
+                    out.key("$writable").value(child.isConfig() ? "config" : "write");
+                }
             }
         } else if (child.isConfig()) {
-            out.key("$permission").value("config");
+            e = cacheMap.remove("permission");
+            if (e != null) {
+                out.key("$permission").value(e);
+            } else {
+                out.key("$permission").value("config");
+            }
         }
         out.endMap().endList();
         cacheMap.clear();
@@ -178,25 +201,40 @@ class DS1InboundList extends DS1InboundRequest
      * Encode all the meta data about the root target of a list request.
      */
     private void encodeTarget(ApiObject object, DSIWriter out) {
-        object.getMetadata(cacheMap.clear());
-        if (cacheMap.contains("is")) {
-            out.beginList().value("$is").value(cacheMap.getString("is")).endList();
-            cacheMap.remove("is");
+        if (object instanceof DSInfo) {
+            DSMetadata.getMetadata((DSInfo)object, cacheMap.clear());
         } else {
+            object.getMetadata(cacheMap.clear());
+        }
+        DSElement e = cacheMap.remove("is");
+        if (e == null) {
             out.beginList().value("$is").value("node").endList();
+        } else {
+            out.beginList().value("$is").value(e).endList();
+
         }
-        String safeName = object.getName();
-        if (DSPath.encodeName(safeName, cacheBuf)) {
-            safeName = cacheBuf.toString();
+        e = cacheMap.get("name");
+        if (e == null) {
+            String safeName = object.getName();
+            if (DSPath.encodeName(safeName, cacheBuf)) {
+                safeName = cacheBuf.toString();
+            }
+            cacheBuf.setLength(0);
+            out.beginList().value("$name").value(safeName).endList();
+        } else {
+            out.beginList().value("$name").value(e).endList();
         }
-        cacheBuf.setLength(0);
-        out.beginList().value("$name").value(safeName).endList();
         if (object.isAction()) {
-            encodeTargetAction(object.getAction(), out);
+            encodeTargetAction(object, out);
         } else if (object.isValue()) {
             encodeTargetValue(object, out);
         } else if (object.isConfig()) {
-            out.beginList().value("$permission").value("config").endList();
+            e = cacheMap.remove("permission");
+            if (e == null) {
+                out.beginList().value("$permission").value("config").endList();
+            } else {
+                out.beginList().value("$permission").value(e).endList();
+            }
         }
         encodeTargetMetadata(cacheMap, out);
         cacheMap.clear();
@@ -205,42 +243,70 @@ class DS1InboundList extends DS1InboundRequest
     /**
      * Called by encodeTarget for actions.
      */
-    private void encodeTargetAction(ActionSpec action, DSIWriter out) {
-        if (!cacheMap.contains("invokable")) {
-            out.beginList()
-               .value("$invokable")
-               .value(action.getPermission().toString())
-               .endList();
+    private void encodeTargetAction(ApiObject object, DSIWriter out) {
+        DSInfo info = null;
+        if (object instanceof DSInfo) {
+            info = (DSInfo) object;
         }
-        if (!cacheMap.contains("params")) {
-            out.beginList().value("$params").beginList();
+        ActionSpec action = object.getAction();
+        DSAction dsAction = null;
+        if (action instanceof DSAction) {
+            dsAction = (DSAction) action;
+        }
+        DSElement e = cacheMap.remove("invokable");
+        out.beginList().value("$invokable");
+        if (e == null) {
+            out.value(action.getPermission().toString()).endList();
+        } else {
+            out.value(e).endList();
+        }
+        e = cacheMap.remove("params");
+        out.beginList().value("$params");
+        if (e == null) {
+            out.beginList();
             Iterator<DSMap> params = action.getParameters();
             if (params != null) {
+                DSMap param;
                 while (params.hasNext()) {
-                    out.value(fixType(params.next()));
+                    param = params.next();
+                    if (dsAction != null) {
+                        dsAction.prepareParameter(info, param);
+                    }
+                    out.value(fixType(param));
                 }
             }
-            out.endList().endList();
+            out.endList();
+        } else {
+            out.value(e);
         }
+        out.endList();
         if (action.getResultType().isValues()) {
-            if (!cacheMap.contains("columns")) {
-                out.beginList().value("$columns").beginList();
-                Iterator<DSMap> it = action.getValueResults();
-                if (it != null) {
-                    while (it.hasNext()) {
-                        out.value(fixType(it.next()));
+            e = cacheMap.remove("columns");
+            out.beginList().value("$columns");
+            if (e == null) {
+                out.beginList();
+                Iterator<DSMap> params = action.getParameters();
+                if (params != null) {
+                    DSMap param;
+                    while (params.hasNext()) {
+                        param = params.next();
+                        if (dsAction != null) {
+                            dsAction.prepareParameter(info, param);
+                        }
+                        out.value(fixType(param));
                     }
                 }
-                out.endList().endList();
+                out.endList();
+            } else {
+                out.value(e);
             }
+            out.endList();
         }
-        if (!cacheMap.contains("result")) {
-            if (!action.getResultType().isVoid()) {
-                out.beginList()
-                   .value("$result")
-                   .value(action.getResultType().toString())
-                   .endList();
-            }
+        e = cacheMap.remove("result");
+        if (e != null) {
+            out.beginList().value("$result").value(e).endList();
+        } else if (!action.getResultType().isVoid()) {
+            out.beginList().value("$result").value(action.getResultType().toString()).endList();
         }
     }
 
@@ -252,13 +318,22 @@ class DS1InboundList extends DS1InboundRequest
             return;
         }
         Entry entry;
+        String name;
         for (int i = 0, len = cacheMap.size(); i < len; i++) {
             entry = cacheMap.getEntry(i);
             out.beginList();
-            cacheBuf.append("$");
-            DSPath.encodeName(entry.getKey(), cacheBuf);
-            out.value(cacheBuf.toString());
-            cacheBuf.setLength(0);
+            name = entry.getKey();
+            switch (name.charAt(0)) {
+                case '$':
+                case '@':
+                    out.value(name);
+                default:
+                    cacheBuf.append("@");
+                    DSPath.encodeName(name, cacheBuf);
+                    out.value(cacheBuf.toString());
+                    cacheBuf.setLength(0);
+
+            }
             out.value(entry.getValue());
             out.endList();
         }
@@ -268,20 +343,26 @@ class DS1InboundList extends DS1InboundRequest
      * Called by encodeTarget for values.
      */
     private void encodeTargetValue(ApiObject object, DSIWriter out) {
-        DSIValue value = object.getValue();
-        if (!cacheMap.contains("type")) {
-            out.beginList();
-            out.value("$type");
+        DSElement e = cacheMap.remove("type");
+        out.beginList();
+        out.value("$type");
+        if (e != null) {
+            out.value(e);
+        } else {
             encodeType(object.getValue(), cacheMeta, out);
-            out.endList();
         }
-        if (!cacheMap.contains("writable")) {
-            if (!object.isReadOnly()) {
-                out.beginList()
-                   .value("$writable")
-                   .value(object.isConfig() ? "config" : "write")
-                   .endList();
-            }
+        out.endList();
+        e = cacheMap.remove("writable");
+        if (e != null) {
+            out.beginList()
+               .value("$writable")
+               .value(e)
+               .endList();
+        } else if (!object.isReadOnly()) {
+            out.beginList()
+               .value("$writable")
+               .value(object.isConfig() ? "config" : "write")
+               .endList();
         }
     }
 
@@ -290,7 +371,7 @@ class DS1InboundList extends DS1InboundRequest
         if ((type == null) && (value != null)) {
             meta.setType(value);
         }
-        fixType(cacheMap);
+        fixType(meta.getMap());
         out.value(cacheMap.remove(DSMetadata.TYPE));
     }
 
