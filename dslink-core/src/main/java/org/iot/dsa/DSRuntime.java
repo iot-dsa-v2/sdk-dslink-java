@@ -286,6 +286,9 @@ public class DSRuntime {
                 return nextRun;
             }
             if (running) {
+                if (skipMissed) {
+                    return computeNextRun(now);
+                }
                 return nextRun;
             }
             running = true;

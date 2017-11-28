@@ -126,8 +126,8 @@ public class DSMetadata {
 
     /**
      * Fully acquires metadata about the info.  First, if the target of the info implements
-     * DSIMetadata, it is put in the bucket first.  Then the info adds it's meta data to the bucket.
-     * Finally, the parent node is allowed is given the the chance to add/edit the bucket.
+     * DSIMetadata, it is put in the bucket first.  Then the info overlays its meta data into the
+     * bucket. Finally, the parent node is allowed is given the the chance to add/edit the bucket.
      *
      * @param info   Who to get metadata for.
      * @param bucket Where to put the metadata, can be null in which case a new map will be

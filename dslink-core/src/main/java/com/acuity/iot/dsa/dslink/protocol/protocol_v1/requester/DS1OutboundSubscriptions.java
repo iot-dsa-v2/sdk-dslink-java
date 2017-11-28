@@ -122,7 +122,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
         }
         DS1OutboundSubscribeStubs stub = sidMap.get(sid);
         if (stub == null) {
-            finer(finer() ? ("Unexpected subscription update " + sid) : null);
+            finer(finer() ? ("Unexpected subscription update sid=" + sid) : null);
             return;
         }
         DSDateTime timestamp = null;
