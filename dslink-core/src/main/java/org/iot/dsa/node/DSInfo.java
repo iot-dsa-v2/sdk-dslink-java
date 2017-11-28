@@ -60,6 +60,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
     ///////////////////////////////////////////////////////////////////////////
 
     int flags = 0;
+    DSMap metadata;
     String name;
     DSInfo next;
     DSNode parent;
@@ -81,6 +82,11 @@ public class DSInfo implements ApiObject, DSISubscriber {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    public DSInfo clearMetadata() {
+        metadata.clear();
+        return this;
+    }
 
     public DSInfo copy() {
         DSInfo ret = new DSInfo();
@@ -113,6 +119,13 @@ public class DSInfo implements ApiObject, DSISubscriber {
      */
     public boolean equalsDefault() {
         return false;
+    }
+
+    /**
+     * True if the state matches the default state.
+     */
+    public boolean equalsDefaultMetadata() {
+        return metadata == null;
     }
 
     /**
@@ -186,13 +199,15 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return flags;
     }
 
+    /**
+     * Only adds metadata defined in the info to the given bucket.
+     *
+     * @see DSMetadata#getMetadata(DSInfo, DSMap)
+     */
     @Override
     public void getMetadata(DSMap bucket) {
-        if (value instanceof DSIMetadata) {
-            ((DSIMetadata) value).getMetadata(bucket);
-        }
-        if (value instanceof DSNode) {
-            ((DSNode) value).getMetadata(this, bucket);
+        if (metadata != null) {
+            bucket.putAll(metadata);
         }
     }
 
@@ -231,16 +246,26 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
+
+    public boolean hasMetadata() {
+        if (metadata == null) {
+            return false;
+        }
+        if (metadata.isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * True if there is another info after this one.
      */
     public boolean hasNext() {
         return next != null;
-    }
-
-    @Override
-    public int hashCode() {
-        return System.identityHashCode(this);
     }
 
     @Override
@@ -290,8 +315,8 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     /**
-     * True if the flags and target object are identical.  Two nodes are identical
-     * if their children are in the same order.
+     * True if the flags and target object are identical.  Two nodes are identical if their children
+     * are in the same order.
      */
     public boolean isIdentical(DSInfo arg) {
         if (arg == this) {
@@ -401,6 +426,39 @@ public class DSInfo implements ApiObject, DSISubscriber {
         }
     }
 
+    /**
+     * Adds the metadata to the info and returns this.
+     */
+    public DSInfo putMetadata(DSMap map) {
+        if (metadata == null) {
+            metadata = (DSMap) map.copy();
+        } else {
+            metadata.putAll(map);
+        }
+        return this;
+    }
+
+    /**
+     * Adds the metadata to the info and returns this.
+     */
+    public DSInfo putMetadata(String name, DSElement value) {
+        if (metadata == null) {
+            metadata = new DSMap();
+        }
+        metadata.put(name, value);
+        return this;
+    }
+
+    /**
+     * Returns the removed value, or null.
+     */
+    public DSElement removeMetadata(String name) {
+        if (metadata == null) {
+            return null;
+        }
+        return metadata.remove(name);
+    }
+
     DSInfo setFlag(int position, boolean on) {
         fireInfoChanged();
         flags = DSUtil.setBit(flags, position, on);
@@ -448,14 +506,18 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     void subscribe() {
-        if (value instanceof DSIPublisher) {
-            ((DSIPublisher) value).subscribe(this);
+        if (!isNode()) {
+            if (value instanceof DSIPublisher) {
+                ((DSIPublisher) value).subscribe(this);
+            }
         }
     }
 
     void unsubscribe() {
-        if (value instanceof DSIPublisher) {
-            ((DSIPublisher) value).unsubscribe(this);
+        if (!isNode()) {
+            if (value instanceof DSIPublisher) {
+                ((DSIPublisher) value).unsubscribe(this);
+            }
         }
     }
 

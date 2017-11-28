@@ -47,6 +47,9 @@ public class DSString extends DSElement {
             return true;
         }
         if (!(o instanceof DSElement)) {
+            if (o instanceof String) {
+                return value.equals(o.toString());
+            }
             return false;
         }
         DSElement obj = (DSElement) o;

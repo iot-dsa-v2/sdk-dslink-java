@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.logging.Logger;
@@ -187,8 +188,18 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         Logger logger = DSLogging.getDefaultLogger();
         DSLink ret = null;
         File nodes = config.getNodesFile();
+        if (!nodes.exists()) { //TODO remove after 1/1/18
+            //convert from nodes.json to nodes.zip
+            String name = nodes.getName();
+            if (name.endsWith(".zip")) {
+                File tmp = new File(nodes.getParent(), "nodes.json");
+                if (tmp.exists()) {
+                    nodes = tmp;
+                }
+            }
+        }
         if (nodes.exists()) {
-            logger.info("Loading node database...");
+            logger.info("Loading node database " + nodes.getAbsolutePath());
             long time = System.currentTimeMillis();
             JsonReader reader = new JsonReader(nodes);
             DSNode node = NodeDecoder.decode(reader);
@@ -339,6 +350,13 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
      * stopped.
      */
     public void run() {
+        Class clazz = DSLink.class;
+        try {
+            URL src = clazz.getProtectionDomain().getCodeSource().getLocation();
+            info(info() ? src : null);
+        } catch (Throwable t) {
+            warn("Reporting source of DSLink.class", t);
+        }
         info(info() ? "Starting nodes" : null);
         start();
         long stableDelay = config.getConfig(DSLinkConfig.CFG_STABLE_DELAY, 5000l);
@@ -396,34 +414,50 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         InputStream in = null;
         try {
             File nodes = config.getNodesFile();
+            String name = nodes.getName();
             if (nodes.exists()) {
-                info("Backing up the node database");
+                info("Backing up the node database...");
                 StringBuilder buf = new StringBuilder();
-                buf.append(nodes.getName()).append('.');
                 Calendar cal = DSTime.getCalendar(System.currentTimeMillis());
-                DSTime.encodeForFiles(cal, buf);
-                DSTime.recycle(cal);
-                buf.append(".zip");
-                File back = new File(nodes.getParent(), buf.toString());
-                FileOutputStream fos = new FileOutputStream(back);
-                zos = new ZipOutputStream(fos);
-                zos.putNextEntry(new ZipEntry(nodes.getName()));
-                byte[] b = new byte[4096];
-                in = new FileInputStream(nodes);
-                int len = in.read(b);
-                while (len > 0) {
-                    zos.write(b, 0, len);
-                    len = in.read(b);
+                if (name.endsWith(".zip")) {
+                    String tmp = name.substring(0,name.lastIndexOf(".zip"));
+                    buf.append(tmp).append('.');
+                    DSTime.encodeForFiles(cal, buf);
+                    buf.append(".zip");
+                    File bakFile = new File(nodes.getParent(), buf.toString());
+                    nodes.renameTo(bakFile);
+                } else {
+                    buf.append(name).append('.');
+                    DSTime.encodeForFiles(cal, buf);
+                    buf.append(".zip");
+                    File back = new File(nodes.getParent(), buf.toString());
+                    FileOutputStream fos = new FileOutputStream(back);
+                    zos = new ZipOutputStream(fos);
+                    zos.putNextEntry(new ZipEntry(nodes.getName()));
+                    byte[] b = new byte[4096];
+                    in = new FileInputStream(nodes);
+                    int len = in.read(b);
+                    while (len > 0) {
+                        zos.write(b, 0, len);
+                        len = in.read(b);
+                    }
+                    in.close();
+                    in = null;
+                    zos.closeEntry();
+                    zos.close();
+                    zos = null;
                 }
-                in.close();
-                in = null;
-                zos.closeEntry();
-                zos.close();
-                zos = null;
+                DSTime.recycle(cal);
             }
             long time = System.currentTimeMillis();
-            info("Saving node database");
-            JsonWriter writer = new JsonWriter(nodes);
+            info("Saving node database " + nodes.getAbsolutePath());
+            JsonWriter writer = null;
+            if (name.endsWith(".zip")) {
+                String tmp = name.substring(0,name.lastIndexOf(".zip"));
+                writer = new JsonWriter(nodes, tmp + ".json");
+            } else {
+                writer = new JsonWriter(nodes);
+            }
             NodeEncoder.encode(writer, this);
             writer.close();
             trimBackups();
@@ -469,10 +503,26 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         if (nodes == null) {
             return;
         }
+        final String nodesName = nodes.getName();
+        final boolean isZip = nodesName.endsWith(".zip");
+        int idx = nodesName.lastIndexOf('.');
+        final String nameBase = nodesName.substring(0,idx);
         File dir = nodes.getAbsoluteFile().getParentFile();
         File[] backups = dir.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return name.endsWith(".zip") && name.startsWith(nodes.getName());
+                if (name.equals(nodesName)) {
+                    return false;
+                }
+                if (isZip) {
+                    if (name.endsWith(".zip")) {
+                        return name.startsWith(nameBase);
+                    }
+                } else {
+                    if (name.endsWith(".json")) {
+                        return name.startsWith(nameBase);
+                    }
+                }
+                return false;
             }
         });
         if (backups == null) {

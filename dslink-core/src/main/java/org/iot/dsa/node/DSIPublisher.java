@@ -24,6 +24,8 @@ public interface DSIPublisher {
 
     /**
      * Subscribes the argument, has no effect if the argument is already subscribed.
+     *
+     * @param subscriber Who is subscribing.
      */
     public void subscribe(DSISubscriber subscriber);
 
@@ -43,7 +45,7 @@ public interface DSIPublisher {
         CHILD_ADDED,
 
         /**
-         * The event will have a source (parent) and an info.
+         * Fired for EventType.Value, the event will have a source (parent) and a child info.
          */
         CHILD_CHANGED,
 
@@ -58,9 +60,10 @@ public interface DSIPublisher {
         INFO_CHANGED,
 
         /**
-         * The publisher was mutated in such a way that did not involve a child.
+         * Fired for EventType.Value, the event will have a source (parent) but no child.
          */
         PUBLISHER_CHANGED,
 
     }
+
 }

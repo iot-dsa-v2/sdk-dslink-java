@@ -29,7 +29,6 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    private static final Integer ZERO = Integer.valueOf(0);
     static final int MAX_SID = 2147483647;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -123,7 +122,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
         }
         DS1OutboundSubscribeStubs stub = sidMap.get(sid);
         if (stub == null) {
-            finer(finer() ? ("Unexpected subscription update " + sidMap.toString()) : null);
+            finer(finer() ? ("Unexpected subscription update sid=" + sid) : null);
             return;
         }
         DSDateTime timestamp = null;
@@ -260,13 +259,5 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
             sendMessage();
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
 
 }

@@ -30,8 +30,7 @@ public class DS1ConnectionInit extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
 
     private static final String DSA_VERSION = "1.1.2";
-    //private static final String[] SUPPORTED_FORMATS = new String[]{"msgpack", "json"};
-    private static final String[] SUPPORTED_FORMATS = new String[]{"json"};
+    private static final String[] SUPPORTED_FORMATS = new String[]{"msgpack", "json"};
 
     private String BROKER_REQ = "Broker Request";
     private String BROKER_RES = "Broker Response";
@@ -178,7 +177,7 @@ public class DS1ConnectionInit extends DSNode {
                 buf.append("&token=").append(authToken);
             }
             buf.append("&dsId=").append(getLink().getDsId());
-            buf.append("&format=").append("json");
+            buf.append("&format=").append(response.getString("format"));
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
@@ -263,9 +262,5 @@ public class DS1ConnectionInit extends DSNode {
             }
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
 
 }

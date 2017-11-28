@@ -31,14 +31,14 @@ public class StandaloneTransportFactory extends DSLogger implements Factory {
 
     @Override
     public DSTransport makeTransport(DSMap connectionInitResponse) {
-        String wsUri = connectionInitResponse.get("wsUri", null);
-        if (wsUri == null) {
-            throw new IllegalStateException("Only websocket transports are supported.");
+        String format = connectionInitResponse.getString("format");
+        if ("msgpack".equals(format)) {
+            return new MsgpackWsTranport();
         }
-        if (!"json".equals(connectionInitResponse.getString("format"))) {
-            throw new IllegalStateException("Only json is supported.");
+        if ("json".equals(format)) {
+            return new JsonWsTransport();
         }
-        return new TextWsTransport();
+        throw new IllegalStateException("Only msgpack and json are supported.");
     }
 
     /////////////////////////////////////////////////////////////////

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
-import java.util.logging.Logger;
 import javax.websocket.ClientEndpoint;
 import javax.websocket.CloseReason;
 import javax.websocket.EndpointConfig;
@@ -23,8 +22,6 @@ import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.json.JsonAppender;
 import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.logging.DSLogging;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -34,13 +31,7 @@ import org.iot.dsa.util.DSException;
  * @author Aaron Hansen
  */
 @ClientEndpoint
-public class TextWsTransport extends DSTransport {
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    private static final int BUF_SIZE = 8192;
+public class JsonWsTransport extends DSTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -214,7 +205,7 @@ public class TextWsTransport extends DSTransport {
     }
 
     public boolean shouldEndMessage() {
-        return messageSize > endMessageThreshold;
+        return (messageSize + writer.length()) > endMessageThreshold;
     }
 
     /**
@@ -273,7 +264,7 @@ public class TextWsTransport extends DSTransport {
             return buffer.available() > 0;
         }
 
-    }
+    }//MyReader
 
     private class MyWriter extends Writer {
 
@@ -289,7 +280,7 @@ public class TextWsTransport extends DSTransport {
         @Override
         public void write(int b) throws IOException {
             char ch = (char) b;
-            TextWsTransport.this.write(ch + "", false);
+            JsonWsTransport.this.write(ch + "", false);
         }
 
         @Override
@@ -299,18 +290,14 @@ public class TextWsTransport extends DSTransport {
 
         @Override
         public void write(char[] buf, int off, int len) throws IOException {
-            TextWsTransport.this.write(new String(buf, off, len), false);
+            JsonWsTransport.this.write(new String(buf, off, len), false);
         }
 
         @Override
         public void write(String str) throws IOException {
-            TextWsTransport.this.write(str, false);
+            JsonWsTransport.this.write(str, false);
         }
 
-    }
+    }//MyWriter
 
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
-
-}//TyrusTransportFactory
+}

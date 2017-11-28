@@ -254,12 +254,12 @@ public class DSLinkConfig {
     }
 
     /**
-     * If not set, will attempt to use the getConfig in dslink.json but fall back to 'nodes.json' in
+     * If not set, will attempt to use the getConfig in dslink.json but fall back to 'nodes.zip' in
      * the process directory if necessary.
      */
     public File getNodesFile() {
         if (nodesFile == null) {
-            setNodesFile(new File(getConfig(CFG_NODE_FILE, "nodes.json")));
+            setNodesFile(new File(getConfig(CFG_NODE_FILE, "nodes.zip")));
         }
         return nodesFile;
     }

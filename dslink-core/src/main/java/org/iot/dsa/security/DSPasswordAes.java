@@ -7,6 +7,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import org.iot.dsa.io.DSBase64;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIStorable;
 import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValue;
@@ -18,7 +19,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSPasswordAes extends DSValue implements DSIPassword {
+public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
 
     // Constants
     // ---------
@@ -147,8 +148,16 @@ public class DSPasswordAes extends DSValue implements DSIPassword {
     }
 
     @Override
+    public DSString store() {
+        return toElement();
+    }
+
+    @Override
     public DSPasswordAes restore(DSElement element) {
-        return new DSPasswordAes((DSString) element);
+        if (element.isNull()) {
+            return NULL;
+        }
+        return new DSPasswordAes(element.toString());
     }
 
     /**

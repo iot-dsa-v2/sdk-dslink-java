@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.io.DSBase64;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIStorable;
 import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValue;
@@ -15,7 +16,7 @@ import org.iot.dsa.node.DSValueType;
  *
  * @author Aaron Hansen
  */
-public class DSPasswordSha256 extends DSValue implements DSIPassword {
+public class DSPasswordSha256 extends DSValue implements DSIPassword, DSIStorable {
 
     // Constants
     // ---------
@@ -128,8 +129,16 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword {
     }
 
     @Override
+    public DSString store() {
+        return toElement();
+    }
+
+    @Override
     public DSPasswordSha256 restore(DSElement element) {
-        return new DSPasswordSha256((DSString) element);
+        if (element.isNull()) {
+            return NULL;
+        }
+        return new DSPasswordSha256(element.toString());
     }
 
     /**

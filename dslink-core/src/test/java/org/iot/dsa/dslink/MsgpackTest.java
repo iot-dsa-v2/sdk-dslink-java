@@ -65,18 +65,7 @@ public class MsgpackTest {
     @Test
     public void theTest() throws Exception {
         final ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
-        DSIWriter out = new MsgpackWriter() {
-            @Override
-            public DSIWriter flush() {
-                writeTo(baos1);
-                return this;
-            }
-
-            @Override
-            public void close() {
-                flush();
-            }
-        };
+        MsgpackWriter out = new MsgpackWriter();
         out.beginList();
         out.value("abc");
         out.value(10);
@@ -85,6 +74,7 @@ public class MsgpackTest {
         out.value(new DSMap());
         out.value(new DSList());
         out.endList();
+        out.writeTo(baos1);
         out.reset();
         byte[] encoded = baos1.toByteArray();
         DSIReader parser = new MsgpackReader(new ByteArrayInputStream(encoded));
@@ -96,18 +86,7 @@ public class MsgpackTest {
         Assert.assertTrue(list.get(2).toBoolean());
         Assert.assertEquals(list.get(3).toDouble(), 10.1d, 0);
         final ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
-        out = new MsgpackWriter() {
-            @Override
-            public DSIWriter flush() {
-                writeTo(baos2);
-                return this;
-            }
-
-            @Override
-            public void close() {
-                flush();
-            }
-        };
+        out = new MsgpackWriter();
         out.beginMap();
         out.key("first").value("abc");
         out.key("second").value(10);
@@ -127,6 +106,7 @@ public class MsgpackTest {
         }
         out.key("seventh").value("somebytes".getBytes());
         out.endMap();
+        out.writeTo(baos2);
         out.reset();
         encoded = baos2.toByteArray();
         parser = new MsgpackReader(new ByteArrayInputStream(encoded));

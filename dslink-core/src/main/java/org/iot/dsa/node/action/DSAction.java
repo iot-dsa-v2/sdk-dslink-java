@@ -195,7 +195,9 @@ public class DSAction implements ActionSpec, DSIObject {
     @Override
     public Iterator<DSMap> getParameters() {
         if (parameters != null) {
-            return parameters.iterator();
+            ArrayList<DSMap> tmp = new ArrayList<DSMap>(parameters.size());
+            tmp.addAll(parameters);
+            return tmp.iterator();
         }
         return null;
     }
@@ -246,6 +248,17 @@ public class DSAction implements ActionSpec, DSIObject {
     @Override
     public boolean isNull() {
         return false;
+    }
+
+    /**
+     * Override point, called for each parameter as it is being sent to the requester.  Allows you
+     * for example, to use current values as defaults.
+     *
+     * @param info      The info about the action in it's parent container.  Never use the outer
+     *                  'this' of anonymous instances.
+     * @param parameter Map representing a single parameter.
+     */
+    public void prepareParameter(DSInfo info, DSMap parameter) {
     }
 
     /**

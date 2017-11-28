@@ -97,6 +97,12 @@ public class RootNode extends DSRootNode implements Runnable {
         timer = DSRuntime.run(this, System.currentTimeMillis() + 1000l, 1000l);
     }
 
+    /*
+    protected void onStable() {
+        new TestRuntime();
+    }
+    */
+
     /**
      * Cancel an active timer if there is one.
      */
@@ -112,12 +118,6 @@ public class RootNode extends DSRootNode implements Runnable {
      * Build a large database
      */
     private void onTest() {
-        /*
-        for (int i = 0; i < 1000; i++) {
-            put("test"+i, DSInt.valueOf(i));
-        }
-        */
-        /*
         long start = System.currentTimeMillis();
         clear();
         long now = System.currentTimeMillis();
@@ -150,7 +150,6 @@ public class RootNode extends DSRootNode implements Runnable {
         now = System.currentTimeMillis();
         dur = now - start;
         info("********** Iterate duration: " + dur);
-        */
     }
 
     /**
@@ -230,6 +229,33 @@ public class RootNode extends DSRootNode implements Runnable {
             action.addParameter("Arg3", DSString.valueOf("ID3"), null);
             */
             put("action3", action);
+        }
+
+    }
+
+    private class TestRuntime implements Runnable {
+
+        long i = 0;
+        long last = System.currentTimeMillis();
+
+        public TestRuntime() {
+            DSRuntime.run(this);
+        }
+
+        @Override
+        public void run() {
+            long now = System.currentTimeMillis();
+            if (now - last > 1000) {
+                System.out.println("Failure");
+                System.exit(1);
+            }
+            info("Hello " + i);
+            if (++i > 1000) {
+                System.out.println("Success");
+                System.exit(0);
+            }
+            last = now;
+            DSRuntime.runDelayed(this, 100);
         }
 
     }

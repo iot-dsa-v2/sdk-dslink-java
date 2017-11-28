@@ -4,8 +4,10 @@ import java.util.HashMap;
 import org.iot.dsa.io.DSIReader.Token;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSIStorable;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.util.DSException;
@@ -93,6 +95,9 @@ public class NodeDecoder {
                 validateEqual(in.next(), Token.STRING);
             } else if ("i".equals(key)) {
                 in.next(); //just skip
+            } else if ("m".equals(key)) {
+                validateEqual(in.next(), Token.BEGIN_MAP);
+                in.getMap(); //just skip
             } else if ("v".equals(key)) {
                 if (ret == null) {
                     throw new IllegalStateException("Type not read before children");
@@ -108,6 +113,7 @@ public class NodeDecoder {
         DSElement state = null;
         String type = null;
         DSInfo info = null;
+        DSMap meta = null;
         while (in.next() != Token.END_MAP) {
             validateEqual(in.last(), Token.STRING);
             String key = in.getString();
@@ -124,6 +130,9 @@ public class NodeDecoder {
             } else if ("i".equals(key)) {
                 in.next();
                 state = in.getElement();
+            } else if ("m".equals(key)) {
+                validateEqual(in.next(), Token.BEGIN_MAP);
+                meta = in.getMap();
             } else if ("v".equals(key)) {
                 if (name == null) {
                     throw new IllegalStateException("Missing name");
@@ -145,10 +154,17 @@ public class NodeDecoder {
                 } else {
                     in.next();
                     DSIValue val = (DSIValue) obj;
-                    parent.put(info, val.restore(in.getElement()));
+                    if (val instanceof DSIStorable) {
+                        parent.put(info, ((DSIStorable)val).restore(in.getElement()));
+                    } else {
+                        parent.put(info, val.valueOf(in.getElement()));
+                    }
                 }
                 if (state != null) {
                     info.decodeState(state);
+                }
+                if (meta != null) {
+                    info.putMetadata(meta);
                 }
             }
         }

@@ -6,6 +6,7 @@ import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundListHandler;

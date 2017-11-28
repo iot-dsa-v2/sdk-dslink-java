@@ -3,7 +3,6 @@ package org.iot.dsa.dslink.websocket;
 import com.acuity.iot.dsa.dslink.DSTransport;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import javax.websocket.ClientEndpoint;
@@ -18,27 +17,25 @@ import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSByteBuffer;
-import org.iot.dsa.io.DSIoException;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.logging.DSLogger;
+import org.iot.dsa.io.DSIoException;
+import org.iot.dsa.io.msgpack.MsgpackReader;
+import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.util.DSException;
 
 /**
- * Websocket client implementation of DSTransport based on Tyrus, the reference
- * implementation of JSR 356.
+ * Websocket client implementation of DSTransport based on Tyrus, the reference implementation of
+ * JSR 356.
  *
  * @author Aaron Hansen
  */
 @ClientEndpoint
-public class BinaryWsTranport extends DSTransport {
+public class MsgpackWsTranport extends DSTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
     ///////////////////////////////////////////////////////////////////////////
-
-    private static final int BUF_SIZE = 8192;
-    private static final byte[] EMPTY = new byte[0];
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -48,12 +45,11 @@ public class BinaryWsTranport extends DSTransport {
     private ClientManager client;
     private DSLinkConnection connection;
     private int endMessageThreshold = 32768;
-    private int messageSize;
     private boolean open = false;
-    private DSIReader reader;
+    private MsgpackReader reader = new MsgpackReader(new MyInputStream());
     private Session session;
-    private ByteBuffer writeBuffer = ByteBuffer.allocate(BUF_SIZE);
-    private DSIWriter writer;
+    private ByteBuffer writeBuffer = ByteBuffer.allocate(1024 * 64);
+    private MsgpackWriter writer = new MsgpackWriter(writeBuffer);
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -65,7 +61,6 @@ public class BinaryWsTranport extends DSTransport {
 
     @Override
     public DSTransport beginMessage() {
-        messageSize = 0;
         return this;
     }
 
@@ -89,8 +84,14 @@ public class BinaryWsTranport extends DSTransport {
 
     @Override
     public DSTransport endMessage() {
-        write(EMPTY, 0, 0, true);
-        messageSize = 0;
+        try {
+            RemoteEndpoint.Basic basic = session.getBasicRemote();
+            writeBuffer.flip();
+            basic.sendBinary(writeBuffer, true);
+            writeBuffer.clear();
+        } catch (IOException x) {
+            DSException.throwRuntime(x);
+        }
         return this;
     }
 
@@ -143,8 +144,7 @@ public class BinaryWsTranport extends DSTransport {
 
     @OnMessage
     public void onMessage(Session session, byte[] msgPart, boolean isLast) {
-        //isLast is ignored because we treat the incoming bytes as a pure
-        //stream.  Wish we could do the same with outbound...
+        //isLast is ignored because we treat the incoming bytes as a pure stream.
         buffer.put(msgPart, 0, msgPart.length);
     }
 
@@ -209,57 +209,7 @@ public class BinaryWsTranport extends DSTransport {
     }
 
     public boolean shouldEndMessage() {
-        return messageSize > endMessageThreshold;
-    }
-
-    public void write(int b) {
-        try {
-            if (!open) {
-                throw new IOException("Closed " + getConnectionUrl());
-            }
-            messageSize++;
-            RemoteEndpoint.Basic basic = session.getBasicRemote();
-            writeBuffer.put((byte) b);
-            basic.sendBinary(writeBuffer, false);
-            writeBuffer.clear();
-        } catch (IOException x) {
-            severe(getConnectionUrl(), x);
-            connection.onClose();
-        }
-    }
-
-    /**
-     * Send the buffer and indicate whether it represents the end of the message.
-     *
-     * @param buf    The bytes to send.
-     * @param idx    The index of the first byte to write.
-     * @param len    The number of bytes to send.
-     * @param isLast Whether or not this completes the message.
-     * @throws DSIoException If there are any issue.
-     */
-    public void write(byte[] buf, int idx, int len, boolean isLast) {
-        if (!open) {
-            throw new DSIoException("Closed " + getConnectionUrl());
-        }
-        try {
-            RemoteEndpoint.Basic basic = session.getBasicRemote();
-            messageSize += len;
-            while (len > BUF_SIZE) {
-                writeBuffer.put(buf, 0, BUF_SIZE);
-                basic.sendBinary(writeBuffer, false);
-                idx += BUF_SIZE;
-                len -= BUF_SIZE;
-                writeBuffer.clear();
-            }
-            if (len > 0) {
-                writeBuffer.put(buf, idx, len);
-                basic.sendBinary(writeBuffer, isLast);
-                writeBuffer.clear();
-            }
-        } catch (IOException x) {
-            severe(getConnectionUrl(), x);
-            connection.onClose();
-        }
+        return writer.length() > endMessageThreshold;
     }
 
     /////////////////////////////////////////////////////////////////
@@ -294,32 +244,8 @@ public class BinaryWsTranport extends DSTransport {
         }
     }
 
-    private class MyOutputStream extends OutputStream {
-
-        @Override
-        public void close() {
-            getConnection().onClose();
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            BinaryWsTranport.this.write(b);
-        }
-
-        @Override
-        public void write(byte[] buf) throws IOException {
-            BinaryWsTranport.this.write(buf, 0, buf.length, false);
-        }
-
-        @Override
-        public void write(byte[] buf, int off, int len) throws IOException {
-            BinaryWsTranport.this.write(buf, off, len, false);
-        }
-
-    }
-
     /////////////////////////////////////////////////////////////////
     // Initialization
     /////////////////////////////////////////////////////////////////
 
-}//TyrusTransportFactory
+}
