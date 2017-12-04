@@ -1,6 +1,7 @@
 package org.iot.dsa.dslink.websocket;
 
-import com.acuity.iot.dsa.dslink.DSTransport;
+import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -15,23 +16,17 @@ import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
-import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSByteBuffer;
-import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.DSIoException;
-import org.iot.dsa.io.msgpack.MsgpackReader;
-import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.util.DSException;
 
 /**
- * Websocket client implementation of DSTransport based on Tyrus, the reference implementation of
- * JSR 356.
+ * Websocket client implementation of DSBinaryTransport based on Tyrus, the reference implementation
+ * of JSR 356.
  *
  * @author Aaron Hansen
  */
 @ClientEndpoint
-public class MsgpackWsTranport extends DSTransport {
+public class WsBinaryTransport extends DSBinaryTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -43,13 +38,11 @@ public class MsgpackWsTranport extends DSTransport {
 
     private DSByteBuffer buffer = new DSByteBuffer();
     private ClientManager client;
-    private DSLinkConnection connection;
-    private int endMessageThreshold = 32768;
+    private InputStream input = new MyInputStream();
+    private int messageSize;
     private boolean open = false;
-    private MsgpackReader reader = new MsgpackReader(new MyInputStream());
     private Session session;
     private ByteBuffer writeBuffer = ByteBuffer.allocate(1024 * 64);
-    private MsgpackWriter writer = new MsgpackWriter(writeBuffer);
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -75,7 +68,7 @@ public class MsgpackWsTranport extends DSTransport {
             }
             session = null;
         } catch (Exception x) {
-            finer(connection.getConnectionId(), x);
+            finer(getConnection().getConnectionId(), x);
         }
         open = false;
         buffer.close();
@@ -96,36 +89,17 @@ public class MsgpackWsTranport extends DSTransport {
     }
 
     @Override
-    public DSLinkConnection getConnection() {
-        return connection;
-    }
-
-    @Override
-    public DSIReader getReader() {
-        if (reader == null) {
-            reader = null; //TODO
-        }
-        return reader;
-    }
-
-    @Override
-    public DSIWriter getWriter() {
-        if (writer == null) {
-            writer = null; //TODO
-        }
-        return writer;
-    }
-
-    /**
-     * @return Null if not open.
-     */
-    public Session getSession() {
-        return session;
+    public InputStream getInput() {
+        return input;
     }
 
     @Override
     public boolean isOpen() {
         return open;
+    }
+
+    public int messageSize() {
+        return messageSize;
     }
 
     @OnClose
@@ -174,42 +148,21 @@ public class MsgpackWsTranport extends DSTransport {
     }
 
     /**
-     * Returns the next incoming byte, or -1 when end of stream has been reached.
-     *
-     * @throws DSIoException if there are any issues.
+     * Flips the buffer, writes it, then clears it.
      */
-    private int read() {
-        return buffer.read();
-    }
-
-    /**
-     * Reads incoming bytes into the given buffer.
-     *
-     * @param buf The buffer into which data is read.
-     * @param off The start offset in the buffer to put data.
-     * @param len The maximum number of bytes to read.
-     * @return The number of bytes read or -1 for end of stream.
-     * @throws DSIoException if there are any issues.
-     */
-    private int read(byte[] buf, int off, int len) {
-        return buffer.read(buf, off, len);
-    }
-
-    @Override
-    public DSTransport setConnection(DSLinkConnection connection) {
-        this.connection = connection;
-        return this;
-    }
-
-    @Override
-    public DSTransport setReadTimeout(long millis) {
-        super.setReadTimeout(millis);
-        buffer.setTimeout(millis);
-        return this;
-    }
-
-    public boolean shouldEndMessage() {
-        return writer.length() > endMessageThreshold;
+    public void write(ByteBuffer buf, boolean isLast) {
+        messageSize += buf.position();
+        try {
+            buf.flip();
+            RemoteEndpoint.Basic basic = session.getBasicRemote();
+            basic.sendBinary(buf, isLast);
+            buf.clear();
+            if (isLast) {
+                messageSize = 0;
+            }
+        } catch (IOException x) {
+            DSException.throwRuntime(x);
+        }
     }
 
     /////////////////////////////////////////////////////////////////
@@ -230,22 +183,33 @@ public class MsgpackWsTranport extends DSTransport {
 
         @Override
         public int read() throws IOException {
+            if (!open) {
+                if (buffer.available() == 0) {
+                    return -1;
+                }
+            }
             return buffer.read();
         }
 
         @Override
         public int read(byte[] buf) throws IOException {
+            if (!open) {
+                if (buffer.available() == 0) {
+                    return -1;
+                }
+            }
             return buffer.read(buf, 0, buf.length);
         }
 
         @Override
         public int read(byte[] buf, int off, int len) throws IOException {
+            if (!open) {
+                if (buffer.available() == 0) {
+                    return -1;
+                }
+            }
             return buffer.read(buf, off, len);
         }
     }
-
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
 
 }

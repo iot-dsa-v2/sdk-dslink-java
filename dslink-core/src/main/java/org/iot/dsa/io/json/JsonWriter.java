@@ -70,6 +70,13 @@ public class JsonWriter extends AbstractJsonWriter {
         setOutput(out, zipFileName);
     }
 
+    public JsonWriter(Writer out) {
+        setOutput(out);
+    }
+
+    // Public Methods
+    // --------------
+
     @Override
     public void close() {
         try {

@@ -1,24 +1,20 @@
 package com.acuity.iot.dsa.dslink.test;
 
-import com.acuity.iot.dsa.dslink.DSTransport;
+import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.logging.Level;
+import java.nio.ByteBuffer;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSByteBuffer;
 import org.iot.dsa.io.DSIoException;
-import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
 
 /**
  * Routes requests and responses back to self.
  *
  * @author Aaron Hansen
  */
-public class TestTransport extends DSTransport {
+public class TestTransport extends DSBinaryTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -27,11 +23,8 @@ public class TestTransport extends DSTransport {
     private DSByteBuffer buffer = new DSByteBuffer();
     private DSLinkConnection connection;
     private String connectionUri;
-    private int endMessageThreshold = 32768;
     private int messageSize;
     private boolean open = false;
-    private DSIReader reader;
-    private DSIWriter writer;
 
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
@@ -56,7 +49,6 @@ public class TestTransport extends DSTransport {
             return this;
         }
         open = false;
-        buffer.close();
         return this;
     }
 
@@ -72,24 +64,18 @@ public class TestTransport extends DSTransport {
     }
 
     @Override
-    public DSIReader getReader() {
-        if (reader == null) {
-            reader = new JsonReader(new MyInputStream(), "UTF-8");
-        }
-        return reader;
-    }
-
-    @Override
-    public DSIWriter getWriter() {
-        if (writer == null) {
-            writer = new JsonWriter(new MyOutputStream());
-        }
-        return writer;
+    public InputStream getInput() {
+        return new MyInputStream();
     }
 
     @Override
     public boolean isOpen() {
         return open;
+    }
+
+    @Override
+    public int messageSize() {
+        return buffer.length();
     }
 
     @Override
@@ -108,10 +94,7 @@ public class TestTransport extends DSTransport {
      * @throws DSIoException if there are any issues.
      */
     private int read() {
-        synchronized (buffer) {
-            buffer.notify();
-            return buffer.read();
-        }
+        return buffer.read();
     }
 
     /**
@@ -124,10 +107,7 @@ public class TestTransport extends DSTransport {
      * @throws DSIoException if there are any issues.
      */
     private int read(byte[] buf, int off, int len) {
-        synchronized (buffer) {
-            buffer.notify();
-            return buffer.read(buf, off, len);
-        }
+        return buffer.read(buf, off, len);
     }
 
     @Override
@@ -148,37 +128,9 @@ public class TestTransport extends DSTransport {
         return this;
     }
 
-    public boolean shouldEndMessage() {
-        return messageSize > endMessageThreshold;
-    }
-
-    public void write(int b) {
-        try {
-            if (!open) {
-                throw new IOException("Closed " + connectionUri);
-            }
-            messageSize++;
-            buffer.put((byte) b);
-        } catch (IOException x) {
-            connection.getLink().getLogger().log(Level.SEVERE, connectionUri, x);
-            close();
-        }
-    }
-
-    /**
-     * Send the buffer and indicate whether it represents the end of the message.
-     *
-     * @param buf    The bytes to send.
-     * @param len    The number of bytes to send from index 0.
-     * @param isLast Whether or not this completes the message.
-     * @throws DSIoException If there are any issue.
-     */
-    public void write(byte[] buf, int off, int len, boolean isLast) {
-        if (!open) {
-            throw new DSIoException("Closed " + connectionUri);
-        }
-        messageSize += len;
-        buffer.put(buf, 0, len);
+    @Override
+    public void write(ByteBuffer buf, boolean isLast) {
+        buffer.put(buf);
     }
 
     /////////////////////////////////////////////////////////////////
@@ -199,20 +151,36 @@ public class TestTransport extends DSTransport {
 
         @Override
         public int read() throws IOException {
-            return buffer.read();
+            if (!open) {
+                if (buffer.available() == 0) {
+                    throw new IOException("Closed " + connectionUri);
+                }
+            }
+            return TestTransport.this.read();
         }
 
         @Override
         public int read(byte[] buf) throws IOException {
-            return buffer.read(buf, 0, buf.length);
+            if (!open) {
+                if (buffer.available() == 0) {
+                    throw new IOException("Closed " + connectionUri);
+                }
+            }
+            return TestTransport.this.read(buf, 0, buf.length);
         }
 
         @Override
         public int read(byte[] buf, int off, int len) throws IOException {
-            return buffer.read(buf, off, len);
+            if (!open) {
+                if (buffer.available() == 0) {
+                    throw new IOException("Closed " + connectionUri);
+                }
+            }
+            return TestTransport.this.read(buf, off, len);
         }
     }
 
+    /*
     private class MyOutputStream extends OutputStream {
 
         @Override
@@ -236,5 +204,6 @@ public class TestTransport extends DSTransport {
         }
 
     }
+    */
 
 }

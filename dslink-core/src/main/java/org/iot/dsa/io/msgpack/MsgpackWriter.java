@@ -17,7 +17,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     // Fields
     // ------
 
-    private ByteBuffer byteBuffer = ByteBuffer.allocate(1024 * 64);
+    protected ByteBuffer byteBuffer;
     private CharBuffer charBuffer;
     private Frame frame;
     private CharsetEncoder encoder = DSString.UTF8.newEncoder();
@@ -27,6 +27,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     // ------------
 
     public MsgpackWriter() {
+        byteBuffer = ByteBuffer.allocate(1024 * 64);
     }
 
     public MsgpackWriter(ByteBuffer buffer) {
@@ -107,6 +108,12 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         return byteBuffer.position();
     }
 
+    /**
+     * Callback, for when the top level container is finished.
+     */
+    public void onComplete() {
+    }
+
     @Override
     protected void writeSeparator() throws IOException {
     }
@@ -136,12 +143,10 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         if (len < (1 << 8)) {
             byteBuffer.put(BIN8);
             byteBuffer.put((byte) len);
-        }
-        else if (len < (1 << 16)) {
+        } else if (len < (1 << 16)) {
             byteBuffer.put(BIN16);
             byteBuffer.putShort((short) len);
-        }
-        else {
+        } else {
             byteBuffer.put(BIN32);
             byteBuffer.putInt(len);
         }
@@ -217,7 +222,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         frame.writeSize();
         frame = frame.parent;
         if (frame == null) {
-            flush();
+            onComplete();
         }
     }
 
@@ -250,7 +255,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         frame.writeSize();
         frame = frame.parent;
         if (frame == null) {
-            flush();
+            onComplete();
         }
     }
 

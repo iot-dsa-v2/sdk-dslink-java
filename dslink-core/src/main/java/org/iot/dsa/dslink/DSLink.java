@@ -163,7 +163,11 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         DSLogging.setDefaultLevel(config.getLogLevel());
         name = config.getLinkName();
         keys = config.getKeys();
-        logger = DSLogging.getLogger(name, config.getLogFile());
+        if (config.getLogFile() != null) {
+            logger = DSLogging.getLogger(name, config.getLogFile());
+        } else {
+            logger = DSLogging.getDefaultLogger();
+        }
         try {
             String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
             if (type != null) {
@@ -357,6 +361,12 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         } catch (Throwable t) {
             warn("Reporting source of DSLink.class", t);
         }
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                save();
+                DSLogging.close();
+            }
+        });
         info(info() ? "Starting nodes" : null);
         start();
         long stableDelay = config.getConfig(DSLinkConfig.CFG_STABLE_DELAY, 5000l);
@@ -389,11 +399,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             stop();
             DSException.throwRuntime(x);
         }
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                save();
-            }
-        });
+        info(info() ? "Exit DSLink.run" : null);
     }
 
     @Override

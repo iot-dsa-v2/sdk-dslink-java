@@ -32,7 +32,7 @@ public class DSLinkConfig {
     public static final String CFG_ROOT_TYPE = "rootType";
     public static final String CFG_SAVE_INTERVAL = "saveInterval";
     public static final String CFG_STABLE_DELAY = "stableDelay";
-    public static final String CFG_TRANSPORT_FACTORY = "transportFactory";
+    public static final String CFG_WS_TRANSPORT_FACTORY = "wsTransportFactory";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -237,7 +237,9 @@ public class DSLinkConfig {
 
     public File getLogFile() {
         if (logFile == null) {
-            setLogFile(new File(getConfig(CFG_LOG_FILE, getLinkName() + ".log")));
+            String file = getConfig(CFG_LOG_FILE, null);
+            if (file != null)
+                setLogFile(new File(file));
         }
         return logFile;
     }

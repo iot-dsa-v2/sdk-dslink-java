@@ -1,5 +1,7 @@
 package org.iot.dsa.io;
 
+import java.nio.ByteBuffer;
+
 /**
  * A buffer for storing bytes being pushed from an input stream.  Useful when bytes are coming in
  * faster than can be processed.
@@ -95,6 +97,27 @@ public class DSByteBuffer {
         open = true;
         notify();
         return this;
+    }
+
+    /**
+     * Gets the bytes from the given buffer, which will be flipped, then cleared.
+     */
+    public synchronized void put(ByteBuffer buf) {
+        int len = buf.position();
+        int bufLen = buffer.length;
+        if ((len + length + offset) >= bufLen) {
+            if ((len + length) > bufLen) {  //the buffer is too small
+                growBuffer(len + length);
+            } else { //offset must be > 0, shift everything to index 0
+                System.arraycopy(buffer, offset, buffer, 0, length);
+                offset = 0;
+            }
+        }
+        buf.flip();
+        buf.get(buffer, length + offset, len);
+        buf.clear();
+        length += len;
+        notify();
     }
 
     /**
@@ -239,6 +262,41 @@ public class DSByteBuffer {
         }
         len = Math.min(len, length);
         System.arraycopy(buffer, offset, buf, off, len);
+        length -= len;
+        if (length == 0) {
+            offset = 0;
+        } else {
+            offset += len;
+        }
+        return len;
+    }
+
+    /**
+     * Reads incoming bytes into the given buffer.
+     *
+     * @param buf The buffer into which data is read.
+     * @return The number of bytes read or -1 for end of stream.
+     * @throws DSIoException if there are any issues.
+     */
+    public synchronized int read(ByteBuffer buf) {
+        while (open && (length == 0)) {
+            try {
+                if (timeout > 0) {
+                    wait(timeout);
+                } else {
+                    wait();
+                }
+            } catch (InterruptedException ignore) {
+            }
+        }
+        notify();
+        if (!open) {
+            return -1;
+        } else if (length == 0) {
+            throw new DSIoException("Read timeout");
+        }
+        int len = Math.min(buf.remaining(), length);
+        buf.put(buffer, offset, len);
         length -= len;
         if (length == 0) {
             offset = 0;

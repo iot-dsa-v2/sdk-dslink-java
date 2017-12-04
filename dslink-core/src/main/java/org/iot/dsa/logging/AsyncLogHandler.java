@@ -21,6 +21,10 @@ public abstract class AsyncLogHandler extends Handler {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
+    static final int STATE_CLOSED = 0;
+    static final int STATE_OPEN = 1;
+    static final int STATE_CLOSE_PENDING = 2;
+
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
@@ -29,39 +33,33 @@ public abstract class AsyncLogHandler extends Handler {
     private Calendar calendar = Calendar.getInstance();
     private LogHandlerThread logHandlerThread;
     private int maxQueueSize = DSLogging.DEFAULT_MAX_QUEUE;
-    private boolean open = false;
     private PrintStream out;
+    private int state = STATE_CLOSED;
     private LinkedList<LogRecord> queue = new LinkedList<LogRecord>();
     private int queueThrottle = (int) (DSLogging.DEFAULT_MAX_QUEUE * .90);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * The number of items on the queue.
-     */
-    public int backlog() {
-        synchronized (queue) {
-            return queue.size();
-        }
-    }
-
-    /**
      * Closes the PrintStream, terminates the write thread and performs houseKeeping.
      */
     @Override
     public void close() {
-        open = false;
+        state = STATE_CLOSE_PENDING;
         synchronized (queue) {
-            queue.notifyAll();
+            while (queue.size() > 0) {
+                queue.notifyAll();
+                try {
+                    queue.wait();
+                } catch (Exception ignore) {
+                }
+            }
         }
         houseKeeping();
-        out.close();
+        out.flush();
+        state = STATE_CLOSED;
     }
 
     @Override
@@ -75,10 +73,6 @@ public abstract class AsyncLogHandler extends Handler {
      */
     public long getHouseKeepingIntervalMillis() {
         return DSTime.MILLIS_TEN_SECONDS;
-    }
-
-    public int getMaxQueueSize() {
-        return maxQueueSize;
     }
 
     /**
@@ -106,7 +100,7 @@ public abstract class AsyncLogHandler extends Handler {
      */
     @Override
     public void publish(LogRecord record) {
-        if (open) {
+        if (state == STATE_OPEN) {
             if (maxQueueSize > 0) {
                 int size = queue.size();
                 if (size >= queueThrottle) {
@@ -194,7 +188,7 @@ public abstract class AsyncLogHandler extends Handler {
      */
     protected void start() {
         if (logHandlerThread == null) {
-            open = true;
+            state = STATE_OPEN;
             logHandlerThread = new LogHandlerThread();
             logHandlerThread.start();
         }
@@ -262,25 +256,27 @@ public abstract class AsyncLogHandler extends Handler {
             long lastHouseKeeping = System.nanoTime();
             long now;
             LogRecord record;
-            boolean emptyQueue;
-            while (open) {
+            boolean emptyQueue = false;
+            while (state != STATE_CLOSED) {
                 record = null;
-                synchronized (queue) {
-                    emptyQueue = queue.isEmpty();
-                    if (emptyQueue) {
-                        try {
-                            queue.wait(DSTime.MILLIS_SECOND);
-                        } catch (Exception ignore) {
+                if (state != STATE_OPEN) {
+                    synchronized (queue) {
+                        emptyQueue = queue.isEmpty();
+                        if (emptyQueue) {
+                            try {
+                                queue.notify();
+                                queue.wait(DSTime.MILLIS_SECOND);
+                            } catch (Exception ignore) {
+                            }
+                            emptyQueue = queue.isEmpty(); //housekeeping opportunity flag
+                        } else {
+                            record = queue.removeFirst();
                         }
-                        emptyQueue = queue.isEmpty(); //housekeeping opportunity flag
-                    } else {
-                        record = queue.removeFirst();
                     }
                 }
-                if (open) {
+                if (state != STATE_CLOSED) {
                     if (record != null) {
                         write(record);
-                        Thread.yield();
                     }
                     if (emptyQueue) {
                         //housekeeping opportunity
@@ -305,8 +301,4 @@ public abstract class AsyncLogHandler extends Handler {
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
-
-} //class
+}

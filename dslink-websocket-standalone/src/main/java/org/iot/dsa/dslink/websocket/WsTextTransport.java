@@ -1,6 +1,7 @@
 package org.iot.dsa.dslink.websocket;
 
-import com.acuity.iot.dsa.dslink.DSTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -15,23 +16,18 @@ import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
-import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSCharBuffer;
 import org.iot.dsa.io.DSIoException;
-import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.json.JsonAppender;
-import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.util.DSException;
 
 /**
- * Websocket client implementation of DSTransport based on Tyrus, the reference
- * implementation of JSR 356.
+ * Websocket client implementation of DSTextTransport based on Tyrus, the reference implementation
+ * of JSR 356.
  *
  * @author Aaron Hansen
  */
 @ClientEndpoint
-public class JsonWsTransport extends DSTransport {
+public class WsTextTransport extends DSTextTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -39,13 +35,11 @@ public class JsonWsTransport extends DSTransport {
 
     private DSCharBuffer buffer = new DSCharBuffer();
     private ClientManager client;
-    private DSLinkConnection connection;
-    private int endMessageThreshold = 32768;
     private int messageSize;
+    private Reader myReader;
+    private Writer myWriter;
     private boolean open = false;
-    private DSIReader reader;
     private Session session;
-    private DSIWriter writer;
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -72,7 +66,7 @@ public class JsonWsTransport extends DSTransport {
             }
             session = null;
         } catch (Exception x) {
-            finer(connection.getConnectionId(), x);
+            finer(getConnection().getConnectionId(), x);
         }
         open = false;
         buffer.close();
@@ -86,37 +80,28 @@ public class JsonWsTransport extends DSTransport {
         return this;
     }
 
-    @Override
-    public DSLinkConnection getConnection() {
-        return connection;
-    }
-
-    @Override
-    public DSIReader getReader() {
-        if (reader == null) {
-            reader = new JsonReader(new MyReader());
+    public Reader getReader() {
+        if (myReader == null) {
+            myReader = new MyReader();
         }
-        return reader;
+        return myReader;
     }
 
-    /**
-     * @return Null if not open.
-     */
-    public Session getSession() {
-        return session;
-    }
-
-    @Override
-    public DSIWriter getWriter() {
-        if (writer == null) {
-            writer = new JsonAppender(new MyWriter()).setPrettyPrint(false);
+    public Writer getWriter() {
+        if (myWriter == null) {
+            myWriter = new MyWriter();
         }
-        return writer;
+        return myWriter;
     }
 
     @Override
     public boolean isOpen() {
         return open;
+    }
+
+    @Override
+    public int messageSize() {
+        return messageSize;
     }
 
     @OnClose
@@ -170,45 +155,6 @@ public class JsonWsTransport extends DSTransport {
     }
 
     /**
-     * Returns the next incoming byte, or -1 when end of stream has been reached.
-     *
-     * @throws DSIoException if there are any issues.
-     */
-    private int read() {
-        return buffer.read();
-    }
-
-    /**
-     * Reads incoming bytes into the given buffer.
-     *
-     * @param buf The buffer into which data is read.
-     * @param off The start offset in the buffer to put data.
-     * @param len The maximum number of bytes to read.
-     * @return The number of bytes read or -1 for end of stream.
-     * @throws DSIoException if there are any issues.
-     */
-    private int read(char[] buf, int off, int len) {
-        return buffer.read(buf, off, len);
-    }
-
-    @Override
-    public DSTransport setConnection(DSLinkConnection connection) {
-        this.connection = connection;
-        return this;
-    }
-
-    @Override
-    public DSTransport setReadTimeout(long millis) {
-        super.setReadTimeout(millis);
-        buffer.setTimeout(millis);
-        return this;
-    }
-
-    public boolean shouldEndMessage() {
-        return (messageSize + writer.length()) > endMessageThreshold;
-    }
-
-    /**
      * Send the buffer and indicate whether it represents the end of the message.
      *
      * @param text   The characters to send
@@ -229,7 +175,7 @@ public class JsonWsTransport extends DSTransport {
             basic.sendText(text, isLast);
         } catch (IOException x) {
             severe(getConnectionUrl(), x);
-            connection.onClose();
+            getConnection().onClose();
         }
     }
 
@@ -246,16 +192,31 @@ public class JsonWsTransport extends DSTransport {
 
         @Override
         public int read() throws IOException {
+            if (!open) {
+                if (buffer.available() == 0) {
+                    return -1;
+                }
+            }
             return buffer.read();
         }
 
         @Override
         public int read(char[] buf) throws IOException {
+            if (!open) {
+                if (buffer.available() == 0) {
+                    return -1;
+                }
+            }
             return buffer.read(buf, 0, buf.length);
         }
 
         @Override
         public int read(char[] buf, int off, int len) throws IOException {
+            if (!open) {
+                if (buffer.available() == 0) {
+                    return -1;
+                }
+            }
             return buffer.read(buf, off, len);
         }
 
@@ -280,7 +241,7 @@ public class JsonWsTransport extends DSTransport {
         @Override
         public void write(int b) throws IOException {
             char ch = (char) b;
-            JsonWsTransport.this.write(ch + "", false);
+            WsTextTransport.this.write(ch + "", false);
         }
 
         @Override
@@ -290,12 +251,12 @@ public class JsonWsTransport extends DSTransport {
 
         @Override
         public void write(char[] buf, int off, int len) throws IOException {
-            JsonWsTransport.this.write(new String(buf, off, len), false);
+            WsTextTransport.this.write(new String(buf, off, len), false);
         }
 
         @Override
         public void write(String str) throws IOException {
-            JsonWsTransport.this.write(str, false);
+            WsTextTransport.this.write(str, false);
         }
 
     }//MyWriter
