@@ -1,12 +1,7 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -14,12 +9,7 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.responder.InboundInvokeRequest;
-import org.iot.dsa.dslink.responder.InboundListRequest;
-import org.iot.dsa.dslink.responder.InboundSetRequest;
-import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
-import org.iot.dsa.dslink.responder.OutboundListResponse;
-import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
+import org.iot.dsa.dslink.responder.*;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
@@ -37,16 +27,16 @@ import org.iot.dsa.util.DSException;
 
 /**
  * Represents an upstream connection, a node tree, and manages the lifecycle of both.
- *
  * <p>
- *
+ * <p>
+ * <p>
  * Links are created with DSLinkConfig object. The main method of the process is responsible for
  * creating the config.  After instantiation, the link should call DSLink.run()
- *
  * <p>
- *
+ * <p>
+ * <p>
  * Lifecycle:
- *
+ * <p>
  * TODO
  *
  * @author Aaron Hansen
@@ -71,6 +61,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
     private Logger logger;
     private String name;
     private DSInfo nodes = getInfo(NODES);
+    private Thread runThread;
     private DSInfo save = getInfo(SAVE);
     private boolean saveEnabled = true;
 
@@ -166,7 +157,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         if (config.getLogFile() != null) {
             logger = DSLogging.getLogger(name, config.getLogFile());
         } else {
-            logger = DSLogging.getDefaultLogger();
+            logger = Logger.getLogger(name);
         }
         try {
             String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
@@ -241,12 +232,16 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
 
     /**
      * This is a convenience for DSLink.load(new DSLinkConfig(args)).run() and can be used as the
-     * the main class for any link.
+     * the main class for any link.  Use DSLink.shutdown() to stop running.
      */
     public static void main(String[] args) {
-        DSLinkConfig cfg = new DSLinkConfig(args);
-        DSLink link = DSLink.load(cfg);
-        link.run();
+        try {
+            DSLinkConfig cfg = new DSLinkConfig(args);
+            DSLink link = DSLink.load(cfg);
+            link.run();
+        } catch (Exception x) {
+            x.printStackTrace();
+        }
     }
 
     /**
@@ -354,52 +349,63 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
      * stopped.
      */
     public void run() {
-        Class clazz = DSLink.class;
-        try {
-            URL src = clazz.getProtectionDomain().getCodeSource().getLocation();
-            info(info() ? src : null);
-        } catch (Throwable t) {
-            warn("Reporting source of DSLink.class", t);
-        }
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                save();
-                DSLogging.close();
+        synchronized (this) {
+            if (runThread != null) {
+                throw new IllegalStateException("Already running.");
             }
-        });
-        info(info() ? "Starting nodes" : null);
-        start();
-        long stableDelay = config.getConfig(DSLinkConfig.CFG_STABLE_DELAY, 5000l);
-        try {
-            Thread.sleep(stableDelay);
-        } catch (Exception x) {
-            warn("Interrupted stable delay", x);
+            runThread = Thread.currentThread();
         }
         try {
-            info(info() ? "Stabilizing nodes" : null);
-            stable();
-            long saveInterval = config.getConfig(DSLinkConfig.CFG_SAVE_INTERVAL, 60);
-            saveInterval *= 60000;
-            long nextSave = System.currentTimeMillis() + saveInterval;
-            while (isRunning()) {
-                synchronized (this) {
-                    try {
-                        wait(10000);
-                    } catch (InterruptedException x) {
-                        warn(getPath(), x);
-                    }
-                    if (System.currentTimeMillis() > nextSave) {
-                        save();
-                        nextSave = System.currentTimeMillis() + saveInterval;
+            Class clazz = DSLink.class;
+            try {
+                URL src = clazz.getProtectionDomain().getCodeSource().getLocation();
+                info(info() ? src : null);
+            } catch (Throwable t) {
+                warn("Reporting source of DSLink.class", t);
+            }
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    info("Running shutdown hook");
+                    shutdown();
+                }
+            });
+            info(info() ? "Starting nodes" : null);
+            start();
+            long stableDelay = config.getConfig(DSLinkConfig.CFG_STABLE_DELAY, 5000l);
+            try {
+                Thread.sleep(stableDelay);
+            } catch (Exception x) {
+                warn("Interrupted stable delay", x);
+            }
+            try {
+                info(info() ? "Stabilizing nodes" : null);
+                stable();
+                long saveInterval = config.getConfig(DSLinkConfig.CFG_SAVE_INTERVAL, 60);
+                saveInterval *= 60000;
+                long nextSave = System.currentTimeMillis() + saveInterval;
+                while (isRunning()) {
+                    synchronized (this) {
+                        try {
+                            wait(10000);
+                        } catch (InterruptedException x) {
+                            warn(getPath(), x);
+                        }
+                        if (System.currentTimeMillis() > nextSave) {
+                            save();
+                            nextSave = System.currentTimeMillis() + saveInterval;
+                        }
                     }
                 }
+            } catch (Exception x) {
+                severe(getLinkName(), x);
+                stop();
+                DSException.throwRuntime(x);
             }
-        } catch (Exception x) {
-            severe(getLinkName(), x);
-            stop();
-            DSException.throwRuntime(x);
+            save();
+            DSLogging.close();
+        } finally {
+            runThread = null;
         }
-        info(info() ? "Exit DSLink.run" : null);
     }
 
     @Override
@@ -426,7 +432,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
                 StringBuilder buf = new StringBuilder();
                 Calendar cal = DSTime.getCalendar(System.currentTimeMillis());
                 if (name.endsWith(".zip")) {
-                    String tmp = name.substring(0,name.lastIndexOf(".zip"));
+                    String tmp = name.substring(0, name.lastIndexOf(".zip"));
                     buf.append(tmp).append('.');
                     DSTime.encodeForFiles(cal, buf);
                     buf.append(".zip");
@@ -459,7 +465,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             info("Saving node database " + nodes.getAbsolutePath());
             JsonWriter writer = null;
             if (name.endsWith(".zip")) {
-                String tmp = name.substring(0,name.lastIndexOf(".zip"));
+                String tmp = name.substring(0, name.lastIndexOf(".zip"));
                 writer = new JsonWriter(nodes, tmp + ".json");
             } else {
                 writer = new JsonWriter(nodes);
@@ -488,6 +494,23 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         }
     }
 
+    /**
+     * Properly shuts down the link when a thread is executing the run method.
+     */
+    public void shutdown() {
+        stop();
+        if (runThread == null) {
+            return;
+        }
+        synchronized (runThread) {
+            try {
+                runThread.join();
+            } catch (Exception x) {
+                fine(x);
+            }
+        }
+    }
+
     public DSLink setNodes(DSRootNode root) {
         put(nodes, root);
         return this;
@@ -512,7 +535,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         final String nodesName = nodes.getName();
         final boolean isZip = nodesName.endsWith(".zip");
         int idx = nodesName.lastIndexOf('.');
-        final String nameBase = nodesName.substring(0,idx);
+        final String nameBase = nodesName.substring(0, idx);
         File dir = nodes.getAbsoluteFile().getParentFile();
         File[] backups = dir.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {

@@ -2,16 +2,8 @@ package org.iot.dsa.dslink;
 
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
-import org.iot.dsa.node.DSIObject;
-import org.iot.dsa.node.DSIPublisher;
+import org.iot.dsa.node.*;
 import org.iot.dsa.node.DSIPublisher.Event;
-import org.iot.dsa.node.DSIStatus;
-import org.iot.dsa.node.DSISubscriber;
-import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSStatus;
-import org.iot.dsa.node.DSString;
 
 /**
  * Used by DSRootNode to handle value subscriptions.
@@ -77,6 +69,11 @@ class ValueSubscriber implements DSISubscriber, SubscriptionCloseHandler {
                 parent.unsubscribe(this);
                 break;
         }
+    }
+
+    @Override
+    public void onClose(DSIObject publisher) {
+        request.close();
     }
 
     private void onContainerEvent(DSIObject publisher, DSInfo child, DSIPublisher.Event event) {

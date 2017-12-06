@@ -350,9 +350,7 @@ public abstract class DSSession extends DSNode {
             beginResponses();
         }
         OutboundMessage msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
-        DSTransport transport = getTransport();
-        //while ((msg != null) && (System.currentTimeMillis() < endTime)) { //TODO debugging
-        while (msg != null) {
+        while ((msg != null) && (System.currentTimeMillis() < endTime)) {
             if (requests) {
                 writeRequest(msg);
             } else {

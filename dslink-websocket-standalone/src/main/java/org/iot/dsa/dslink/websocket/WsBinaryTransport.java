@@ -42,7 +42,6 @@ public class WsBinaryTransport extends DSBinaryTransport {
     private int messageSize;
     private boolean open = false;
     private Session session;
-    private ByteBuffer writeBuffer = ByteBuffer.allocate(1024 * 64);
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -77,14 +76,6 @@ public class WsBinaryTransport extends DSBinaryTransport {
 
     @Override
     public DSTransport endMessage() {
-        try {
-            RemoteEndpoint.Basic basic = session.getBasicRemote();
-            writeBuffer.flip();
-            basic.sendBinary(writeBuffer, true);
-            writeBuffer.clear();
-        } catch (IOException x) {
-            DSException.throwRuntime(x);
-        }
         return this;
     }
 

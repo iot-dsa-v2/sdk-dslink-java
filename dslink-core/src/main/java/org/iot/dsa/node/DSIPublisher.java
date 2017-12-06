@@ -45,9 +45,16 @@ public interface DSIPublisher {
         CHILD_ADDED,
 
         /**
-         * Fired for EventType.Value, the event will have a source (parent) and a child info.
+         * A value child has changed.  The event will have a source (parent) and a child
+         * info.
          */
         CHILD_CHANGED,
+
+        /**
+         * The meta-data about a child has changed.  The event will have a source (parent)
+         * and an info.
+         */
+        CHILD_INFO_CHANGED,
 
         /**
          * The event will have a source (parent) and an info.
@@ -55,14 +62,15 @@ public interface DSIPublisher {
         CHILD_REMOVED,
 
         /**
-         * The info of a child changed.  The event will have a source (parent) and an info.
-         */
-        INFO_CHANGED,
-
-        /**
-         * Fired for EventType.Value, the event will have a source (parent) but no child.
+         * The publisher represents a value and has changed.  The event will have a
+         * source (parent) but * no child.
          */
         PUBLISHER_CHANGED,
+
+        /**
+         * The event will have a source (parent) and possibly a child.
+         */
+        SUBSCRIPTION_ENDED,
 
     }
 

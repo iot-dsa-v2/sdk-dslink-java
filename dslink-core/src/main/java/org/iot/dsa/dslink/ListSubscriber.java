@@ -76,6 +76,11 @@ class ListSubscriber implements DSISubscriber, OutboundListResponse {
     }
 
     @Override
+    public void onClose(DSIObject publisher) {
+        request.close();
+    }
+
+    @Override
     public void onEvent(DSIObject publisher, DSInfo child, DSIPublisher.Event event) {
         switch (event) {
             case CHILD_ADDED:

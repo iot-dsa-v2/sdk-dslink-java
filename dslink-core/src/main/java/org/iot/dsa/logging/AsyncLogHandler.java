@@ -47,7 +47,12 @@ public abstract class AsyncLogHandler extends Handler {
      */
     @Override
     public void close() {
-        state = STATE_CLOSE_PENDING;
+        synchronized (this) {
+            if (state != STATE_OPEN) {
+                return;
+            }
+            state = STATE_CLOSE_PENDING;
+        }
         synchronized (queue) {
             while (queue.size() > 0) {
                 queue.notifyAll();
@@ -206,12 +211,17 @@ public abstract class AsyncLogHandler extends Handler {
         // timestamp
         calendar.setTimeInMillis(record.getMillis());
         DSTime.encodeForLogs(calendar, builder);
-        // log name
-        builder.append(" [");
-        builder.append(record.getLoggerName());
-        builder.append("] ");
         // severity
-        builder.append(record.getLevel().getLocalizedName());
+        builder.append(' ').append(record.getLevel().getLocalizedName());
+        // log name
+        String name = record.getLoggerName();
+        if ((name != null) && !name.isEmpty()) {
+            builder.append(" [");
+            builder.append(record.getLoggerName());
+            builder.append(']');
+        } else {
+            builder.append(" [default]");
+        }
         // class
         if (record.getSourceClassName() != null) {
             builder.append(" - ");
@@ -259,46 +269,48 @@ public abstract class AsyncLogHandler extends Handler {
             boolean emptyQueue = false;
             while (state != STATE_CLOSED) {
                 record = null;
-                if (state != STATE_OPEN) {
-                    synchronized (queue) {
-                        emptyQueue = queue.isEmpty();
-                        if (emptyQueue) {
-                            try {
-                                queue.notify();
-                                queue.wait(DSTime.MILLIS_SECOND);
-                            } catch (Exception ignore) {
-                            }
-                            emptyQueue = queue.isEmpty(); //housekeeping opportunity flag
-                        } else {
-                            record = queue.removeFirst();
+                synchronized (queue) {
+                    emptyQueue = queue.isEmpty();
+                    if (emptyQueue && (state == STATE_OPEN)) {
+                        try {
+                            queue.notifyAll();
+                            queue.wait(DSTime.MILLIS_SECOND);
+                        } catch (Exception ignore) {
                         }
+                        emptyQueue = queue.isEmpty(); //housekeeping opportunity flag
+                    } else {
+                        record = queue.removeFirst();
                     }
                 }
                 if (state != STATE_CLOSED) {
                     if (record != null) {
                         write(record);
                     }
-                    if (emptyQueue) {
-                        //housekeeping opportunity
-                        now = System.currentTimeMillis();
-                        long min = getHouseKeepingIntervalMillis() / 2;
-                        if ((now - lastHouseKeeping) > min) {
-                            flush();
-                            houseKeeping();
-                            lastHouseKeeping = System.nanoTime();
-                        }
-                    } else {
-                        now = System.currentTimeMillis();
-                        if ((now - lastHouseKeeping) > getHouseKeepingIntervalMillis()) {
-                            flush();
-                            houseKeeping();
-                            lastHouseKeeping = System.nanoTime();
+                    if (state == STATE_OPEN) {
+                        if (emptyQueue) {
+                            //housekeeping opportunity
+                            now = System.currentTimeMillis();
+                            long min = getHouseKeepingIntervalMillis() / 2;
+                            if ((now - lastHouseKeeping) > min) {
+                                flush();
+                                houseKeeping();
+                                lastHouseKeeping = System.nanoTime();
+                            }
+                        } else {
+                            now = System.currentTimeMillis();
+                            if ((now - lastHouseKeeping) > getHouseKeepingIntervalMillis()) {
+                                flush();
+                                houseKeeping();
+                                lastHouseKeeping = System.nanoTime();
+                            }
                         }
                     }
                 }
             }
+            flush();
             logHandlerThread = null;
         }
-    }
+
+    } //LogHandlerThread
 
 }

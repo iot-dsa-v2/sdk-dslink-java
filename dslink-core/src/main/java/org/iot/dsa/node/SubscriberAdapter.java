@@ -40,6 +40,18 @@ class SubscriberAdapter extends DSLogger implements DSISubscriber {
         return subscribers.isEmpty();
     }
 
+    @Override
+    public void onClose(DSIObject publisher) {
+        for (DSISubscriber subscriber : subscribers) {
+            try {
+                subscriber.onClose(publisher);
+            } catch (Exception x) {
+                severe(subscriber.toString(), x);
+            }
+        }
+    }
+
+    @Override
     public void onEvent(DSIObject publisher, DSInfo child, DSIPublisher.Event event) {
         for (DSISubscriber subscriber : subscribers) {
             try {
@@ -59,13 +71,5 @@ class SubscriberAdapter extends DSLogger implements DSISubscriber {
     public void unsubscribe(DSISubscriber subscriber) {
         subscribers.remove(subscriber);
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
 
 }

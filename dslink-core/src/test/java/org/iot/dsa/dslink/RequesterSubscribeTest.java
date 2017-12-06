@@ -70,7 +70,8 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
     public void theTest() throws Exception {
         link = new TestLink(root = new MyRoot());
         link.getConnection().addListener(this);
-        DSRuntime.run(link);
+        Thread t = new Thread(link, "DSLink Runner");
+        t.start();
         Assert.assertFalse(root.isSubscribed());
         Assert.assertFalse(success);
         //Wait for onConnected to subscribe and receive the first update value of 0
@@ -130,7 +131,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
             }
         }
         Assert.assertTrue(node.unsubscribeCalled);
-        link.stop();
+        link.shutdown();
         link = null;
     }
 

@@ -159,7 +159,7 @@ public class DS1LinkConnection extends DSLinkConnection {
      */
     protected DSTransport makeTransport(DS1ConnectionInit init) {
         DSTransport.Factory factory = null;
-        DSTransport transport = null;
+        transport = null;
         String wsUri = init.getResponse().get("wsUri", null);
         if (wsUri == null) {
             throw new IllegalStateException("Only websocket transports are supported.");
@@ -228,6 +228,16 @@ public class DS1LinkConnection extends DSLinkConnection {
             writer = new MsgpackWriter() {
                 @Override
                 public void onComplete() {
+                    /* How to debug
+                    try {
+                        MsgpackReader reader = new MsgpackReader(
+                                new ByteArrayInputStream(byteBuffer.array());
+                        System.out.println(reader.getMap());
+                        reader.close();
+                    } catch (Exception x) {
+                        x.printStackTrace();
+                    }
+                    */
                     trans.write(byteBuffer, true);
                 }
             };
