@@ -1202,13 +1202,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             info = info.next();
         }
-        state = DSUtil.setBit(state, STATE_STABLE, false);
-        state = DSUtil.setBit(state, STATE_STOPPED, true);
-        try {
-            onStopped();
-        } catch (Exception x) {
-            fine(getPath(), x);
-        }
         if (subscriber != null) {
             try {
                 subscriber.onClose(this);
@@ -1216,6 +1209,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 fine(getPath(), x);
             }
             subscriber = null;
+        }
+        state = DSUtil.setBit(state, STATE_STABLE, false);
+        state = DSUtil.setBit(state, STATE_STOPPED, true);
+        try {
+            onStopped();
+        } catch (Exception x) {
+            fine(getPath(), x);
         }
     }
 
