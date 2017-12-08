@@ -278,7 +278,7 @@ public abstract class AsyncLogHandler extends Handler {
                         } catch (Exception ignore) {
                         }
                         emptyQueue = queue.isEmpty(); //housekeeping opportunity flag
-                    } else {
+                    } else if (!emptyQueue) {
                         record = queue.removeFirst();
                     }
                 }
