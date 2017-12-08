@@ -1,6 +1,6 @@
 package com.acuity.iot.dsa.dslink.test;
 
-import com.acuity.iot.dsa.dslink.DSTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1ConnectionInit;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
@@ -59,6 +59,7 @@ public class TestLink extends DSLink {
             transport.setConnection(this);
             transport.setReadTimeout(getLink().getConfig().getConfig(
                     DSLinkConfig.CFG_READ_TIMEOUT, 60000));
+            setTransport(transport);
             return transport;
         }
 

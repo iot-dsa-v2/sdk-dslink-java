@@ -1,12 +1,20 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
-import com.acuity.iot.dsa.dslink.DSTransport;
+import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.io.json.JsonReader;
+import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.msgpack.MsgpackReader;
+import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
 
@@ -37,8 +45,10 @@ public class DS1LinkConnection extends DSLinkConnection {
     private Logger logger;
     private Object mutex = new Object();
     private DS1Session session;
+    private DSIReader reader;
     private long reconnectRate = 1000;
     private DSTransport transport;
+    private DSIWriter writer;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -99,9 +109,21 @@ public class DS1LinkConnection extends DSLinkConnection {
         return logger;
     }
 
+    public DSIReader getReader() {
+        return reader;
+    }
+
     @Override
     public DSIRequester getRequester() {
         return session.getRequester();
+    }
+
+    public DSTransport getTransport() {
+        return transport;
+    }
+
+    public DSIWriter getWriter() {
+        return writer;
     }
 
     protected DS1ConnectionInit initializeConnection() throws Exception {
@@ -137,19 +159,26 @@ public class DS1LinkConnection extends DSLinkConnection {
      */
     protected DSTransport makeTransport(DS1ConnectionInit init) {
         DSTransport.Factory factory = null;
-        DSTransport transport = null;
-        try {
-            String type = link.getConfig().getConfig(
-                    DSLinkConfig.CFG_TRANSPORT_FACTORY,
-                    "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
-            factory = (DSTransport.Factory) Class.forName(type).newInstance();
-            transport = factory.makeTransport(init.getResponse());
-        } catch (Exception x) {
-            DSException.throwRuntime(x);
-        }
+        transport = null;
         String wsUri = init.getResponse().get("wsUri", null);
         if (wsUri == null) {
             throw new IllegalStateException("Only websocket transports are supported.");
+        }
+        try {
+            String type = link.getConfig().getConfig(
+                    DSLinkConfig.CFG_WS_TRANSPORT_FACTORY,
+                    "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
+            factory = (DSTransport.Factory) Class.forName(type).newInstance();
+            String format = init.getResponse().getString("format");
+            if ("msgpack".equals(format)) {
+                setTransport(factory.makeBinaryTransport(this));
+            } else if ("json".equals(format)) {
+                setTransport(factory.makeTextTransport(this));
+            } else {
+                throw new IllegalStateException("Unknown format: " + format);
+            }
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
         }
         String uri = init.makeWsUrl(wsUri);
         config(config() ? "Connection URL = " + uri : null);
@@ -190,6 +219,38 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     public void setRequesterAllowed() {
         session.setRequesterAllowed();
+    }
+
+    protected void setTransport(DSTransport transport) {
+        if (transport instanceof DSBinaryTransport) {
+            final DSBinaryTransport trans = (DSBinaryTransport) transport;
+            reader = new MsgpackReader(trans.getInput());
+            writer = new MsgpackWriter() {
+                @Override
+                public void onComplete() {
+                    /* How to debug
+                    try {
+                        MsgpackReader reader = new MsgpackReader(
+                                new ByteArrayInputStream(byteBuffer.array());
+                        System.out.println(reader.getMap());
+                        reader.close();
+                    } catch (Exception x) {
+                        x.printStackTrace();
+                    }
+                    */
+                    trans.write(byteBuffer, true);
+                }
+            };
+        } else if (transport instanceof DSTextTransport) {
+            DSTextTransport trans = (DSTextTransport) transport;
+            reader = new JsonReader(trans.getReader());
+            writer = new JsonWriter(trans.getWriter());
+        } else {
+            throw new IllegalStateException(
+                    "Unexpected transport type: " + transport.getClass().getName());
+        }
+        this.transport = transport;
+
     }
 
     public void updateSalt(String salt) {
@@ -236,7 +297,6 @@ public class DS1LinkConnection extends DSLinkConnection {
                     }
                     try {
                         transport.open();
-                        session.setTransport(transport);
                         connectionInit = init;
                         session.onConnect();
                     } catch (Exception x) {
@@ -271,10 +331,12 @@ public class DS1LinkConnection extends DSLinkConnection {
                 if (transport != null) {
                     remove(TRANSPORT);
                     transport = null;
+                    reader = null;
+                    writer = null;
                 }
             }
         }
-    }
+    } //ConnectionRunner
 
     /**
      * Daemon thread that manages connection and reconnection.

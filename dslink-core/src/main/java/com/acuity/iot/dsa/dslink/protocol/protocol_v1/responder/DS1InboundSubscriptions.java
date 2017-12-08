@@ -93,8 +93,12 @@ class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
             sidMap.put(sid, subscription);
             pathMap.put(path, subscription);
             subscription.setCloseHandler(responder.onSubscribe(subscription));
+        } else if (!path.equals(subscription.getPath())) {
+            unsubscribe(sid);
+            subscribe(responder, sid, path, qos);
         } else {
-            subscription.setQos(qos).setPath(path);
+            subscription.setQos(qos);
+            //TODO refresh subscription, align w/v2
         }
     }
 

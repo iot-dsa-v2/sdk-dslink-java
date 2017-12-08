@@ -32,7 +32,7 @@ public class DSLinkConfig {
     public static final String CFG_ROOT_TYPE = "rootType";
     public static final String CFG_SAVE_INTERVAL = "saveInterval";
     public static final String CFG_STABLE_DELAY = "stableDelay";
-    public static final String CFG_TRANSPORT_FACTORY = "transportFactory";
+    public static final String CFG_WS_TRANSPORT_FACTORY = "wsTransportFactory";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -209,7 +209,7 @@ public class DSLinkConfig {
            .append(" --token|-t   Authentication token for the connection handshake.\n")
            .append(" --nodes|-n   Path to the configuration node database.\n")
            .append(" --key|-k     Path to the stored keys.\n")
-           .append(" --Log|-l     Log level (finest,finer,fine,config,info,warning,severe).\n")
+           .append(" --log|-l     Log level (finest,finer,fine,config,info,warning,severe).\n")
            .append(" --dslink-json|-d  Location of the dslink.json file.\n")
            .append(" --name       Name of the link implementation, for example ")
            .append("dslink-java-modbus.\n")
@@ -237,7 +237,9 @@ public class DSLinkConfig {
 
     public File getLogFile() {
         if (logFile == null) {
-            setLogFile(new File(getConfig(CFG_LOG_FILE, getLinkName() + ".log")));
+            String file = getConfig(CFG_LOG_FILE, null);
+            if (file != null)
+                setLogFile(new File(file));
         }
         return logFile;
     }
@@ -341,6 +343,8 @@ public class DSLinkConfig {
                 setDslinkJson(new File(value));
             } else if (key.equals("--help")) {
                 help = true;
+            } else if (key.equals("--log")) {
+                setLogLevel(value);
             } else if (key.equals("--logging")) {
                 setLogLevel(value);
             } else if (key.equals("--logging-file")) {

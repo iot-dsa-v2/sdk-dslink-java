@@ -10,6 +10,7 @@ import com.acuity.iot.dsa.dslink.DSProtocolException;
 import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester.DS1Requester;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder.DS1Responder;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.io.DSIReader;
@@ -44,8 +45,11 @@ public class DS1Session extends DSSession {
     private DSInfo lastAckSent = getInfo(LAST_ACK_SENT);
     private int nextAck = -1;
     private int nextMsg = 1;
+    private DSIReader reader;
     private DS1Requester requester = new DS1Requester(this);
     private DS1Responder responder = new DS1Responder(this);
+    private DSTransport transport;
+    private DSIWriter writer;
 
     /////////////////////////////////////////////////////////////////
     // Constructors
@@ -124,8 +128,23 @@ public class DS1Session extends DSSession {
     }
 
     @Override
+    public DSIReader getReader() {
+        return reader;
+    }
+
+    @Override
     public DSIRequester getRequester() {
         return requester;
+    }
+
+    @Override
+    public DSTransport getTransport() {
+        return transport;
+    }
+
+    @Override
+    public DSIWriter getWriter() {
+        return writer;
     }
 
     private boolean hasPingToSend() {
@@ -156,6 +175,9 @@ public class DS1Session extends DSSession {
     @Override
     public void onConnect() {
         super.onConnect();
+        transport = getConnection().getTransport();
+        reader = getConnection().getReader();
+        writer = getConnection().getWriter();
         requester.onConnect();
         responder.onConnect();
     }
@@ -169,6 +191,9 @@ public class DS1Session extends DSSession {
     @Override
     public void onDisconnect() {
         super.onDisconnect();
+        transport = null;
+        reader = null;
+        writer = null;
         requester.onDisconnect();
         responder.onDisconnect();
     }
@@ -270,10 +295,6 @@ public class DS1Session extends DSSession {
     private synchronized void sendAck(int msg) {
         nextAck = msg;
         notifyOutgoing();
-    }
-
-    public boolean shouldEndMessage() {
-        return getTransport().shouldEndMessage();
     }
 
 }

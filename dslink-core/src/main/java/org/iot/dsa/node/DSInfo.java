@@ -177,7 +177,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
     /**
      * If this represents a dynamic child, this just returns the current value.
      */
-    public DSIObject getDefaultObject() { //TODO Maybe dynamic should return null.
+    public DSIObject getDefaultObject() {
         if (value == null) {
             return null;
         }
@@ -414,6 +414,13 @@ public class DSInfo implements ApiObject, DSISubscriber {
             cur = cur.next();
         }
         return cur;
+    }
+
+    /**
+     * Does nothing.
+     */
+    @Override
+    public void onClose(DSIObject publisher) {
     }
 
     /**

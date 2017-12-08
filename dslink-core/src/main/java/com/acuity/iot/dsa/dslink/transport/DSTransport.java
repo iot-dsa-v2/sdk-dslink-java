@@ -1,11 +1,10 @@
-package com.acuity.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.transport;
 
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSLong;
-import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 
@@ -28,11 +27,8 @@ public abstract class DSTransport extends DSNode {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private DSLinkConnection connection;
     private Logger logger;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
@@ -66,7 +62,9 @@ public abstract class DSTransport extends DSNode {
      */
     public abstract DSTransport endMessage();
 
-    public abstract DSLinkConnection getConnection();
+    public DSLinkConnection getConnection() {
+        return connection;
+    }
 
     public String getConnectionUrl() {
         return String.valueOf(get(CONNECTION_URL));
@@ -84,11 +82,12 @@ public abstract class DSTransport extends DSNode {
         return ((DSLong) get(READ_TIMEOUT)).toLong();
     }
 
-    public abstract DSIReader getReader();
-
-    public abstract DSIWriter getWriter();
-
     public abstract boolean isOpen();
+
+    /**
+     * The size of the current message (in what depends on the type of transport).
+     */
+    public abstract int messageSize();
 
     /**
      * Establish the underlying connection.  Calling when already open will have no effect.
@@ -100,7 +99,10 @@ public abstract class DSTransport extends DSNode {
     /**
      * @return This
      */
-    public abstract DSTransport setConnection(DSLinkConnection connection);
+    public DSTransport setConnection(DSLinkConnection connection) {
+        this.connection = connection;
+        return this;
+    }
 
     /**
      * The complete url used to establish the connection.
@@ -123,25 +125,21 @@ public abstract class DSTransport extends DSNode {
         return this;
     }
 
-    /**
-     * Whether or not to continue the current message.  Implementations might have a limit on
-     * message size, this should return true before the limit is reached.
-     */
-    public abstract boolean shouldEndMessage();
-
     /////////////////////////////////////////////////////////////////
     // Inner Classes
     /////////////////////////////////////////////////////////////////
 
     /**
      * Responsible for creating the appropriate transport.  When launching a link, the config
-     * transportFactory needs to be set to an implementation of this.  The implmentation must
+     * wsTransportFactory needs to be set to an implementation of this.  The implementation must
      * support the public no-arg constructor.
      */
     public interface Factory {
 
-        public DSTransport makeTransport(DSMap connectionInitializationResponse);
+        public DSBinaryTransport makeBinaryTransport(DSLinkConnection conn);
+
+        public DSTextTransport makeTextTransport(DSLinkConnection conn);
 
     }
 
-} //class
+}

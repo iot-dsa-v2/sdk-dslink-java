@@ -94,13 +94,6 @@ public class FileLogHandler extends AsyncLogHandler {
     }
 
     /**
-     * The size after which a logging file will be backed up and cleared.
-     */
-    public int getBackupThreshold() {
-        return backupThreshold;
-    }
-
-    /**
      * The number of backup files to retain.
      */
     public int getMaxBackups() {

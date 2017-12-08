@@ -2,6 +2,7 @@ package com.acuity.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +25,7 @@ public abstract class DSSession extends DSNode {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
+    static final int END_MSG_THRESHOLD = 32768;
     static final int MAX_MSG_TIME = 3000;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -37,10 +39,7 @@ public abstract class DSSession extends DSNode {
     private Object outgoingMutex = new Object();
     private List<OutboundMessage> outgoingRequests = new LinkedList<OutboundMessage>();
     private List<OutboundMessage> outgoingResponses = new LinkedList<OutboundMessage>();
-    private DSIReader reader;
     protected boolean requesterAllowed = false;
-    private DSTransport transport;
-    private DSIWriter writer;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -132,8 +131,7 @@ public abstract class DSSession extends DSNode {
                 if (hasMessagesToSend()) {
                     send(requestsFirst, endTime);
                     if (active &&
-                            (System.currentTimeMillis() < endTime) &&
-                            !transport.shouldEndMessage()) {
+                            (System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
                         send(!requestsFirst, endTime);
                     }
                 }
@@ -241,25 +239,13 @@ public abstract class DSSession extends DSNode {
         return logger;
     }
 
-    protected DSIReader getReader() {
-        if ((reader == null) && (transport != null)) {
-            setReader(transport.getReader());
-        }
-        return reader;
-    }
+    protected abstract DSIReader getReader();
 
     protected abstract DSIRequester getRequester();
 
-    protected DSTransport getTransport() {
-        return transport;
-    }
+    protected abstract DSTransport getTransport();
 
-    protected DSIWriter getWriter() {
-        if ((writer == null) && (transport != null)) {
-            setWriter(transport.getWriter());
-        }
-        return writer;
-    }
+    protected abstract DSIWriter getWriter();
 
     /**
      * True if there are outbound messages on the queue.
@@ -287,7 +273,7 @@ public abstract class DSSession extends DSNode {
      * @see #doRead()
      */
     protected boolean isOpen() {
-        return active && transport.isOpen();
+        return active && getTransport().isOpen();
     }
 
     /**
@@ -364,14 +350,13 @@ public abstract class DSSession extends DSNode {
             beginResponses();
         }
         OutboundMessage msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
-        DSTransport transport = getTransport();
         while ((msg != null) && (System.currentTimeMillis() < endTime)) {
             if (requests) {
                 writeRequest(msg);
             } else {
                 writeResponse(msg);
             }
-            if (!transport.shouldEndMessage()) {
+            if (!shouldEndMessage()) {
                 msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
             } else {
                 msg = null;
@@ -402,27 +387,10 @@ public abstract class DSSession extends DSNode {
     }
 
     /**
-     * For use by the connection object.
+     * Returns true if the current message size has crossed a message size threshold.
      */
-    public DSSession setReader(DSIReader reader) {
-        this.reader = reader;
-        return this;
-    }
-
-    /**
-     * For use by the connection object.
-     */
-    public DSSession setTransport(DSTransport transport) {
-        this.transport = transport;
-        return this;
-    }
-
-    /**
-     * For use by the connection object.
-     */
-    public DSSession setWriter(DSIWriter writer) {
-        this.writer = writer;
-        return this;
+    public boolean shouldEndMessage() {
+        return (getWriter().length() + getTransport().messageSize()) > END_MSG_THRESHOLD;
     }
 
     /**

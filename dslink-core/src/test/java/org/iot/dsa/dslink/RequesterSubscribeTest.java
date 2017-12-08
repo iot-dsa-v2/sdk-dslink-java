@@ -1,14 +1,9 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.TestLink;
-import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
-import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.dslink.requester.SimpleRequestHandler;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSInt;
-import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSStatus;
+import org.iot.dsa.node.*;
 import org.iot.dsa.time.DSDateTime;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,6 +30,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
         handler = (AbstractSubscribeHandler) requester.subscribe(
                 "/Nodes/int", 0, new AbstractSubscribeHandler() {
                     boolean first = true;
+
                     @Override
                     public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
                         if (first) {
@@ -70,7 +66,8 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
     public void theTest() throws Exception {
         link = new TestLink(root = new MyRoot());
         link.getConnection().addListener(this);
-        DSRuntime.run(link);
+        Thread t = new Thread(link, "DSLink Runner");
+        t.start();
         Assert.assertFalse(root.isSubscribed());
         Assert.assertFalse(success);
         //Wait for onConnected to subscribe and receive the first update value of 0
@@ -87,7 +84,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
             this.wait(5000);
         }
         Assert.assertTrue(success);
-        Assert.assertEquals(root.get("int"),DSInt.valueOf(10));
+        Assert.assertEquals(root.get("int"), DSInt.valueOf(10));
         success = false;
         //Close stream, validate onClose called
         handler.getStream().closeStream();
@@ -99,8 +96,18 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
         Assert.assertFalse(root.isSubscribed());
         //Subscribe a lower value, validate onSubscribe.
         ANode node = (ANode) root.getNode("aNode");
-        Assert.assertFalse(node.subscribeCalled);
-        Assert.assertFalse(node.unsubscribeCalled);
+        testChild(requester);
+        //Test the same path, but different instance.
+        root.remove("aNode");
+        Assert.assertTrue(node.isStopped());
+        root.put("aNode", new ANode());
+        testChild(requester);
+        link.shutdown();
+        link = null;
+    }
+
+    private void testChild(DSIRequester requester) throws Exception {
+        ANode node = (ANode) root.getNode("aNode");
         AbstractSubscribeHandler handler = (AbstractSubscribeHandler) requester.subscribe(
                 "/Nodes/aNode", 0, new AbstractSubscribeHandler() {
                     @Override
@@ -121,6 +128,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
             }
         }
         Assert.assertTrue(node.subscribeCalled);
+        Assert.assertTrue(node.isSubscribed());
         //Now close the stream and validate unsubscribed.
         Assert.assertFalse(node.unsubscribeCalled);
         handler.getStream().closeStream();
@@ -130,8 +138,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
             }
         }
         Assert.assertTrue(node.unsubscribeCalled);
-        link.stop();
-        link = null;
+        Assert.assertFalse(node.isSubscribed());
     }
 
     // Inner Classes
@@ -141,7 +148,6 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
 
         public void declareDefaults() {
             declareDefault("int", DSInt.valueOf(0));
-            declareDefault("aNode", new ANode());
         }
 
         @Override
@@ -149,15 +155,29 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
             notifyAll();
         }
 
+        public synchronized void onStable() {
+            put("aNode", new ANode());
+        }
+
     }
 
-    public static class ANode extends DSNode {
+    public static class ANode extends DSNode implements DSIValue {
 
         public boolean subscribeCalled = false;
         public boolean unsubscribeCalled = false;
 
         public void declareDefaults() {
             declareDefault("int", DSInt.valueOf(0));
+        }
+
+        @Override
+        public DSValueType getValueType() {
+            return DSValueType.STRING;
+        }
+
+        @Override
+        public DSElement toElement() {
+            return getInfo("int").getValue().toElement();
         }
 
         @Override
@@ -172,6 +192,10 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
             notifyAll();
         }
 
+        @Override
+        public DSIValue valueOf(DSElement element) {
+            return element;
+        }
     }
 
 }

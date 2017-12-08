@@ -1,52 +1,27 @@
 package org.iot.dsa.dslink.websocket;
 
-import com.acuity.iot.dsa.dslink.DSTransport;
-import com.acuity.iot.dsa.dslink.DSTransport.Factory;
+import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport.Factory;
+import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.node.DSMap;
 
 /**
- * Websocket client implementation of DSTransport based on Tyrus, the reference
+ * Websocket client implementation of DSTransport.Factory based on Tyrus, the reference
  * implementation of JSR 356.
  *
  * @author Aaron Hansen
  */
 public class StandaloneTransportFactory extends DSLogger implements Factory {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Constructors
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - In alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
     @Override
-    public DSTransport makeTransport(DSMap connectionInitResponse) {
-        String format = connectionInitResponse.getString("format");
-        if ("msgpack".equals(format)) {
-            return new MsgpackWsTranport();
-        }
-        if ("json".equals(format)) {
-            return new JsonWsTransport();
-        }
-        throw new IllegalStateException("Only msgpack and json are supported.");
+    public DSBinaryTransport makeBinaryTransport(DSLinkConnection conn) {
+        return new WsBinaryTransport();
     }
 
-    /////////////////////////////////////////////////////////////////
-    // Inner Classes
-    /////////////////////////////////////////////////////////////////
+    @Override
+    public DSTextTransport makeTextTransport(DSLinkConnection conn) {
+        return new WsTextTransport();
+    }
 
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
-
-}//TyrusTransportFactory
+}
