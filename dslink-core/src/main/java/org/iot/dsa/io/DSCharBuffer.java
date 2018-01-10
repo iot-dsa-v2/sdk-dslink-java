@@ -1,22 +1,19 @@
 package org.iot.dsa.io;
 
 /**
- * A buffer for storing chars being pushed from a reader.  Useful when chars are coming in faster
- * than can be processed.
+ * A buffer for storing chars being pushed from a reader.  Useful when chars are coming
+ * in faster than can be processed.
  *
  * @author Aaron Hansen
  */
 public class DSCharBuffer {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private char[] buffer;
+    private RuntimeException closeException;
     private int length = 0;
     private int offset = 0;
     private boolean open = false;
@@ -45,6 +42,12 @@ public class DSCharBuffer {
         return length;
     }
 
+    public synchronized void clear() {
+        length = 0;
+        offset = 0;
+        notify();
+    }
+
     /**
      * Important for notifying waiting threads.
      */
@@ -52,6 +55,18 @@ public class DSCharBuffer {
         if (!open) {
             return;
         }
+        open = false;
+        notify();
+    }
+
+    /**
+     * Important for notifying waiting threads.
+     */
+    public synchronized void close(RuntimeException toThrow) {
+        if (!open) {
+            return;
+        }
+        closeException = toThrow;
         open = false;
         notify();
     }
@@ -87,7 +102,10 @@ public class DSCharBuffer {
         if (open) {
             return;
         }
+        length = 0;
+        offset = 0;
         open = true;
+        closeException = null;
         notify();
     }
 
@@ -96,7 +114,7 @@ public class DSCharBuffer {
      */
     public synchronized void put(char b) {
         if (!open) {
-            throw new IllegalStateException("Buffer closed");
+            throw new DSIoException("Closed");
         }
         int bufLen = buffer.length;
         int msgLen = 1;
@@ -131,7 +149,7 @@ public class DSCharBuffer {
      */
     public synchronized void put(char[] msg, int off, int len) {
         if (!open) {
-            throw new IllegalStateException("Buffer closed");
+            throw new DSIoException("Closed");
         }
         int bufLen = buffer.length;
         if ((len + length + offset) >= bufLen) {
@@ -153,7 +171,7 @@ public class DSCharBuffer {
      */
     public synchronized void put(String msg) {
         if (!open) {
-            throw new IllegalStateException("Buffer closed");
+            throw new DSIoException("Closed");
         }
         int len = msg.length();
         int bufLen = buffer.length;
@@ -188,7 +206,12 @@ public class DSCharBuffer {
         }
         notify();
         if (!open) {
-            return -1;
+            if (length == 0) {
+                if (closeException != null) {
+                    throw closeException;
+                }
+                return -1;
+            }
         } else if (length == 0) {
             throw new DSIoException("Read timeout");
         }
@@ -220,7 +243,12 @@ public class DSCharBuffer {
         }
         notify();
         if (!open) {
-            return -1;
+            if (length == 0) {
+                if (closeException != null) {
+                    throw closeException;
+                }
+                return -1;
+            }
         } else if (length == 0) {
             throw new DSIoException("Read timeout");
         }
@@ -245,13 +273,5 @@ public class DSCharBuffer {
         this.timeout = timeout;
         return this;
     }
-
-    /////////////////////////////////////////////////////////////////
-    // Inner Classes
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
 
 }

@@ -6,17 +6,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import javax.websocket.ClientEndpoint;
-import javax.websocket.CloseReason;
-import javax.websocket.EndpointConfig;
-import javax.websocket.OnClose;
-import javax.websocket.OnError;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.RemoteEndpoint;
-import javax.websocket.Session;
+import javax.websocket.*;
 import org.glassfish.tyrus.client.ClientManager;
 import org.iot.dsa.io.DSByteBuffer;
+import org.iot.dsa.io.DSIoException;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -61,15 +54,15 @@ public class WsBinaryTransport extends DSBinaryTransport {
         if (!open) {
             return this;
         }
+        open = false;
         try {
             if (session != null) {
                 session.close();
             }
-            session = null;
         } catch (Exception x) {
             finer(getConnection().getConnectionId(), x);
         }
-        open = false;
+        session = null;
         buffer.close();
         return this;
     }
@@ -97,14 +90,22 @@ public class WsBinaryTransport extends DSBinaryTransport {
     public void onClose(Session session, CloseReason reason) {
         if (open) {
             info(getConnectionUrl() + " remotely closed, reason = " + reason.toString());
-            getConnection().onClose();
+            close();
         }
     }
 
     @OnError
     public void onError(Session session, Throwable err) {
-        severe(getConnectionUrl(), err);
-        getConnection().onClose();
+        if (open) {
+            open = false;
+            severe(getConnectionUrl(), err);
+            buffer.close(DSException.makeRuntime(err));
+            if (err instanceof RuntimeException) {
+                buffer.close((RuntimeException) err);
+            } else {
+                buffer.close(new DSException(err));
+            }
+        }
     }
 
     @OnMessage
@@ -142,6 +143,9 @@ public class WsBinaryTransport extends DSBinaryTransport {
      * Flips the buffer, writes it, then clears it.
      */
     public void write(ByteBuffer buf, boolean isLast) {
+        if (!open) {
+            throw new DSIoException("Closed " + getConnectionUrl());
+        }
         messageSize += buf.position();
         try {
             buf.flip();
@@ -152,7 +156,10 @@ public class WsBinaryTransport extends DSBinaryTransport {
                 messageSize = 0;
             }
         } catch (IOException x) {
-            DSException.throwRuntime(x);
+            if (open) {
+                close();
+                DSException.throwRuntime(x);
+            }
         }
     }
 
@@ -169,36 +176,21 @@ public class WsBinaryTransport extends DSBinaryTransport {
 
         @Override
         public void close() {
-            getConnection().onClose();
+            WsBinaryTransport.this.close();
         }
 
         @Override
         public int read() throws IOException {
-            if (!open) {
-                if (buffer.available() == 0) {
-                    return -1;
-                }
-            }
             return buffer.read();
         }
 
         @Override
         public int read(byte[] buf) throws IOException {
-            if (!open) {
-                if (buffer.available() == 0) {
-                    return -1;
-                }
-            }
             return buffer.read(buf, 0, buf.length);
         }
 
         @Override
         public int read(byte[] buf, int off, int len) throws IOException {
-            if (!open) {
-                if (buffer.available() == 0) {
-                    return -1;
-                }
-            }
             return buffer.read(buf, off, len);
         }
     }

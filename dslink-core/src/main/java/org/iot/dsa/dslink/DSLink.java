@@ -160,14 +160,19 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             logger = Logger.getLogger(name);
         }
         try {
-            String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
-            if (type != null) {
-                config(config() ? "Connection type: " + type : null);
-                connection = (DSLinkConnection) Class.forName(type).newInstance();
-            } else {
-                connection = new DS1LinkConnection();
+            String ver = config.getConfig(DSLinkConfig.CFG_PROTOCOL_VERSION, "1");
+            if (ver.startsWith("1")) {
+                String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
+                if (type != null) {
+                    config(config() ? "Connection type: " + type : null);
+                    connection = (DSLinkConnection) Class.forName(type).newInstance();
+                } else {
+                    connection = new DS1LinkConnection();
+                }
+            } else { //2
+                ; //TODO
             }
-            put("Broker Connection", connection).setConfig(true).setTransient(true);
+           put("Broker Connection", connection).setConfig(true).setTransient(true);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }

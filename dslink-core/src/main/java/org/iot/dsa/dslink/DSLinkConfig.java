@@ -28,6 +28,7 @@ public class DSLinkConfig {
     public static final String CFG_LOG_FILE = "logFile";
     public static final String CFG_LOG_LEVEL = "log";
     public static final String CFG_NODE_FILE = "nodes";
+    public static final String CFG_PROTOCOL_VERSION = "protocolVersion";
     public static final String CFG_READ_TIMEOUT = "readTimeout";
     public static final String CFG_ROOT_TYPE = "rootType";
     public static final String CFG_SAVE_INTERVAL = "saveInterval";

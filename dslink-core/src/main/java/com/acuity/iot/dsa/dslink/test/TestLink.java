@@ -35,9 +35,8 @@ public class TestLink extends DSLink {
 
     public static class TestConnection extends DS1LinkConnection {
 
-        protected DS1ConnectionInit initializeConnection() throws Exception {
-            DS1ConnectionInit init = new DS1ConnectionInit();
-            return init;
+        protected DS1ConnectionInit initializeConnection() {
+            return new DS1ConnectionInit();
         }
 
         /**

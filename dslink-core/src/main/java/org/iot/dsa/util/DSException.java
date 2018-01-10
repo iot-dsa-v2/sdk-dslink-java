@@ -1,7 +1,9 @@
 package org.iot.dsa.util;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import org.iot.dsa.io.DSIoException;
 
 /**
  * An runtime exception that forwards most calls to the inner exception. This is to exclude itself
@@ -16,7 +18,7 @@ public class DSException extends RuntimeException {
     // Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DSException(Exception inner) {
+    public DSException(Throwable inner) {
         this.inner = inner;
     }
 
@@ -44,6 +46,31 @@ public class DSException extends RuntimeException {
         return inner.getStackTrace();
     }
 
+    /**
+     * Attempts come up with the best description of the argument.
+     */
+    public static String makeMessage(Throwable t) {
+        if (t.getCause() != null) {
+            return makeMessage(t.getCause());
+        }
+        String message = t.getMessage();
+        if ((message == null) || message.trim().isEmpty()) {
+            return t.toString();
+        }
+        return message;
+    }
+
+    /**
+     * If the given exception is already a runtime exception, it is cast and returned,
+     * otherwise it will be returned wrapped by an instance of this class.
+     */
+    public static RuntimeException makeRuntime(Throwable x) {
+        if (x instanceof RuntimeException) {
+            return (RuntimeException) x;
+        }
+        return new DSException(x);
+    }
+
     @Override
     public void printStackTrace() {
         inner.printStackTrace();
@@ -65,14 +92,11 @@ public class DSException extends RuntimeException {
     }
 
     /**
-     * If the given exception is already a runtime exception, it is rethrown, otherwise it will be
-     * thrown wrapped by an instance of this class.
+     * If the given exception is already a runtime exception, it is rethrown, otherwise
+     * it will be thrown wrapped by an instance of this class.
      */
-    public static void throwRuntime(Exception x) {
-        if (x instanceof RuntimeException) {
-            throw (RuntimeException) x;
-        }
-        throw new DSException(x);
+    public static void throwRuntime(Throwable x) {
+        throw makeRuntime(x);
     }
 
     public String toString() {
@@ -80,33 +104,9 @@ public class DSException extends RuntimeException {
     }
 
     /////////////////////////////////////////////////////////////////
-    // Methods - Protected and in alphabetical order by method name.
+    // Fields - in alphabetical order by field name.
     /////////////////////////////////////////////////////////////////
 
-    /////////////////////////////////////////////////////////////////
-    // Methods - Package and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Private and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Inner Classes - in alphabetical order by class name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Constants - in alphabetical order by field name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Facets - in alphabetical order by field name.
-    /////////////////////////////////////////////////////////////////
-
-    private Exception inner;
-
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
+    private Throwable inner;
 
 }
