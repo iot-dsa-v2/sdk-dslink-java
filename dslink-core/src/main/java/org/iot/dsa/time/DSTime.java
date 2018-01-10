@@ -750,6 +750,14 @@ public class DSTime {
         return cal;
     }
 
+    public static long millisToNanos(long millis) {
+        return millis * NANOS_IN_MS;
+    }
+
+    public static long nanosToMillis(long nanos) {
+        return nanos / NANOS_IN_MS;
+    }
+
     /**
      * Return a calendar instance for reuse.
      */

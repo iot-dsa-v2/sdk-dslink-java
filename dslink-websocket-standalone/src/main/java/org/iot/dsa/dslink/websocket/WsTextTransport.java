@@ -6,15 +6,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
-import javax.websocket.ClientEndpoint;
-import javax.websocket.CloseReason;
-import javax.websocket.EndpointConfig;
-import javax.websocket.OnClose;
-import javax.websocket.OnError;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.RemoteEndpoint;
-import javax.websocket.Session;
+import javax.websocket.*;
 import org.glassfish.tyrus.client.ClientManager;
 import org.iot.dsa.io.DSCharBuffer;
 import org.iot.dsa.io.DSIoException;
@@ -42,10 +34,6 @@ public class WsTextTransport extends DSTextTransport {
     private Session session;
 
     /////////////////////////////////////////////////////////////////
-    // Methods - Constructors
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
 
@@ -60,15 +48,15 @@ public class WsTextTransport extends DSTextTransport {
         if (!open) {
             return this;
         }
+        open = false;
         try {
             if (session != null) {
                 session.close();
             }
-            session = null;
         } catch (Exception x) {
             finer(getConnection().getConnectionId(), x);
         }
-        open = false;
+        session = null;
         buffer.close();
         return this;
     }
@@ -108,25 +96,23 @@ public class WsTextTransport extends DSTextTransport {
     public void onClose(Session session, CloseReason reason) {
         if (open) {
             info(getConnectionUrl() + " remotely closed, reason = " + reason.toString());
-            getConnection().onClose();
+            close();
         }
     }
 
     @OnError
     public void onError(Session session, Throwable err) {
-        severe(getConnectionUrl(), err);
-        getConnection().onClose();
+        if (open) {
+            open = false;
+            severe(getConnectionUrl(), err);
+            buffer.close(DSException.makeRuntime(err));
+        }
     }
 
     @OnMessage
     public void onMessage(Session session, String msgPart, boolean isLast) {
-        try {
-            finest(finest() ? "Recv: " + msgPart : null);
-            buffer.put(msgPart);
-        } catch (Exception x) {
-            getConnection().onClose();
-            DSException.throwRuntime(x);
-        }
+        finest(finest() ? "Recv: " + msgPart : null);
+        buffer.put(msgPart);
     }
 
     @OnOpen
@@ -174,8 +160,10 @@ public class WsTextTransport extends DSTextTransport {
             }
             basic.sendText(text, isLast);
         } catch (IOException x) {
-            severe(getConnectionUrl(), x);
-            getConnection().onClose();
+            if (open) {
+                close();
+                DSException.throwRuntime(x);
+            }
         }
     }
 
@@ -187,36 +175,21 @@ public class WsTextTransport extends DSTextTransport {
 
         @Override
         public void close() {
-            getConnection().onClose();
+            WsTextTransport.this.close();
         }
 
         @Override
         public int read() throws IOException {
-            if (!open) {
-                if (buffer.available() == 0) {
-                    return -1;
-                }
-            }
             return buffer.read();
         }
 
         @Override
         public int read(char[] buf) throws IOException {
-            if (!open) {
-                if (buffer.available() == 0) {
-                    return -1;
-                }
-            }
             return buffer.read(buf, 0, buf.length);
         }
 
         @Override
         public int read(char[] buf, int off, int len) throws IOException {
-            if (!open) {
-                if (buffer.available() == 0) {
-                    return -1;
-                }
-            }
             return buffer.read(buf, off, len);
         }
 
@@ -231,7 +204,7 @@ public class WsTextTransport extends DSTextTransport {
 
         @Override
         public void close() {
-            getConnection().onClose();
+            WsTextTransport.this.close();
         }
 
         @Override

@@ -182,6 +182,7 @@ public class DSBytes extends DSElement {
      * @param bigEndian Whether to decode in big or little endian byte ordering.
      */
     public static int readInt(InputStream in, boolean bigEndian) {
+        int ret = 0;
         try {
             if (bigEndian) {
                 return (((in.read() & 0xFF) << 24) |
@@ -189,14 +190,14 @@ public class DSBytes extends DSElement {
                         ((in.read() & 0xFF) << 8) |
                         ((in.read() & 0xFF) << 0));
             }
-            return (((in.read() & 0xFF) << 0) |
+            ret = (((in.read() & 0xFF) << 0) |
                     ((in.read() & 0xFF) << 8) |
                     ((in.read() & 0xFF) << 16) |
                     ((in.read() & 0xFF) << 24));
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
-        return 0; //unreachable
+        return ret;
     }
 
     /**
@@ -234,6 +235,7 @@ public class DSBytes extends DSElement {
      * @param bigEndian Whether to decode in big or little endian byte ordering.
      */
     public static long readLong(InputStream in, boolean bigEndian) {
+        long ret = 0;
         try {
             if (bigEndian) {
                 return (((long) (in.read() & 0xFF) << 56) |
@@ -245,7 +247,7 @@ public class DSBytes extends DSElement {
                         ((in.read() & 0xFF) << 8) |
                         ((in.read() & 0xFF) << 0));
             }
-            return (((in.read() & 0xFF) << 0) |
+            ret = (((in.read() & 0xFF) << 0) |
                     ((in.read() & 0xFF) << 8) |
                     ((in.read() & 0xFF) << 16) |
                     ((long) (in.read() & 0xFF) << 24) |
@@ -256,7 +258,7 @@ public class DSBytes extends DSElement {
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
-        return 0; //unreachable
+        return ret;
     }
 
     /**
@@ -280,26 +282,17 @@ public class DSBytes extends DSElement {
      * @param bigEndian Whether to decode in big or little endian byte ordering.
      */
     public static short readShort(InputStream in, boolean bigEndian) {
+        short ret = 0;
         try {
             if (bigEndian) {
                 return (short) (((in.read() & 0xFF) << 8) | ((in.read() & 0xFF) << 0));
             }
-            return (short) (((in.read() & 0xFF) << 0) | ((in.read() & 0xFF) << 8));
+            ret = (short) (((in.read() & 0xFF) << 0) | ((in.read() & 0xFF) << 8));
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
-        return 0;//unreachable
+        return ret;
     }
-
-    /*
-    @Override
-    public DSString toElement() {
-        if (isNull()) {
-            return DSString.NULL;
-        }
-        return DSString.valueOf(toString());
-    }
-    */
 
     @Override
     public byte[] toBytes() {

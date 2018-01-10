@@ -3,22 +3,19 @@ package org.iot.dsa.io;
 import java.nio.ByteBuffer;
 
 /**
- * A buffer for storing bytes being pushed from an input stream.  Useful when bytes are coming in
- * faster than can be processed.
+ * A buffer for storing bytes being pushed from an input stream.  Useful when bytes are
+ * coming in faster than can be processed.
  *
  * @author Aaron Hansen
  */
 public class DSByteBuffer {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private byte[] buffer;
+    private RuntimeException closeException;
     private int length = 0;
     private int offset = 0;
     private boolean open = false;
@@ -47,6 +44,12 @@ public class DSByteBuffer {
         return length;
     }
 
+    public synchronized void clear() {
+        length = 0;
+        offset = 0;
+        notify();
+    }
+
     /**
      * Important for notifying waiting threads.
      */
@@ -54,6 +57,19 @@ public class DSByteBuffer {
         if (!open) {
             return this;
         }
+        open = false;
+        notify();
+        return this;
+    }
+
+    /**
+     * Important for notifying waiting threads.
+     */
+    public synchronized DSByteBuffer close(RuntimeException toThrow) {
+        if (!open) {
+            return this;
+        }
+        this.closeException = toThrow;
         open = false;
         notify();
         return this;
@@ -94,7 +110,10 @@ public class DSByteBuffer {
         if (open) {
             return this;
         }
+        length = 0;
+        offset = 0;
         open = true;
+        closeException = null;
         notify();
         return this;
     }
@@ -103,6 +122,9 @@ public class DSByteBuffer {
      * Gets the bytes from the given buffer, which will be flipped, then cleared.
      */
     public synchronized void put(ByteBuffer buf) {
+        if (!open) {
+            throw new DSIoException("Closed");
+        }
         int len = buf.position();
         int bufLen = buffer.length;
         if ((len + length + offset) >= bufLen) {
@@ -125,7 +147,7 @@ public class DSByteBuffer {
      */
     public synchronized void put(byte b) {
         if (!open) {
-            throw new IllegalStateException("Buffer closed");
+            throw new DSIoException("Closed");
         }
         int bufLen = buffer.length;
         int msgLen = 1;
@@ -160,7 +182,7 @@ public class DSByteBuffer {
      */
     public synchronized void put(byte[] msg, int off, int len) {
         if (!open) {
-            throw new IllegalStateException("Buffer closed");
+            throw new DSIoException("Closed");
         }
         int bufLen = buffer.length;
         if ((len + length + offset) >= bufLen) {
@@ -186,7 +208,7 @@ public class DSByteBuffer {
      */
     public synchronized void put(int dest, byte[] msg, int off, int len) {
         if (!open) {
-            throw new IllegalStateException("Buffer closed");
+            throw new DSIoException("Closed");
         }
         if (offset > 0) {
             System.arraycopy(buffer, offset, buffer, 0, length);
@@ -207,7 +229,7 @@ public class DSByteBuffer {
     }
 
     /**
-     * Returns the nextRun incoming byte, or -1 when end of stream has been reached.
+     * Returns the next incoming byte, or -1 when end of stream has been reached.
      *
      * @throws DSIoException if there are any issues.
      */
@@ -224,7 +246,12 @@ public class DSByteBuffer {
         }
         notify();
         if (!open) {
-            return -1;
+            if (length == 0) {
+                if (closeException != null) {
+                    throw closeException;
+                }
+                return -1;
+            }
         } else if (length == 0) {
             throw new DSIoException("Read timeout");
         }
@@ -244,7 +271,7 @@ public class DSByteBuffer {
      * @throws DSIoException if there are any issues.
      */
     public synchronized int read(byte[] buf, int off, int len) {
-        while (open && (length == 0)) {
+        while (open && (length < len)) {
             try {
                 if (timeout > 0) {
                     wait(timeout);
@@ -256,7 +283,12 @@ public class DSByteBuffer {
         }
         notify();
         if (!open) {
-            return -1;
+            if (length == 0) {
+                if (closeException != null) {
+                    throw closeException;
+                }
+                return -1;
+            }
         } else if (length == 0) {
             throw new DSIoException("Read timeout");
         }
@@ -291,7 +323,12 @@ public class DSByteBuffer {
         }
         notify();
         if (!open) {
-            return -1;
+            if (length == 0) {
+                if (closeException != null) {
+                    throw closeException;
+                }
+                return -1;
+            }
         } else if (length == 0) {
             throw new DSIoException("Read timeout");
         }
