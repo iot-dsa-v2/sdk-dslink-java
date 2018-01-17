@@ -324,6 +324,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         if (path.isResponder()) {
             DSIResponder responder = (DSIResponder) path.getTarget();
             responder.onSet(new SetWrapper(path.getPath(), request));
+            return;
         }
         DSNode parent = path.getParent();
         DSInfo info = path.getInfo();

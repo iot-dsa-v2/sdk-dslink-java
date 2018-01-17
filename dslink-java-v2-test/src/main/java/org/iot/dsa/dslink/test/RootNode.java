@@ -72,7 +72,7 @@ public class RootNode extends DSRootNode implements Runnable {
     @Override
     public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {
         if (actionInfo == this.reset) {
-            put(incrementingInt, DSInt.valueOf(0));
+            put(incrementingInt, DSElement.make(0));
             DSElement arg = invocation.getParameters().get("Arg");
             put("Message", arg);
             clear();
@@ -178,7 +178,7 @@ public class RootNode extends DSRootNode implements Runnable {
      */
     @Override
     public void run() {
-        DSElement value = incrementingInt.getElement();
+        DSElement value = incrementingInt.getValue().toElement();
         put(incrementingInt, DSElement.make(value.toInt() + 1));
     }
 

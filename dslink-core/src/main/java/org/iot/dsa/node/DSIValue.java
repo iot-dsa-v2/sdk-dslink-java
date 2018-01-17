@@ -23,9 +23,13 @@ package org.iot.dsa.node;
  *
  * <li>If mutable (avoid if at all possible), implement DSIPublisher so nodes know of changes.
  *
+ * <li>If a DSNode subclass is implementing DSIValue, it's onSet(DSIValue) must also be overridden.
+ *
  * </ul>
  *
+ *
  * @author Aaron Hansen
+ * @see DSNode#onSet(DSIValue)
  */
 public interface DSIValue extends DSIObject {
 

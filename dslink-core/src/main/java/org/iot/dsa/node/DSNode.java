@@ -1,8 +1,8 @@
 package org.iot.dsa.node;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Level;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
@@ -10,9 +10,13 @@ import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.logging.DSLogging;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.event.DSIEvent;
+import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSInfoTopic;
+import org.iot.dsa.node.event.DSTopic;
+import org.iot.dsa.node.event.DSValueTopic;
 import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
-import static org.iot.dsa.node.DSIPublisher.Event.*;
 
 /**
  * The primary organization unit of the node tree.  Most links will bind their specific logic by
@@ -42,7 +46,6 @@ import static org.iot.dsa.node.DSIPublisher.Event.*;
  * <p>
  * <p>
  * <p>
- * <h3>Constructors</h3>
  * <p>
  * DSNode sub-classes must support the public no-arg constructor.  This is how they will be
  * instantiated when deserializing the configuration database.
@@ -272,7 +275,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     //Prevents infinite loops when initializing default instances.
     static final DSNode defaultDefaultInstance = new DSNode();
-    private static final int MAP_THRESHOLD = 10;
+    private static final int MAP_THRESHOLD = 7;
+
+    public static final DSTopic INFO_TOPIC = DSInfoTopic.INSTANCE;
+    public static final DSTopic VALUE_TOPIC = DSValueTopic.INSTANCE;
 
     private static int STATE_STOPPED = 0;
     private static int STATE_STARTED = 1;
@@ -282,19 +288,15 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private HashMap<String, DSInfo> childMap;
+    private Map<String, DSInfo> childMap;
     private DSNode defaultInstance;
     private DSInfo firstChild;
     private DSInfo infoInParent;
     private DSInfo lastChild;
     private String path;
-    private DSISubscriber subscriber;
+    private Subscription subscription;
     private int size = 0;
     private int state = 1; //See STATE_*
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
@@ -331,13 +333,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             } catch (Exception x) {
                 severe(getPath(), x);
             }
-            if (subscriber != null) {
-                try {
-                    subscriber.onEvent(this, info, CHILD_ADDED);
-                } catch (Exception x) {
-                    severe(getPath(), x);
-                }
-            }
+            fire(info, INFO_TOPIC, DSInfoTopic.Event.CHILD_ADDED);
         }
     }
 
@@ -369,13 +365,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (info != null) {
             throw new IllegalArgumentException("Name already in use: " + name);
         }
-        info = new DSInfo(name, object);
+        info = new DSInfo(name.intern(), object);
         add(info);
         if (isRunning()) {
             if (argIsNode) {
                 argAsNode.start();
             }
-            info.subscribe();
         }
         if (isStable()) {
             if (argIsNode) {
@@ -383,27 +378,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
         }
         return info;
-    }
-
-    /**
-     * Can be used to force a child changed event for the given child.
-     */
-    public void childChanged(DSInfo info) {
-        if (info.getParent() != this) {
-            throw new IllegalArgumentException("Not a child of this node.");
-        }
-        try {
-            onChildChanged(info);
-        } catch (Exception x) {
-            severe(getPath(), x);
-        }
-        if (subscriber != null) {
-            try {
-                subscriber.onEvent(this, info, CHILD_CHANGED);
-            } catch (Exception x) {
-                severe(getPath(), x);
-            }
-        }
     }
 
     /**
@@ -517,6 +491,107 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
+     * Notifies subscribers of the event.
+     *
+     * @param child Can be null.
+     * @param topic Must not be null.
+     * @param event Must not be null.
+     */
+    protected void fire(DSInfo child,
+                        DSTopic topic,
+                        DSIEvent event) {
+        fire(child, topic, event, null, null, null, null);
+    }
+
+    /**
+     * Notifies subscribers of the event.
+     *
+     * @param child  Can be null.
+     * @param topic  Must not be null.
+     * @param event  Must not be null.
+     * @param param1 Optional
+     */
+    protected void fire(DSInfo child,
+                        DSTopic topic,
+                        DSIEvent event,
+                        Object param1) {
+        fire(child, topic, event, param1, null, null, null);
+    }
+
+    /**
+     * Notifies subscribers of the event.
+     *
+     * @param child  Can be null.
+     * @param topic  Must not be null.
+     * @param event  Must not be null.
+     * @param param1 Optional
+     * @param param2 Optional
+     */
+    protected void fire(DSInfo child,
+                        DSTopic topic,
+                        DSIEvent event,
+                        Object param1,
+                        Object param2) {
+        fire(child, topic, event, param1, param2, null, null);
+    }
+
+    /**
+     * Notifies subscribers of the event.
+     *
+     * @param child  Can be null.
+     * @param topic  Must not be null.
+     * @param event  Must not be null.
+     * @param param1 Optional
+     * @param param2 Optional
+     * @param param3 Optional
+     */
+    protected void fire(DSInfo child,
+                        DSTopic topic,
+                        DSIEvent event,
+                        Object param1,
+                        Object param2,
+                        Object param3) {
+        fire(child, topic, event, param1, param2, param3, null);
+    }
+
+    /**
+     * Notifies subscribers of the event.
+     *
+     * @param child  Can be null.
+     * @param topic  Must not be null.
+     * @param event  Must not be null.
+     * @param param1 Optional
+     * @param param2 Optional
+     * @param param3 Optional
+     * @param param4 Optional
+     */
+    protected void fire(DSInfo child,
+                        DSTopic topic,
+                        DSIEvent event,
+                        Object param1,
+                        Object param2,
+                        Object param3,
+                        Object param4) {
+        if (topic == null) {
+            throw new NullPointerException("Null topic");
+        }
+        if (event == null) {
+            throw new NullPointerException("Null event");
+        }
+        Subscription sub = subscription;
+        while (sub != null) {
+            if (sub.matches(child, topic)) {
+                try {
+                    sub.subscriber.onEvent(this, child, topic, event, param1, param2);
+                } catch (Exception x) {
+                    severe(getPath(), x);
+                }
+            }
+            sub = sub.next;
+        }
+    }
+
+    /**
      * Returns the child value with the given name, or null.
      *
      * @return Possibly null.
@@ -549,7 +624,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         synchronized (this) {
             if (size >= MAP_THRESHOLD) {
                 if (childMap == null) {
-                    childMap = new HashMap<String, DSInfo>(size);
+                    childMap = new TreeMap<String, DSInfo>();
                     for (DSInfo info = firstChild; info != null; info = info.next()) {
                         childMap.put(info.getName(), info);
                     }
@@ -676,27 +751,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Called by the info when it detects a change.  Will propagate the event asynchronously.
-     */
-    void infoChanged(final DSInfo info) {
-        if (isStopped()) {
-            return;
-        }
-        try {
-            onInfoChanged(info);
-        } catch (Exception x) {
-            severe(getPath(), x);
-        }
-        if (subscriber != null) {
-            try {
-                subscriber.onEvent(this, info, DSIPublisher.Event.CHILD_INFO_CHANGED);
-            } catch (Exception x) {
-                severe(getPath(), x);
-            }
-        }
-    }
-
-    /**
      * True if this is the default instance for the type.
      */
     protected final boolean isDefaultInstance() {
@@ -808,7 +862,40 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * True if there are any subscribers.
      */
     public boolean isSubscribed() {
-        return subscriber != null;
+        return subscription != null;
+    }
+
+    /**
+     * True if there are any subscriptions with the matching child and topic.
+     *
+     * @param child Can be null.
+     * @param topic Can be null.
+     */
+    public boolean isSubscribed(DSInfo child, DSTopic topic) {
+        Subscription sub = subscription;
+        while (sub != null) {
+            if (DSUtil.equal(topic, sub.topic)) {
+                if (DSUtil.equal(child, sub.child)) {
+                    return true;
+                }
+            }
+            sub = sub.next;
+        }
+        return false;
+    }
+
+    /**
+     * True if there any subscriptions for the given topic.
+     */
+    public boolean isSubscribed(DSTopic topic) {
+        Subscription sub = subscription;
+        while (sub != null) {
+            if (sub.topic == topic) {
+                return true;
+            }
+            sub = sub.next;
+        }
+        return false;
     }
 
     /**
@@ -830,20 +917,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public Iterator<DSInfo> iterator() {
         return new ChildIterator();
-    }
-
-    /**
-     * Fires a publisher changed event for this node.  Useful if the node is also a DSIValue and you
-     * want to notify listeners of a value change.
-     */
-    protected void nodeChanged() {
-        if (subscriber != null) {
-            try {
-                subscriber.onEvent(this, null, PUBLISHER_CHANGED);
-            } catch (Exception x) {
-                severe(getPath(), x);
-            }
-        }
     }
 
     /**
@@ -903,7 +976,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Override point, called only when a DSNode subclass implements DSIValue is being set.  This
-     * will throw and IllegalStateException if not overridden and called. Throw an exception to
+     * will throw and IllegalStateException if not overridden. You should store the value of the
+     * node as a child and call put in override implementation.  Throw an exception to
      * report an error to the requester.
      *
      * @param value The new value.
@@ -914,9 +988,29 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Called when this node transitions from unsubscribed to subscribed.
+     * Called for every subscription.
+     *
+     * @param child      Can be null.
+     * @param subscriber Will not be null.
+     * @param topic      Will not be null.
+     */
+    protected void onSubscribe(DSInfo child, DSISubscriber subscriber, DSTopic topic) {
+    }
+
+    /**
+     * Called when this node transitions from having no subscriptions to having a subscription of
+     * any kind.
      */
     protected void onSubscribed() {
+    }
+
+    /**
+     * Called when the child and topic pair transitions from having no subscriptions to have a
+     * subscription.
+     *
+     * @param child Can be null, which indicates node subscriptions.
+     */
+    protected void onSubscribed(DSInfo child, DSTopic topic) {
     }
 
     /**
@@ -938,9 +1032,28 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Called when this node transitions from subscribed to unsubscribed.
+     * Called for every unsubscribe.
+     *
+     * @param child      Can be null.
+     * @param subscriber Will not be null.
+     * @param topic      Will not be null.
+     */
+    protected void onUnsubscribe(DSInfo child, DSISubscriber subscriber, DSTopic topic) {
+    }
+
+    /**
+     * Called when this node transitions to having no subscriptions of any kind.
      */
     protected void onUnsubscribed() {
+    }
+
+    /**
+     * Called when the child and topic pair transitions to having no subscriptions.
+     *
+     * @param child Can be null.
+     * @param topic Can not be null.
+     */
+    protected void onUnsubscribed(DSInfo child, DSTopic topic) {
     }
 
     /**
@@ -955,6 +1068,60 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
         put(info, object);
         return info;
+    }
+
+    /**
+     * A convenience for put(String, DSIObject)
+     *
+     * @return The info for the child.
+     */
+    public DSInfo put(String name, boolean arg) {
+        return put(name, DSBool.valueOf(arg));
+    }
+
+    /**
+     * A convenience for put(String, DSIObject)
+     *
+     * @return The info for the child.
+     */
+    public DSInfo put(String name, double arg) {
+        return put(name, DSDouble.valueOf(arg));
+    }
+
+    /**
+     * A convenience for put(String, DSIObject)
+     *
+     * @return The info for the child.
+     */
+    public DSInfo put(String name, float arg) {
+        return put(name, DSFloat.valueOf(arg));
+    }
+
+    /**
+     * A convenience for put(String, DSIObject)
+     *
+     * @return The info for the child.
+     */
+    public DSInfo put(String name, int arg) {
+        return put(name, DSInt.valueOf(arg));
+    }
+
+    /**
+     * A convenience for put(String, DSIObject)
+     *
+     * @return The info for the child.
+     */
+    public DSInfo put(String name, long arg) {
+        return put(name, DSLong.valueOf(arg));
+    }
+
+    /**
+     * A convenience for put(String, DSIObject)
+     *
+     * @return The info for the child.
+     */
+    public DSInfo put(String name, String arg) {
+        return put(name, DSString.valueOf(arg));
     }
 
     /**
@@ -984,7 +1151,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         } else if (old instanceof DSGroup) {
             ((DSGroup) object).setParent(null);
         }
-        info.unsubscribe();
         info.setObject(object);
         if (argIsNode) {
             argAsNode.infoInParent = info;
@@ -992,13 +1158,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (isRunning()) {
             if (argIsNode) {
                 argAsNode.start();
-            }
-            info.subscribe();
-            childChanged(info);
-            if (isStable()) {
-                if (argIsNode) {
-                    argAsNode.stable();
-                }
+            } else {
+                fire(info, VALUE_TOPIC, DSValueTopic.Event.CHILD_CHANGED, old, object);
             }
         }
         return this;
@@ -1044,19 +1205,20 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             node.infoInParent = null;
             node.stop();
         }
-        info.unsubscribe();
         if (isRunning()) {
             try {
                 onChildRemoved(info);
             } catch (Exception x) {
                 severe(getPath(), x);
             }
-            if (subscriber != null) {
-                try {
-                    subscriber.onEvent(this, info, CHILD_REMOVED);
-                } catch (Exception x) {
-                    severe(getPath(), x);
+            fire(info, INFO_TOPIC, DSInfoTopic.Event.CHILD_REMOVED);
+            Subscription sub = subscription;
+            while (sub != null) {
+                if (sub.matches(info)) {
+                    //TODO Is this right?
+                    unsubscribe(info, sub.subscriber, sub.topic);
                 }
+                sub = sub.next;
             }
         }
         return this;
@@ -1075,33 +1237,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
         remove(info);
         return info;
-    }
-
-    /**
-     * There can be multiple subscribers but will only call onSubscribed when the node transitions
-     * from unsubscribed to subscribed.
-     */
-    public void subscribe(DSISubscriber arg) {
-        boolean first = false;
-        synchronized (this) {
-            if (subscriber == null) {
-                subscriber = arg;
-                first = true;
-            } else if (subscriber instanceof SubscriberAdapter) {
-                ((SubscriberAdapter) subscriber).subscribe(arg);
-            } else {
-                SubscriberAdapter adapter = new SubscriberAdapter(subscriber);
-                subscriber = adapter;
-                adapter.subscribe(arg);
-            }
-        }
-        if (first) {
-            try {
-                onSubscribed();
-            } catch (Exception x) {
-                severe(getPath(), x);
-            }
-        }
     }
 
     /** TODO later
@@ -1152,7 +1287,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         try {
             onStable();
         } catch (Exception x) {
-            DSLogging.getDefaultLogger().log(Level.FINE, getPath(), x);
+            severe(getPath(), x);
         }
     }
 
@@ -1169,11 +1304,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             if (info.isNode()) {
                 info.getNode().start();
             }
-            try {
-                info.subscribe();
-            } catch (Exception x) {
-                severe(getPath(), x);
-            }
             info = info.next();
         }
         state = DSUtil.setBit(state, STATE_STOPPED, false);
@@ -1181,7 +1311,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         try {
             onStarted();
         } catch (Exception x) {
-            DSLogging.getDefaultLogger().log(Level.FINE, getPath(), x);
+            severe(getPath(), x);
         }
     }
 
@@ -1196,26 +1326,87 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         path = null;
         DSInfo info = getFirstInfo();
         while (info != null) {
-            info.unsubscribe();
             if (info.isNode()) {
                 info.getNode().stop();
             }
             info = info.next();
         }
-        if (subscriber != null) {
-            try {
-                subscriber.onClose(this);
-            } catch (Exception x) {
-                fine(getPath(), x);
-            }
-            subscriber = null;
+        Subscription sub = subscription;
+        while (sub != null) {
+            sub.unsubscribe();
+            sub = sub.next;
         }
+        subscription = null;
         state = DSUtil.setBit(state, STATE_STABLE, false);
         state = DSUtil.setBit(state, STATE_STOPPED, true);
         try {
             onStopped();
         } catch (Exception x) {
             fine(getPath(), x);
+        }
+    }
+
+    /**
+     * Subscribes the child and topic.
+     *
+     * @param child      Can be null, but cannot be a child node.
+     * @param subscriber Can not be null.
+     * @param topic      Can not be null.
+     */
+    public void subscribe(DSInfo child, DSISubscriber subscriber, DSTopic topic) {
+        if (child != null) {
+            if (child.isNode()) {
+                throw new IllegalArgumentException("Must subscribe nodes directly");
+            }
+        }
+        if (subscriber == null) {
+            throw new NullPointerException("Null subscriber");
+        }
+        if (topic == null) {
+            throw new NullPointerException("Null topic");
+        }
+        boolean firstSubscription;
+        int count = 0;
+        synchronized (this) {
+            Subscription sub = subscription;
+            firstSubscription = (sub == null);
+            Subscription prev = null;
+            while (sub != null) {
+                if (sub.matches(child, topic)) {
+                    count++;
+                    if (DSUtil.equal(subscriber, sub.subscriber)) {
+                        return;
+                    }
+                }
+                prev = sub;
+                sub = sub.next;
+            }
+            sub = new Subscription(child, subscriber, topic);
+            if (prev == null) {
+                sub.next = subscription;
+                subscription = sub;
+            } else {
+                prev.next = sub;
+            }
+        }
+        try {
+            onSubscribe(child, subscriber, topic);
+        } catch (Exception x) {
+            severe(getParent(), x);
+        }
+        if (count == 0) {
+            try {
+                onSubscribed(child, topic);
+            } catch (Exception x) {
+                severe(getParent(), x);
+            }
+        }
+        if (firstSubscription) {
+            try {
+                onSubscribed();
+            } catch (Exception x) {
+                severe(getParent(), x);
+            }
         }
     }
 
@@ -1227,29 +1418,56 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * There can be multiple subscribers but this will only call onUnsubscribed when the node
-     * transitions from subscribed to unsubscribed.
+     * Unsubscribes the tuple.
+     *
+     * @param child      Can be null.
+     * @param subscriber Can not be null.
+     * @param topic      Can not be null.
      */
-    public void unsubscribe(DSISubscriber arg) {
+    public void unsubscribe(DSInfo child, DSISubscriber subscriber, DSTopic topic) {
+        int count = 0;
+        Subscription removed = null;
         synchronized (this) {
-            if (arg == null) {
-                return;
-            } else if (subscriber instanceof SubscriberAdapter) {
-                SubscriberAdapter adapter = (SubscriberAdapter) subscriber;
-                adapter.unsubscribe(arg);
-                if (adapter.isEmpty()) {
-                    subscriber = null;
+            Subscription sub = subscription;
+            Subscription prev = null;
+            while (sub != null) {
+                if (sub.matches(child, topic)) {
+                    count++;
+                    if (DSUtil.equal(subscriber, sub.subscriber)) {
+                        count--;
+                        removed = sub;
+                        if (prev == null) {
+                            subscription = subscription.next;
+                        } else {
+                            prev.next = sub.next;
+                        }
+                    }
                 }
-            } else if (subscriber == arg) {
-                subscriber = null;
+                prev = sub;
+                sub = sub.next;
             }
         }
-        if (subscriber == null) {
+        if (removed != null) {
             try {
-                onUnsubscribed();
+                onUnsubscribe(child, subscriber, topic);
             } catch (Exception x) {
-                severe(getPath(), x);
+                severe(getParent(), x);
             }
+            if (count == 0) {
+                try {
+                    onUnsubscribed(child, topic);
+                } catch (Exception x) {
+                    severe(getParent(), x);
+                }
+            }
+            if (subscription == null) {
+                try {
+                    onUnsubscribed();
+                } catch (Exception x) {
+                    severe(getParent(), x);
+                }
+            }
+            removed.unsubscribe();
         }
     }
 
@@ -1297,7 +1515,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             DSNode.this.remove(last);
         }
-    }
+    } //ChildIterator
 
     /**
      * Iterates only node children. Does not support the remove operation.
@@ -1331,7 +1549,44 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             DSNode.this.remove(last);
         }
-    }
+    } //NodeIterator
+
+    private class Subscription {
+
+        DSInfo child;
+        Subscription next;
+        DSISubscriber subscriber;
+        DSTopic topic;
+
+        Subscription(DSInfo child, DSISubscriber subscriber, DSTopic topic) {
+            this.child = child;
+            this.subscriber = subscriber;
+            this.topic = topic;
+        }
+
+        boolean matches(DSInfo child) {
+            return !DSUtil.equal(child, this.child);
+        }
+
+        boolean matches(DSInfo child, DSTopic topic) {
+            if (!DSUtil.equal(child, this.child)) {
+                return false;
+            }
+            if (!DSUtil.equal(topic, this.topic)) {
+                return false;
+            }
+            return true;
+        }
+
+        void unsubscribe() {
+            try {
+                subscriber.onUnsubscribed(DSNode.this, child, topic);
+            } catch (Exception x) {
+                severe(getPath(), x);
+            }
+        }
+
+    } //Subscription
 
     /**
      * Iterates only value children.
@@ -1365,10 +1620,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             DSNode.this.remove(last);
         }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
+    } //ValueIterator
 
 }

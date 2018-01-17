@@ -3,6 +3,7 @@ package org.iot.dsa.node;
 import java.util.Iterator;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.util.DSUtil;
 
 /**
@@ -37,7 +38,7 @@ import org.iot.dsa.util.DSUtil;
  *
  * @author Aaron Hansen
  */
-public class DSInfo implements ApiObject, DSISubscriber {
+public class DSInfo implements ApiObject {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -160,7 +161,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     private void fireInfoChanged() {
         if (parent != null) {
-            parent.infoChanged(this);
+            parent.fire(this, DSInfoTopic.INSTANCE, DSInfoTopic.Event.METADATA_CHANGED);
         }
     }
 
@@ -417,23 +418,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     /**
-     * Does nothing.
-     */
-    @Override
-    public void onClose(DSIObject publisher) {
-    }
-
-    /**
-     * Routes events from child DSIPublishers to onChildChanged in the parent.
-     */
-    @Override
-    public void onEvent(DSIObject publisher, DSInfo child, DSIPublisher.Event event) {
-        if (parent != null) {
-            parent.onChildChanged(this);
-        }
-    }
-
-    /**
      * Adds the metadata to the info and returns this.
      */
     public DSInfo putMetadata(DSMap map) {
@@ -510,22 +494,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
     public DSInfo setTransient(boolean trans) {
         setFlag(TRANSIENT, trans);
         return this;
-    }
-
-    void subscribe() {
-        if (!isNode()) {
-            if (value instanceof DSIPublisher) {
-                ((DSIPublisher) value).subscribe(this);
-            }
-        }
-    }
-
-    void unsubscribe() {
-        if (!isNode()) {
-            if (value instanceof DSIPublisher) {
-                ((DSIPublisher) value).unsubscribe(this);
-            }
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
