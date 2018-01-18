@@ -222,9 +222,9 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             ret.info("Creating new database...");
             String type = config.getMainType();
             if (type == null) {
-                throw new IllegalStateException("Config missing the root node type");
+                throw new IllegalStateException("Config missing the main node type");
             }
-            ret.config("Nodes type: " + type);
+            ret.config("Main type: " + type);
             try {
                 DSNode node = (DSNode) Class.forName(type).newInstance();
                 ret.put(MAIN, node);
@@ -520,8 +520,8 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         }
     }
 
-    public DSLink setNodes(DSMainNode root) {
-        put(main, root);
+    public DSLink setNodes(DSMainNode node) {
+        put(main, node);
         return this;
     }
 

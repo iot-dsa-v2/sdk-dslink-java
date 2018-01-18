@@ -130,6 +130,8 @@ public class NodeDecoder {
                     obj = getInstance(type);
                     if (info == null) {
                         info = parent.put(name, obj);
+                    } else {
+                        parent.put(info, obj);
                     }
                 }
                 if ((info != null) && (obj == null)) {

@@ -17,7 +17,7 @@ import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
 
 /**
- * Link main class and root node.
+ * Link main class and node.
  *
  * @author Aaron Hansen
  */

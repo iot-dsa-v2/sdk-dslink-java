@@ -44,8 +44,6 @@ public class DSInfo implements ApiObject {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    //Config vs admin vs operator
-    //
     static final int ADMIN = 0;
     static final int HIDDEN = 1;
     static final int TRANSIENT = 2;

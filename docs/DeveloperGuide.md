@@ -53,22 +53,22 @@ Nodes are where application specific logic is bound to the link architecture.  N
 will use various lifecycle callbacks to trigger their logic.
 
 First you must create a root node.  It is the hook for the rest of your functionality.  The 
-convention is to name it RootNode, but make sure it is in a unique package so that multiple links
+convention is to name it MainNode, but make sure it is in a unique package so that multiple links
 can be run in the same process. 
 
 Then you will probably create additional nodes that will be descendants in the tree rooted by your 
 root node.
 
-### Root Node
+### Main Node
 
 All links require a single root node and it must subclass 
-[org.iot.dsa.dslink.DSRootNode](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/dslink/DSRootNode.html). 
-The convention is to name the class RootNode but the package must be unique from any other 
-RootNodes so that multiple links can be run in the same process.
+[org.iot.dsa.dslink.DSMainNode](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/dslink/DSMainNode.html). 
+The convention is to name the class MainNode but the package must be unique from any other 
+MainNodes so that multiple links can be run in the same process.
 
 When a link launches the first time, the type of the root node is looked up **dslink.json**.
-The config _rootType_ must store the fully qualified class name of the root node.  After the first 
-launch, the configuration database is serialized and the _rootType_ config will longer have an 
+The config _mainType_ must store the fully qualified class name of the root node.  After the first 
+launch, the configuration database is serialized and the _mainType_ config will longer have an 
 impact.
 
 ### Additional Nodes
