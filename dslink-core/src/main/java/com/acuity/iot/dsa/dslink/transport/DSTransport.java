@@ -2,8 +2,6 @@ package com.acuity.iot.dsa.dslink.transport;
 
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;

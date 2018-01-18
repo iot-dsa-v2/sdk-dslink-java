@@ -7,7 +7,6 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.msgpack.MsgpackReader;
 import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSList;

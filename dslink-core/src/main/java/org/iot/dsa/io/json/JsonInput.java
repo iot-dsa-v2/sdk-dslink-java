@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.zip.ZipInputStream;
-import org.iot.dsa.node.DSString;
 
 /**
  * Allows unreading of a byte for DSReader.

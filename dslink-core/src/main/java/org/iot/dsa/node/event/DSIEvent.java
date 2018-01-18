@@ -8,7 +8,7 @@ import org.iot.dsa.node.DSNode;
  * event needs more parameters than two predefined ones
  *
  * @author Aaron Hansen
- * @see DSISubscriber#onEvent(DSNode, DSInfo, DSTopic, DSIEvent, Object, Object
+ * @see DSISubscriber#onEvent(DSNode, DSInfo, DSTopic, DSIEvent, Object...)
  * @see DSTopic
  */
 public interface DSIEvent {

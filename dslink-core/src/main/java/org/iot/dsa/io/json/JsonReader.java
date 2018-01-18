@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -331,7 +330,7 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
                 ch = (char) in.read();
                 switch (ch) {
                     case 'u':
-                    case 'U' :
+                    case 'U':
                         ch = readUnicode();
                         break;
                     case 'b':

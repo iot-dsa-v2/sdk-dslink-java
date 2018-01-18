@@ -46,7 +46,7 @@ public class DSInfo implements ApiObject {
 
     //Config vs admin vs operator
     //
-    static final int CONFIG = 0;
+    static final int ADMIN = 0;
     static final int HIDDEN = 1;
     static final int TRANSIENT = 2;
     static final int READONLY = 3;
@@ -61,7 +61,6 @@ public class DSInfo implements ApiObject {
     ///////////////////////////////////////////////////////////////////////////
 
     int flags = 0;
-    DSMap metadata;
     String name;
     DSInfo next;
     DSNode parent;
@@ -83,11 +82,6 @@ public class DSInfo implements ApiObject {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    public DSInfo clearMetadata() {
-        metadata.clear();
-        return this;
-    }
 
     public DSInfo copy() {
         DSInfo ret = new DSInfo();
@@ -120,13 +114,6 @@ public class DSInfo implements ApiObject {
      */
     public boolean equalsDefault() {
         return false;
-    }
-
-    /**
-     * True if the state matches the default state.
-     */
-    public boolean equalsDefaultMetadata() {
-        return metadata == null;
     }
 
     /**
@@ -200,20 +187,13 @@ public class DSInfo implements ApiObject {
         return flags;
     }
 
-    /**
-     * Only adds metadata defined in the info to the given bucket.
-     *
-     * @see DSMetadata#getMetadata(DSInfo, DSMap)
-     */
-    @Override
-    public void getMetadata(DSMap bucket) {
-        if (metadata != null) {
-            bucket.putAll(metadata);
-        }
-    }
-
     public String getName() {
         return name;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        DSMetadata.getMetadata(this, bucket);
     }
 
     /**
@@ -252,16 +232,6 @@ public class DSInfo implements ApiObject {
         return System.identityHashCode(this);
     }
 
-    public boolean hasMetadata() {
-        if (metadata == null) {
-            return false;
-        }
-        if (metadata.isEmpty()) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * True if there is another info after this one.
      */
@@ -275,8 +245,8 @@ public class DSInfo implements ApiObject {
     }
 
     @Override
-    public boolean isConfig() {
-        return getFlag(CONFIG);
+    public boolean isAdmin() {
+        return getFlag(ADMIN);
     }
 
     /**
@@ -417,47 +387,14 @@ public class DSInfo implements ApiObject {
         return cur;
     }
 
-    /**
-     * Adds the metadata to the info and returns this.
-     */
-    public DSInfo putMetadata(DSMap map) {
-        if (metadata == null) {
-            metadata = (DSMap) map.copy();
-        } else {
-            metadata.putAll(map);
-        }
+    public DSInfo setAdmin(boolean admin) {
+        setFlag(ADMIN, admin);
         return this;
-    }
-
-    /**
-     * Adds the metadata to the info and returns this.
-     */
-    public DSInfo putMetadata(String name, DSElement value) {
-        if (metadata == null) {
-            metadata = new DSMap();
-        }
-        metadata.put(name, value);
-        return this;
-    }
-
-    /**
-     * Returns the removed value, or null.
-     */
-    public DSElement removeMetadata(String name) {
-        if (metadata == null) {
-            return null;
-        }
-        return metadata.remove(name);
     }
 
     DSInfo setFlag(int position, boolean on) {
         fireInfoChanged();
         flags = DSUtil.setBit(flags, position, on);
-        return this;
-    }
-
-    public DSInfo setConfig(boolean config) {
-        setFlag(CONFIG, config);
         return this;
     }
 
@@ -522,8 +459,4 @@ public class DSInfo implements ApiObject {
 
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
-
-} //class
+}

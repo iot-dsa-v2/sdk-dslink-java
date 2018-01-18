@@ -11,7 +11,7 @@ import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.node.event.DSTopic;
 
 /**
- * Used by DSRootNode to subscribe to the target of a list request and update the stream when
+ * Used by DSMainNode to subscribe to the target of a list request and update the stream when
  * changes are detected.
  *
  * @author Aaron Hansen
@@ -60,8 +60,7 @@ class ListSubscriber implements DSISubscriber, OutboundListResponse {
                         DSInfo child,
                         DSTopic topic,
                         DSIEvent event,
-                        Object p1,
-                        Object p2) {
+                        Object... params) {
         switch ((DSInfoTopic.Event) event) {
             case CHILD_ADDED:
                 request.childAdded(child);

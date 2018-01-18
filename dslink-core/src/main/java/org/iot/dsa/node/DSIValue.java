@@ -27,7 +27,6 @@ package org.iot.dsa.node;
  *
  * </ul>
  *
- *
  * @author Aaron Hansen
  * @see DSNode#onSet(DSIValue)
  */

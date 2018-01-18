@@ -39,7 +39,6 @@ public abstract class DSLinkConnection extends DSNode {
     private DSTransport transport;
     private DSIWriter writer;
 
-
     // Methods
     // -------
 

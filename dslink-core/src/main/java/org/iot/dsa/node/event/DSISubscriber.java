@@ -8,19 +8,13 @@ public interface DSISubscriber {
     /**
      * Subscription callback.
      *
-     * @param node  Required, node subscribed to.
-     * @param child Optional, if the event concerns a child.
-     * @param topic Required, the topic emanating the event.
-     * @param event Required, the actual event.
-     * @param param1 Can be null, only used if the event defines it.
-     * @param param2 Can be null, only used if the event defines it.
+     * @param node   Required, node subscribed to.
+     * @param child  Optional, if the event concerns a child.
+     * @param topic  Required, the topic emanating the event.
+     * @param event  Required, the actual event.
+     * @param params Can be null, only used if the event defines it.
      */
-    public void onEvent(DSNode node,
-                        DSInfo child,
-                        DSTopic topic,
-                        DSIEvent event,
-                        Object param1,
-                        Object param2);
+    public void onEvent(DSNode node, DSInfo child, DSTopic topic, DSIEvent event, Object... params);
 
     /**
      * Called no matter how the unsubscribe happens, whether explicitly or if the node

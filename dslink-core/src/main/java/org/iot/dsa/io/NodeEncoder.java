@@ -24,10 +24,6 @@ import org.iot.dsa.node.DSNode;
 public class NodeEncoder {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
@@ -148,15 +144,6 @@ public class NodeEncoder {
                 out.key("t").value(getToken(node));
             }
         }
-        if (!arg.equalsDefaultMetadata()) {
-            if (cacheMap == null) {
-                cacheMap = new DSMap();
-            } else {
-                cacheMap.clear();
-            }
-            arg.getMetadata(cacheMap);
-            out.key("m").value(cacheMap);
-        }
         writeChildren((DSNode) arg.getObject());
         out.endMap();
     }
@@ -176,15 +163,6 @@ public class NodeEncoder {
                 out.key("t").value(getToken(obj));
             }
         }
-        if (!arg.equalsDefaultMetadata()) {
-            if (cacheMap == null) {
-                cacheMap = new DSMap();
-            } else {
-                cacheMap.clear();
-            }
-            arg.getMetadata(cacheMap);
-            out.key("m").value(cacheMap);
-        }
         out.endMap();
     }
 
@@ -203,22 +181,11 @@ public class NodeEncoder {
             return;
         }
         if (!arg.equalsDefaultType()) {
-            if (!(v instanceof DSElement)) {
-                out.key("t").value(getToken(v));
-            }
-        }
-        if (!arg.equalsDefaultMetadata()) {
-            if (cacheMap == null) {
-                cacheMap = new DSMap();
-            } else {
-                cacheMap.clear();
-            }
-            arg.getMetadata(cacheMap);
-            out.key("m").value(cacheMap);
+            out.key("t").value(getToken(v));
         }
         if (!arg.equalsDefaultValue()) {
             if (v instanceof DSIStorable) {
-                out.key("v").value(((DSIStorable)v).store());
+                out.key("v").value(((DSIStorable) v).store());
             } else {
                 out.key("v").value(v.toElement());
             }

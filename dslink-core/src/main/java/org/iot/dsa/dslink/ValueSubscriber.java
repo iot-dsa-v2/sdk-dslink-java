@@ -61,8 +61,7 @@ class ValueSubscriber implements DSISubscriber, SubscriptionCloseHandler {
                         DSInfo child,
                         DSTopic topic,
                         DSIEvent event,
-                        Object param1,
-                        Object param2) {
+                        Object... params) {
         DSIValue value;
         if (info == null) {
             if (this.node instanceof DSIValue) {

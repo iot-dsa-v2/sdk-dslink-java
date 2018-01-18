@@ -5,8 +5,7 @@ package org.iot.dsa.node.event;
  * NODE_CHANGED for nodes that implement DSIValue and CHILD_CHANGED for child values of the
  * subscribed node.
  * <p>
- * Events will be one of the enums defined in the Event inner class.  The parameters for each event
- * are defined in the documentation for each event.
+ * Events will be one of the enums defined in the Event inner class.
  *
  * @author Aaron Hansen
  */
@@ -28,15 +27,11 @@ public class DSValueTopic extends DSTopic implements DSIEvent {
      */
     public enum Event implements DSIEvent {
         /**
-         * For DSNodes that implement DSIValue.  The DSInfo arg to onEvent should be null.
-         * The first parameter may be old value, and the second parameter must be the new
-         * value.  The first parameter can be null if the prior value is unknown.
+         * For DSNodes that implement DSIValue.  The DSInfo arg to onEvent must be null.
          */
         NODE_CHANGED,
         /**
-         * For node value children (who are not also nodes).
-         * The first parameter may be old value, and the second parameter must be the new
-         * value.  The first parameter can be null if the prior value is unknown.
+         * For node value children (who are not also nodes).  The DSInfo arg must not be null.
          */
         CHILD_CHANGED
     }

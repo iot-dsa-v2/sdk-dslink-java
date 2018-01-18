@@ -27,10 +27,10 @@ public class DSLinkConfig {
     public static final String CFG_KEY_FILE = "key";
     public static final String CFG_LOG_FILE = "logFile";
     public static final String CFG_LOG_LEVEL = "log";
+    public static final String CFG_MAIN_TYPE = "mainType";
     public static final String CFG_NODE_FILE = "nodes";
     public static final String CFG_PROTOCOL_VERSION = "protocolVersion";
     public static final String CFG_READ_TIMEOUT = "readTimeout";
-    public static final String CFG_ROOT_TYPE = "rootType";
     public static final String CFG_SAVE_INTERVAL = "saveInterval";
     public static final String CFG_STABLE_DELAY = "stableDelay";
     public static final String CFG_WS_TRANSPORT_FACTORY = "wsTransportFactory";
@@ -48,7 +48,7 @@ public class DSLinkConfig {
     private File logFile;
     private Level logLevel;
     private File nodesFile;
-    private String rootType;
+    private String mainType;
     private String token;
     private File workingDir = new File(".");
 
@@ -239,8 +239,9 @@ public class DSLinkConfig {
     public File getLogFile() {
         if (logFile == null) {
             String file = getConfig(CFG_LOG_FILE, null);
-            if (file != null)
+            if (file != null) {
                 setLogFile(new File(file));
+            }
         }
         return logFile;
     }
@@ -270,14 +271,14 @@ public class DSLinkConfig {
     /**
      * The type of the root node.
      */
-    public String getRootType() {
-        if (rootType == null) {
-            rootType = getConfig(CFG_ROOT_TYPE, null);
-            if (rootType == null) {
-                throw new IllegalStateException("Missing rootType config.");
+    public String getMainType() {
+        if (mainType == null) {
+            mainType = getConfig(CFG_MAIN_TYPE, null);
+            if (mainType == null) {
+                throw new IllegalStateException("Missing mainType config.");
             }
         }
-        return rootType;
+        return mainType;
     }
 
     /**
@@ -541,8 +542,8 @@ public class DSLinkConfig {
     /**
      * The type of the root node.
      */
-    public DSLinkConfig setRootType(Class clazz) {
-        rootType = clazz.getName();
+    public DSLinkConfig setMainType(Class clazz) {
+        mainType = clazz.getName();
         return this;
     }
 

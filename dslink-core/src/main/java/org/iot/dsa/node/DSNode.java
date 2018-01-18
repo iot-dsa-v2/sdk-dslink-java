@@ -497,10 +497,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param topic Must not be null.
      * @param event Must not be null.
      */
-    protected void fire(DSInfo child,
-                        DSTopic topic,
-                        DSIEvent event) {
-        fire(child, topic, event, null, null, null, null);
+    protected void fire(DSInfo child, DSTopic topic, DSIEvent event) {
+        fire(child, topic, event, (Object[]) null);
     }
 
     /**
@@ -509,69 +507,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param child  Can be null.
      * @param topic  Must not be null.
      * @param event  Must not be null.
-     * @param param1 Optional
+     * @param params Optional
      */
-    protected void fire(DSInfo child,
-                        DSTopic topic,
-                        DSIEvent event,
-                        Object param1) {
-        fire(child, topic, event, param1, null, null, null);
-    }
-
-    /**
-     * Notifies subscribers of the event.
-     *
-     * @param child  Can be null.
-     * @param topic  Must not be null.
-     * @param event  Must not be null.
-     * @param param1 Optional
-     * @param param2 Optional
-     */
-    protected void fire(DSInfo child,
-                        DSTopic topic,
-                        DSIEvent event,
-                        Object param1,
-                        Object param2) {
-        fire(child, topic, event, param1, param2, null, null);
-    }
-
-    /**
-     * Notifies subscribers of the event.
-     *
-     * @param child  Can be null.
-     * @param topic  Must not be null.
-     * @param event  Must not be null.
-     * @param param1 Optional
-     * @param param2 Optional
-     * @param param3 Optional
-     */
-    protected void fire(DSInfo child,
-                        DSTopic topic,
-                        DSIEvent event,
-                        Object param1,
-                        Object param2,
-                        Object param3) {
-        fire(child, topic, event, param1, param2, param3, null);
-    }
-
-    /**
-     * Notifies subscribers of the event.
-     *
-     * @param child  Can be null.
-     * @param topic  Must not be null.
-     * @param event  Must not be null.
-     * @param param1 Optional
-     * @param param2 Optional
-     * @param param3 Optional
-     * @param param4 Optional
-     */
-    protected void fire(DSInfo child,
-                        DSTopic topic,
-                        DSIEvent event,
-                        Object param1,
-                        Object param2,
-                        Object param3,
-                        Object param4) {
+    protected void fire(DSInfo child, DSTopic topic, DSIEvent event, Object... params) {
         if (topic == null) {
             throw new NullPointerException("Null topic");
         }
@@ -582,7 +520,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         while (sub != null) {
             if (sub.matches(child, topic)) {
                 try {
-                    sub.subscriber.onEvent(this, child, topic, event, param1, param2);
+                    sub.subscriber.onEvent(this, child, topic, event, params);
                 } catch (Exception x) {
                     severe(getPath(), x);
                 }
@@ -602,6 +540,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             return info.getObject();
         }
         return null;
+    }
+
+    /**
+     * A convenience for (DSElement) get(name).
+     */
+    public DSElement getElement(String name) {
+        return (DSElement) get(name);
     }
 
     /**
@@ -748,6 +693,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             path = DSPath.encodePath(this);
         }
         return path;
+    }
+
+    /**
+     * A convenience for (DSIValue) get(name).
+     */
+    public DSIValue getValue(String name) {
+        return (DSIValue) get(name);
     }
 
     /**
@@ -1159,7 +1111,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             if (argIsNode) {
                 argAsNode.start();
             } else {
-                fire(info, VALUE_TOPIC, DSValueTopic.Event.CHILD_CHANGED, old, object);
+                fire(info, VALUE_TOPIC, DSValueTopic.Event.CHILD_CHANGED);
             }
         }
         return this;

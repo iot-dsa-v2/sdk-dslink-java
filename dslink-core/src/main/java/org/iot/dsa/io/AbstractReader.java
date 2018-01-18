@@ -1,6 +1,5 @@
 package org.iot.dsa.io;
 
-import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;

@@ -8,10 +8,11 @@ import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSFloat;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSList;
-import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 import org.junit.Assert;
@@ -103,6 +104,16 @@ public class SerializationTest {
         Assert.assertTrue("f".equals(list.getString(2)));
     }
 
+    @Test
+    public void differentTypeThanDefault() throws Exception {
+        DSNode node = new MyNode();
+        node.put("tmp", DSElement.make(10));
+        node.put("string", DSLong.valueOf(6));
+        node = decode(encode(node));
+        Assert.assertEquals(node.get("string"), DSLong.valueOf(6));
+        Assert.assertEquals(node.get("tmp"), DSElement.make(10));
+    }
+
     // Inner Classes
     // -------------
 
@@ -112,6 +123,7 @@ public class SerializationTest {
         public void declareDefaults() {
             declareDefault("int", DSInt.valueOf(1));
             declareDefault("node", new DSNode());
+            declareDefault("string", DSString.EMPTY);
         }
     }
 }

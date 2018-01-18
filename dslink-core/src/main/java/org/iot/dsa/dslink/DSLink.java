@@ -1,7 +1,12 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -9,7 +14,12 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.responder.*;
+import org.iot.dsa.dslink.responder.InboundInvokeRequest;
+import org.iot.dsa.dslink.responder.InboundListRequest;
+import org.iot.dsa.dslink.responder.InboundSetRequest;
+import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
+import org.iot.dsa.dslink.responder.OutboundListResponse;
+import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
@@ -47,8 +57,9 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    static final String NODES = "Nodes";
+    static final String MAIN = "main";
     static final String SAVE = "Save";
+    static final String SYS = "sys";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -59,11 +70,12 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
     private String dsId;
     private DSKeys keys;
     private Logger logger;
+    private DSInfo main = getInfo(MAIN);
     private String name;
-    private DSInfo nodes = getInfo(NODES);
     private Thread runThread;
     private DSInfo save = getInfo(SAVE);
     private boolean saveEnabled = true;
+    private DSInfo sys = getInfo(SYS);
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -86,8 +98,9 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
      */
     @Override
     protected void declareDefaults() {
-        declareDefault(SAVE, new DSAction()).setConfig(true);
-        declareDefault(NODES, new DSNode());
+        declareDefault(SAVE, new DSAction()).setAdmin(true);
+        declareDefault(MAIN, new DSNode());
+        declareDefault(SYS, new DSNode()).setTransient(true);
     }
 
     public DSLinkConfig getConfig() {
@@ -140,8 +153,8 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
     /**
      * Returns the root of the node tree.
      */
-    public DSRootNode getNodes() {
-        return (DSRootNode) nodes.getNode();
+    public DSMainNode getNodes() {
+        return (DSMainNode) main.getNode();
     }
 
     /**
@@ -172,7 +185,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             } else { //2
                 ; //TODO
             }
-           put("Broker Connection", connection).setConfig(true).setTransient(true);
+            put(sys, connection);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
@@ -188,16 +201,6 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         Logger logger = DSLogging.getDefaultLogger();
         DSLink ret = null;
         File nodes = config.getNodesFile();
-        if (!nodes.exists()) { //TODO remove after 1/1/18
-            //convert from nodes.json to nodes.zip
-            String name = nodes.getName();
-            if (name.endsWith(".zip")) {
-                File tmp = new File(nodes.getParent(), "nodes.json");
-                if (tmp.exists()) {
-                    nodes = tmp;
-                }
-            }
-        }
         if (nodes.exists()) {
             logger.info("Loading node database " + nodes.getAbsolutePath());
             long time = System.currentTimeMillis();
@@ -208,7 +211,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
                 ret = (DSLink) node;
             } else {
                 ret = new DSLink();
-                ret.setNodes((DSRootNode) node);
+                ret.setNodes((DSMainNode) node);
             }
             ret.init(config);
             time = System.currentTimeMillis() - time;
@@ -217,14 +220,14 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             ret = new DSLink();
             ret.init(config);
             ret.info("Creating new database...");
-            String type = config.getRootType();
+            String type = config.getMainType();
             if (type == null) {
                 throw new IllegalStateException("Config missing the root node type");
             }
             ret.config("Nodes type: " + type);
             try {
                 DSNode node = (DSNode) Class.forName(type).newInstance();
-                ret.put(NODES, node);
+                ret.put(MAIN, node);
             } catch (Exception x) {
                 DSException.throwRuntime(x);
             }
@@ -517,8 +520,8 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
         }
     }
 
-    public DSLink setNodes(DSRootNode root) {
-        put(nodes, root);
+    public DSLink setNodes(DSMainNode root) {
+        put(main, root);
         return this;
     }
 

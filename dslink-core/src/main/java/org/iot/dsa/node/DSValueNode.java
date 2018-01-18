@@ -1,25 +1,15 @@
 package org.iot.dsa.node;
 
-import org.iot.dsa.node.event.DSTopic;
 import org.iot.dsa.node.event.DSValueTopic.Event;
 
 /**
- * A convenience implementation of a node that is also values.  The value of the node must be stored
- * in a child and the only method to override is getValueChild()
+ * A convenience implementation of a node that is also a value.  The value of the node must be
+ * stored as a child.  Subclasses only need to override is getValueChild()
  *
  * @author Aaron Hansen
  * @see DSValueNode#getValueChild()
  */
 public abstract class DSValueNode extends DSNode implements DSIValue {
-
-    // Fields
-    // ------
-
-    private DSIValue prev;
-
-
-    // Methods
-    // -------
 
     /**
      * This fires the NODE_CHANGED topic when the value child changes.  Overrides should call
@@ -30,8 +20,7 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
         DSInfo info = getValueChild();
         if (child == info) {
             DSIValue val = info.getValue();
-            fire(null, VALUE_TOPIC, Event.NODE_CHANGED, prev, val);
-            prev = val;
+            fire(null, VALUE_TOPIC, Event.NODE_CHANGED);
         }
     }
 
@@ -55,20 +44,6 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
     @Override
     public void onSet(DSIValue value) {
         put(getValueChild(), value);
-    }
-
-    /**
-     * Captures the current value of the value child when the node is subscribed for value changes.
-     * Overrides should call super.onSubscribed.
-     */
-    @Override
-    public void onSubscribed(DSInfo child, DSTopic topic) {
-        if (topic == VALUE_TOPIC) {
-            DSInfo info = getValueChild();
-            if (child == null) {
-                prev = info.getValue();
-            }
-        }
     }
 
     @Override

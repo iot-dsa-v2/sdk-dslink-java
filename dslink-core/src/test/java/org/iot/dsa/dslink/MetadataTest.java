@@ -61,16 +61,6 @@ public class MetadataTest {
         Assert.assertTrue(metadata.getEnumRange().get(0).equals("abc"));
         Assert.assertTrue(metadata.getEnumRange().get(1).equals("def"));
         Assert.assertTrue(metadata.getEnumRange().get(2).equals("ghi"));
-        info.putMetadata(DSMetadata.ENUM_RANGE, DSList.valueOf("abc"));
-        meta.clear();
-        DSMetadata.getMetadata(info, meta);
-        Assert.assertEquals(2, metadata.getEnumRange().size());
-        byte[] bytes = encode(node);
-        meta.clear();
-        node = decode(bytes);
-        info = node.getInfo("enum");
-        DSMetadata.getMetadata(info, meta);
-        Assert.assertEquals(2, metadata.getEnumRange().size());
     }
 
     // Inner Classes

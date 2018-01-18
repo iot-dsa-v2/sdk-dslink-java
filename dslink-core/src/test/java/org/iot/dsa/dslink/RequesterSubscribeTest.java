@@ -3,7 +3,12 @@ package org.iot.dsa.dslink;
 import com.acuity.iot.dsa.dslink.test.TestLink;
 import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
 import org.iot.dsa.dslink.requester.SimpleRequestHandler;
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSStatus;
+import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.time.DSDateTime;
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,7 +23,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
 
     private boolean success = false;
     private DSLink link;
-    private MyRoot root;
+    private MyMain root;
     private AbstractSubscribeHandler handler;
 
     // Methods
@@ -28,7 +33,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
         DSIRequester requester = link.getConnection().getRequester();
         success = !root.isSubscribed();
         handler = (AbstractSubscribeHandler) requester.subscribe(
-                "/Nodes/int", 0, new AbstractSubscribeHandler() {
+                "/main/int", 0, new AbstractSubscribeHandler() {
                     boolean first = true;
 
                     @Override
@@ -64,7 +69,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
 
     @Test
     public void theTest() throws Exception {
-        link = new TestLink(root = new MyRoot());
+        link = new TestLink(root = new MyMain());
         link.getConnection().addListener(this);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
@@ -79,7 +84,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
         //Set the value to 10 and wait for the update
         success = false;
         DSIRequester requester = link.getConnection().getRequester();
-        requester.set("/Nodes/int", DSInt.valueOf(10), SimpleRequestHandler.DEFAULT);
+        requester.set("/main/int", DSInt.valueOf(10), SimpleRequestHandler.DEFAULT);
         synchronized (this) {
             this.wait(5000);
         }
@@ -109,7 +114,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
     private void testChild(DSIRequester requester) throws Exception {
         ANode node = (ANode) root.getNode("aNode");
         AbstractSubscribeHandler handler = (AbstractSubscribeHandler) requester.subscribe(
-                "/Nodes/aNode", 0, new AbstractSubscribeHandler() {
+                "/main/aNode", 0, new AbstractSubscribeHandler() {
                     @Override
                     public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
                     }
@@ -144,7 +149,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
     // Inner Classes
     // -------------
 
-    public static class MyRoot extends DSRootNode {
+    public static class MyMain extends DSMainNode {
 
         public void declareDefaults() {
             declareDefault("int", DSInt.valueOf(0));

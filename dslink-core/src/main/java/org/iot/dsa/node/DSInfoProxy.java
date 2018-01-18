@@ -10,10 +10,6 @@ import org.iot.dsa.util.DSUtil;
 class DSInfoProxy extends DSInfo {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
@@ -37,16 +33,6 @@ class DSInfoProxy extends DSInfo {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public DSInfo clearMetadata() {
-        if (metadata == null) {
-            metadata = new DSMap();
-        } else {
-            metadata.clear();
-        }
-        return this;
-    }
-
-    @Override
     public DSInfo copy() {
         DSInfoProxy ret = new DSInfoProxy(defaultInfo);
         ret.flags = flags;
@@ -68,24 +54,9 @@ class DSInfoProxy extends DSInfo {
         return value;
     }
 
-    public boolean hasMetadata() {
-        if (metadata == null) {
-            return defaultInfo.hasMetadata();
-        }
-        return !metadata.isEmpty();
-    }
-
     @Override
     public boolean equalsDefault() {
-        return equalsDefaultState() && equalsDefaultValue() && equalsDefaultMetadata();
-    }
-
-    @Override
-    public boolean equalsDefaultMetadata() {
-        if (metadata == null) {
-            return true;
-        }
-        return metadata.equals(defaultInfo.metadata);
+        return equalsDefaultState() && equalsDefaultValue();
     }
 
     @Override
@@ -114,57 +85,4 @@ class DSInfoProxy extends DSInfo {
         return true;
     }
 
-    @Override
-    public void getMetadata(DSMap bucket) {
-        if (metadata == null) {
-            defaultInfo.getMetadata(bucket);
-        } else {
-            bucket.putAll(metadata);
-        }
-    }
-
-    /**
-     * Adds all the metadata to the info and returns this.
-     */
-    public DSInfo putMetadata(DSMap map) {
-        if (metadata == null) {
-            metadata = new DSMap();
-            defaultInfo.getMetadata(metadata);
-        }
-        metadata.putAll(map);
-        return this;
-    }
-
-    /**
-     * Adds the metadata to the info and returns this.
-     */
-    public DSInfo putMetadata(String name, DSElement value) {
-        if (metadata == null) {
-            metadata = new DSMap();
-            defaultInfo.getMetadata(metadata);
-        }
-        metadata.put(name, value);
-        return this;
-    }
-
-    /**
-     * Returns the removed value, or null.
-     */
-    public DSElement removeMetadata(String name) {
-        if (metadata == null) {
-            metadata = new DSMap();
-            defaultInfo.getMetadata(metadata);
-        }
-        return metadata.remove(name);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
-
-} //class
+}
