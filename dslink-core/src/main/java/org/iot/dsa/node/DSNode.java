@@ -518,7 +518,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
         Subscription sub = subscription;
         while (sub != null) {
-            if (!topic.isChildSpecific() || sub.matches(child, topic)) {
+            if (sub.matches(child, topic)) {
                 try {
                     sub.subscriber.onEvent(this, child, topic, event, params);
                 } catch (Exception x) {
@@ -1516,10 +1516,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
 
         boolean matches(DSInfo child) {
-            if (topic.isChildSpecific()) {
-                return !DSUtil.equal(child, this.child);
-            }
-            return false;
+            return !DSUtil.equal(child, this.child);
         }
 
         boolean matches(DSInfo child, DSTopic topic) {

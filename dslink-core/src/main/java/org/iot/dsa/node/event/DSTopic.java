@@ -33,13 +33,6 @@ public class DSTopic implements DSIObject {
     }
 
     /**
-     * Returns false, override to return true if the topic is child specific.
-     */
-    public boolean isChildSpecific() {
-        return false;
-    }
-
-    /**
      * Only test instance equality.
      */
     @Override

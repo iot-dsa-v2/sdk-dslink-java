@@ -23,12 +23,6 @@ public class DSValueTopic extends DSTopic implements DSIEvent {
     }
 
     /**
-     * Returns true.
-     */
-    public boolean isChildSpecific() {
-        return true;
-    }
-    /**
      * The possible events from this topic.
      */
     public enum Event implements DSIEvent {
