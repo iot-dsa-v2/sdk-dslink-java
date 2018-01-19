@@ -19,42 +19,27 @@ import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
 /**
- * The primary organization unit of the node tree.  Most links will bind their specific logic by
+ * The organizational unit of the node tree.  Most links will bind their specific logic by
  * subclassing DSNode and utilizing the lifecycle callbacks.
  * <p>
  * To create a node subclass,  you should understand the following concepts:
  * <p>
- * <p>
- * <p>
  * <ul>
- * <p>
  * <li>Constructors
- * <p>
  * <li>Defaults
- * <p>
  * <li>Node Lifecycle and Callbacks
- * <p>
  * <li>Subscriptions
- * <p>
  * <li>Values
- * <p>
  * <li>Actions
- * <p>
  * <li>DSInfo
- * <p>
  * </ul>
  * <p>
- * <p>
- * <p>
+ * <h3>Constructors</h3>
  * <p>
  * DSNode sub-classes must support the public no-arg constructor.  This is how they will be
  * instantiated when deserializing the configuration database.
  * <p>
- * <p>
- * <p>
  * <h3>Defaults</h3>
- * <p>
- * <p>
  * <p>
  * Every subtype of DSNode has a private default instance, all other instances of any particular
  * type are copies of the default instance.  You should never perform application logic unless your
@@ -63,206 +48,117 @@ import org.iot.dsa.util.DSUtil;
  * If a DSNode subtype needs to have specific child nodes or values (most will), it should override
  * the declareDefaults method.  The method should:
  * <p>
- * <p>
- * <p>
  * <ul>
- * <p>
  * <li> Call super.declareDefaults();
- * <p>
  * <li> Call DSNode.declareDefault(String name, DSIObject child) for each non-removable child.  Do
  * not add dynamic children in declareDefaults, because if they are removed, they will be re-added
  * the next time the link is restarted.
- * <p>
  * </ul>
- * <p>
- * <p>
  * <p>
  * During node serialization (configuration database, not DSA interop), children that match their
  * declared default are omitted.  This has two benefits:
  * <p>
- * <p>
- * <p>
  * <ul>
- * <p>
  * <li> Smaller node database means faster serialization / deserialization.
- * <p>
  * <li> Default values can be modified and all existing database will be automatically upgraded the
  * next time the updated class loaded.
- * <p>
  * </ul>
  * <p>
- * <p>
- * <p>
  * <h3>Lifecycle</h3>
- * <p>
- * <p>
- * <p>
  * <p>
  * It is important to know the node lifecycle.  Your nodes should not execute any application logic
  * unless they are running (started or stable).
  * <p>
- * <p>
- * <p>
  * <b>Stopped</b>
- * <p>
- * <p>
  * <p>
  * A node is instantiated in the stopped state.  If a node tree has been persisted, will be be fully
  * restored in the stopped state.  DSNode.onStopped will not be called, it is only called when nodes
  * transition from running to stopped.
  * <p>
- * <p>
- * <p>
  * When nodes are removed from a running parent node, they will be stopped.  DSNode.onStopped will
  * be called after all child nodes have been stopped.
  * <p>
- * <p>
- * <p>
  * When a link is stopped, an attempt to stop the tree will be made, but it cannot be guaranteed.
  * <p>
- * <p>
- * <p>
  * <b>Started</b>
- * <p>
- * <p>
  * <p>
  * After the node tree is fully deserialized it will be started.  A node's onStart method will be
  * called after all of its child nodes have been started.  The only guarantee is that all child
  * nodes have been started.
  * <p>
- * <p>
- * <p>
  * Nodes will also started when they are added to an already running parent node.
  * <p>
- * <p>
- * <p>
  * <b>Stable</b>
- * <p>
- * <p>
  * <p>
  * Stable is called after the entire tree has been started.  The first time the node tree is loaded,
  * there is a stable delay of 5 seconds.  This is configurable as <b>stableDelay</b> in
  * <i>slink.json</i>.
  * <p>
- * <p>
- * <p>
  * Nodes added to an already stable parent will have onStart and onStable called immediately.
- * <p>
- * <p>
  * <p>
  * When in doubt of whether to use onStarted or onStable, use onStable.
  * <p>
  * <b>Other Callbacks</b>
  * <p>
- * <p>
- * <p>
  * When a node is stable, there are several other callbacks for various state changes.  All
  * callbacks begin with **on** such as onChildAdded().
  * <p>
- * <p>
- * <p>
  * <h3>Subscriptions</h3>
- * <p>
- * <p>
  * <p>
  * Nodes should suspend, or minimize activity when nothing is interested in them.  For example, if
  * nothing is interested in a point, it is best to not poll the point on the foreign system.
  * <p>
- * <p>
- * <p>
  * To do this you use the following APIs:
  * <p>
- * <p>
- * <p>
  * <ul>
- * <p>
  * <li>DSNode.onSubscribed - Called when the node transitions from unsubscribed to subscribed.  This
  * is not called for subsequent subscribers once in the subscribed state.
- * <p>
  * <li>DSNode.onUnsubscribed - Called when the node transitions from subscribed to unsubscribed. If
  * there are multiple subscribers, this is only called when the last one unsubscribes.
- * <p>
  * <li>DSNode.isSubscribed - Tells the caller whether or not the node is subscribed.
- * <p>
  * </ul>
- * <p>
- * <p>
  * <p>
  * <h3>Values</h3>
  * <p>
- * <p>
- * <p>
  * Values mostly represent leaf members of the node tree.  There are two types of values:
  * <p>
- * <p>
- * <p>
  * <ul>
- * <p>
  * <li>DSElement - These map to the JSON type system and represent leaf members of the node tree.
- * <p>
  * <li>DSIValue - These don't map to the JSON type system, and it is possible for nodes to implement
  * this interface. This allows for values to have children.
- * <p>
  * </ul>
- * <p>
- * <p>
  * <p>
  * Many values are singleton instances.  This is for efficiency, the same value instance (e.g.
  * DSBoolean.TRUE) can be stored in many nodes. Singleton values must be immutable.
- * <p>
- * <p>
  * <p>
  * Whenever possible, values should also have NULL instance.  Rather than storing a generic null,
  * this helps the system decode the proper type such as when a requester is attempting to set a
  * value.
  * <p>
- * <p>
- * <p>
  * <h3>Actions</h3>
  * <p>
- * <p>
- * <p>
  * Add actions to your node to allow requester invocation using org.iot.dsa.node.action.DSAction.
- * <p>
- * <p>
  * <p>
  * Override DSNode.onInvoke to handle invocations.  The reason for this is complicated but it is
  * possible to subclass DSAction, just carefully read the javadoc if you do.  Be sure to call
  * super.onInvoke() when overriding that method.
  * <p>
- * <p>
- * <p>
  * <h3>DSInfo</h3>
- * <p>
- * <p>
  * <p>
  * All node children have corresponding DSInfo instances.  This type serves two purposes:
  * <p>
- * <p>
- * <p>
  * <ul>
- * <p>
  * <li>It carries some meta-data about the relationship between the parent node and the child.
- * <p>
  * <li>It tracks whether or not the child matches a declared default.
- * <p>
  * </ul>
- * <p>
- * <p>
  * <p>
  * Important things for developers to know about DSInfo are:
  * <p>
- * <p>
- * <p>
  * <ul>
- * <p>
  * <li>You can configure state such as transient, readonly and hidden.
- * <p>
  * <li>You can declare fields in the your Java class for default info instances to avoid looking up
  * the child every time it is needed.  This is can be used to create fast getters and setters.
- * <p>
  * </ul>
- * <p>
  * <p>
  *
  * @author Aaron Hansen

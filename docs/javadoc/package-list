@@ -8,6 +8,7 @@ org.iot.dsa.io.msgpack
 org.iot.dsa.logging
 org.iot.dsa.node
 org.iot.dsa.node.action
+org.iot.dsa.node.event
 org.iot.dsa.security
 org.iot.dsa.time
 org.iot.dsa.util
