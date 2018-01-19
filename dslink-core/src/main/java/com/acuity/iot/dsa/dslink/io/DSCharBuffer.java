@@ -1,4 +1,4 @@
-package org.iot.dsa.io;
+package com.acuity.iot.dsa.dslink.io;
 
 /**
  * A buffer for storing chars being pushed from a reader.  Useful when chars are coming

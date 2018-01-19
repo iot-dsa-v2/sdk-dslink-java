@@ -1,21 +1,10 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
-import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
-import org.iot.dsa.io.msgpack.MsgpackReader;
-import org.iot.dsa.io.msgpack.MsgpackWriter;
-import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
 
 /**

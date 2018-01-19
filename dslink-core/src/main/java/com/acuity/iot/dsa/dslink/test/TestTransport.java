@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.io.DSByteBuffer;
-import org.iot.dsa.io.DSIoException;
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.io.DSIoException;
 
 /**
  * Routes requests and responses back to self.

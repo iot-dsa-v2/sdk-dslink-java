@@ -3,6 +3,7 @@ package org.iot.dsa.node;
 import java.util.Iterator;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.util.DSUtil;
 
 /**
@@ -37,15 +38,13 @@ import org.iot.dsa.util.DSUtil;
  *
  * @author Aaron Hansen
  */
-public class DSInfo implements ApiObject, DSISubscriber {
+public class DSInfo implements ApiObject {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    //Config vs admin vs operator
-    //
-    static final int CONFIG = 0;
+    static final int ADMIN = 0;
     static final int HIDDEN = 1;
     static final int TRANSIENT = 2;
     static final int READONLY = 3;
@@ -60,7 +59,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
     ///////////////////////////////////////////////////////////////////////////
 
     int flags = 0;
-    DSMap metadata;
     String name;
     DSInfo next;
     DSNode parent;
@@ -82,11 +80,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    public DSInfo clearMetadata() {
-        metadata.clear();
-        return this;
-    }
 
     public DSInfo copy() {
         DSInfo ret = new DSInfo();
@@ -124,13 +117,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
     /**
      * True if the state matches the default state.
      */
-    public boolean equalsDefaultMetadata() {
-        return metadata == null;
-    }
-
-    /**
-     * True if the state matches the default state.
-     */
     public boolean equalsDefaultState() {
         return flags == 0;
     }
@@ -160,7 +146,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     private void fireInfoChanged() {
         if (parent != null) {
-            parent.infoChanged(this);
+            parent.fire(this, DSInfoTopic.INSTANCE, DSInfoTopic.Event.METADATA_CHANGED);
         }
     }
 
@@ -199,20 +185,13 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return flags;
     }
 
-    /**
-     * Only adds metadata defined in the info to the given bucket.
-     *
-     * @see DSMetadata#getMetadata(DSInfo, DSMap)
-     */
-    @Override
-    public void getMetadata(DSMap bucket) {
-        if (metadata != null) {
-            bucket.putAll(metadata);
-        }
-    }
-
     public String getName() {
         return name;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        DSMetadata.getMetadata(this, bucket);
     }
 
     /**
@@ -251,16 +230,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return System.identityHashCode(this);
     }
 
-    public boolean hasMetadata() {
-        if (metadata == null) {
-            return false;
-        }
-        if (metadata.isEmpty()) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * True if there is another info after this one.
      */
@@ -274,8 +243,8 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     @Override
-    public boolean isConfig() {
-        return getFlag(CONFIG);
+    public boolean isAdmin() {
+        return getFlag(ADMIN);
     }
 
     /**
@@ -416,64 +385,14 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return cur;
     }
 
-    /**
-     * Does nothing.
-     */
-    @Override
-    public void onClose(DSIObject publisher) {
-    }
-
-    /**
-     * Routes events from child DSIPublishers to onChildChanged in the parent.
-     */
-    @Override
-    public void onEvent(DSIObject publisher, DSInfo child, DSIPublisher.Event event) {
-        if (parent != null) {
-            parent.onChildChanged(this);
-        }
-    }
-
-    /**
-     * Adds the metadata to the info and returns this.
-     */
-    public DSInfo putMetadata(DSMap map) {
-        if (metadata == null) {
-            metadata = (DSMap) map.copy();
-        } else {
-            metadata.putAll(map);
-        }
+    public DSInfo setAdmin(boolean admin) {
+        setFlag(ADMIN, admin);
         return this;
-    }
-
-    /**
-     * Adds the metadata to the info and returns this.
-     */
-    public DSInfo putMetadata(String name, DSElement value) {
-        if (metadata == null) {
-            metadata = new DSMap();
-        }
-        metadata.put(name, value);
-        return this;
-    }
-
-    /**
-     * Returns the removed value, or null.
-     */
-    public DSElement removeMetadata(String name) {
-        if (metadata == null) {
-            return null;
-        }
-        return metadata.remove(name);
     }
 
     DSInfo setFlag(int position, boolean on) {
         fireInfoChanged();
         flags = DSUtil.setBit(flags, position, on);
-        return this;
-    }
-
-    public DSInfo setConfig(boolean config) {
-        setFlag(CONFIG, config);
         return this;
     }
 
@@ -512,22 +431,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return this;
     }
 
-    void subscribe() {
-        if (!isNode()) {
-            if (value instanceof DSIPublisher) {
-                ((DSIPublisher) value).subscribe(this);
-            }
-        }
-    }
-
-    void unsubscribe() {
-        if (!isNode()) {
-            if (value instanceof DSIPublisher) {
-                ((DSIPublisher) value).unsubscribe(this);
-            }
-        }
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
@@ -554,8 +457,4 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
-
-} //class
+}

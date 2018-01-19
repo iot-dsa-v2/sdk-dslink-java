@@ -155,7 +155,7 @@ class DS1InboundList extends DS1InboundRequest
         } else if (displayName != null) {
             out.key("$name").value(displayName);
         }
-        e = cacheMap.remove("is");
+        e = cacheMap.remove("$is");
         if (e != null) {
             out.key("$is").value(e);
         } else {
@@ -163,7 +163,7 @@ class DS1InboundList extends DS1InboundRequest
         }
         if (child.isAction()) {
             ActionSpec action = child.getAction();
-            e = cacheMap.remove("invokable");
+            e = cacheMap.remove("$invokable");
             if (e != null) {
                 out.key("$invokable").value(e);
             } else {
@@ -171,22 +171,22 @@ class DS1InboundList extends DS1InboundRequest
             }
         } else if (child.isValue()) {
             out.key("$type");
-            e = cacheMap.remove("type");
+            e = cacheMap.remove("$type");
             if (e != null) {
                 out.value(e);
             } else {
                 encodeType(child.getValue(), cacheMeta, out);
             }
             if (!child.isReadOnly()) {
-                e = cacheMap.remove("writable");
+                e = cacheMap.remove("$writable");
                 if (e != null) {
                     out.key("$writable").value(e);
                 } else {
-                    out.key("$writable").value(child.isConfig() ? "config" : "write");
+                    out.key("$writable").value(child.isAdmin() ? "config" : "write");
                 }
             }
-        } else if (child.isConfig()) {
-            e = cacheMap.remove("permission");
+        } else if (child.isAdmin()) {
+            e = cacheMap.remove("$permission");
             if (e != null) {
                 out.key("$permission").value(e);
             } else {
@@ -202,18 +202,18 @@ class DS1InboundList extends DS1InboundRequest
      */
     private void encodeTarget(ApiObject object, DSIWriter out) {
         if (object instanceof DSInfo) {
-            DSMetadata.getMetadata((DSInfo)object, cacheMap.clear());
+            DSMetadata.getMetadata((DSInfo) object, cacheMap.clear());
         } else {
             object.getMetadata(cacheMap.clear());
         }
-        DSElement e = cacheMap.remove("is");
+        DSElement e = cacheMap.remove("$is");
         if (e == null) {
             out.beginList().value("$is").value("node").endList();
         } else {
             out.beginList().value("$is").value(e).endList();
 
         }
-        e = cacheMap.get("name");
+        e = cacheMap.get("$name");
         if (e == null) {
             String safeName = object.getName();
             if (DSPath.encodeName(safeName, cacheBuf)) {
@@ -228,8 +228,8 @@ class DS1InboundList extends DS1InboundRequest
             encodeTargetAction(object, out);
         } else if (object.isValue()) {
             encodeTargetValue(object, out);
-        } else if (object.isConfig()) {
-            e = cacheMap.remove("permission");
+        } else if (object.isAdmin()) {
+            e = cacheMap.remove("$permission");
             if (e == null) {
                 out.beginList().value("$permission").value("config").endList();
             } else {
@@ -253,7 +253,7 @@ class DS1InboundList extends DS1InboundRequest
         if (action instanceof DSAction) {
             dsAction = (DSAction) action;
         }
-        DSElement e = cacheMap.remove("invokable");
+        DSElement e = cacheMap.remove("$invokable");
         out.beginList().value("$invokable");
         if (e == null) {
             out.value(action.getPermission().toString()).endList();
@@ -281,7 +281,7 @@ class DS1InboundList extends DS1InboundRequest
         }
         out.endList();
         if (action.getResultType().isValues()) {
-            e = cacheMap.remove("columns");
+            e = cacheMap.remove("$columns");
             out.beginList().value("$columns");
             if (e == null) {
                 out.beginList();
@@ -302,7 +302,7 @@ class DS1InboundList extends DS1InboundRequest
             }
             out.endList();
         }
-        e = cacheMap.remove("result");
+        e = cacheMap.remove("$result");
         if (e != null) {
             out.beginList().value("$result").value(e).endList();
         } else if (!action.getResultType().isVoid()) {
@@ -328,7 +328,7 @@ class DS1InboundList extends DS1InboundRequest
                 case '@':
                     out.value(name);
                 default:
-                    cacheBuf.append("@");
+                    cacheBuf.append("@"); //TODO ?
                     DSPath.encodeName(name, cacheBuf);
                     out.value(cacheBuf.toString());
                     cacheBuf.setLength(0);
@@ -343,7 +343,7 @@ class DS1InboundList extends DS1InboundRequest
      * Called by encodeTarget for values.
      */
     private void encodeTargetValue(ApiObject object, DSIWriter out) {
-        DSElement e = cacheMap.remove("type");
+        DSElement e = cacheMap.remove("$type");
         out.beginList();
         out.value("$type");
         if (e != null) {
@@ -352,7 +352,7 @@ class DS1InboundList extends DS1InboundRequest
             encodeType(object.getValue(), cacheMeta, out);
         }
         out.endList();
-        e = cacheMap.remove("writable");
+        e = cacheMap.remove("$writable");
         if (e != null) {
             out.beginList()
                .value("$writable")
@@ -361,7 +361,7 @@ class DS1InboundList extends DS1InboundRequest
         } else if (!object.isReadOnly()) {
             out.beginList()
                .value("$writable")
-               .value(object.isConfig() ? "config" : "write")
+               .value(object.isAdmin() ? "config" : "write")
                .endList();
         }
     }
@@ -372,7 +372,11 @@ class DS1InboundList extends DS1InboundRequest
             meta.setType(value);
         }
         fixType(meta.getMap());
-        out.value(cacheMap.remove(DSMetadata.TYPE));
+        DSElement e = cacheMap.remove(DSMetadata.TYPE);
+        if (e == null) {
+            throw new IllegalArgumentException("Missing type");
+        }
+        out.value(e);
     }
 
     private void encodeUpdate(Update update, DSIWriter out) {

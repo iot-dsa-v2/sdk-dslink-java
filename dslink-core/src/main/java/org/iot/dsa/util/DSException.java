@@ -1,9 +1,7 @@
 package org.iot.dsa.util;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import org.iot.dsa.io.DSIoException;
 
 /**
  * An runtime exception that forwards most calls to the inner exception. This is to exclude itself

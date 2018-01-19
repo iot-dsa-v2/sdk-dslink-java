@@ -5,7 +5,7 @@ import org.iot.dsa.node.DSElement;
 import org.iot.dsa.security.DSPermission;
 
 /**
- * Used by DSRootNode to handle a set request.
+ * Used by DSMainNode to handle a set request.
  *
  * @author Aaron Hansen
  */

@@ -5,7 +5,7 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSStatus;
 
 /**
- * Used by DSRootNode to handle subscribe requests.
+ * Used by DSMainNode to handle subscribe requests.
  *
  * @author Aaron Hansen
  */

@@ -4,7 +4,7 @@ import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 
 /**
- * Used by DSRootNode to handle and list request.
+ * Used by DSMainNode to handle and list request.
  *
  * @author Aaron Hansen
  */

@@ -41,7 +41,6 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
         setInput(in);
     }
 
-
     // Public Methods
     // --------------
 

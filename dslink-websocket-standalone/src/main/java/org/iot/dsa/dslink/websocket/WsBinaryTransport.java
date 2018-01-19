@@ -6,10 +6,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import javax.websocket.*;
+import javax.websocket.ClientEndpoint;
+import javax.websocket.CloseReason;
+import javax.websocket.EndpointConfig;
+import javax.websocket.OnClose;
+import javax.websocket.OnError;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.RemoteEndpoint;
+import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
-import org.iot.dsa.io.DSByteBuffer;
-import org.iot.dsa.io.DSIoException;
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.io.DSIoException;
 import org.iot.dsa.util.DSException;
 
 /**

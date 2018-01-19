@@ -1,7 +1,7 @@
 package org.iot.dsa.dslink.test;
 
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSRootNode;
+import org.iot.dsa.dslink.DSMainNode;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSFlexEnum;
@@ -17,11 +17,11 @@ import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
 
 /**
- * Link main class and root node.
+ * Link main class and node.
  *
  * @author Aaron Hansen
  */
-public class RootNode extends DSRootNode implements Runnable {
+public class MainNode extends DSMainNode implements Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -48,7 +48,7 @@ public class RootNode extends DSRootNode implements Runnable {
     protected void declareDefaults() {
         super.declareDefaults();
         declareDefault("Incrementing Int", DSLong.valueOf(1)).setReadOnly(true);
-        declareDefault("Writable Boolean", DSBool.valueOf(true)).setConfig(true);
+        declareDefault("Writable Boolean", DSBool.valueOf(true)).setAdmin(true);
         declareDefault("Writable Enum",
                        DSFlexEnum.valueOf("On",
                                           DSList.valueOf("Off", "On", "Auto", "Has Space")));
@@ -72,7 +72,7 @@ public class RootNode extends DSRootNode implements Runnable {
     @Override
     public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {
         if (actionInfo == this.reset) {
-            put(incrementingInt, DSInt.valueOf(0));
+            put(incrementingInt, DSElement.make(0));
             DSElement arg = invocation.getParameters().get("Arg");
             put("Message", arg);
             clear();
@@ -125,7 +125,7 @@ public class RootNode extends DSRootNode implements Runnable {
         info("********** Clear duration: " + dur);
         start = System.currentTimeMillis();
         DSNode node = new TestNode();
-        add("test", node).setConfig(true);
+        add("test", node).setAdmin(true);
         for (int i = 0; i < 10; i++) {
             DSNode iNode = new TestNode();
             node.add("test" + i, iNode);
@@ -178,7 +178,7 @@ public class RootNode extends DSRootNode implements Runnable {
      */
     @Override
     public void run() {
-        DSElement value = incrementingInt.getElement();
+        DSElement value = incrementingInt.getValue().toElement();
         put(incrementingInt, DSElement.make(value.toInt() + 1));
     }
 

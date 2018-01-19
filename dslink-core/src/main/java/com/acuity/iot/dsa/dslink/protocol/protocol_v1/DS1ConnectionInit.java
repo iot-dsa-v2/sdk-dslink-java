@@ -30,8 +30,8 @@ public class DS1ConnectionInit extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
 
     private static final String DSA_VERSION = "1.1.2";
-    private static final String[] SUPPORTED_FORMATS = new String[]{"msgpack", "json"};
-    //private static final String[] SUPPORTED_FORMATS = new String[]{"json"};
+    //private static final String[] SUPPORTED_FORMATS = new String[]{"msgpack", "json"};
+    private static final String[] SUPPORTED_FORMATS = new String[]{"json"};
 
     private String BROKER_REQ = "Broker Request";
     private String BROKER_RES = "Broker Response";

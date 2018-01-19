@@ -2,7 +2,6 @@ package org.iot.dsa.io;
 
 import java.io.Closeable;
 import java.io.IOException;
-import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
