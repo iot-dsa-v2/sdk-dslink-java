@@ -16,8 +16,8 @@ import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
-import org.iot.dsa.io.DSCharBuffer;
-import org.iot.dsa.io.DSIoException;
+import com.acuity.iot.dsa.dslink.io.DSCharBuffer;
+import com.acuity.iot.dsa.dslink.io.DSIoException;
 import org.iot.dsa.util.DSException;
 
 /**

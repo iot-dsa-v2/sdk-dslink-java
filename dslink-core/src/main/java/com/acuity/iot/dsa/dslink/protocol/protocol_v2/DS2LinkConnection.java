@@ -22,8 +22,8 @@ import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
 /**
- * The default connection implementation. Performs connection initialization with the broker, then
- * creates a transport and a protocol based on the broker response.
+ * The default V2 connection implementation. Performs connection initialization with the broker,
+ * then creates a transport and a protocol based on the broker response.
  *
  * @author Aaron Hansen
  */
@@ -220,8 +220,8 @@ public class DS2LinkConnection extends DSLinkConnection {
         }
         writer.writeString(token, buffer);
         buffer.put((byte) 0x01); //isResponder
-        writer.writeString("", buffer); //blank session string
-        writer.writeIntLE(0, buffer); //last ack
+        writer.writeString("", buffer); //TODO remove
+        writer.writeIntLE(0, buffer); //TODO remove
         writer.writeString("", buffer); //blank server path
         byte[] sharedSecret = getLink().getKeys().generateSharedSecret(brokerPubKey);
         byte[] authBytes = new byte[brokerSalt.length + sharedSecret.length];

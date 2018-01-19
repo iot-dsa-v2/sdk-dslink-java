@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import org.junit.Assert;
 import org.junit.Test;
 

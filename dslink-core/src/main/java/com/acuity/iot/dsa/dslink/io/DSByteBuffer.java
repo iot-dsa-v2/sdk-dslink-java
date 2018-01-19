@@ -1,4 +1,4 @@
-package org.iot.dsa.io;
+package com.acuity.iot.dsa.dslink.io;
 
 import java.nio.ByteBuffer;
 
