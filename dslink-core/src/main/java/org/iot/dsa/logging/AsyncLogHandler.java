@@ -271,11 +271,16 @@ public abstract class AsyncLogHandler extends Handler {
                 record = null;
                 synchronized (queue) {
                     emptyQueue = queue.isEmpty();
-                    if (emptyQueue && (state == STATE_OPEN)) {
+                    if (emptyQueue) {
                         try {
                             queue.notifyAll();
-                            queue.wait(DSTime.MILLIS_SECOND);
                         } catch (Exception ignore) {
+                        }
+                        if (state == STATE_OPEN) {
+                            try {
+                                queue.wait(DSTime.MILLIS_SECOND);
+                            } catch (Exception ignore) {
+                            }
                         }
                         emptyQueue = queue.isEmpty(); //housekeeping opportunity flag
                     } else if (!emptyQueue) {

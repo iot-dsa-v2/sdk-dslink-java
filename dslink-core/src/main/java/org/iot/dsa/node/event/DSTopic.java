@@ -20,7 +20,7 @@ import org.iot.dsa.node.DSInfo;
  * @see DSISubscriber
  * @see DSInfoTopic
  * @see DSValueTopic
- * @see org.iot.dsa.node.DSNode#subscribe(DSInfo, DSISubscriber, DSTopic)
+ * @see org.iot.dsa.node.DSNode#subscribe(DSTopic, DSInfo, DSISubscriber)
  */
 public class DSTopic implements DSIObject {
 

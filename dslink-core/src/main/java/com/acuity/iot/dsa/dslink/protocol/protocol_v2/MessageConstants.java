@@ -30,19 +30,19 @@ public interface MessageConstants {
     Byte HDR_TARGET_PATH = (byte) (0x80 & 0xFF);
     Byte HDR_SOURCE_PATH = (byte) (0x81 & 0xFF);
 
-    Byte MSG_SUBSCRIBE_REQ = 0x01;
-    Byte MSG_SUBSCRIBE_RES = (byte) (0x81 & 0xFF);
-    Byte MSG_LIST_REQ = 0x02;
-    Byte MSG_LIST_RES = (byte) (0x82 & 0xFF);
-    Byte MSG_INVOKE_REQ = 0x03;
-    Byte MSG_INVOKE_RES = (byte) (0x83 & 0xFF);
-    Byte MSG_SET_REQ = 0x04;
-    Byte MSG_SET_RES = (byte) (0x84 & 0xFF);
-    Byte MSG_OBSERVE_REQ = 0x0A;
-    Byte MSG_OBSERVE_RES = (byte) (0x8A & 0xFF);
-    Byte MSG_CLOSE = 0x0F;
-    Byte MSG_ACK = (byte) (0xF8 & 0xFF);
-    Byte MSG_PING = (byte) (0xF9 & 0xFF);
+    int MSG_SUBSCRIBE_REQ = 0x01;
+    int MSG_SUBSCRIBE_RES = 0x81;
+    int MSG_LIST_REQ = 0x02;
+    int MSG_LIST_RES = 0x82;
+    int MSG_INVOKE_REQ = 0x03;
+    int MSG_INVOKE_RES = 0x83;
+    int MSG_SET_REQ = 0x04;
+    int MSG_SET_RES = 0x84;
+    int MSG_OBSERVE_REQ = 0x0A;
+    int MSG_OBSERVE_RES = 0x8A;
+    int MSG_CLOSE = 0x0F;
+    int MSG_ACK = 0xF8;
+    int MSG_PING = 0xF9;
 
     Byte STS_OK = 0;
     Byte STS_INITIALIZING = 0x01;

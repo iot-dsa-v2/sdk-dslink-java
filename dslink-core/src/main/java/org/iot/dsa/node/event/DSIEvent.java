@@ -7,7 +7,7 @@ import org.iot.dsa.node.DSNode;
  * This is an empty interface, DSTopics are allowed to define events however they wish.
  *
  * @author Aaron Hansen
- * @see DSISubscriber#onEvent(DSNode, DSInfo, DSTopic, DSIEvent, Object...)
+ * @see DSISubscriber#onEvent(DSTopic, DSIEvent, DSNode, DSInfo, Object...)
  * @see DSTopic
  */
 public interface DSIEvent {

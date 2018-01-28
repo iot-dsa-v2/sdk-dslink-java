@@ -2,7 +2,7 @@ package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Stream;
+import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.responder.InboundInvokeRequest;
@@ -22,7 +22,7 @@ import org.iot.dsa.security.DSPermission;
  * @author Aaron Hansen
  */
 class DS1InboundInvoke extends DS1InboundRequest
-        implements DS1Stream, InboundInvokeRequest, OutboundMessage, Runnable {
+        implements DSStream, InboundInvokeRequest, OutboundMessage, Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants

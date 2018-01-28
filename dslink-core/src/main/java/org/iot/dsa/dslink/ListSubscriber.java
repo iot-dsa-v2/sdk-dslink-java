@@ -35,7 +35,7 @@ class ListSubscriber implements DSISubscriber, OutboundListResponse {
         this.info = path.getInfo();
         if (info.isNode()) {
             this.node = info.getNode();
-            node.subscribe(null, this, DSNode.INFO_TOPIC);
+            node.subscribe(DSNode.INFO_TOPIC, null, this);
         }
     }
 
@@ -51,15 +51,13 @@ class ListSubscriber implements DSISubscriber, OutboundListResponse {
     @Override
     public void onClose() {
         if (node != null) {
-            node.unsubscribe(null, this, DSNode.INFO_TOPIC);
+            node.unsubscribe(DSNode.INFO_TOPIC, null, this);
         }
     }
 
     @Override
-    public void onEvent(DSNode node,
+    public void onEvent(DSTopic topic, DSIEvent event, DSNode node,
                         DSInfo child,
-                        DSTopic topic,
-                        DSIEvent event,
                         Object... params) {
         switch ((DSInfoTopic.Event) event) {
             case CHILD_ADDED:
@@ -75,7 +73,7 @@ class ListSubscriber implements DSISubscriber, OutboundListResponse {
     }
 
     @Override
-    public void onUnsubscribed(DSNode node, DSInfo child, DSTopic topic) {
+    public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
         request.close();
     }
 

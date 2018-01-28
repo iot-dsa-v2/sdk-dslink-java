@@ -38,7 +38,12 @@ class DSInfoProxy extends DSInfo {
         ret.flags = flags;
         ret.name = name;
         ret.defaultInfo = defaultInfo;
-        if (value != null) {
+        if (isDefaultOnCopy()) {
+            DSIObject val = getDefaultObject();
+            if (val != null) {
+                ret.setObject(val.copy());
+            }
+        } else if (value != null) {
             ret.setObject(value.copy());
         }
         return ret;

@@ -1,11 +1,11 @@
-package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
+package com.acuity.iot.dsa.dslink.protocol;
 
 /**
  * Can be closed locally and remotely.
  *
  * @author Aaron Hansen
  */
-public interface DS1Stream {
+public interface DSStream {
 
     /**
      * Use to close locally.

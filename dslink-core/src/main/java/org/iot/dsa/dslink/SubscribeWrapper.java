@@ -51,11 +51,6 @@ class SubscribeWrapper implements InboundSubscribeRequest {
     }
 
     @Override
-    public DSLinkSession getResponder() {
-        return request.getResponder();
-    }
-
-    @Override
     public Integer getSubscriptionId() {
         return request.getSubscriptionId();
     }

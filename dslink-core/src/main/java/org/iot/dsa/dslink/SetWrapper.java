@@ -51,11 +51,6 @@ class SetWrapper implements InboundSetRequest {
     }
 
     @Override
-    public DSLinkSession getResponder() {
-        return request.getResponder();
-    }
-
-    @Override
     public DSElement getValue() {
         return request.getValue();
     }

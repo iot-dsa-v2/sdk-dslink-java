@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
-import com.acuity.iot.dsa.dslink.DSResponderSession;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
@@ -163,7 +162,7 @@ class DS1InboundSubscription extends DS1InboundRequest implements InboundSubscri
      */
     void write(DSIWriter out, StringBuilder buf) {
         //Don't check open state - forcefully closing will send an update
-        DSResponderSession session = getResponder();
+        DS1Responder session = getResponder();
         Update update = dequeue();
         while (update != null) {
             out.beginMap();

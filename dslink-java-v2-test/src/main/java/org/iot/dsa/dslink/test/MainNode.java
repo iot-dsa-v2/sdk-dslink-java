@@ -59,7 +59,7 @@ public class MainNode extends DSMainNode implements Runnable {
                             DSJavaEnum.valueOf(MyEnum.Off),
                             "My action description");
         declareDefault("Reset", action);
-        declareDefault("Test", new DSAction());
+        declareDefault("Test", DSAction.DEFAULT);
     }
 
     /**

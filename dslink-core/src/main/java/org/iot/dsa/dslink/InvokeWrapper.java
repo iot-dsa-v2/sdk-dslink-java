@@ -75,11 +75,6 @@ class InvokeWrapper implements InboundInvokeRequest {
     }
 
     @Override
-    public DSLinkSession getResponder() {
-        return request.getResponder();
-    }
-
-    @Override
     public void insert(int index, DSList... rows) {
         request.insert(index, rows);
     }

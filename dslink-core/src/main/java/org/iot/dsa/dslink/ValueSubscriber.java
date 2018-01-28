@@ -38,13 +38,13 @@ class ValueSubscriber implements DSISubscriber, SubscriptionCloseHandler {
         if (info.isNode()) {
             this.node = info.getNode();
             this.info = null;
-            onEvent(node, info, DSNode.VALUE_TOPIC, Event.NODE_CHANGED, null, node);
+            onEvent(DSNode.VALUE_TOPIC, Event.NODE_CHANGED, node, info, null, node);
         } else {
             this.node = path.getParent();
-            onEvent(node, info, DSNode.VALUE_TOPIC, Event.CHILD_CHANGED, info.getValue(),
+            onEvent(DSNode.VALUE_TOPIC, Event.CHILD_CHANGED, node, info, info.getValue(),
                     info.getValue());
         }
-        node.subscribe(info, this, DSNode.VALUE_TOPIC);
+        node.subscribe(DSNode.VALUE_TOPIC, info, this);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -53,14 +53,12 @@ class ValueSubscriber implements DSISubscriber, SubscriptionCloseHandler {
 
     @Override
     public void onClose(Integer subscriptionId) {
-        node.unsubscribe(info, this, DSNode.VALUE_TOPIC);
+        node.unsubscribe(DSNode.VALUE_TOPIC, info, this);
     }
 
     @Override
-    public void onEvent(DSNode node,
+    public void onEvent(DSTopic topic, DSIEvent event, DSNode node,
                         DSInfo child,
-                        DSTopic topic,
-                        DSIEvent event,
                         Object... params) {
         DSIValue value;
         if (info == null) {
@@ -84,7 +82,7 @@ class ValueSubscriber implements DSISubscriber, SubscriptionCloseHandler {
     }
 
     @Override
-    public void onUnsubscribed(DSNode node, DSInfo info, DSTopic topic) {
+    public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo info) {
         request.close();
     }
 
