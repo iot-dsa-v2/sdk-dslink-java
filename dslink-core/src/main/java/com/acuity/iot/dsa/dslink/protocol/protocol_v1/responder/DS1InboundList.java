@@ -1,10 +1,11 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
+import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
@@ -16,9 +17,14 @@ import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMap.Entry;
 import org.iot.dsa.node.DSMetadata;
+import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.event.DSIEvent;
+import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSInfoTopic;
+import org.iot.dsa.node.event.DSTopic;
 
 /**
  * List implementation for a responder.
@@ -26,7 +32,8 @@ import org.iot.dsa.node.action.DSAction;
  * @author Aaron Hansen
  */
 class DS1InboundList extends DS1InboundRequest
-        implements DSStream, InboundListRequest, OutboundMessage, Runnable {
+        implements DSISubscriber, DSStream, InboundListRequest, OutboundMessage,
+        OutboundListResponse, Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -47,6 +54,8 @@ class DS1InboundList extends DS1InboundRequest
     private DSMetadata cacheMeta = new DSMetadata(cacheMap);
     private Iterator<ApiObject> children;
     private Exception closeReason;
+    private DSInfo info;
+    private DSNode node;
     private OutboundListResponse response;
     private boolean enqueued = false;
     private int state = STATE_INIT;
@@ -464,6 +473,11 @@ class DS1InboundList extends DS1InboundRequest
         return arg;
     }
 
+    @Override
+    public ApiObject getTarget() {
+        return info;
+    }
+
     private boolean isClosed() {
         return state == STATE_CLOSED;
     }
@@ -481,14 +495,59 @@ class DS1InboundList extends DS1InboundRequest
     }
 
     @Override
+    public void onClose() {
+        if (node != null) {
+            node.unsubscribe(DSNode.INFO_TOPIC, null, this);
+        }
+    }
+
+    @Override
+    public void onEvent(DSTopic topic, DSIEvent event, DSNode node, DSInfo child,
+                        Object... params) {
+        switch ((DSInfoTopic.Event) event) {
+            case CHILD_ADDED:
+                childAdded(child);
+                break;
+            case CHILD_REMOVED:
+                childRemoved(child);
+                break;
+            case METADATA_CHANGED: //TODO
+                break;
+            default:
+        }
+    }
+
+    @Override
+    public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
+        close();
+    }
+
+    @Override
     public void run() {
         try {
-            response = getResponderImpl().onList(this);
+            RequestPath path = new RequestPath(getPath(), getLink());
+            if (path.isResponder()) {
+                DSIResponder responder = (DSIResponder) path.getTarget();
+                setPath(path.getPath());
+                response = responder.onList(this);
+            } else {
+                info = path.getInfo();
+                if (info.isNode()) {
+                    node = info.getNode();
+                    node.subscribe(DSNode.INFO_TOPIC, null, this);
+                }
+                response = this;
+            }
         } catch (Exception x) {
             severe(getPath(), x);
             close(x);
+            return;
         }
-        enqueueResponse();
+        if (response == null) {
+            close();
+        } else {
+            enqueueResponse();
+        }
     }
 
     @Override

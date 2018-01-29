@@ -1,7 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
-import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.responder.InboundRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSMap;
@@ -14,19 +14,15 @@ import org.iot.dsa.node.DSMap;
 class DS1InboundRequest extends DSLogger implements InboundRequest {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private DSLink link;
     private String path;
-    private DS1Session session;
     private DSMap request;
     private Integer requestId;
-    private DSIResponder responderImpl;
     private DS1Responder responder;
+    private DS1Session session;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -38,6 +34,10 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
     ///////////////////////////////////////////////////////////////////////////
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
+
+    public DSLink getLink() {
+        return link;
+    }
 
     public String getPath() {
         return path;
@@ -51,16 +51,17 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return responder;
     }
 
-    public DSIResponder getResponderImpl() {
-        return responderImpl;
-    }
-
     public Integer getRequestId() {
         return requestId;
     }
 
     public DS1Session getSession() {
         return session;
+    }
+
+    public DS1InboundRequest setLink(DSLink link) {
+        this.link = link;
+        return this;
     }
 
     public DS1InboundRequest setPath(String path) {
@@ -78,11 +79,6 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         return this;
     }
 
-    public DS1InboundRequest setResponderImpl(DSIResponder responderImpl) {
-        this.responderImpl = responderImpl;
-        return this;
-    }
-
     public DS1InboundRequest setRequestId(Integer requestId) {
         this.requestId = requestId;
         return this;
@@ -92,13 +88,5 @@ class DS1InboundRequest extends DSLogger implements InboundRequest {
         this.responder = responder;
         return this;
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
 
 }

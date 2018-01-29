@@ -1,19 +1,23 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
+import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.responder.InboundInvokeRequest;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.ActionValues;
+import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.security.DSPermission;
 
 /**
@@ -162,15 +166,29 @@ class DS1InboundInvoke extends DS1InboundRequest
      */
     public void run() {
         try {
-            result = getResponderImpl().onInvoke(this);
-            if (result == null) {
-                close();
+            RequestPath path = new RequestPath(getPath(), getLink());
+            if (path.isResponder()) {
+                DSIResponder responder = (DSIResponder) path.getTarget();
+                setPath(path.getPath());
+                result = responder.onInvoke(this);
             }
+            DSInfo info = path.getInfo();
+            if (!info.isAction()) {
+                throw new DSRequestException("Not an action " + path.getPath());
+            }
+            //TODO verify incoming permission
+            DSAction action = info.getAction();
+            result = action.invoke(info, this);
         } catch (Exception x) {
             severe(getPath(), x);
             close(x);
+            return;
         }
-        enqueueResponse();
+        if (result == null) {
+            close();
+        } else {
+            enqueueResponse();
+        }
     }
 
     /**

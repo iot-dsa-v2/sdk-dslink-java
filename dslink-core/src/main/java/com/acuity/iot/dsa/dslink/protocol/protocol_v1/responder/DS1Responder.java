@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -30,9 +30,9 @@ public class DS1Responder extends DSNode {
 
     private ConcurrentHashMap<Integer, DSStream> inboundRequests =
             new ConcurrentHashMap<Integer, DSStream>();
+    private DSLink link;
     private Logger logger;
     private DS1Session session;
-    private DSIResponder responder;
     private DS1InboundSubscriptions subscriptions =
             new DS1InboundSubscriptions(this);
 
@@ -103,7 +103,7 @@ public class DS1Responder extends DSNode {
         invokeImpl.setPath(getPath(req))
                   .setSession(session)
                   .setRequestId(rid)
-                  .setResponderImpl(responder)
+                  .setLink(link)
                   .setResponder(this);
         inboundRequests.put(rid, invokeImpl);
         DSRuntime.run(invokeImpl);
@@ -118,7 +118,7 @@ public class DS1Responder extends DSNode {
                 .setSession(session)
                 .setRequest(req)
                 .setRequestId(rid)
-                .setResponderImpl(responder)
+                .setLink(link)
                 .setResponder(this);
         inboundRequests.put(listImpl.getRequestId(), listImpl);
         DSRuntime.run(listImpl);
@@ -128,10 +128,10 @@ public class DS1Responder extends DSNode {
      * Process an individual request.
      */
     public void processRequest(final Integer rid, final DSMap map) {
-        if (responder == null) {
-            responder = getConnection().getLink();
+        if (link == null) {
+            link = getConnection().getLink();
         }
-        if (responder == null) {
+        if (link == null) {
             throw new DSProtocolException("Not a responder");
         }
         String method = map.get("method", null);
@@ -228,7 +228,7 @@ public class DS1Responder extends DSNode {
         setImpl.setPath(getPath(req))
                .setSession(session)
                .setRequestId(rid)
-               .setResponderImpl(responder)
+               .setLink(link)
                .setResponder(this);
         DSRuntime.run(setImpl);
     }
@@ -251,7 +251,7 @@ public class DS1Responder extends DSNode {
             sid = subscribe.getInt("sid");
             qos = subscribe.get("qos", 0);
             try {
-                subscriptions.subscribe(responder, sid, path, qos);
+                subscriptions.subscribe(sid, path, qos);
             } catch (Exception x) {
                 //invalid paths are very common
                 fine(path, x);
