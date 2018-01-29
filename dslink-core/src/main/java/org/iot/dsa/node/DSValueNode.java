@@ -20,7 +20,7 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
         DSInfo info = getValueChild();
         if (child == info) {
             DSIValue val = info.getValue();
-            fire(null, VALUE_TOPIC, Event.NODE_CHANGED);
+            fire(VALUE_TOPIC, Event.NODE_CHANGED, null);
         }
     }
 

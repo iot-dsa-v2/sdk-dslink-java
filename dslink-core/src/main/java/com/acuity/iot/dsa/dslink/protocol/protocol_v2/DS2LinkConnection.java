@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2;
 
+import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
@@ -12,9 +13,13 @@ import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.io.DSBase64;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.io.msgpack.MsgpackReader;
+import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSBytes;
+import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.security.DSKeys;
@@ -22,24 +27,43 @@ import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
 /**
- * The default V2 connection implementation. Performs connection initialization with the broker,
- * then creates a transport and a protocol based on the broker response.
+ * The DSA V2 connection implementation. Performs connection initialization with the broker,
+ * then creates a transport and session based on the broker response.
  *
  * @author Aaron Hansen
  */
 public class DS2LinkConnection extends DSLinkConnection {
 
     ///////////////////////////////////////////////////////////////////////////
+    // Constants
+    ///////////////////////////////////////////////////////////////////////////
+
+    private static final String BROKER_AUTH = "Broker Auth";
+    private static final String BROKER_ID = "Broker DSID";
+    private static final String BROKER_PATH = "Broker Path";
+    private static final String BROKER_PUB_KEY = "Broker Public Key";
+    private static final String BROKER_SALT = "Broker Salt";
+    private static final String BROKER_URI = "Broker URI";
+    private static final String LINK_SALT = "Link Salt";
+    private static final String REQUESTER_ALLOWED = "Requester Allowed";
+    private static final String LAST_CONNECT_OK = "Last Connect Ok";
+    private static final String LAST_CONNECT_FAIL = "Last Connect Fail";
+    private static final String FAIL_CAUSE = "Fail Cause";
+    private static final String STATUS = "Status";
+
+    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private byte[] brokerAuth;
-    private String brokerDsId;
-    private byte[] brokerPubKey;
-    private byte[] brokerSalt;
-    private DSLink link;
-    private byte[] linkSalt;
-    private boolean requesterAllowed = false;
+    private DSInfo brokerAuth = getInfo(BROKER_AUTH);
+    private DSInfo brokerDsId = getInfo(BROKER_ID);
+    private DSInfo brokerPath = getInfo(BROKER_PATH);
+    private DSInfo brokerPubKey = getInfo(BROKER_PUB_KEY);
+    private DSInfo brokerSalt = getInfo(BROKER_SALT);
+    private DSInfo brokerUri = getInfo(BROKER_URI);
+    private DSInfo linkSalt = getInfo(LINK_SALT);
+    private DSInfo requesterAllowed = getInfo(REQUESTER_ALLOWED);
+    private DSSession session;
     private DSBinaryTransport transport;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -47,39 +71,63 @@ public class DS2LinkConnection extends DSLinkConnection {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public DSLink getLink() {
-        return link;
+    public void declareDefaults() {
+        declareDefault(STATUS, DSStatus.down).setTransient(true).setReadOnly(true);
+        declareDefault(LAST_CONNECT_OK, DSDateTime.NULL).setTransient(true).setReadOnly(true);
+        declareDefault(LAST_CONNECT_FAIL, DSDateTime.NULL).setTransient(true).setReadOnly(true);
+        declareDefault(FAIL_CAUSE, DSString.NULL).setTransient(true).setReadOnly(true);
+        declareDefault(BROKER_PATH, DSString.NULL).setTransient(true).setReadOnly(true);
+        declareDefault(BROKER_ID, DSString.NULL).setTransient(true).setReadOnly(true);
+        declareDefault(BROKER_AUTH, DSBytes.NULL)
+                .setTransient(true).setReadOnly(true).setAdmin(true);
+        declareDefault(BROKER_PUB_KEY, DSBytes.NULL)
+                .setTransient(true).setReadOnly(true).setAdmin(true);
+        declareDefault(BROKER_SALT, DSBytes.NULL)
+                .setTransient(true).setReadOnly(true).setAdmin(true);
+        declareDefault(LINK_SALT, DSBytes.NULL)
+                .setTransient(true).setReadOnly(true).setAdmin(true);
+        declareDefault(REQUESTER_ALLOWED, DSBool.FALSE).setTransient(true).setReadOnly(true);
+    }
+
+    @Override
+    public void disconnect() {
+        if (session != null) {
+            session.disconnect();
+        }
     }
 
     private byte[] getLinkSalt() {
-        if (linkSalt == null) {
-            linkSalt = new byte[32];
+        if (linkSalt.getObject().isNull()) {
+            byte[] tmp = new byte[32];
             SecureRandom random = new SecureRandom();
-            random.nextBytes(linkSalt);
-            put("Link Salt", DSString.valueOf(DSBase64.encodeUrl(linkSalt)))
-                    .setReadOnly(true)
-                    .setTransient(true);
+            random.nextBytes(tmp);
+            put(linkSalt, DSBytes.valueOf(tmp));
         }
-        return linkSalt;
+        return linkSalt.getElement().toBytes();
     }
 
     @Override
     public DSIRequester getRequester() {
-        return null;//session.getRequester();
+        return session.getRequester();
+    }
+
+    @Override
+    public DSBinaryTransport getTransport() {
+        return transport;
     }
 
     /**
      * Looks at the connection initialization response to determine the type of transport then
      * instantiates the correct type fom the config.
      */
-    protected DSTransport makeTransport() {
+    protected void makeTransport() {
         DSTransport.Factory factory = null;
-        String uri = link.getConfig().getBrokerUri();
-        put("Broker URI", DSString.valueOf(uri)).setReadOnly(true).setTransient(true);
+        String uri = getLink().getConfig().getBrokerUri();
+        put(brokerUri, DSString.valueOf(uri));
         transport = null;
         if (uri.startsWith("ws")) {
             try {
-                String type = link.getConfig().getConfig(
+                String type = getLink().getConfig().getConfig(
                         DSLinkConfig.CFG_WS_TRANSPORT_FACTORY,
                         "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
                 factory = (DSTransport.Factory) Class.forName(type).newInstance();
@@ -95,26 +143,25 @@ public class DS2LinkConnection extends DSLinkConnection {
         transport.setConnection(this);
         transport.setReadTimeout(getLink().getConfig().getConfig(
                 DSLinkConfig.CFG_READ_TIMEOUT, 60000));
-        setTransport(makeTransport());
-        return transport;
     }
 
     @Override
     protected void onConnect() {
-        put("Last Connect Attempt", DSDateTime.currentTime())
-                .setReadOnly(true).setTransient(true);
-        makeTransport().open();
+        transport.open();
         performHandshake();
-        put("Status", DSStatus.ok).setReadOnly(true).setTransient(true);
     }
 
     @Override
     protected void onDisconnect() {
-        put("Status", DSStatus.down).setReadOnly(true).setTransient(true);
+        put(STATUS, DSStatus.down);
     }
 
     @Override
     protected void onInitialize() {
+        if (session == null) {
+            session = null;//TODO
+        }
+        makeTransport();
     }
 
     /**
@@ -123,13 +170,7 @@ public class DS2LinkConnection extends DSLinkConnection {
      */
     @Override
     protected void onRun() {
-        //session.run();
-    }
-
-    @Override
-    protected void onStable() {
-        this.link = (DSLink) getParent();
-        super.onStable();
+        session.run();
     }
 
     private void performHandshake() {
@@ -138,13 +179,12 @@ public class DS2LinkConnection extends DSLinkConnection {
             recvF1();
             sendF2();
             recvF3();
-            put("Last Connect", DSDateTime.currentTime()).setReadOnly(true).setTransient(true);
-            put("Status", DSStatus.ok).setReadOnly(true).setTransient(true);
+            put(LAST_CONNECT_OK, DSDateTime.currentTime());
+            put(STATUS, DSStatus.ok);
         } catch (Exception io) {
-            put("Status", DSStatus.fault).setReadOnly(true).setTransient(true);
-            put("Last Fail", DSDateTime.currentTime()).setReadOnly(true).setTransient(true);
-            put("Fail Cause", DSString.valueOf(DSException.makeMessage(io)))
-                    .setReadOnly(true).setTransient(true);
+            put(STATUS, DSStatus.fault);
+            put(LAST_CONNECT_FAIL, DSDateTime.currentTime());
+            put(FAIL_CAUSE, DSString.valueOf(DSException.makeMessage(io)));
             DSException.throwRuntime(io);
         }
     }
@@ -158,16 +198,13 @@ public class DS2LinkConnection extends DSLinkConnection {
                                                     Integer.toHexString(reader.getMethod()));
         }
         //TODO check for header status
-        brokerDsId = reader.readString(in);
-        put("Broker DSID", DSString.valueOf(brokerDsId)).setReadOnly(true).setTransient(true);
-        brokerPubKey = new byte[65];
-        in.read(brokerPubKey);
-        put("Broker Public Key", DSString.valueOf(DSBase64.encodeUrl(brokerPubKey)))
-                .setReadOnly(true).setTransient(true);
-        brokerSalt = new byte[32];
-        in.read(brokerSalt);
-        put("Broker Salt", DSString.valueOf(DSBase64.encodeUrl(brokerSalt)))
-                .setReadOnly(true).setTransient(true);
+        put(brokerDsId, DSString.valueOf(reader.readString(in)));
+        byte[] tmp = new byte[65];
+        in.read(tmp);
+        put(BROKER_PUB_KEY, DSBytes.valueOf(tmp));
+        tmp = new byte[32];
+        in.read(tmp);
+        put(BROKER_SALT, DSBytes.valueOf(tmp));
     }
 
     private void recvF3() throws IOException {
@@ -179,21 +216,14 @@ public class DS2LinkConnection extends DSLinkConnection {
                                                     Integer.toHexString(reader.getMethod()));
         }
         //TODO check for header status
-        requesterAllowed = (in.read() == 1);
-        put("Requester Allowed", DSBool.valueOf(requesterAllowed))
-                .setReadOnly(true).setTransient(true);
-        String sessionId = reader.readString(in);
-        put("Session ID", DSString.valueOf(sessionId)).setTransient(true);
-        int lastAck = DSBytes.readInt(in, false);
+        put(requesterAllowed, DSBool.valueOf(in.read() == 1));
+        String sessionId = reader.readString(in); //TODO remove
+        int lastAck = DSBytes.readInt(in, false); //TODO remove
         String pathOnBroker = reader.readString(in);
-        put("Broker Path", DSString.valueOf(pathOnBroker))
-                .setReadOnly(true).setTransient(true);
-        if (brokerAuth == null) {
-            brokerAuth = new byte[32];
-        }
-        in.read(brokerAuth);
-        put("Broker Auth", DSString.valueOf(DSBase64.encodeUrl(brokerAuth)))
-                .setReadOnly(true).setTransient(true);
+        put(brokerPath, DSString.valueOf(pathOnBroker));
+        byte[] tmp = new byte[32];
+        in.read(tmp);
+        put(brokerAuth, DSBytes.valueOf(tmp));
     }
 
     private void sendF0() {
@@ -214,7 +244,7 @@ public class DS2LinkConnection extends DSLinkConnection {
         MessageWriter writer = new MessageWriter();
         writer.setMethod((byte) 0xf2);
         ByteBuffer buffer = writer.getBody();
-        String token = link.getConfig().getToken();
+        String token = getLink().getConfig().getToken();
         if (token == null) {
             token = "";
         }
@@ -223,14 +253,17 @@ public class DS2LinkConnection extends DSLinkConnection {
         writer.writeString("", buffer); //TODO remove
         writer.writeIntLE(0, buffer); //TODO remove
         writer.writeString("", buffer); //blank server path
-        byte[] sharedSecret = getLink().getKeys().generateSharedSecret(brokerPubKey);
-        byte[] authBytes = new byte[brokerSalt.length + sharedSecret.length];
-        System.arraycopy(brokerSalt, 0, authBytes, 0, brokerSalt.length);
-        System.arraycopy(sharedSecret, 0, authBytes, brokerSalt.length, sharedSecret.length);
+        byte[] sharedSecret = getLink().getKeys().generateSharedSecret(
+                brokerPubKey.getElement().toBytes());
+        byte[] tmp = brokerSalt.getElement().toBytes();
+        byte[] authBytes = new byte[tmp.length + sharedSecret.length];
+        System.arraycopy(tmp, 0, authBytes, 0, tmp.length);
+        System.arraycopy(sharedSecret, 0, authBytes, tmp.length, sharedSecret.length);
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         messageDigest.update(authBytes);
         authBytes = messageDigest.digest();
         buffer.put(authBytes);
+        writer.write(transport);
     }
 
 }

@@ -37,6 +37,9 @@ public class MessageReader implements MessageConstants {
     // Constructors
     // ------------
 
+    public MessageReader() {
+    }
+
     // Methods
     // -------
 
@@ -104,7 +107,7 @@ public class MessageReader implements MessageConstants {
         return strBuffer;
     }
 
-    public void init(InputStream in) {
+    public MessageReader init(InputStream in) {
         try {
             input = in;
             headers.clear();
@@ -127,6 +130,22 @@ public class MessageReader implements MessageConstants {
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
+        return this;
+    }
+
+    public boolean isRequest() {
+        switch (method) {
+            case MSG_CLOSE :
+            case MSG_INVOKE_REQ :
+            case MSG_LIST_REQ :
+            case MSG_OBSERVE_REQ :
+                return true;
+        }
+        return false;
+    }
+
+    public boolean isResponse() {
+        return (method & 0x80) != 0;
     }
 
     private void parseDynamicHeaders(InputStream in, int len) throws IOException {

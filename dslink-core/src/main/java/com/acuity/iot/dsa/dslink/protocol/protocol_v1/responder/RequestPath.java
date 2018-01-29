@@ -1,5 +1,7 @@
-package org.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
+import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.DSInvalidPathException;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
@@ -11,10 +13,6 @@ import org.iot.dsa.node.DSPath;
  * @author Aaron Hansen
  */
 class RequestPath {
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -110,9 +108,5 @@ class RequestPath {
     boolean isResponder() {
         return target instanceof DSIResponder;
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
 
 }

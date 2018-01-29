@@ -1,18 +1,17 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
 import com.acuity.iot.dsa.dslink.DSProtocolException;
-import com.acuity.iot.dsa.dslink.DSResponderSession;
+import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Stream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -23,21 +22,17 @@ import org.iot.dsa.node.DSNode;
  *
  * @author Aaron Hansen
  */
-public class DS1Responder extends DSNode implements DSResponderSession {
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
+public class DS1Responder extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private ConcurrentHashMap<Integer, DS1Stream> inboundRequests =
-            new ConcurrentHashMap<Integer, DS1Stream>();
+    private ConcurrentHashMap<Integer, DSStream> inboundRequests =
+            new ConcurrentHashMap<Integer, DSStream>();
+    private DSLink link;
     private Logger logger;
     private DS1Session session;
-    private DSIResponder responder;
     private DS1InboundSubscriptions subscriptions =
             new DS1InboundSubscriptions(this);
 
@@ -53,7 +48,6 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
 
-    @Override
     public DSLinkConnection getConnection() {
         return session.getConnection();
     }
@@ -91,7 +85,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
     public void onDisconnect() {
         finer(finer() ? "Close" : null);
         subscriptions.close();
-        for (Map.Entry<Integer, DS1Stream> entry : inboundRequests.entrySet()) {
+        for (Map.Entry<Integer, DSStream> entry : inboundRequests.entrySet()) {
             try {
                 entry.getValue().onClose(entry.getKey());
             } catch (Exception x) {
@@ -109,7 +103,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
         invokeImpl.setPath(getPath(req))
                   .setSession(session)
                   .setRequestId(rid)
-                  .setResponderImpl(responder)
+                  .setLink(link)
                   .setResponder(this);
         inboundRequests.put(rid, invokeImpl);
         DSRuntime.run(invokeImpl);
@@ -124,7 +118,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
                 .setSession(session)
                 .setRequest(req)
                 .setRequestId(rid)
-                .setResponderImpl(responder)
+                .setLink(link)
                 .setResponder(this);
         inboundRequests.put(listImpl.getRequestId(), listImpl);
         DSRuntime.run(listImpl);
@@ -134,10 +128,10 @@ public class DS1Responder extends DSNode implements DSResponderSession {
      * Process an individual request.
      */
     public void processRequest(final Integer rid, final DSMap map) {
-        if (responder == null) {
-            responder = getConnection().getLink();
+        if (link == null) {
+            link = getConnection().getLink();
         }
-        if (responder == null) {
+        if (link == null) {
             throw new DSProtocolException("Not a responder");
         }
         String method = map.get("method", null);
@@ -150,7 +144,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
                     if (!method.equals("close")) {
                         throwInvalidMethod(method, map);
                     }
-                    final DS1Stream req = inboundRequests.remove(rid);
+                    final DSStream req = inboundRequests.remove(rid);
                     if (req != null) {
                         DSRuntime.run(new Runnable() {
                             public void run() {
@@ -234,7 +228,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
         setImpl.setPath(getPath(req))
                .setSession(session)
                .setRequestId(rid)
-               .setResponderImpl(responder)
+               .setLink(link)
                .setResponder(this);
         DSRuntime.run(setImpl);
     }
@@ -257,7 +251,7 @@ public class DS1Responder extends DSNode implements DSResponderSession {
             sid = subscribe.getInt("sid");
             qos = subscribe.get("qos", 0);
             try {
-                subscriptions.subscribe(responder, sid, path, qos);
+                subscriptions.subscribe(sid, path, qos);
             } catch (Exception x) {
                 //invalid paths are very common
                 fine(path, x);
@@ -287,12 +281,10 @@ public class DS1Responder extends DSNode implements DSResponderSession {
         inboundRequests.remove(requestId);
     }
 
-    @Override
     public boolean shouldEndMessage() {
         return session.shouldEndMessage();
     }
 
-    @Override
     public void sendResponse(OutboundMessage res) {
         session.enqueueOutgoingResponse(res);
     }

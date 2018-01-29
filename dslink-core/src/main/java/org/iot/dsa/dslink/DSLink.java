@@ -51,7 +51,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSLink extends DSNode implements DSIResponder, Runnable {
+public class DSLink extends DSNode implements Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -153,7 +153,7 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
     /**
      * Returns the root of the node tree.
      */
-    public DSMainNode getNodes() {
+    public DSMainNode getMain() {
         return (DSMainNode) main.getNode();
     }
 
@@ -266,91 +266,6 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             return null;
         }
         return super.onInvoke(actionInfo, invocation);
-    }
-
-    /**
-     * Responder implementation.  If one of the children in the path implements DSResponder, it will
-     * be given responsibility for completing the request.
-     */
-    @Override
-    public ActionResult onInvoke(InboundInvokeRequest request) {
-        RequestPath path = new RequestPath(request.getPath(), this);
-        if (path.isResponder()) {
-            DSIResponder responder = (DSIResponder) path.getTarget();
-            return responder.onInvoke(new InvokeWrapper(path, request));
-        }
-        DSInfo info = path.getInfo();
-        if (!info.isAction()) {
-            throw new DSRequestException("Not an action " + path.getPath());
-        }
-        //TODO verify incoming permission
-        DSAction action = info.getAction();
-        return action.invoke(info, request);
-    }
-
-    /**
-     * Responder implementation.  If one of the children in the path implements DSResponder, it will
-     * be given responsibility for completing the request.
-     */
-    @Override
-    public OutboundListResponse onList(InboundListRequest request) {
-        RequestPath path = new RequestPath(request.getPath(), this);
-        if (path.isResponder()) {
-            DSIResponder responder = (DSIResponder) path.getTarget();
-            return responder.onList(new ListWrapper(path.getPath(), request));
-        }
-        return new ListSubscriber(path, request);
-    }
-
-    /**
-     * Responder implementation.  If one of the children in the path implements DSResponder, it will
-     * be given responsibility for completing the request.
-     */
-    @Override
-    public SubscriptionCloseHandler onSubscribe(InboundSubscribeRequest request) {
-        RequestPath path = new RequestPath(request.getPath(), this);
-        if (path.isResponder()) {
-            DSIResponder responder = (DSIResponder) path.getTarget();
-            return responder.onSubscribe(new SubscribeWrapper(path.getPath(), request));
-        }
-        return new ValueSubscriber(path, request);
-    }
-
-
-    /**
-     * Responder implementation.  If one of the children in the path implements DSResponder, it will
-     * be given responsibility for completing the request.
-     */
-    @Override
-    public void onSet(InboundSetRequest request) {
-        RequestPath path = new RequestPath(request.getPath(), this);
-        if (path.isResponder()) {
-            DSIResponder responder = (DSIResponder) path.getTarget();
-            responder.onSet(new SetWrapper(path.getPath(), request));
-            return;
-        }
-        DSNode parent = path.getParent();
-        DSInfo info = path.getInfo();
-        if (info.isReadOnly()) {
-            throw new DSRequestException("Not writable: " + getPath());
-        }
-        //TODO verify incoming permission
-        if (info.isNode()) {
-            info.getNode().onSet(request.getValue());
-            return;
-        }
-        DSIValue value = info.getValue();
-        if (value == null) {
-            if (info.getDefaultObject() instanceof DSIValue) {
-                value = (DSIValue) info.getDefaultObject();
-            }
-        }
-        if (value != null) {
-            value = value.valueOf(request.getValue());
-        } else {
-            value = request.getValue();
-        }
-        parent.onSet(info, value);
     }
 
     /**
@@ -574,13 +489,5 @@ public class DSLink extends DSNode implements DSIResponder, Runnable {
             backups[i].delete();
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
 
 }

@@ -11,7 +11,7 @@ public class DSUtil {
     }
 
     /**
-     * Comparison that takes null into account.  Null == null.
+     * Comparison that takes null into account; null == null.
      */
     public static boolean equal(Object o1, Object o2) {
         if (o1 == o2) {

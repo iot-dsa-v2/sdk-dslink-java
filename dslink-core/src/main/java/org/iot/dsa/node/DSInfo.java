@@ -45,14 +45,11 @@ public class DSInfo implements ApiObject {
     ///////////////////////////////////////////////////////////////////////////
 
     static final int ADMIN = 0;
+    static final int DEFAULT_ON_COPY = 5;
     static final int HIDDEN = 1;
-    static final int TRANSIENT = 2;
-    static final int READONLY = 3;
     static final int PERMANENT = 4;
-    //static final int PERMANENTLY_SUBSCRIBED = 5;
-    //static final int NO_ADD_REMOVE_CHILDREN = 5;
-    //static final int NO_MODIFY_FLAGS = 5;
-    //static final int NO_AUDIT      = 5;
+    static final int READONLY = 3;
+    static final int TRANSIENT = 2;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -85,6 +82,13 @@ public class DSInfo implements ApiObject {
         DSInfo ret = new DSInfo();
         ret.flags = flags;
         ret.name = name;
+        if (isDefaultOnCopy()) {
+            DSIObject val = getDefaultObject();
+            if (val != null) {
+                ret.setObject(val.copy());
+                return ret;
+            }
+        }
         if (value != null) {
             ret.setObject(value.copy());
         }
@@ -145,8 +149,8 @@ public class DSInfo implements ApiObject {
     }
 
     private void fireInfoChanged() {
-        if (parent != null) {
-            parent.fire(this, DSInfoTopic.INSTANCE, DSInfoTopic.Event.METADATA_CHANGED);
+        if ((parent != null) && (parent.isRunning())) {
+            parent.fire(DSInfoTopic.INSTANCE, DSInfoTopic.Event.METADATA_CHANGED, this);
         }
     }
 
@@ -245,6 +249,13 @@ public class DSInfo implements ApiObject {
     @Override
     public boolean isAdmin() {
         return getFlag(ADMIN);
+    }
+
+    /**
+     * Whether or not the current value, or the default value is copied.
+     */
+    public boolean isDefaultOnCopy() {
+        return getFlag(DEFAULT_ON_COPY);
     }
 
     /**

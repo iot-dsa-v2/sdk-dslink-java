@@ -1,15 +1,23 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1;
 
+import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.io.json.JsonReader;
+import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.msgpack.MsgpackReader;
+import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.util.DSException;
 
 /**
- * The default connection implementation. Performs connection initialization with the broker, then
- * creates a transport and a protocol based on the broker response.
+ * The DSA V1 connection implementation. Performs connection initialization with the broker, then
+ * creates a transport based on the broker response.
  *
  * @author Aaron Hansen
  */
@@ -29,24 +37,41 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     private DS1ConnectionInit connectionInit;
     private DSLink link;
+    private DSIReader reader;
+    private DSTransport transport;
     private DS1Session session;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
+    private DSIWriter writer;
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public DSLink getLink() {
-        return link;
+    /**
+     * Forcefully closes an open connection.  Does not prevent reconnection, intended for
+     * problem resolution.
+     */
+    public void disconnect() {
+        if (session != null) {
+            session.disconnect();
+        }
+    }
+
+    public DSIReader getReader() {
+        return reader;
     }
 
     @Override
     public DSIRequester getRequester() {
         return session.getRequester();
+    }
+
+    @Override
+    public DSTransport getTransport() {
+        return transport;
+    }
+
+    public DSIWriter getWriter() {
+        return writer;
     }
 
     protected DS1ConnectionInit initializeConnection() {
@@ -58,17 +83,6 @@ public class DS1LinkConnection extends DSLinkConnection {
             DSException.throwRuntime(x);
         }
         return init;
-    }
-
-    /**
-     * Looks at the connection initialization response to determine the protocol implementation.
-     */
-    protected DS1Session makeSession(DS1ConnectionInit init) {
-        String version = init.getResponse().get("version", "");
-        if (!version.startsWith("1.1.2")) {
-            throw new IllegalStateException("Unsupported version: " + version);
-        }
-        return new DS1Session();
     }
 
     /**
@@ -111,13 +125,13 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     @Override
     protected void onConnect() {
-        //If there is a failure, then we want connection init to happen again.
-        DS1ConnectionInit init = connectionInit;
-        connectionInit = null;
         try {
+            DS1ConnectionInit init = connectionInit;
+            //Don't reuse the connection init if there is connection problem.
+            connectionInit = null;
             getTransport().open();
-            connectionInit = init;
             session.onConnect();
+            connectionInit = init;
         } catch (Exception x) {
             session.onConnectFail();
             DSException.throwRuntime(x);
@@ -127,19 +141,18 @@ public class DS1LinkConnection extends DSLinkConnection {
     @Override
     protected void onDisconnect() {
         if (session != null) {
-            session.close();
-        }
-        if (session != null) {
             session.onDisconnect();
         }
+        reader = null;
+        writer = null;
+        transport = null;
         remove(TRANSPORT);
     }
 
     @Override
     protected void onInitialize() {
-        //We need to reinitialize if there are any connection failures, so
-        //only hold the init reference after successfully connected.
         DS1ConnectionInit init = connectionInit;
+        //Don't reuse the connection init if there is connection problem.
         connectionInit = null;
         if (init == null) {
             init = initializeConnection();
@@ -147,10 +160,9 @@ public class DS1LinkConnection extends DSLinkConnection {
         makeTransport(init);
         put(TRANSPORT, getTransport()).setTransient(true);
         if (session == null) {
-            session = makeSession(init);
-            config(config() ? "Session type: " + session.getClass().getName() : null);
+            session = new DS1Session();
             put(SESSION, session).setTransient(true);
-            session.setConnection(DS1LinkConnection.this);
+            session.setConnection(this);
         }
         connectionInit = init;
     }
@@ -168,6 +180,40 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     public void setRequesterAllowed() {
         session.setRequesterAllowed();
+    }
+
+    /**
+     * Sets the transport and creates the appropriate reader/writer.
+     */
+    protected void setTransport(DSTransport transport) {
+        if (transport instanceof DSBinaryTransport) {
+            final DSBinaryTransport trans = (DSBinaryTransport) transport;
+            reader = new MsgpackReader(trans.getInput());
+            writer = new MsgpackWriter() {
+                @Override
+                public void onComplete() {
+                    /* How to debug
+                    try {
+                        MsgpackReader reader = new MsgpackReader(
+                                new ByteArrayInputStream(byteBuffer.array());
+                        System.out.println(reader.getMap());
+                        reader.close();
+                    } catch (Exception x) {
+                        x.printStackTrace();
+                    }
+                    */
+                    trans.write(byteBuffer, true);
+                }
+            };
+        } else if (transport instanceof DSTextTransport) {
+            DSTextTransport trans = (DSTextTransport) transport;
+            reader = new JsonReader(trans.getReader());
+            writer = new JsonWriter(trans.getWriter());
+        } else {
+            throw new IllegalStateException(
+                    "Unexpected transport type: " + transport.getClass().getName());
+        }
+        this.transport = transport;
     }
 
     public void updateSalt(String salt) {

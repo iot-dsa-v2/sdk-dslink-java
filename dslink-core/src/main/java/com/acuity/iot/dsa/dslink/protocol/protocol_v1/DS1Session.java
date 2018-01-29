@@ -8,6 +8,7 @@ import static org.iot.dsa.io.DSIReader.Token.NULL;
 
 import com.acuity.iot.dsa.dslink.DSProtocolException;
 import com.acuity.iot.dsa.dslink.DSSession;
+import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester.DS1Requester;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder.DS1Responder;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
@@ -31,6 +32,7 @@ public class DS1Session extends DSSession {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
+    static final int END_MSG_THRESHOLD = 48000;
     static final String LAST_ACK_RECV = "Last Ack Recv";
     static final String LAST_ACK_SENT = "Last Ack Sent";
 
@@ -43,23 +45,25 @@ public class DS1Session extends DSSession {
 
     private DSInfo lastAckRecv = getInfo(LAST_ACK_RECV);
     private DSInfo lastAckSent = getInfo(LAST_ACK_SENT);
+    private long lastMessageSent;
     private int nextAck = -1;
     private int nextMsg = 1;
-    private DSIReader reader;
+    private boolean requestsNext = false;
     private DS1Requester requester = new DS1Requester(this);
     private DS1Responder responder = new DS1Responder(this);
-    private DSTransport transport;
-    private DSIWriter writer;
-
-    /////////////////////////////////////////////////////////////////
-    // Constructors
-    /////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////
     // Methods
     /////////////////////////////////////////////////////////////////
 
-    @Override
+    /**
+     * Prepare a new message.  After this is called, beginRequests and/beginResponses maybe called.
+     * When the message is complete, endMessage will be called.
+     *
+     * @see #beginRequests()
+     * @see #beginResponses()
+     * @see #endMessage()
+     */
     protected void beginMessage() {
         DSIWriter out = getWriter();
         out.beginMap();
@@ -76,12 +80,24 @@ public class DS1Session extends DSSession {
         }
     }
 
-    @Override
+    /**
+     * Prepare for the response portion of the message.  This will be followed by one or more calls
+     * to writeResponse().  When there are no more responses, endResponses() will be called.
+     *
+     * @see #writeResponse(OutboundMessage)
+     * @see #endResponses()
+     */
     protected void beginResponses() {
         getWriter().key("responses").beginList();
     }
 
-    @Override
+    /**
+     * Prepare for the request portion of the message.  This will be followed by one or more calls
+     * to writeRequest().  When there are no more responses, endRequests() will be called.
+     *
+     * @see #writeResponse(OutboundMessage)
+     * @see #endResponses()
+     */
     protected void beginRequests() {
         getWriter().key("requests").beginList();
     }
@@ -93,43 +109,77 @@ public class DS1Session extends DSSession {
     }
 
     @Override
-    protected void doRead() throws IOException {
+    protected void doRecvMessage() throws IOException {
         DSIReader reader = getReader();
-        while (isOpen()) {
-            switch (reader.next()) {
-                case BEGIN_MAP:
-                    processEnvelope(reader);
-                    break;
-                case END_MAP:
-                case END_LIST:
-                case ROOT:
-                    break;
-                case END_INPUT:
-                    return;
-                default:
-                    throw new IllegalStateException("Unexpected input: " + reader.last());
-            }
+        switch (reader.next()) {
+            case BEGIN_MAP:
+                processEnvelope(reader);
+                break;
+            case END_MAP:
+            case END_LIST:
+            case ROOT:
+                break;
+            case END_INPUT:
+                return;
+            default:
+                throw new IOException("Unexpected input: " + reader.last());
         }
     }
 
     @Override
+    protected void doSendMessage() {
+        DSTransport transport = getTransport();
+        long endTime = System.currentTimeMillis() + 2000;
+        DSIWriter writer = getWriter();
+        writer.reset();
+        requestsNext = !requestsNext;
+        transport.beginMessage();
+        beginMessage();
+        if (hasMessagesToSend()) {
+            send(requestsNext, endTime);
+            if ((System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
+                send(!requestsNext, endTime);
+            }
+        }
+        endMessage();
+        transport.endMessage();
+        lastMessageSent = System.currentTimeMillis();
+    }
+
+    /**
+     * Complete the message.
+     */
     protected void endMessage() {
         getWriter().endMap().flush();
     }
 
-    @Override
+    /**
+     * Complete the outgoing responses part of the message.
+     *
+     * @see #beginResponses()
+     * @see #writeResponse(OutboundMessage)
+     */
     protected void endResponses() {
         getWriter().endList();
     }
 
-    @Override
+    /**
+     * Complete the outgoing requests part of the message.
+     *
+     * @see #beginRequests()
+     * @see #writeRequest(OutboundMessage)
+     */
     protected void endRequests() {
         getWriter().endList();
     }
 
     @Override
+    public DS1LinkConnection getConnection() {
+        return (DS1LinkConnection) super.getConnection();
+    }
+
     public DSIReader getReader() {
-        return reader;
+        return getConnection().getReader();
     }
 
     @Override
@@ -137,18 +187,12 @@ public class DS1Session extends DSSession {
         return requester;
     }
 
-    @Override
-    public DSTransport getTransport() {
-        return transport;
-    }
-
-    @Override
     public DSIWriter getWriter() {
-        return writer;
+        return getConnection().getWriter();
     }
 
     private boolean hasPingToSend() {
-        return (System.currentTimeMillis() - getLastMessageSent()) > MAX_MSG_IVL;
+        return (System.currentTimeMillis() - lastMessageSent) > MAX_MSG_IVL;
     }
 
     /**
@@ -175,15 +219,13 @@ public class DS1Session extends DSSession {
     @Override
     public void onConnect() {
         super.onConnect();
-        transport = getConnection().getTransport();
-        reader = getConnection().getReader();
-        writer = getConnection().getWriter();
         requester.onConnect();
         responder.onConnect();
     }
 
     @Override
     public void onConnectFail() {
+        super.onConnectFail();
         requester.onConnectFail();
         responder.onConnectFail();
     }
@@ -191,9 +233,6 @@ public class DS1Session extends DSSession {
     @Override
     public void onDisconnect() {
         super.onDisconnect();
-        transport = null;
-        reader = null;
-        writer = null;
         requester.onDisconnect();
         responder.onDisconnect();
     }
@@ -290,11 +329,79 @@ public class DS1Session extends DSSession {
     }
 
     /**
+     * Send messages from one of the queues.
+     *
+     * @param requests Determines which queue to use; True for outgoing requests, false for
+     *                 responses.
+     * @param endTime  Stop after this time.
+     */
+    private void send(boolean requests, long endTime) {
+        if (requests) {
+            if (!hasOutgoingRequests()) {
+                return;
+            }
+            beginRequests();
+        } else {
+            if (!hasOutgoingResponses()) {
+                return;
+            }
+            beginResponses();
+        }
+        OutboundMessage msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
+        while ((msg != null) && (System.currentTimeMillis() < endTime)) {
+            if (requests) {
+                writeRequest(msg);
+            } else {
+                writeResponse(msg);
+            }
+            if (!shouldEndMessage()) {
+                msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
+            } else {
+                msg = null;
+            }
+        }
+        if (requests) {
+            endRequests();
+        } else {
+            endResponses();
+        }
+    }
+
+    /**
      * We need to send an ack to the broker.
      */
     private synchronized void sendAck(int msg) {
         nextAck = msg;
         notifyOutgoing();
+    }
+
+    /**
+     * Returns true if the current message size has crossed a message size threshold.
+     */
+    public boolean shouldEndMessage() {
+        return (getWriter().length() + getTransport().messageSize()) > END_MSG_THRESHOLD;
+    }
+
+    /**
+     * Write a request in the current message. Can be called multiple times after beginRequests() is
+     * called.  endRequests() will be called once the request part of the message is complete.
+     *
+     * @see #beginRequests()
+     * @see #endRequests()
+     */
+    public void writeRequest(OutboundMessage message) {
+        message.write(getWriter());
+    }
+
+    /**
+     * Write a response in the current message. Can be called multiple times after beginResponses()
+     * is called.  endResponses() will be called once the response part of the message is complete.
+     *
+     * @see #beginResponses()
+     * @see #endResponses()
+     */
+    public void writeResponse(OutboundMessage message) {
+        message.write(getWriter());
     }
 
 }

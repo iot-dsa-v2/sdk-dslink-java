@@ -1,17 +1,9 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
-import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
-import org.iot.dsa.io.msgpack.MsgpackReader;
-import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.time.DSTime;
 
@@ -20,9 +12,6 @@ import org.iot.dsa.time.DSTime;
  * <p>
  * Implementations must have a no-arg public constructor.  It will be dynamically added as
  * a child of the DSLink.
- * <p>
- * The default connection type can be overridden by specifying the config connectionType
- * as a Java class name dslink.json.
  *
  * @author Aaron Hansen
  */
@@ -35,9 +24,6 @@ public abstract class DSLinkConnection extends DSNode {
     private String connectionId;
     private ConcurrentHashMap<Listener, Listener> listeners;
     private Logger logger;
-    private DSIReader reader;
-    private DSTransport transport;
-    private DSIWriter writer;
 
     // Methods
     // -------
@@ -63,13 +49,10 @@ public abstract class DSLinkConnection extends DSNode {
     }
 
     /**
-     * Closes an open connection.
+     * Forcefully closes an open connection.  Does not prevent reconnection, intended for
+     * dealing with problems.
      */
-    public void disconnect() {
-        if (transport != null) {
-            transport.close();
-        }
-    }
+    public abstract void disconnect();
 
     /**
      * A unique descriptive tag such as a combination of the link name and the broker host.
@@ -102,7 +85,9 @@ public abstract class DSLinkConnection extends DSNode {
     /**
      * The link using this connection.
      */
-    public abstract DSLink getLink();
+    public DSLink getLink() {
+        return (DSLink) getParent();
+    }
 
     @Override
     public Logger getLogger() {
@@ -112,19 +97,9 @@ public abstract class DSLinkConnection extends DSNode {
         return logger;
     }
 
-    public DSIReader getReader() {
-        return reader;
-    }
-
     public abstract DSIRequester getRequester();
 
-    public DSTransport getTransport() {
-        return transport;
-    }
-
-    public DSIWriter getWriter() {
-        return writer;
-    }
+    public abstract DSTransport getTransport();
 
     /**
      * True when a connection is established with the remote endpoint.
@@ -147,7 +122,8 @@ public abstract class DSLinkConnection extends DSNode {
     protected abstract void onDisconnect();
 
     /**
-     * Always called before onConnect.
+     * Always called before onConnect.  If an exception is thrown onConnect and onDisconnect
+     * will not be called.
      */
     protected abstract void onInitialize();
 
@@ -172,40 +148,6 @@ public abstract class DSLinkConnection extends DSNode {
         if (listeners != null) {
             listeners.remove(listener);
         }
-    }
-
-    /**
-     * Sets the transport and creates the appropriate reader/writer.
-     */
-    protected void setTransport(DSTransport transport) {
-        if (transport instanceof DSBinaryTransport) {
-            final DSBinaryTransport trans = (DSBinaryTransport) transport;
-            reader = new MsgpackReader(trans.getInput());
-            writer = new MsgpackWriter() {
-                @Override
-                public void onComplete() {
-                    /* How to debug
-                    try {
-                        MsgpackReader reader = new MsgpackReader(
-                                new ByteArrayInputStream(byteBuffer.array());
-                        System.out.println(reader.getMap());
-                        reader.close();
-                    } catch (Exception x) {
-                        x.printStackTrace();
-                    }
-                    */
-                    trans.write(byteBuffer, true);
-                }
-            };
-        } else if (transport instanceof DSTextTransport) {
-            DSTextTransport trans = (DSTextTransport) transport;
-            reader = new JsonReader(trans.getReader());
-            writer = new JsonWriter(trans.getWriter());
-        } else {
-            throw new IllegalStateException(
-                    "Unexpected transport type: " + transport.getClass().getName());
-        }
-        this.transport = transport;
     }
 
     // Inner Classes
@@ -270,9 +212,6 @@ public abstract class DSLinkConnection extends DSNode {
                 } catch (Exception x) {
                     severe(getPath(), x);
                 }
-                transport = null;
-                reader = null;
-                writer = null;
                 if (listeners != null) {
                     for (Listener listener : listeners.keySet()) {
                         try {
