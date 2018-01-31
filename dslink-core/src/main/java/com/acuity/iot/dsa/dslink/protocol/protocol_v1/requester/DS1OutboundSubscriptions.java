@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester.DS1OutboundSubscribeStubs.State;
@@ -202,7 +203,8 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
     }
 
     @Override
-    public void write(DSIWriter out) {
+    public void write(MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
         DS1Session session = requester.getSession();
         if (!pendingSubscribe.isEmpty()) {
             out.beginMap();

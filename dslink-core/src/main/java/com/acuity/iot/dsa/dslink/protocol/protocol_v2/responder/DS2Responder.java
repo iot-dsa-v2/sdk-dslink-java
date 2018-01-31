@@ -4,9 +4,10 @@ import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2Session;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.MessageConstants;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v2.MessageReader;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageReader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSNode;
 
@@ -64,6 +65,27 @@ public class DS2Responder extends DSNode implements MessageConstants {
     }
     */
 
+    /**
+     * Process an individual request.
+     */
+    public void handleRequest(DS2MessageReader reader) {
+        switch (reader.getMethod()) {
+            case MSG_INVOKE_REQ:
+                break;
+            case MSG_LIST_REQ:
+                processList(reader);
+                break;
+            case MSG_OBSERVE_REQ:
+                break;
+            case MSG_SET_REQ:
+                break;
+            case MSG_SUBSCRIBE_REQ:
+                break;
+            default:
+                throw new IllegalArgumentException("Unexpected method: " + reader.getMethod());
+        }
+    }
+
     public void onConnect() {
     }
 
@@ -101,38 +123,17 @@ public class DS2Responder extends DSNode implements MessageConstants {
 
     /**
      * Handles a list request.
-     private void processList(Integer rid, DSMap req) {
-     DS2InboundList listImpl = new DS2InboundList();
-     listImpl.setPath(getPath(req))
-     .setSession(session)
-     .setRequest(req)
-     .setRequestId(rid)
-     .setResponderImpl(responder)
-     .setResponder(this);
-     inboundRequests.put(listImpl.getRequestId(), listImpl);
-     DSRuntime.run(listImpl);
-     }
      */
-
-    /**
-     * Process an individual request.
-     */
-    public void processRequest(MessageReader reader) {
-        switch (reader.getMethod()) {
-            case MSG_INVOKE_REQ :
-                break;
-            case MSG_LIST_REQ :
-                //processList()
-                break;
-            case MSG_OBSERVE_REQ :
-                break;
-            case MSG_SET_REQ :
-                break;
-            case MSG_SUBSCRIBE_REQ :
-                break;
-            default :
-                throw new IllegalArgumentException("Unexpected method: " + reader.getMethod());
-        }
+    private void processList(DS2MessageReader msg) {
+        int rid = msg.getRequestId();
+        String path = (String) msg.getHeader(HDR_TARGET_PATH);
+        DS2InboundList listImpl = new DS2InboundList();
+        listImpl.setPath(path)
+                .setSession(session)
+                .setRequestId(rid)
+                .setResponder(this);
+        inboundRequests.put(listImpl.getRequestId(), listImpl);
+        DSRuntime.run(listImpl);
     }
 
     /**

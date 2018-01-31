@@ -8,6 +8,7 @@ import static org.iot.dsa.io.DSIReader.Token.NULL;
 
 import com.acuity.iot.dsa.dslink.DSProtocolException;
 import com.acuity.iot.dsa.dslink.DSSession;
+import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester.DS1Requester;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder.DS1Responder;
@@ -46,11 +47,23 @@ public class DS1Session extends DSSession {
     private DSInfo lastAckRecv = getInfo(LAST_ACK_RECV);
     private DSInfo lastAckSent = getInfo(LAST_ACK_SENT);
     private long lastMessageSent;
+    private MessageWriter messageWriter;
     private int nextAck = -1;
     private int nextMsg = 1;
     private boolean requestsNext = false;
     private DS1Requester requester = new DS1Requester(this);
     private DS1Responder responder = new DS1Responder(this);
+
+    /////////////////////////////////////////////////////////////////
+    // Constructors
+    /////////////////////////////////////////////////////////////////
+
+    public DS1Session() {
+    }
+
+    public DS1Session(DS1LinkConnection connection) {
+        super(connection);
+    }
 
     /////////////////////////////////////////////////////////////////
     // Methods
@@ -178,6 +191,13 @@ public class DS1Session extends DSSession {
         return (DS1LinkConnection) super.getConnection();
     }
 
+    private MessageWriter getMessageWriter() {
+        if (messageWriter == null) {
+            messageWriter = new MyMessageWriter(getConnection().getWriter());
+        }
+        return messageWriter;
+    }
+
     public DSIReader getReader() {
         return getConnection().getReader();
     }
@@ -187,8 +207,8 @@ public class DS1Session extends DSSession {
         return requester;
     }
 
-    public DSIWriter getWriter() {
-        return getConnection().getWriter();
+    private DSIWriter getWriter() {
+        return getMessageWriter().getWriter();
     }
 
     private boolean hasPingToSend() {
@@ -390,7 +410,7 @@ public class DS1Session extends DSSession {
      * @see #endRequests()
      */
     public void writeRequest(OutboundMessage message) {
-        message.write(getWriter());
+        message.write(getMessageWriter());
     }
 
     /**
@@ -401,7 +421,26 @@ public class DS1Session extends DSSession {
      * @see #endResponses()
      */
     public void writeResponse(OutboundMessage message) {
-        message.write(getWriter());
+        message.write(getMessageWriter());
+    }
+
+
+    /////////////////////////////////////////////////////////////////
+    // Inner Classes
+    /////////////////////////////////////////////////////////////////
+
+    private class MyMessageWriter implements MessageWriter {
+
+        DSIWriter writer;
+
+        MyMessageWriter(DSIWriter writer) {
+            this.writer = writer;
+        }
+
+        @Override
+        public DSIWriter getWriter() {
+            return writer;
+        }
     }
 
 }

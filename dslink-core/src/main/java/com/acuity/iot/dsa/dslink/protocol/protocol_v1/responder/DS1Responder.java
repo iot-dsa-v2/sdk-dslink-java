@@ -1,38 +1,28 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
 import com.acuity.iot.dsa.dslink.DSProtocolException;
+import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
-import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSNode;
 
 /**
  * Implements DSA 1.1.2
  *
  * @author Aaron Hansen
  */
-public class DS1Responder extends DSNode {
+public class DS1Responder extends DSResponder {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private ConcurrentHashMap<Integer, DSStream> inboundRequests =
-            new ConcurrentHashMap<Integer, DSStream>();
-    private DSLink link;
-    private Logger logger;
-    private DS1Session session;
     private DS1InboundSubscriptions subscriptions =
             new DS1InboundSubscriptions(this);
 
@@ -40,26 +30,13 @@ public class DS1Responder extends DSNode {
     // Methods - Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DS1Responder(DS1Session session) {
-        this.session = session;
+    public DS1Responder(DSSession session) {
+        super(session);
     }
 
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
-
-    public DSLinkConnection getConnection() {
-        return session.getConnection();
-    }
-
-    @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(
-                    getConnection().getLink().getLinkName() + ".responderSession");
-        }
-        return logger;
-    }
 
     /**
      * Will throw an exception if the request doesn't have the path.
@@ -85,14 +62,14 @@ public class DS1Responder extends DSNode {
     public void onDisconnect() {
         finer(finer() ? "Close" : null);
         subscriptions.close();
-        for (Map.Entry<Integer, DSStream> entry : inboundRequests.entrySet()) {
+        for (Map.Entry<Integer, DSStream> entry : getRequests().entrySet()) {
             try {
                 entry.getValue().onClose(entry.getKey());
             } catch (Exception x) {
                 finer(finer() ? "Close" : null, x);
             }
         }
-        inboundRequests.clear();
+        getRequests().clear();
     }
 
     /**
@@ -100,12 +77,13 @@ public class DS1Responder extends DSNode {
      */
     private void processInvoke(Integer rid, DSMap req) {
         DS1InboundInvoke invokeImpl = new DS1InboundInvoke(req);
-        invokeImpl.setPath(getPath(req))
-                  .setSession(session)
+        invokeImpl.setRequest(req)
+                  .setPath(getPath(req))
+                  .setSession(getSession())
                   .setRequestId(rid)
-                  .setLink(link)
+                  .setLink(getLink())
                   .setResponder(this);
-        inboundRequests.put(rid, invokeImpl);
+        putRequest(rid, invokeImpl);
         DSRuntime.run(invokeImpl);
     }
 
@@ -114,13 +92,13 @@ public class DS1Responder extends DSNode {
      */
     private void processList(Integer rid, DSMap req) {
         DS1InboundList listImpl = new DS1InboundList();
-        listImpl.setPath(getPath(req))
-                .setSession(session)
-                .setRequest(req)
+        listImpl.setRequest(req)
+                .setPath(getPath(req))
+                .setSession(getSession())
                 .setRequestId(rid)
-                .setLink(link)
+                .setLink(getLink())
                 .setResponder(this);
-        inboundRequests.put(listImpl.getRequestId(), listImpl);
+        putRequest(listImpl.getRequestId(), listImpl);
         DSRuntime.run(listImpl);
     }
 
@@ -128,12 +106,6 @@ public class DS1Responder extends DSNode {
      * Process an individual request.
      */
     public void processRequest(final Integer rid, final DSMap map) {
-        if (link == null) {
-            link = getConnection().getLink();
-        }
-        if (link == null) {
-            throw new DSProtocolException("Not a responder");
-        }
         String method = map.get("method", null);
         try {
             if ((method == null) || method.isEmpty()) {
@@ -144,7 +116,7 @@ public class DS1Responder extends DSNode {
                     if (!method.equals("close")) {
                         throwInvalidMethod(method, map);
                     }
-                    final DSStream req = inboundRequests.remove(rid);
+                    final DSStream req = removeRequest(rid);
                     if (req != null) {
                         DSRuntime.run(new Runnable() {
                             public void run() {
@@ -225,10 +197,11 @@ public class DS1Responder extends DSNode {
      */
     private void processSet(Integer rid, DSMap req) {
         DS1InboundSet setImpl = new DS1InboundSet(req);
-        setImpl.setPath(getPath(req))
-               .setSession(session)
+        setImpl.setRequest(req)
+               .setPath(getPath(req))
+               .setSession(getSession())
                .setRequestId(rid)
-               .setLink(link)
+               .setLink(getLink())
                .setResponder(this);
         DSRuntime.run(setImpl);
     }
@@ -275,18 +248,6 @@ public class DS1Responder extends DSNode {
                 }
             }
         }
-    }
-
-    void removeInboundRequest(Integer requestId) {
-        inboundRequests.remove(requestId);
-    }
-
-    public boolean shouldEndMessage() {
-        return session.shouldEndMessage();
-    }
-
-    public void sendResponse(OutboundMessage res) {
-        session.enqueueOutgoingResponse(res);
     }
 
     /**

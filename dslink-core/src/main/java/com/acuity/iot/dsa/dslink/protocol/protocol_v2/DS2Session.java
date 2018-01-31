@@ -34,12 +34,23 @@ public class DS2Session extends DSSession implements MessageConstants {
     private DSInfo lastAckRecv = getInfo(LAST_ACK_RECV);
     private DSInfo lastAckSent = getInfo(LAST_ACK_SENT);
     private long lastMessageSent;
-    private MessageReader messageReader;
+    private DS2MessageReader messageReader;
     private int nextAck = -1;
     private int nextMsg = 1;
     private boolean requestsNext = false;
     private DS1Requester requester;// = new DS1Requester(this);
     private DS2Responder responder = new DS2Responder(this);
+
+    /////////////////////////////////////////////////////////////////
+    // Constructors
+    /////////////////////////////////////////////////////////////////
+
+    public DS2Session() {
+    }
+
+    public DS2Session(DS2LinkConnection connection) {
+        super(connection);
+    }
 
     /////////////////////////////////////////////////////////////////
     // Methods
@@ -54,17 +65,17 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     protected void doRecvMessage() throws IOException {
         if (messageReader == null) {
-            messageReader = new MessageReader();
+            messageReader = new DS2MessageReader();
         }
         messageReader.init(getTransport().getInput());
-        if (messageReader.isRequest()) {
-            responder.processRequest(messageReader);
-        } else if (messageReader.isResponse()) {
-            ;//requester.processResponse(messageReader);
-        }
         int ack = messageReader.getAckId();
         if (ack > 0) {
             put(lastAckRecv, DSInt.valueOf(ack));
+        }
+        if (messageReader.isRequest()) {
+            responder.handleRequest(messageReader);
+        } else if (messageReader.isResponse()) {
+            ;//requester.processResponse(messageReader);
         }
     }
 

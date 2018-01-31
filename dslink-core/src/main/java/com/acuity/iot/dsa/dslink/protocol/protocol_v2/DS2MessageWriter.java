@@ -15,7 +15,7 @@ import org.iot.dsa.node.DSString;
  *
  * @author Aaron Hansen
  */
-public class MessageWriter implements MessageConstants {
+public class DS2MessageWriter implements MessageConstants {
 
     // Fields
     // ------
@@ -30,7 +30,7 @@ public class MessageWriter implements MessageConstants {
     // Constructors
     // ------------
 
-    public MessageWriter() {
+    public DS2MessageWriter() {
         body = ByteBuffer.allocateDirect(MAX_HEADER);
         //do not change endian-ness of the body since most bodies will be big endian msgpack.
         header = ByteBuffer.allocateDirect(MAX_BODY);
@@ -45,7 +45,7 @@ public class MessageWriter implements MessageConstants {
     /**
      * Encodes the key into the header buffer.
      */
-    public MessageWriter addHeader(byte key) {
+    public DS2MessageWriter addHeader(byte key) {
         header.put(key);
         return this;
     }
@@ -53,7 +53,7 @@ public class MessageWriter implements MessageConstants {
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public MessageWriter addHeader(byte key, byte value) {
+    public DS2MessageWriter addHeader(byte key, byte value) {
         header.put(key);
         header.put(value);
         return this;
@@ -62,7 +62,7 @@ public class MessageWriter implements MessageConstants {
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public MessageWriter addHeader(byte key, int value) {
+    public DS2MessageWriter addHeader(byte key, int value) {
         header.put(key);
         header.putInt(value);
         return this;
@@ -71,7 +71,7 @@ public class MessageWriter implements MessageConstants {
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public MessageWriter addHeader(byte key, String value) {
+    public DS2MessageWriter addHeader(byte key, String value) {
         header.put(key);
         writeString(value, header);
         return this;
@@ -152,7 +152,7 @@ public class MessageWriter implements MessageConstants {
      * @param requestId The request ID or -1 to omit.
      * @param ackId     -1 to omit, but can only be -1 when the requestId is also -1.
      */
-    public MessageWriter init(int requestId, int ackId) {
+    public DS2MessageWriter init(int requestId, int ackId) {
         body.clear();
         header.clear();
         header.position(7);
@@ -165,7 +165,7 @@ public class MessageWriter implements MessageConstants {
         return this;
     }
 
-    public MessageWriter setMethod(byte method) {
+    public DS2MessageWriter setMethod(byte method) {
         this.method = method;
         return this;
     }
@@ -191,7 +191,7 @@ public class MessageWriter implements MessageConstants {
     /**
      * Writes the message to the transport.
      */
-    public MessageWriter write(DSBinaryTransport out) {
+    public DS2MessageWriter write(DSBinaryTransport out) {
         encodeHeaderLengths();
         out.write(header, false);
         out.write(body, true);

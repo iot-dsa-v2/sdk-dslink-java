@@ -2,7 +2,9 @@ package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
+import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSIResponder;
@@ -113,7 +115,7 @@ class DS1InboundInvoke extends DS1InboundRequest
      */
     private void doClose() {
         state = STATE_CLOSED;
-        getResponder().removeInboundRequest(getRequestId());
+        getResponder().removeRequest(getRequestId());
         if (result == null) {
             return;
         }
@@ -250,7 +252,8 @@ class DS1InboundInvoke extends DS1InboundRequest
     }
 
     @Override
-    public void write(DSIWriter out) {
+    public void write(MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
         enqueued = false;
         if (isClosed()) {
             return;
@@ -258,7 +261,7 @@ class DS1InboundInvoke extends DS1InboundRequest
         if (isClosePending() && (updateHead == null) && (closeReason != null)) {
             ErrorResponse res = new ErrorResponse(closeReason);
             res.parseRequest(getRequest());
-            res.write(out);
+            res.write(writer);
             doClose();
             return;
         }
@@ -465,9 +468,5 @@ class DS1InboundInvoke extends DS1InboundRequest
             return type.toString() + " " + beginIndex + "-" + endIndex;
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
 
 }

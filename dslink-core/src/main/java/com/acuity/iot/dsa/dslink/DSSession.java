@@ -30,6 +30,17 @@ public abstract class DSSession extends DSNode {
     protected boolean requesterAllowed = false;
 
     ///////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ///////////////////////////////////////////////////////////////////////////
+
+    public DSSession() {
+    }
+
+    public DSSession(DSLinkConnection connection) {
+        this.connection = connection;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
@@ -202,6 +213,8 @@ public abstract class DSSession extends DSNode {
         requesterAllowed = true;
     }
 
+    public abstract boolean shouldEndMessage();
+
     /**
      * Called by the connection, this manages the running state and calls doRun for the specific
      * implementation.  A separate thread is spun off to manage writing.
@@ -219,14 +232,6 @@ public abstract class DSSession extends DSNode {
                 }
             }
         }
-    }
-
-    /**
-     * For use by the connection object.
-     */
-    public DSSession setConnection(DSLinkConnection connection) {
-        this.connection = connection;
-        return this;
     }
 
     ///////////////////////////////////////////////////////////////////////////

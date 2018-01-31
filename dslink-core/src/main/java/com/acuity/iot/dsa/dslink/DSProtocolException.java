@@ -46,6 +46,14 @@ public class DSProtocolException extends RuntimeException {
     /**
      * Optional.
      */
+    public DSProtocolException setDetail(String arg) {
+        detail = arg;
+        return this;
+    }
+
+    /**
+     * Optional.
+     */
     public DSProtocolException setDetail(Throwable arg) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);

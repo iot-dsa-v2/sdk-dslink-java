@@ -1,4 +1,4 @@
-package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
+package com.acuity.iot.dsa.dslink.protocol.protocol_v2.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
@@ -33,7 +33,7 @@ import org.iot.dsa.node.event.DSTopic;
  *
  * @author Aaron Hansen
  */
-class DS1InboundList extends DS1InboundRequest
+class DS2InboundList extends DS2InboundRequest
         implements DSISubscriber, DSStream, InboundListRequest, OutboundMessage,
         OutboundListResponse, Runnable {
 
@@ -68,7 +68,7 @@ class DS1InboundList extends DS1InboundRequest
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1InboundList() {
+    DS2InboundList() {
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ class DS1InboundList extends DS1InboundRequest
 
     private void doClose() {
         state = STATE_CLOSED;
-        getResponder().removeRequest(getRequestId());
+        getResponder().removeInboundRequest(getRequestId());
         if (response == null) {
             return;
         }
@@ -647,7 +647,7 @@ class DS1InboundList extends DS1InboundRequest
     }
 
     private void writeUpdates(DSIWriter out) {
-        DS1Responder session = getResponder();
+        DS2Responder session = getResponder();
         Update update = dequeue();
         while (update != null) {
             encodeUpdate(update, out);

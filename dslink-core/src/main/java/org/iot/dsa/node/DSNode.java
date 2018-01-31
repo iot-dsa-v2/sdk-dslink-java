@@ -189,6 +189,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     private DSInfo firstChild;
     private DSInfo infoInParent;
     private DSInfo lastChild;
+    private Object mutex = new Object();
     private String path;
     private Subscription subscription;
     private int size = 0;
@@ -203,7 +204,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     void add(final DSInfo info) {
         dsInit();
-        synchronized (this) {
+        synchronized (mutex) {
             if (lastChild != null) {
                 lastChild.next = info;
                 info.prev = lastChild;
@@ -460,7 +461,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (firstChild == null) {
             return null;
         }
-        synchronized (this) {
+        synchronized (mutex) {
             if (size >= MAP_THRESHOLD) {
                 if (childMap == null) {
                     childMap = new TreeMap<String, DSInfo>();
@@ -1030,7 +1031,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (info.getParent() != this) {
             throw new IllegalStateException("Not a child of this container");
         }
-        synchronized (this) {
+        synchronized (mutex) {
             if (childMap != null) {
                 childMap.remove(info.getName());
                 if (childMap.size() < MAP_THRESHOLD) {
@@ -1218,7 +1219,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
         boolean firstSubscription;
         int count = 0;
-        synchronized (this) {
+        synchronized (mutex) {
             Subscription sub = subscription;
             firstSubscription = (sub == null);
             Subscription prev = null;
@@ -1278,7 +1279,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     public void unsubscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
         int count = 0;
         Subscription removed = null;
-        synchronized (this) {
+        synchronized (mutex) {
             Subscription sub = subscription;
             Subscription prev = null;
             while (sub != null) {

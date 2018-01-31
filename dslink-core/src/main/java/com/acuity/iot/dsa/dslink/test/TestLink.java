@@ -44,7 +44,7 @@ public class TestLink extends DSLink {
          * implementation.
          */
         protected DS1Session makeSession(DS1ConnectionInit init) {
-            DS1Session ret = new DS1Session();
+            DS1Session ret = new DS1Session(TestConnection.this);
             ret.setRequesterAllowed();
             return ret;
         }
