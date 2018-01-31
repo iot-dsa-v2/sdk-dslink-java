@@ -36,9 +36,9 @@ public class CloseMessage extends BaseMessage implements OutboundMessage {
      * Calls the super implementation then writes the error object and closes the entire response
      * object.
      */
-    public void write(DSIWriter writer) {
+    public void write(MessageWriter writer) {
         super.write(writer);
-        writer.endMap();
+        writer.getWriter().endMap();
     }
 
     /////////////////////////////////////////////////////////////////

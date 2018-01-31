@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -121,7 +122,8 @@ class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
     }
 
     @Override
-    public void write(DSIWriter out) {
+    public void write(MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(ZERO);
         out.key("updates").beginList();
@@ -144,13 +146,5 @@ class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
         }
         responder.sendResponse(this);
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
 
 }

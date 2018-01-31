@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIResponder;

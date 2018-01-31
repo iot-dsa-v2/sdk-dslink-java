@@ -16,10 +16,9 @@ import org.iot.dsa.util.DSException;
  * can be reused for multiple messages. Not thread safe, the intent is messages will be constructed
  * and read serially.
  *
- * * @author Aaron Hansen
- * 1
+ * @author Aaron Hansen
  */
-public class MessageReader implements MessageConstants {
+public class DS2MessageReader implements MessageConstants {
 
     // Fields
     // ------
@@ -37,7 +36,7 @@ public class MessageReader implements MessageConstants {
     // Constructors
     // ------------
 
-    public MessageReader() {
+    public DS2MessageReader() {
     }
 
     // Methods
@@ -70,6 +69,18 @@ public class MessageReader implements MessageConstants {
             charBuffer.clear();
         }
         return charBuffer;
+    }
+
+    public Object getHeader(Byte key) {
+        return headers.get(key);
+    }
+
+    public Object getHeader(Byte key, Object def) {
+        Object ret = headers.get(key);
+        if (ret == null) {
+            ret = def;
+        }
+        return ret;
     }
 
     public Map<Byte, Object> getHeaders() {
@@ -107,7 +118,7 @@ public class MessageReader implements MessageConstants {
         return strBuffer;
     }
 
-    public MessageReader init(InputStream in) {
+    public DS2MessageReader init(InputStream in) {
         try {
             input = in;
             headers.clear();

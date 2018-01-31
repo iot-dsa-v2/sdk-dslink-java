@@ -69,9 +69,13 @@ public class PerfTest {
     //@Test
     public void execute() {
         System.out.println("\nStarting " + new java.util.Date());
+        System.out.println("Test (1/3)...");
         test(false);
+        System.out.println("Test (2/3)...");
         test(false);
+        System.out.println("Test (3/3)...");
         test(true);
+        System.out.println("\nFinished " + new java.util.Date());
     }
 
     public void test(boolean print) {

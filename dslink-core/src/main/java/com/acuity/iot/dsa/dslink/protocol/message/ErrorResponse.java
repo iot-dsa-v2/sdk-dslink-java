@@ -52,10 +52,10 @@ public class ErrorResponse extends BaseMessage implements OutboundMessage {
                 reason = tmp;
             }
         }
+        msg = reason.getMessage();
         if (reason instanceof DSProtocolException) {
             DSProtocolException x = (DSProtocolException) reason;
             detail = x.getDetail();
-            msg = x.getMessage();
             phase = x.getPhase();
             type = x.getType();
         } else if (reason instanceof DSRequestException) {
@@ -117,35 +117,24 @@ public class ErrorResponse extends BaseMessage implements OutboundMessage {
      * Calls the super implementation then writes the error object and closes the entire response
      * object.
      */
-    public void write(DSIWriter writer) {
+    public void write(MessageWriter writer) {
         super.write(writer);
-        writer.key("error").beginMap();
+        DSIWriter out = writer.getWriter();
+        out.key("error").beginMap();
         if (type != null) {
-            writer.key("type").value(type);
+            out.key("type").value(type);
         }
         if (phase == Phase.RESPONSE) {
-            writer.key("phase").value("response");
+            out.key("phase").value("response");
         }
         if (msg != null) {
-            writer.key("msg").value(msg);
+            out.key("msg").value(msg);
         }
         if (detail != null) {
-            writer.key("detail").value(detail);
+            out.key("detail").value(detail);
         }
-        writer.endMap().endMap();
+        out.endMap().endMap();
     }
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Protected and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Package and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Private and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////
     // Inner Classes - in alphabetical order by class name.
@@ -155,13 +144,5 @@ public class ErrorResponse extends BaseMessage implements OutboundMessage {
         REQUEST,
         RESPONSE
     }
-
-    /////////////////////////////////////////////////////////////////
-    // Facets - in alphabetical order by field name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
 
 }

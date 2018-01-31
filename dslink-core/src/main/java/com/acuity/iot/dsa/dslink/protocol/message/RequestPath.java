@@ -1,4 +1,4 @@
-package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
+package com.acuity.iot.dsa.dslink.protocol.message;
 
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.DSInvalidPathException;
@@ -12,7 +12,7 @@ import org.iot.dsa.node.DSPath;
  *
  * @author Aaron Hansen
  */
-class RequestPath {
+public class RequestPath {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -29,7 +29,7 @@ class RequestPath {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    RequestPath(String path, DSNode root) {
+    public RequestPath(String path, DSNode root) {
         this.path = path;
         this.root = root;
         names = DSPath.decodePath(path);
@@ -40,9 +40,9 @@ class RequestPath {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * The info of the target in the parent.
+     * The info of the target in it's parent.
      */
-    DSInfo getInfo() {
+    public DSInfo getInfo() {
         if (target == null) {
             getTarget();
         }
@@ -52,7 +52,7 @@ class RequestPath {
     /**
      * The parent of the target unless the request was for /
      */
-    DSNode getParent() {
+    public DSNode getParent() {
         if (parent == null) {
             getTarget();
         }
@@ -60,13 +60,14 @@ class RequestPath {
     }
 
     /**
-     * If the target is a responder, this is path to send to it.
+     * If the target is a responder, this is path it should use, not the original path of the
+     * request.
      */
-    String getPath() {
+    public String getPath() {
         return path;
     }
 
-    DSIObject getTarget() {
+    public DSIObject getTarget() {
         if (parent == null) {
             parent = root.getParent();
             target = root;
@@ -105,7 +106,7 @@ class RequestPath {
         return target;
     }
 
-    boolean isResponder() {
+    public boolean isResponder() {
         return target instanceof DSIResponder;
     }
 

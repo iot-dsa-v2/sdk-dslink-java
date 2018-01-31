@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
@@ -43,7 +44,8 @@ class DS1OutboundRemoveStub extends DS1OutboundStub {
     }
 
     @Override
-    public void write(DSIWriter out) {
+    public void write(MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(getRequestId());
         out.key("method").value("remove");

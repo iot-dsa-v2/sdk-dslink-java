@@ -97,7 +97,8 @@ public class BaseMessage implements OutboundMessage {
      * write the key value pairs that have been configured on this object, but does not close the
      * response map.
      */
-    public void write(DSIWriter writer) {
+    public void write(MessageWriter out) {
+        DSIWriter writer = out.getWriter();
         writer.beginMap();
         if (rid >= 0) {
             writer.key("rid").value(rid);

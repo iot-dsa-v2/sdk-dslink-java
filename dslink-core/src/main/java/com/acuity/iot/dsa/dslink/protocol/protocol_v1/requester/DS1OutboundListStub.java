@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.io.DSIWriter;
@@ -77,7 +78,8 @@ class DS1OutboundListStub extends DS1OutboundStub {
     }
 
     @Override
-    public void write(DSIWriter out) {
+    public void write(MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(getRequestId());
         out.key("method").value("list");

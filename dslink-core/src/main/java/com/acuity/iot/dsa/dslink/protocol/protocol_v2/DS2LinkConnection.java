@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2;
 
-import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
@@ -13,10 +12,6 @@ import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.msgpack.MsgpackReader;
-import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSInfo;
@@ -44,11 +39,12 @@ public class DS2LinkConnection extends DSLinkConnection {
     private static final String BROKER_PUB_KEY = "Broker Public Key";
     private static final String BROKER_SALT = "Broker Salt";
     private static final String BROKER_URI = "Broker URI";
-    private static final String LINK_SALT = "Link Salt";
-    private static final String REQUESTER_ALLOWED = "Requester Allowed";
     private static final String LAST_CONNECT_OK = "Last Connect Ok";
     private static final String LAST_CONNECT_FAIL = "Last Connect Fail";
+    private static final String LINK_SALT = "Link Salt";
     private static final String FAIL_CAUSE = "Fail Cause";
+    private static final String REQUESTER_ALLOWED = "Requester Allowed";
+    private static final String SESSION = "Status";
     private static final String STATUS = "Status";
 
     ///////////////////////////////////////////////////////////////////////////
@@ -63,7 +59,7 @@ public class DS2LinkConnection extends DSLinkConnection {
     private DSInfo brokerUri = getInfo(BROKER_URI);
     private DSInfo linkSalt = getInfo(LINK_SALT);
     private DSInfo requesterAllowed = getInfo(REQUESTER_ALLOWED);
-    private DSSession session;
+    private DS2Session session;
     private DSBinaryTransport transport;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -159,7 +155,8 @@ public class DS2LinkConnection extends DSLinkConnection {
     @Override
     protected void onInitialize() {
         if (session == null) {
-            session = null;//TODO
+            session = new DS2Session(this);
+            put(SESSION, session);
         }
         makeTransport();
     }
@@ -191,7 +188,7 @@ public class DS2LinkConnection extends DSLinkConnection {
 
     private void recvF1() throws IOException {
         InputStream in = transport.getInput();
-        MessageReader reader = new MessageReader();
+        DS2MessageReader reader = new DS2MessageReader();
         reader.init(in);
         if (reader.getMethod() != 0xf1) {
             throw new IllegalStateException("Expecting handshake method 0xF1 not 0x" +
@@ -209,7 +206,7 @@ public class DS2LinkConnection extends DSLinkConnection {
 
     private void recvF3() throws IOException {
         InputStream in = transport.getInput();
-        MessageReader reader = new MessageReader();
+        DS2MessageReader reader = new DS2MessageReader();
         reader.init(in);
         if (reader.getMethod() != 0xf3) {
             throw new IllegalStateException("Expecting handshake method 0xF3 not 0x" +
@@ -230,7 +227,7 @@ public class DS2LinkConnection extends DSLinkConnection {
         DSLink link = getLink();
         String dsId = link.getDsId();
         DSKeys dsKeys = link.getKeys();
-        MessageWriter writer = new MessageWriter();
+        DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf0);
         ByteBuffer buffer = writer.getBody();
         buffer.put((byte) 2).put((byte) 0); //dsa version
@@ -241,7 +238,7 @@ public class DS2LinkConnection extends DSLinkConnection {
     }
 
     private void sendF2() throws Exception {
-        MessageWriter writer = new MessageWriter();
+        DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf2);
         ByteBuffer buffer = writer.getBody();
         String token = getLink().getConfig().getToken();

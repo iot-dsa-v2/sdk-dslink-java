@@ -1,7 +1,7 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.protocol.protocol_v2.MessageReader;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v2.MessageWriter;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageReader;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageWriter;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -84,7 +84,7 @@ public class V2HandshakeTest {
         byte[] saltBytes = toBytesFromHex(saltHex);
         Assert.assertTrue(saltBytes.length == 32);
         //construct the message
-        MessageWriter writer = new MessageWriter();
+        DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf0);
         ByteBuffer buffer = writer.getBody();
         buffer.put((byte) 2).put((byte) 0); //dsa version
@@ -111,7 +111,7 @@ public class V2HandshakeTest {
         byte[] saltBytes = toBytesFromHex(saltHex);
         Assert.assertTrue(saltBytes.length == 32);
         //construct the message
-        MessageWriter writer = new MessageWriter();
+        DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf1);
         ByteBuffer buffer = writer.getBody();
         //dsa version
@@ -127,7 +127,7 @@ public class V2HandshakeTest {
         byte[] correctBytes = toBytesFromHex(correctResult);
         Assert.assertArrayEquals(bytes, correctBytes);
         //validate reading
-        MessageReader reader = new MessageReader();
+        DS2MessageReader reader = new DS2MessageReader();
         reader.init(new ByteArrayInputStream(bytes));
         InputStream in = reader.getBody();
         Assert.assertEquals(0xf1, reader.getMethod());
@@ -158,7 +158,7 @@ public class V2HandshakeTest {
         byte[] validAuthBytes = toBytesFromHex(validAuthString);
         Assert.assertTrue(Arrays.equals(auth, validAuthBytes));
         //construct the message
-        MessageWriter writer = new MessageWriter();
+        DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf2);
         ByteBuffer buffer = writer.getBody();
         writer.writeString("sample_token_string", buffer);
@@ -191,7 +191,7 @@ public class V2HandshakeTest {
         byte[] validAuthBytes = toBytesFromHex(validAuthString);
         Assert.assertTrue(Arrays.equals(auth, validAuthBytes));
         //construct the message
-        MessageWriter writer = new MessageWriter();
+        DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf3);
         ByteBuffer buffer = writer.getBody();
         buffer.put((byte) 1); // allow requester
@@ -207,7 +207,7 @@ public class V2HandshakeTest {
         byte[] correctBytes = toBytesFromHex(correctResult);
         Assert.assertTrue(Arrays.equals(tmp, correctBytes));
         //validate reading
-        MessageReader reader = new MessageReader();
+        DS2MessageReader reader = new DS2MessageReader();
         reader.init(new ByteArrayInputStream(tmp));
         InputStream in = reader.getBody();
         Assert.assertEquals(0xf3, reader.getMethod());

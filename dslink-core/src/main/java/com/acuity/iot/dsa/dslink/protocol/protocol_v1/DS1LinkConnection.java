@@ -160,9 +160,8 @@ public class DS1LinkConnection extends DSLinkConnection {
         makeTransport(init);
         put(TRANSPORT, getTransport()).setTransient(true);
         if (session == null) {
-            session = new DS1Session();
+            session = new DS1Session(this);
             put(SESSION, session).setTransient(true);
-            session.setConnection(this);
         }
         connectionInit = init;
     }

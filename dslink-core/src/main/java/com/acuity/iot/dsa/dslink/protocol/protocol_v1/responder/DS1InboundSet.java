@@ -2,6 +2,7 @@ package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.message.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
+import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
