@@ -193,8 +193,8 @@ public class DS2MessageWriter implements MessageConstants {
      */
     public DS2MessageWriter write(DSBinaryTransport out) {
         encodeHeaderLengths();
-        out.write(header, false);
-        out.write(body, true);
+        //TODO out.write(header, false);
+        //TODO out.write(body, true);
         return this;
     }
 

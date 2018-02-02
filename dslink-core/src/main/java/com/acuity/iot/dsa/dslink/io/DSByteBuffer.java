@@ -1,10 +1,13 @@
 package com.acuity.iot.dsa.dslink.io;
 
+import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import org.iot.dsa.util.DSException;
 
 /**
  * A buffer for storing bytes being pushed from an input stream.  Useful when bytes are
- * coming in faster than can be processed.
+ * coming in faster than can be processed.  This is not synchronized.
  *
  * @author Aaron Hansen
  */
@@ -15,11 +18,8 @@ public class DSByteBuffer {
     ///////////////////////////////////////////////////////////////////////////
 
     private byte[] buffer;
-    private RuntimeException closeException;
     private int length = 0;
     private int offset = 0;
-    private boolean open = false;
-    private long timeout = 60000;
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -38,50 +38,15 @@ public class DSByteBuffer {
     /////////////////////////////////////////////////////////////////
 
     /**
-     * The number of bytes available for reading.
+     * Number of bytes available for reading.
      */
     public int available() {
         return length;
     }
 
-    public synchronized void clear() {
+    public void clear() {
         length = 0;
         offset = 0;
-        notify();
-    }
-
-    /**
-     * Important for notifying waiting threads.
-     */
-    public synchronized DSByteBuffer close() {
-        if (!open) {
-            return this;
-        }
-        open = false;
-        notify();
-        return this;
-    }
-
-    /**
-     * Important for notifying waiting threads.
-     */
-    public synchronized DSByteBuffer close(RuntimeException toThrow) {
-        if (!open) {
-            return this;
-        }
-        this.closeException = toThrow;
-        open = false;
-        notify();
-        return this;
-    }
-
-    /**
-     * Number of millis the read methods will block before throwing an IOException.
-     *
-     * @return Zero or less is indefinite.
-     */
-    public long getTimeout() {
-        return timeout;
     }
 
     /**
@@ -98,33 +63,73 @@ public class DSByteBuffer {
         offset = 0;
     }
 
-    public boolean isOpen() {
-        return open;
-    }
-
+    /**
+     * Number of bytes available for reading.
+     */
     public int length() {
         return length;
     }
 
-    public synchronized DSByteBuffer open() {
-        if (open) {
-            return this;
+    /**
+     * Overwrites bytes in the internal buffer, does not change the current length or position.
+     */
+    public void overwrite(int dest, byte b1, byte b2) {
+        buffer[dest] = b1;
+        buffer[++dest] = b2;
+    }
+
+    /**
+     * Overwrites bytes in the internal buffer, does not change the current length or position.
+     */
+    public void overwrite(int dest, byte b1, byte b2, byte b3, byte b4) {
+        buffer[dest] = b1;
+        buffer[++dest] = b2;
+        buffer[++dest] = b3;
+        buffer[++dest] = b4;
+    }
+
+    /**
+     * Overwrites the primitive in the internal buffer.  Does not change the buffer length or
+     * position.
+     *
+     * @param dest      The offset in the internal buffer to write the bytes.
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public void overwriteInt(int dest, int v, boolean bigEndian) {
+        if (bigEndian) {
+            overwrite(dest, (byte) ((v >>> 24) & 0xFF),
+                      (byte) ((v >>> 16) & 0xFF),
+                      (byte) ((v >>> 8) & 0xFF),
+                      (byte) ((v >>> 0) & 0xFF));
+        } else {
+            overwrite(dest, (byte) ((v >>> 0) & 0xFF),
+                      (byte) ((v >>> 8) & 0xFF),
+                      (byte) ((v >>> 16) & 0xFF),
+                      (byte) ((v >>> 24) & 0xFF));
         }
-        length = 0;
-        offset = 0;
-        open = true;
-        closeException = null;
-        notify();
-        return this;
+    }
+
+    /**
+     * Overwrites the primitive in the internal buffer.  Does not change the buffer length or*
+     * position.
+     *
+     * @param dest      The offset in the internal buffer to write the bytes.
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public void overwriteShort(int dest, short v, boolean bigEndian) {
+        if (bigEndian) {
+            overwrite(dest, (byte) ((v >>> 8) & 0xFF), (byte) ((v >>> 0) & 0xFF));
+        } else {
+            overwrite(dest, (byte) ((v >>> 0) & 0xFF), (byte) ((v >>> 8) & 0xFF));
+        }
     }
 
     /**
      * Gets the bytes from the given buffer, which will be flipped, then cleared.
      */
-    public synchronized void put(ByteBuffer buf) {
-        if (!open) {
-            throw new DSIoException("Closed");
-        }
+    public void put(ByteBuffer buf) {
         int len = buf.position();
         int bufLen = buffer.length;
         if ((len + length + offset) >= bufLen) {
@@ -139,16 +144,12 @@ public class DSByteBuffer {
         buf.get(buffer, length + offset, len);
         buf.clear();
         length += len;
-        notify();
     }
 
     /**
      * Add the byte to the buffer for reading.
      */
-    public synchronized void put(byte b) {
-        if (!open) {
-            throw new DSIoException("Closed");
-        }
+    public void put(byte b) {
         int bufLen = buffer.length;
         int msgLen = 1;
         if ((msgLen + length + offset) >= bufLen) {
@@ -161,7 +162,74 @@ public class DSByteBuffer {
         }
         buffer[length + offset] = b;
         length++;
-        notify();
+    }
+
+    /**
+     * Add the byte to the buffer for reading.
+     */
+    public void put(byte b1, byte b2) {
+        int bufLen = buffer.length;
+        int msgLen = 2;
+        if ((msgLen + length + offset) >= bufLen) {
+            if ((msgLen + length) > bufLen) {
+                growBuffer(msgLen + length);
+            } else { //offset must be > 0
+                System.arraycopy(buffer, offset, buffer, 0, length);
+                offset = 0;
+            }
+        }
+        int idx = length + offset;
+        buffer[idx] = b1;
+        buffer[++idx] = b2;
+        length += msgLen;
+    }
+
+    /**
+     * Add the byte to the buffer for reading.
+     */
+    public void put(byte b1, byte b2, byte b3, byte b4) {
+        int bufLen = buffer.length;
+        int msgLen = 4;
+        if ((msgLen + length + offset) >= bufLen) {
+            if ((msgLen + length) > bufLen) {
+                growBuffer(msgLen + length);
+            } else { //offset must be > 0
+                System.arraycopy(buffer, offset, buffer, 0, length);
+                offset = 0;
+            }
+        }
+        int idx = length + offset;
+        buffer[idx] = b1;
+        buffer[++idx] = b2;
+        buffer[++idx] = b3;
+        buffer[++idx] = b4;
+        length += msgLen;
+    }
+
+    /**
+     * Add the byte to the buffer for reading.
+     */
+    public void put(byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7, byte b8) {
+        int bufLen = buffer.length;
+        int msgLen = 8;
+        if ((msgLen + length + offset) >= bufLen) {
+            if ((msgLen + length) > bufLen) {
+                growBuffer(msgLen + length);
+            } else { //offset must be > 0
+                System.arraycopy(buffer, offset, buffer, 0, length);
+                offset = 0;
+            }
+        }
+        int idx = length + offset;
+        buffer[idx] = b1;
+        buffer[++idx] = b2;
+        buffer[++idx] = b3;
+        buffer[++idx] = b4;
+        buffer[++idx] = b5;
+        buffer[++idx] = b6;
+        buffer[++idx] = b7;
+        buffer[++idx] = b8;
+        length += msgLen;
     }
 
     /**
@@ -169,7 +237,7 @@ public class DSByteBuffer {
      *
      * @param msg The data source.
      */
-    public synchronized void put(byte[] msg) {
+    public void put(byte[] msg) {
         put(msg, 0, msg.length);
     }
 
@@ -180,10 +248,7 @@ public class DSByteBuffer {
      * @param off The start offset in the buffer to put data.
      * @param len The maximum number of bytes to read.
      */
-    public synchronized void put(byte[] msg, int off, int len) {
-        if (!open) {
-            throw new DSIoException("Closed");
-        }
+    public void put(byte[] msg, int off, int len) {
         int bufLen = buffer.length;
         if ((len + length + offset) >= bufLen) {
             if ((len + length) > bufLen) {  //the buffer is too small
@@ -195,7 +260,6 @@ public class DSByteBuffer {
         }
         System.arraycopy(msg, off, buffer, length + offset, len);
         length += len;
-        notify();
     }
 
     /**
@@ -204,12 +268,9 @@ public class DSByteBuffer {
      * @param dest The internal destination offset.
      * @param msg  The data source.
      * @param off  The start offset in the msg to put data.
-     * @param len  The maximum number of bytes to read.
+     * @param len  The maximum number of bytes to put.
      */
-    public synchronized void put(int dest, byte[] msg, int off, int len) {
-        if (!open) {
-            throw new DSIoException("Closed");
-        }
+    public void put(int dest, byte[] msg, int off, int len) {
         if (offset > 0) {
             System.arraycopy(buffer, offset, buffer, 0, length);
             offset = 0;
@@ -225,35 +286,131 @@ public class DSByteBuffer {
         if ((dest + len) > length) {
             length += len;
         }
-        notify();
     }
 
     /**
-     * Returns the next incoming byte, or -1 when end of stream has been reached.
-     *
-     * @throws DSIoException if there are any issues.
+     * Encodes the primitive into buffer using big endian encoding.
      */
-    public synchronized int read() {
-        while (open && (length == 0)) {
-            try {
-                if (timeout > 0) {
-                    wait(timeout);
-                } else {
-                    wait();
-                }
-            } catch (InterruptedException ignore) {
-            }
+    public void putDouble(double v) {
+        putDouble(v, true);
+    }
+
+    /**
+     * Encodes the primitive into the buffer.
+     *
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public void putDouble(double v, boolean bigEndian) {
+        putLong(Double.doubleToRawLongBits(v), bigEndian);
+    }
+
+    /**
+     * Encodes the primitive into buffer using big endian encoding.
+     */
+    public void putFloat(float v) {
+        putFloat(v, true);
+    }
+
+    /**
+     * Encodes the primitive into the buffer.
+     *
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public void putFloat(float v, boolean bigEndian) {
+        putInt(Float.floatToIntBits(v), bigEndian);
+    }
+
+    /**
+     * Encodes the primitive into buffer using big endian encoding.
+     */
+    public void putInt(int v) {
+        putInt(v, true);
+    }
+
+    /**
+     * Encodes the primitive into buffer.
+     *
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public void putInt(int v, boolean bigEndian) {
+        if (bigEndian) {
+            put((byte) ((v >>> 24) & 0xFF),
+                (byte) ((v >>> 16) & 0xFF),
+                (byte) ((v >>> 8) & 0xFF),
+                (byte) ((v >>> 0) & 0xFF));
+        } else {
+            put((byte) ((v >>> 0) & 0xFF),
+                (byte) ((v >>> 8) & 0xFF),
+                (byte) ((v >>> 16) & 0xFF),
+                (byte) ((v >>> 24) & 0xFF));
         }
-        notify();
-        if (!open) {
-            if (length == 0) {
-                if (closeException != null) {
-                    throw closeException;
-                }
-                return -1;
-            }
-        } else if (length == 0) {
-            throw new DSIoException("Read timeout");
+    }
+
+    /**
+     * Encodes the primitive into the buffer using big endian encoding.
+     */
+    public void putLong(long v) {
+        putLong(v, true);
+    }
+
+    /**
+     * Encodes the primitive into the buffer.
+     *
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public void putLong(long v, boolean bigEndian) {
+        if (bigEndian) {
+            put((byte) (v >>> 56),
+                (byte) (v >>> 48),
+                (byte) (v >>> 40),
+                (byte) (v >>> 32),
+                (byte) (v >>> 24),
+                (byte) (v >>> 16),
+                (byte) (v >>> 8),
+                (byte) (v >>> 0));
+        } else {
+            put((byte) (v >>> 0),
+                (byte) (v >>> 8),
+                (byte) (v >>> 16),
+                (byte) (v >>> 24),
+                (byte) (v >>> 32),
+                (byte) (v >>> 40),
+                (byte) (v >>> 48),
+                (byte) (v >>> 56));
+        }
+    }
+
+    /**
+     * Encodes the primitive into the buffer using big endian.
+     */
+    public void putShort(short v) {
+        putShort(v, true);
+    }
+
+    /**
+     * Encodes the primitive into the buffer.
+     *
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public void putShort(short v, boolean bigEndian) {
+        if (bigEndian) {
+            put((byte) ((v >>> 8) & 0xFF), (byte) ((v >>> 0) & 0xFF));
+        } else {
+            put((byte) ((v >>> 0) & 0xFF), (byte) ((v >>> 8) & 0xFF));
+        }
+    }
+
+    /**
+     * Returns the next byte in the buffer, or -1 when nothing is available.
+     */
+    public int read() {
+        if (length == 0) {
+            return -1;
         }
         int ret = buffer[offset];
         offset++;
@@ -262,35 +419,16 @@ public class DSByteBuffer {
     }
 
     /**
-     * Reads incoming bytes into the given buffer.
+     * Push bytes from the internal buffer to the given buffer.
      *
      * @param buf The buffer into which data is read.
      * @param off The start offset in the buffer to put data.
      * @param len The maximum number of bytes to read.
-     * @return The number of bytes read or -1 for end of stream.
-     * @throws DSIoException if there are any issues.
+     * @return The number of bytes read.
      */
-    public synchronized int read(byte[] buf, int off, int len) {
-        while (open && (length < len)) {
-            try {
-                if (timeout > 0) {
-                    wait(timeout);
-                } else {
-                    wait();
-                }
-            } catch (InterruptedException ignore) {
-            }
-        }
-        notify();
-        if (!open) {
-            if (length == 0) {
-                if (closeException != null) {
-                    throw closeException;
-                }
-                return -1;
-            }
-        } else if (length == 0) {
-            throw new DSIoException("Read timeout");
+    public int sendTo(byte[] buf, int off, int len) {
+        if (length == 0) {
+            return 0;
         }
         len = Math.min(len, length);
         System.arraycopy(buffer, offset, buf, off, len);
@@ -304,33 +442,14 @@ public class DSByteBuffer {
     }
 
     /**
-     * Reads incoming bytes into the given buffer.
+     * Push bytes from the internal buffer to the given buffer.
      *
      * @param buf The buffer into which data is read.
-     * @return The number of bytes read or -1 for end of stream.
-     * @throws DSIoException if there are any issues.
+     * @return The number of bytes read.
      */
-    public synchronized int read(ByteBuffer buf) {
-        while (open && (length == 0)) {
-            try {
-                if (timeout > 0) {
-                    wait(timeout);
-                } else {
-                    wait();
-                }
-            } catch (InterruptedException ignore) {
-            }
-        }
-        notify();
-        if (!open) {
-            if (length == 0) {
-                if (closeException != null) {
-                    throw closeException;
-                }
-                return -1;
-            }
-        } else if (length == 0) {
-            throw new DSIoException("Read timeout");
+    public int sendTo(ByteBuffer buf) {
+        if (length == 0) {
+            return 0;
         }
         int len = Math.min(buf.remaining(), length);
         buf.put(buffer, offset, len);
@@ -344,14 +463,28 @@ public class DSByteBuffer {
     }
 
     /**
-     * Number of millis the read methods will block before throwing an DSIoException.
-     *
-     * @param timeout Zero or less for indefinite.
-     * @return This
+     * Push bytes from the internal buffer to the transport.
      */
-    public DSByteBuffer setTimeout(long timeout) {
-        this.timeout = timeout;
-        return this;
+    public void sendTo(DSBinaryTransport transport, boolean isLast) {
+        transport.write(buffer, offset, length, isLast);
+        offset = 0;
+        length = 0;
+    }
+
+    /**
+     * Push bytes from the internal buffer to the stream.
+     */
+    public void sendTo(OutputStream out) {
+        if (length == 0) {
+            return;
+        }
+        try {
+            out.write(buffer, offset, length);
+            offset = 0;
+            length = 0;
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
     }
 
     /**
@@ -359,7 +492,7 @@ public class DSByteBuffer {
      */
     public byte[] toByteArray() {
         byte[] ret = new byte[length];
-        read(ret, 0, length);
+        sendTo(ret, 0, length);
         return ret;
     }
 

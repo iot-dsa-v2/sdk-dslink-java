@@ -15,22 +15,13 @@ import org.iot.dsa.util.DSException;
 public class SocketTransport extends DSBinaryTransport {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private byte[] buffer = new byte[8192];
     private int messageSize;
     private OutputStream out;
     private boolean open = false;
     private Socket socket;
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Constructors
-    /////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
@@ -95,10 +86,10 @@ public class SocketTransport extends DSBinaryTransport {
 
     @Override
     public DSTransport open() {
+        if (open) {
+            throw new IllegalStateException("Already open");
+        }
         try {
-            if (open) {
-                return this;
-            }
             socket = new Socket(getConnectionUrl(), 443);
             open = true;
             fine(fine() ? "SocketTransport open" : null);
@@ -109,26 +100,15 @@ public class SocketTransport extends DSBinaryTransport {
     }
 
     /**
-     * Flips the buffer, writes it, then clears it.
+     * Write the bytes to the socket, isLast is ignored.
      */
-    public void write(ByteBuffer buf, boolean isLast) {
-        messageSize += buf.position();
+    public void write(byte[] buf, int off, int len, boolean isLast) {
         try {
+            messageSize += len;
             if (out == null) {
                 out = socket.getOutputStream();
             }
-            buf.flip();
-            int len = buf.remaining();
-            while (len > 0) {
-                len = Math.min(buf.remaining(), buffer.length);
-                buf.get(buffer, 0, len);
-                out.write(buffer, 0, len);
-                len = buf.remaining();
-            }
-            buf.clear();
-            if (isLast) {
-                messageSize = 0;
-            }
+            out.write(buf, 0, len);
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }

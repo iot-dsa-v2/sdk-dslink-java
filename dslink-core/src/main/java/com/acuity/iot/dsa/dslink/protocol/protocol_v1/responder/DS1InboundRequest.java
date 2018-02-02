@@ -1,10 +1,8 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
+import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
-import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.responder.InboundRequest;
-import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSMap;
 
 /**
@@ -20,7 +18,13 @@ class DS1InboundRequest extends DSInboundRequest implements InboundRequest {
         return request;
     }
 
-    public DS1InboundRequest setRequest(DSMap request){
+    protected ErrorResponse makeError(Throwable reason) {
+        ErrorResponse ret = new ErrorResponse(reason);
+        ret.parseRequest(request);
+        return ret;
+    }
+
+    public DS1InboundRequest setRequest(DSMap request) {
         this.request = request;
         return this;
     }

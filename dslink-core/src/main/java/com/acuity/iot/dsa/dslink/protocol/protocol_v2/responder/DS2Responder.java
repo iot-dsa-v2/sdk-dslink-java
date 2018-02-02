@@ -1,22 +1,17 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2.responder;
 
-import com.acuity.iot.dsa.dslink.protocol.DSStream;
-import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2Session;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.MessageConstants;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageReader;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import org.iot.dsa.DSRuntime;
-import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.node.DSNode;
 
 /**
  * Implements DSA 1.1.2
  *
  * @author Aaron Hansen
  */
-public class DS2Responder extends DSNode implements MessageConstants {
+public class DS2Responder extends DSResponder implements MessageConstants {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -26,11 +21,6 @@ public class DS2Responder extends DSNode implements MessageConstants {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private ConcurrentHashMap<Integer, DSStream> inboundRequests =
-            new ConcurrentHashMap<Integer, DSStream>();
-    private Logger logger;
-    private DS2Session session;
-    private DS2Responder responder;
     //private DS2InboundSubscriptions subscriptions =
     //new DS2InboundSubscriptions(this);
 
@@ -39,31 +29,12 @@ public class DS2Responder extends DSNode implements MessageConstants {
     /////////////////////////////////////////////////////////////////
 
     public DS2Responder(DS2Session session) {
-        this.session = session;
+        super(session);
     }
 
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
-
-    public DSLinkConnection getConnection() {
-        return session.getConnection();
-    }
-
-    @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(
-                    getConnection().getLink().getLinkName() + ".responderSession");
-        }
-        return logger;
-    }
-
-    /*
-    public DS2InboundSubscriptions getSubscriptions() {
-        return subscriptions;
-    }
-    */
 
     /**
      * Process an individual request.
@@ -129,10 +100,10 @@ public class DS2Responder extends DSNode implements MessageConstants {
         String path = (String) msg.getHeader(HDR_TARGET_PATH);
         DS2InboundList listImpl = new DS2InboundList();
         listImpl.setPath(path)
-                .setSession(session)
+                .setSession(getSession())
                 .setRequestId(rid)
                 .setResponder(this);
-        inboundRequests.put(listImpl.getRequestId(), listImpl);
+        putRequest(listImpl.getRequestId(), listImpl);
         DSRuntime.run(listImpl);
     }
 
@@ -192,18 +163,6 @@ public class DS2Responder extends DSNode implements MessageConstants {
      * }
      * }
      */
-
-    void removeInboundRequest(Integer requestId) {
-        inboundRequests.remove(requestId);
-    }
-
-    public boolean shouldEndMessage() {
-        return session.shouldEndMessage();
-    }
-
-    public void sendResponse(OutboundMessage res) {
-        session.enqueueOutgoingResponse(res);
-    }
 
     /**
      * Used throughout processRequest.
