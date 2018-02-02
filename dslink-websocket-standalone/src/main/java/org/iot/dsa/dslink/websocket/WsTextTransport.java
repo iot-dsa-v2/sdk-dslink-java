@@ -1,5 +1,7 @@
 package org.iot.dsa.dslink.websocket;
 
+import com.acuity.iot.dsa.dslink.io.DSCharBuffer;
+import com.acuity.iot.dsa.dslink.io.DSIoException;
 import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
@@ -16,8 +18,6 @@ import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
-import com.acuity.iot.dsa.dslink.io.DSCharBuffer;
-import com.acuity.iot.dsa.dslink.io.DSIoException;
 import org.iot.dsa.util.DSException;
 
 /**

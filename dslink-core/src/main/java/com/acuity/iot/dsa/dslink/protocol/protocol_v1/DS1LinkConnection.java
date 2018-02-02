@@ -201,7 +201,7 @@ public class DS1LinkConnection extends DSLinkConnection {
                         x.printStackTrace();
                     }
                     */
-                    trans.write(byteBuffer, true);
+                    writeTo(trans);
                 }
             };
         } else if (transport instanceof DSTextTransport) {

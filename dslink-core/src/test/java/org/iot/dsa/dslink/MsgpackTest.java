@@ -20,18 +20,6 @@ import org.junit.Test;
  */
 public class MsgpackTest {
 
-    // Constants
-    // ---------
-
-    // Fields
-    // ------
-
-    // Constructors
-    // ------------
-
-    // Methods
-    // -------
-
     @Test
     public void testStrings() throws Exception {
         String input = "He wes Leovenaðes sone -- liðe him be Drihten.";
@@ -63,6 +51,13 @@ public class MsgpackTest {
 
     @Test
     public void theTest() throws Exception {
+        MsgpackWriter tmp = new MsgpackWriter();
+        tmp.beginList();
+        tmp.value("abc");
+        tmp.endList();
+        DSIReader reader = new MsgpackReader(new ByteArrayInputStream(tmp.toByteArray()));
+        reader.getElement().toList();
+
         final ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
         MsgpackWriter out = new MsgpackWriter();
         out.beginList();
@@ -73,9 +68,9 @@ public class MsgpackTest {
         out.value(new DSMap());
         out.value(new DSList());
         out.endList();
-        out.writeTo(baos1);
-        out.reset();
-        byte[] encoded = baos1.toByteArray();
+        //out.writeTo(baos1);
+        //out.reset();
+        byte[] encoded = out.toByteArray();
         DSIReader parser = new MsgpackReader(new ByteArrayInputStream(encoded));
         DSList list = parser.getElement().toList();
         parser.close();

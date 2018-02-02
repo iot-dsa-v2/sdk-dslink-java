@@ -389,7 +389,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Notifies subscribers of the event.
-     *  @param topic Must not be null.
+     *
+     * @param topic Must not be null.
      * @param event Must not be null.
      * @param child Can be null.
      */
@@ -399,7 +400,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Notifies subscribers of the event.
-     *  @param topic  Must not be null.
+     *
+     * @param topic  Must not be null.
      * @param event  Must not be null.
      * @param child  Can be null.
      * @param params Optional

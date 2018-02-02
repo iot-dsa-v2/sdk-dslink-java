@@ -1,7 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.message;
 
-import org.iot.dsa.io.DSIWriter;
-
 /**
  * A close request or response.
  *

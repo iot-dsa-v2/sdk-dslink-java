@@ -1,5 +1,7 @@
 package org.iot.dsa.io.msgpack;
 
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -17,7 +19,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     // Fields
     // ------
 
-    protected ByteBuffer byteBuffer;
+    protected DSByteBuffer byteBuffer = new DSByteBuffer();
     private CharBuffer charBuffer;
     private Frame frame;
     private CharsetEncoder encoder = DSString.UTF8.newEncoder();
@@ -27,11 +29,6 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     // ------------
 
     public MsgpackWriter() {
-        byteBuffer = ByteBuffer.allocate(1024 * 64);
-    }
-
-    public MsgpackWriter(ByteBuffer buffer) {
-        this.byteBuffer = buffer;
     }
 
     // Methods
@@ -105,13 +102,17 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
      * Returns the number of bytes in the outgoing byte buffer.
      */
     public int length() {
-        return byteBuffer.position();
+        return byteBuffer.length();
     }
 
     /**
      * Callback, for when the top level container is finished.
      */
     public void onComplete() {
+    }
+
+    public byte[] toByteArray() {
+        return byteBuffer.toByteArray();
     }
 
     @Override
@@ -237,7 +238,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         this.frame = new Frame(true);
         if (len < 0) {
             byteBuffer.put(LIST16);
-            frame.offset = byteBuffer.position();
+            frame.offset = byteBuffer.length();
             byteBuffer.putShort((short) 0);
         } else if (len < (1 << 4)) {
             byteBuffer.put((byte) (FIXLIST_PREFIX | len));
@@ -270,7 +271,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         this.frame = new Frame(true);
         if (len < 0) {
             byteBuffer.put(MAP16);
-            frame.offset = byteBuffer.position();
+            frame.offset = byteBuffer.length();
             byteBuffer.putShort((short) 0);
         } else if (len < (1 << 4)) {
             byteBuffer.put((byte) (FIXMAP_PREFIX | len));
@@ -295,8 +296,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         CharBuffer chars = getCharBuffer(arg);
         ByteBuffer strBuffer = getStringBuffer(chars.position() * (int) encoder.maxBytesPerChar());
         encoder.encode(chars, strBuffer, false);
-        strBuffer.flip();
-        int len = strBuffer.remaining();
+        int len = strBuffer.position();
         if (len < (1 << 5)) {
             byteBuffer.put((byte) (FIXSTR_PREFIX | len));
         } else if (len < (1 << 8)) {
@@ -317,9 +317,14 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
      * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
      */
     public void writeTo(ByteBuffer out) {
-        byteBuffer.flip();
-        out.put(byteBuffer);
-        byteBuffer.clear();
+        byteBuffer.sendTo(out);
+    }
+
+    /**
+     * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
+     */
+    public void writeTo(DSBinaryTransport out) {
+        byteBuffer.sendTo(out, (frame == null));
     }
 
     /**
@@ -329,12 +334,8 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
      */
     public void writeTo(OutputStream out) {
         try {
-            byteBuffer.flip();
-            while (byteBuffer.hasRemaining()) {
-                out.write(byteBuffer.get());
-            }
-            byteBuffer.clear();
-        } catch (IOException x) {
+            byteBuffer.sendTo(out);
+        } catch (Exception x) {
             DSException.throwRuntime(x);
         }
     }
@@ -372,7 +373,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
 
         void writeSize() {
             if (offset >= 0) {
-                byteBuffer.putShort(offset, (short) size);
+                byteBuffer.overwriteShort(offset, (short) size, true);
             }
         }
     }

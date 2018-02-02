@@ -337,7 +337,7 @@ public class DS1Session extends DSSession {
                 throw new DSProtocolException("Response missing rid");
             }
             if (areRequests) {
-                responder.processRequest(rid, req);
+                responder.handleRequest(rid, req);
             } else {
                 requester.processResponse(rid, req);
             }
@@ -423,7 +423,6 @@ public class DS1Session extends DSSession {
     public void writeResponse(OutboundMessage message) {
         message.write(getMessageWriter());
     }
-
 
     /////////////////////////////////////////////////////////////////
     // Inner Classes

@@ -146,10 +146,10 @@ public class DS2MessageReader implements MessageConstants {
 
     public boolean isRequest() {
         switch (method) {
-            case MSG_CLOSE :
-            case MSG_INVOKE_REQ :
-            case MSG_LIST_REQ :
-            case MSG_OBSERVE_REQ :
+            case MSG_CLOSE:
+            case MSG_INVOKE_REQ:
+            case MSG_LIST_REQ:
+            case MSG_OBSERVE_REQ:
                 return true;
         }
         return false;

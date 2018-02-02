@@ -7,7 +7,6 @@ import com.acuity.iot.dsa.dslink.protocol.message.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import java.util.Map;
-import java.util.logging.Level;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -53,59 +52,10 @@ public class DS1Responder extends DSResponder {
         return subscriptions;
     }
 
-    public void onConnect() {
-    }
-
-    public void onConnectFail() {
-    }
-
-    public void onDisconnect() {
-        finer(finer() ? "Close" : null);
-        subscriptions.close();
-        for (Map.Entry<Integer, DSStream> entry : getRequests().entrySet()) {
-            try {
-                entry.getValue().onClose(entry.getKey());
-            } catch (Exception x) {
-                finer(finer() ? "Close" : null, x);
-            }
-        }
-        getRequests().clear();
-    }
-
-    /**
-     * Handles an invoke request.
-     */
-    private void processInvoke(Integer rid, DSMap req) {
-        DS1InboundInvoke invokeImpl = new DS1InboundInvoke(req);
-        invokeImpl.setRequest(req)
-                  .setPath(getPath(req))
-                  .setSession(getSession())
-                  .setRequestId(rid)
-                  .setLink(getLink())
-                  .setResponder(this);
-        putRequest(rid, invokeImpl);
-        DSRuntime.run(invokeImpl);
-    }
-
-    /**
-     * Handles a list request.
-     */
-    private void processList(Integer rid, DSMap req) {
-        DS1InboundList listImpl = new DS1InboundList();
-        listImpl.setRequest(req)
-                .setPath(getPath(req))
-                .setSession(getSession())
-                .setRequestId(rid)
-                .setLink(getLink())
-                .setResponder(this);
-        putRequest(listImpl.getRequestId(), listImpl);
-        DSRuntime.run(listImpl);
-    }
-
     /**
      * Process an individual request.
      */
-    public void processRequest(final Integer rid, final DSMap map) {
+    public void handleRequest(final Integer rid, final DSMap map) {
         String method = map.get("method", null);
         try {
             if ((method == null) || method.isEmpty()) {
@@ -123,8 +73,7 @@ public class DS1Responder extends DSResponder {
                                 try {
                                     req.onClose(rid);
                                 } catch (Exception x) {
-                                    getConnection().getLink().getLogger().log(
-                                            Level.FINE, getConnection().getConnectionId(), x);
+                                    fine(getPath(), x);
                                 }
                             }
                         });
@@ -190,6 +139,55 @@ public class DS1Responder extends DSResponder {
             px.setType("serverError");
             sendResponse(new ErrorResponse(px).parseRequest(map));
         }
+    }
+
+    public void onConnect() {
+    }
+
+    public void onConnectFail() {
+    }
+
+    public void onDisconnect() {
+        finer(finer() ? "Close" : null);
+        subscriptions.close();
+        for (Map.Entry<Integer, DSStream> entry : getRequests().entrySet()) {
+            try {
+                entry.getValue().onClose(entry.getKey());
+            } catch (Exception x) {
+                finer(finer() ? "Close" : null, x);
+            }
+        }
+        getRequests().clear();
+    }
+
+    /**
+     * Handles an invoke request.
+     */
+    private void processInvoke(Integer rid, DSMap req) {
+        DS1InboundInvoke invokeImpl = new DS1InboundInvoke(req);
+        invokeImpl.setRequest(req)
+                  .setPath(getPath(req))
+                  .setSession(getSession())
+                  .setRequestId(rid)
+                  .setLink(getLink())
+                  .setResponder(this);
+        putRequest(rid, invokeImpl);
+        DSRuntime.run(invokeImpl);
+    }
+
+    /**
+     * Handles a list request.
+     */
+    private void processList(Integer rid, DSMap req) {
+        DS1InboundList listImpl = new DS1InboundList();
+        listImpl.setRequest(req)
+                .setPath(getPath(req))
+                .setSession(getSession())
+                .setRequestId(rid)
+                .setLink(getLink())
+                .setResponder(this);
+        putRequest(listImpl.getRequestId(), listImpl);
+        DSRuntime.run(listImpl);
     }
 
     /**
