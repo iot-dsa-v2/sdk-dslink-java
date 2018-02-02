@@ -1,16 +1,10 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.test.TestLink;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
-import org.iot.dsa.dslink.requester.AbstractInvokeHandler;
-import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSInt;
-import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionInvocation;

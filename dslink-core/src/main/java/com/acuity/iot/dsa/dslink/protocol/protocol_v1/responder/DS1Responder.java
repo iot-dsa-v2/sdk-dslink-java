@@ -7,7 +7,6 @@ import com.acuity.iot.dsa.dslink.protocol.message.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import java.util.Map;
-import java.util.logging.Level;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;

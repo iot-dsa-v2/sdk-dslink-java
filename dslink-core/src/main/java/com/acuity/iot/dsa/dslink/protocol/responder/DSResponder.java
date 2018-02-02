@@ -88,6 +88,7 @@ public abstract class DSResponder extends DSNode {
     public DSStream putRequest(Integer rid, DSStream request) {
         return inboundRequests.put(rid, request);
     }
+
     public DSStream removeRequest(Integer rid) {
         return inboundRequests.remove(rid);
     }

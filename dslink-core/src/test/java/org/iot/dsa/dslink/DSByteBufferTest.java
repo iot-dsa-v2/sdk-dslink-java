@@ -82,8 +82,8 @@ public class DSByteBufferTest {
         Assert.assertEquals(dsry.length, jary.length);
         Assert.assertArrayEquals(dsry, jary);
         //short
-        javaBuf.putShort((short)123);
-        dsBuf.putShort((short)123);
+        javaBuf.putShort((short) 123);
+        dsBuf.putShort((short) 123);
         dsry = dsBuf.toByteArray();
         jary = toByteArray(javaBuf);
         Assert.assertEquals(dsry.length, jary.length);
