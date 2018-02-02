@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -91,6 +90,7 @@ public class SocketTransport extends DSBinaryTransport {
         }
         try {
             socket = new Socket(getConnectionUrl(), 443);
+            socket.setSoTimeout((int) getReadTimeout());
             open = true;
             fine(fine() ? "SocketTransport open" : null);
         } catch (Exception x) {
