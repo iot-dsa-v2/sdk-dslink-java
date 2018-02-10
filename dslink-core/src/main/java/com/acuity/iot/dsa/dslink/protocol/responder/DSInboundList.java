@@ -288,7 +288,7 @@ public class DSInboundList extends DSInboundRequest
             out.beginList().value("$columns");
             if (e == null) {
                 out.beginList();
-                Iterator<DSMap> params = action.getParameters();
+                Iterator<DSMap> params = action.getValueResults();
                 if (params != null) {
                     DSMap param;
                     while (params.hasNext()) {
