@@ -173,7 +173,7 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     @Override
     protected void onStable() {
-        this.link = (DSLink) getParent();
+        this.link = getLink();
         super.onStable();
     }
 

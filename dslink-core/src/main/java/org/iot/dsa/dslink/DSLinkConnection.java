@@ -86,7 +86,7 @@ public abstract class DSLinkConnection extends DSNode {
      * The link using this connection.
      */
     public DSLink getLink() {
-        return (DSLink) getParent();
+        return (DSLink) getSys().getParent();
     }
 
     @Override
@@ -95,6 +95,10 @@ public abstract class DSLinkConnection extends DSNode {
             logger = Logger.getLogger(getLink().getLinkName() + ".connection");
         }
         return logger;
+    }
+
+    public DSSysNode getSys() {
+        return (DSSysNode) getParent();
     }
 
     public abstract DSIRequester getRequester();

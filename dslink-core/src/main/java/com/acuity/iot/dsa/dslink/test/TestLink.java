@@ -26,7 +26,6 @@ public class TestLink extends DSLink {
         DSLinkConfig cfg = new DSLinkConfig();
         cfg.setDslinkJson(new DSMap().put("configs", new DSMap()));
         cfg.setLinkName("dslink-java-testing");
-        cfg.setRequester(true);
         cfg.setLogLevel(Level.FINEST);
         cfg.setConfig(DSLinkConfig.CFG_CONNECTION_TYPE, TestConnection.class.getName());
         cfg.setConfig(DSLinkConfig.CFG_STABLE_DELAY, 1);

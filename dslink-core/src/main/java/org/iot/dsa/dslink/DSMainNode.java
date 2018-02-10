@@ -29,6 +29,20 @@ public class DSMainNode extends DSNode {
     }
 
     /**
+     * Override point, returns true by default.
+     */
+    public boolean isRequester() {
+        return true;
+    }
+
+    /**
+     * Override point, returns true by default.
+     */
+    public boolean isResponder() {
+        return true;
+    }
+
+    /**
      * The parent must be a DSLink instance.
      */
     public void validateParent(DSNode node) {

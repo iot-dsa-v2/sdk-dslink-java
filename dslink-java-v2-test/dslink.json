@@ -4,7 +4,7 @@
   "description": "Testing Link",
   "main": "bin/dslink-java-v2-test",
   "configs": {
-    "mainType": {
+    "handler_class": {
       "desc1": "*************** THIS IS REQUIRED AND MUST BE CHANGED ***************",
       "desc2": "Fully qualified class name of the root node of the link.",
       "type": "string",
