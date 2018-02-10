@@ -7,6 +7,8 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.util.HashMap;
 import java.util.Map;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.msgpack.MsgpackReader;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.util.DSException;
@@ -29,6 +31,7 @@ public class DS2MessageReader implements MessageConstants {
     private Map<Byte, Object> headers = new HashMap<Byte, Object>();
     private InputStream input;
     private int method;
+    private DSIReader reader;
     private int requestId;
     private ByteBuffer strBuffer;
     private CharsetDecoder utf8decoder = DSString.UTF8.newDecoder();
@@ -48,6 +51,13 @@ public class DS2MessageReader implements MessageConstants {
 
     public InputStream getBody() {
         return input;
+    }
+
+    public DSIReader getBodyReader() {
+        if (reader == null) {
+            reader = new MsgpackReader(input);
+        }
+        return reader;
     }
 
     public int getBodyLength() {

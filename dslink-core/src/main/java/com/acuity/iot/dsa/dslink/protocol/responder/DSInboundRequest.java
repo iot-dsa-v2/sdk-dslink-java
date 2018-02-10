@@ -47,8 +47,6 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
         return session;
     }
 
-    protected abstract ErrorResponse makeError(Throwable reason);
-
     public DSInboundRequest setLink(DSLink link) {
         this.link = link;
         return this;

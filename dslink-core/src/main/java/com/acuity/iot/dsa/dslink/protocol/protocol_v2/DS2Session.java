@@ -39,7 +39,7 @@ public class DS2Session extends DSSession implements MessageConstants {
     private int nextMsg = 1;
     private boolean requestsNext = false;
     private DS1Requester requester;// = new DS1Requester(this);
-    private DS2Responder responder = new DS2Responder(this);
+    private DS2Responder responder = null;//new DS2Responder(this); //todo
 
     /////////////////////////////////////////////////////////////////
     // Constructors
@@ -154,7 +154,7 @@ public class DS2Session extends DSSession implements MessageConstants {
     public void onDisconnect() {
         super.onDisconnect();
         requester.onDisconnect();
-        //responder.onDisconnect();
+        responder.onDisconnect();
     }
 
     /**

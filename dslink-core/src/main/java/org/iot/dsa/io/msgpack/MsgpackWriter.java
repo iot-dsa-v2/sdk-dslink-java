@@ -31,6 +31,10 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     public MsgpackWriter() {
     }
 
+    public MsgpackWriter(DSByteBuffer buffer) {
+        this.byteBuffer = buffer;
+    }
+
     // Methods
     // -------
 
@@ -373,7 +377,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
 
         void writeSize() {
             if (offset >= 0) {
-                byteBuffer.overwriteShort(offset, (short) size, true);
+                byteBuffer.replaceShort(offset, (short) size, true);
             }
         }
     }

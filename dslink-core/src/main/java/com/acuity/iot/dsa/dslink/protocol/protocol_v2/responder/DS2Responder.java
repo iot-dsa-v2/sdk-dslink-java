@@ -1,28 +1,32 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSStream;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v2.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2Session;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.MessageConstants;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
+import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import java.util.Map;
 import org.iot.dsa.DSRuntime;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.security.DSPermission;
 
 /**
- * Implements DSA 1.1.2
+ * Implementation for DSA v2.
  *
  * @author Aaron Hansen
  */
 public class DS2Responder extends DSResponder implements MessageConstants {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    //private DS2InboundSubscriptions subscriptions =
-    //new DS2InboundSubscriptions(this);
+    private DS2InboundSubscriptions subscriptions = new DS2InboundSubscriptions(this);
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -36,12 +40,20 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
 
+    public DSBinaryTransport getTransport() {
+        return (DSBinaryTransport) getConnection().getTransport();
+    }
+
     /**
      * Process an individual request.
      */
     public void handleRequest(DS2MessageReader reader) {
         switch (reader.getMethod()) {
+            case MSG_CLOSE:
+                processClose(reader);
+                break;
             case MSG_INVOKE_REQ:
+                processInvoke(reader);
                 break;
             case MSG_LIST_REQ:
                 processList(reader);
@@ -49,8 +61,10 @@ public class DS2Responder extends DSResponder implements MessageConstants {
             case MSG_OBSERVE_REQ:
                 break;
             case MSG_SET_REQ:
+                processSet(reader);
                 break;
             case MSG_SUBSCRIBE_REQ:
+                processSubscribe(reader);
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected method: " + reader.getMethod());
@@ -63,34 +77,51 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     public void onConnectFail() {
     }
 
-    /*
     public void onDisconnect() {
         finer(finer() ? "Close" : null);
         subscriptions.close();
-        for (Map.Entry<Integer, DSStream> entry : inboundRequests.entrySet()) {
+        for (Map.Entry<Integer, DSStream> entry : getRequests().entrySet()) {
             try {
                 entry.getValue().onClose(entry.getKey());
             } catch (Exception x) {
                 finer(finer() ? "Close" : null, x);
             }
         }
-        inboundRequests.clear();
+        getRequests().clear();
     }
-    */
 
     /**
      * Handles an invoke request.
-     private void processInvoke(Integer rid, DSMap req) {
-     DS2InboundInvoke invokeImpl = new DS2InboundInvoke(req);
-     invokeImpl.setPath(getPath(req))
-     .setSession(session)
-     .setRequestId(rid)
-     .setResponderImpl(responder)
-     .setResponder(this);
-     inboundRequests.put(rid, invokeImpl);
-     DSRuntime.run(invokeImpl);
-     }
      */
+    private void processClose(DS2MessageReader msg) {
+        int rid = msg.getRequestId();
+        DSStream stream = getRequests().get(rid);
+        if (stream != null) {
+            stream.onClose(rid);
+        } else {
+            subscriptions.unsubscribe(rid);
+        }
+    }
+
+    /**
+     * Handles an invoke request.
+     */
+    private void processInvoke(DS2MessageReader msg) {
+        int rid = msg.getRequestId();
+        DSMap params = msg.getBodyReader().getMap();
+        DSPermission perm = DSPermission.READ;
+        Object obj = msg.getHeader(MessageConstants.HDR_MAX_PERMISSION);
+        if (obj != null) {
+            perm = DSPermission.valueOf(obj.hashCode());
+        }
+        DS2InboundInvoke invokeImpl = new DS2InboundInvoke(params, perm);
+        invokeImpl.setPath((String) msg.getHeader(HDR_TARGET_PATH))
+                  .setSession(getSession())
+                  .setRequestId(rid)
+                  .setResponder(this);
+        putRequest(rid, invokeImpl);
+        DSRuntime.run(invokeImpl);
+    }
 
     /**
      * Handles a list request.
@@ -109,68 +140,46 @@ public class DS2Responder extends DSResponder implements MessageConstants {
 
     /**
      * Handles a set request.
-     private void processSet(Integer rid, DSMap req) {
-     DS2InboundSet setImpl = new DS2InboundSet(req);
-     setImpl.setPath(getPath(req))
-     .setSession(session)
-     .setRequestId(rid)
-     .setResponderImpl(responder)
-     .setResponder(this);
-     DSRuntime.run(setImpl);
-     }
      */
+    private void processSet(DS2MessageReader msg) {
+        int rid = msg.getRequestId();
+        DSPermission perm = DSPermission.READ;
+        Object obj = msg.getHeader(MessageConstants.HDR_MAX_PERMISSION);
+        if (obj != null) {
+            perm = DSPermission.valueOf(obj.hashCode());
+        }
+        DSElement value = msg.getBodyReader().getElement();
+        DSInboundSet setImpl = new DSInboundSet(value, perm);
+        setImpl.setPath((String) msg.getHeader(HDR_TARGET_PATH))
+               .setSession(getSession())
+               .setRequestId(rid)
+               .setResponder(this);
+        DSRuntime.run(setImpl);
+    }
 
     /**
      * Handles a subscribe request.
-     private void processSubscribe(int rid, DSMap req) {
-     DSList list = req.getList("paths");
-     if (list == null) {
-     return;
-     }
-     String path;
-     Integer sid;
-     Integer qos;
-     DSMap subscribe;
-     for (int i = 0, len = list.size(); i < len; i++) {
-     subscribe = list.getMap(i);
-     path = subscribe.getString("path");
-     sid = subscribe.getInt("sid");
-     qos = subscribe.get("qos", 0);
-     try {
-     subscriptions.subscribe(responder, sid, path, qos);
-     } catch (Exception x) {
-     //invalid paths are very common
-     fine(path, x);
-     }
-     }
-     }
      */
+    private void processSubscribe(DS2MessageReader msg) {
+        Integer sid = msg.getRequestId();
+        String path = (String) msg.getHeader(HDR_TARGET_PATH);
+        Integer qos = (Integer) msg.getHeader(MessageConstants.HDR_QOS);
+        if (qos == null) {
+            qos = Integer.valueOf(0);
+        }
+        //Integer queueSize = (Integer) msg.getHeader(MessageConstants.HDR_QUEUE_SIZE);
+        subscriptions.subscribe(sid, path, qos);
+    }
 
-    /**
-     * Handles an unsubscribe request.
-     * private void processUnsubscribe(int rid, DSMap req) {
-     * DSList list = req.getList("sids");
-     * Integer sid = null;
-     * if (list != null) {
-     * for (int i = 0, len = list.size(); i < len; i++) {
-     * try {
-     * sid = list.getInt(i);
-     * subscriptions.unsubscribe(sid);
-     * } catch (Exception x) {
-     * fine(fine() ? "Unsubscribe: " + sid : null, x);
-     * }
-     * }
-     * }
-     * }
-     */
+    @Override
+    public void sendClose(int rid) {
+        sendResponse(new CloseMessage(this, rid));
+    }
 
-    /**
-     * Used throughout processRequest.
-     private void throwInvalidMethod(String methodName, DSMap request) {
-     String msg = "Invalid method name " + methodName;
-     finest(finest() ? (msg + ": " + request.toString()) : null);
-     throw new DSProtocolException(msg).setType("invalidMethod");
-     }
-     */
+    @Override
+    public void sendError(DSInboundRequest req, Throwable reason) {
+        sendResponse(new ErrorMessage(req, reason));
+    }
+
 
 }

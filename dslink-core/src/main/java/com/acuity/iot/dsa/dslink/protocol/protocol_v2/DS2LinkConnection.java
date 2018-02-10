@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2;
 
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
@@ -214,8 +215,6 @@ public class DS2LinkConnection extends DSLinkConnection {
         }
         //TODO check for header status
         put(requesterAllowed, DSBool.valueOf(in.read() == 1));
-        String sessionId = reader.readString(in); //TODO remove
-        int lastAck = DSBytes.readInt(in, false); //TODO remove
         String pathOnBroker = reader.readString(in);
         put(brokerPath, DSString.valueOf(pathOnBroker));
         byte[] tmp = new byte[32];
@@ -229,7 +228,7 @@ public class DS2LinkConnection extends DSLinkConnection {
         DSKeys dsKeys = link.getKeys();
         DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf0);
-        ByteBuffer buffer = writer.getBody();
+        DSByteBuffer buffer = writer.getBody();
         buffer.put((byte) 2).put((byte) 0); //dsa version
         writer.writeString(dsId, buffer);
         buffer.put(dsKeys.encodePublic());
@@ -240,15 +239,13 @@ public class DS2LinkConnection extends DSLinkConnection {
     private void sendF2() throws Exception {
         DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf2);
-        ByteBuffer buffer = writer.getBody();
+        DSByteBuffer buffer = writer.getBody();
         String token = getLink().getConfig().getToken();
         if (token == null) {
             token = "";
         }
         writer.writeString(token, buffer);
         buffer.put((byte) 0x01); //isResponder
-        writer.writeString("", buffer); //TODO remove
-        writer.writeIntLE(0, buffer); //TODO remove
         writer.writeString("", buffer); //blank server path
         byte[] sharedSecret = getLink().getKeys().generateSharedSecret(
                 brokerPubKey.getElement().toBytes());

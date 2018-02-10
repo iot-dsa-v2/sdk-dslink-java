@@ -1,5 +1,6 @@
-package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
+package com.acuity.iot.dsa.dslink.protocol.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +24,7 @@ import org.iot.dsa.time.DSTime;
  *
  * @author Aaron Hansen
  */
-class DS1InboundSubscription extends DS1InboundRequest
+public class DSInboundSubscription extends DSInboundRequest
         implements DSISubscriber, InboundSubscribeRequest {
 
     ///////////////////////////////////////////////////////////////////////////
@@ -33,7 +34,7 @@ class DS1InboundSubscription extends DS1InboundRequest
     private DSInfo child;
     private SubscriptionCloseHandler closeHandler;
     private boolean enqueued = false;
-    private DS1InboundSubscriptions manager;
+    private DSInboundSubscriptions manager;
     private DSNode node;
     private boolean open = true;
     private Integer sid;
@@ -45,7 +46,7 @@ class DS1InboundSubscription extends DS1InboundRequest
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1InboundSubscription(DS1InboundSubscriptions manager, Integer sid, String path, int qos) {
+    protected DSInboundSubscription(DSInboundSubscriptions manager, Integer sid, String path, int qos) {
         this.manager = manager;
         this.sid = sid;
         setPath(path);
@@ -66,7 +67,7 @@ class DS1InboundSubscription extends DS1InboundRequest
     /**
      * Remove an update from the queue.
      */
-    private synchronized Update dequeue() {
+    protected synchronized Update dequeue() {
         if (updateHead == null) {
             return null;
         }
@@ -94,7 +95,7 @@ class DS1InboundSubscription extends DS1InboundRequest
         return sid;
     }
 
-    private void init() {
+    protected void init() {
         RequestPath path = new RequestPath(getPath(), getLink());
         if (path.isResponder()) {
             DSIResponder responder = (DSIResponder) path.getTarget();
@@ -173,7 +174,7 @@ class DS1InboundSubscription extends DS1InboundRequest
             return;
         }
         finest(finest() ? "Update " + getPath() + " to " + value : null);
-        if (qos <= 1) {
+        if (qos == 0) {
             synchronized (this) {
                 if (updateHead == null) {
                     updateHead = updateTail = new Update();
@@ -201,12 +202,12 @@ class DS1InboundSubscription extends DS1InboundRequest
         manager.enqueue(this);
     }
 
-    DS1InboundSubscription setQos(int qos) {
+    protected DSInboundSubscription setQos(int qos) {
         this.qos = qos;
         return this;
     }
 
-    DS1InboundSubscription setSubscriptionId(Integer sid) {
+    protected DSInboundSubscription setSubscriptionId(Integer sid) {
         this.sid = sid;
         return this;
     }
@@ -216,34 +217,25 @@ class DS1InboundSubscription extends DS1InboundRequest
         return "Subscription (" + getSubscriptionId() + ") " + getPath();
     }
 
+
     /**
-     * Encodes as many updates as possible.
+     * Encodes one or more updates.
      *
-     * @param out Where to encode.
-     * @param buf For encoding timestamps.
+     * @param writer Where to encode.
+     * @param buf    For encoding timestamps.
      */
-    void write(DSIWriter out, StringBuilder buf) {
-        //Don't check open state - forcefully closing will send an update
-        DS1Responder session = getResponder();
+    protected void write(MessageWriter writer, StringBuilder buf) {
+        DSResponder session = getResponder();
         Update update = dequeue();
         while (update != null) {
-            out.beginMap();
-            out.key("sid").value(getSubscriptionId());
-            buf.setLength(0);
-            DSTime.encode(update.timestamp, true, buf);
-            out.key("ts").value(buf.toString());
-            out.key("value").value(update.value.toElement());
-            if ((update.quality != null) && !update.quality.isOk()) {
-                out.key("quality").value(update.quality.toString());
-            }
-            out.endMap();
-            if ((qos <= 1) || session.shouldEndMessage()) {
+            write(update, writer, buf);
+            if ((qos == 0) || session.shouldEndMessage()) {
                 break;
             }
         }
         synchronized (this) {
             if (updateHead == null) {
-                if (qos <= 1) {
+                if (qos == 0) {
                     //reuse instance
                     updateHead = updateTail = update;
                 }
@@ -254,16 +246,38 @@ class DS1InboundSubscription extends DS1InboundRequest
         manager.enqueue(this);
     }
 
+    /**
+     * Encode a single update.  This is implemented for v1 and will need to be overridden for
+     * v2.
+     *
+     * @param update The udpate to write.
+     * @param writer Where to write.
+     * @param buf    For encoding timestamps.
+     */
+    protected void write(Update update, MessageWriter writer, StringBuilder buf) {
+        DSIWriter out = writer.getWriter();
+        out.beginMap();
+        out.key("sid").value(getSubscriptionId());
+        buf.setLength(0);
+        DSTime.encode(update.timestamp, true, buf);
+        out.key("ts").value(buf.toString());
+        out.key("value").value(update.value.toElement());
+        if ((update.quality != null) && !update.quality.isOk()) {
+            out.key("quality").value(update.quality.toString());
+        }
+        out.endMap();
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
-    private class Update {
+    protected class Update {
 
         Update next;
-        long timestamp;
-        DSIValue value;
-        DSStatus quality;
+        public long timestamp;
+        public DSIValue value;
+        public DSStatus quality;
 
         Update set(long timestamp, DSIValue value, DSStatus quality) {
             this.timestamp = timestamp;

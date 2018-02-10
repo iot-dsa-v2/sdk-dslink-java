@@ -3,6 +3,7 @@ package com.acuity.iot.dsa.dslink.protocol.responder;
 import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -31,7 +32,6 @@ public abstract class DSResponder extends DSNode {
     private Logger logger;
     private DSSession session;
     private DSResponder responder;
-    //private DS2InboundSubscriptions subscriptions = new DSInboundSubscriptions(this);
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -76,6 +76,10 @@ public abstract class DSResponder extends DSNode {
         return session;
     }
 
+    public DSTransport getTransport() {
+        return getConnection().getTransport();
+    }
+
     public void onConnect() {
     }
 
@@ -88,10 +92,13 @@ public abstract class DSResponder extends DSNode {
     public DSStream putRequest(Integer rid, DSStream request) {
         return inboundRequests.put(rid, request);
     }
-
     public DSStream removeRequest(Integer rid) {
         return inboundRequests.remove(rid);
     }
+
+    public abstract void sendClose(int rid);
+
+    public abstract void sendError(DSInboundRequest req, Throwable reason);
 
     public boolean shouldEndMessage() {
         return session.shouldEndMessage();

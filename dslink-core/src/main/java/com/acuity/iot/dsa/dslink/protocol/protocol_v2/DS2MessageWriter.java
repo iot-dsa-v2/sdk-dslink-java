@@ -1,9 +1,9 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2;
 
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
 import org.iot.dsa.node.DSString;
@@ -20,9 +20,9 @@ public class DS2MessageWriter implements MessageConstants {
     // Fields
     // ------
 
-    private ByteBuffer body;
+    private DSByteBuffer body;
     private CharBuffer charBuffer;
-    private ByteBuffer header;
+    private DSByteBuffer header;
     private byte method;
     private ByteBuffer strBuffer;
     private CharsetEncoder utf8encoder;
@@ -31,10 +31,8 @@ public class DS2MessageWriter implements MessageConstants {
     // ------------
 
     public DS2MessageWriter() {
-        body = ByteBuffer.allocateDirect(MAX_HEADER);
-        //do not change endian-ness of the body since most bodies will be big endian msgpack.
-        header = ByteBuffer.allocateDirect(MAX_BODY);
-        header.order(ByteOrder.LITTLE_ENDIAN);
+        header = new DSByteBuffer();
+        body = new DSByteBuffer();
         utf8encoder = DSString.UTF8.newEncoder();
         init(-1, -1);
     }
@@ -64,7 +62,7 @@ public class DS2MessageWriter implements MessageConstants {
      */
     public DS2MessageWriter addHeader(byte key, int value) {
         header.put(key);
-        header.putInt(value);
+        header.putInt(value, false);
         return this;
     }
 
@@ -78,19 +76,19 @@ public class DS2MessageWriter implements MessageConstants {
     }
 
     private void encodeHeaderLengths() {
-        int hlen = header.position();
-        int blen = body.position();
-        header.putInt(0, hlen + blen);
-        header.putShort(4, (short) hlen);
-        header.put(6, method);
+        int hlen = header.length();
+        int blen = body.length();
+        header.replaceInt(0, hlen + blen, false);
+        header.replaceShort(4, (short) hlen, false);
+        header.replace(6, method);
     }
 
     public int getBodyLength() {
-        return body.position();
+        return body.length();
     }
 
     public int getHeaderLength() {
-        return header.position();
+        return header.length();
     }
 
     /**
@@ -142,7 +140,7 @@ public class DS2MessageWriter implements MessageConstants {
         return strBuffer;
     }
 
-    public ByteBuffer getBody() {
+    public DSByteBuffer getBody() {
         return body;
     }
 
@@ -155,7 +153,7 @@ public class DS2MessageWriter implements MessageConstants {
     public DS2MessageWriter init(int requestId, int ackId) {
         body.clear();
         header.clear();
-        header.position(7);
+        header.skip(7);
         if (requestId >= 0) {
             header.putInt(requestId);
             if (ackId >= 0) {
@@ -174,17 +172,10 @@ public class DS2MessageWriter implements MessageConstants {
      * This is for testing, it encodes the full message.
      */
     public byte[] toByteArray() {
-        int len = header.position() + body.position();
-        ByteArrayOutputStream out = new ByteArrayOutputStream(len);
+        ByteArrayOutputStream out = new ByteArrayOutputStream(header.length() + body.length());
         encodeHeaderLengths();
-        header.flip();
-        while (header.hasRemaining()) {
-            out.write(header.get());
-        }
-        body.flip();
-        while (body.hasRemaining()) {
-            out.write(body.get());
-        }
+        header.sendTo(out);
+        body.sendTo(out);
         return out.toByteArray();
     }
 
@@ -193,95 +184,93 @@ public class DS2MessageWriter implements MessageConstants {
      */
     public DS2MessageWriter write(DSBinaryTransport out) {
         encodeHeaderLengths();
-        //TODO out.write(header, false);
-        //TODO out.write(body, true);
+        header.sendTo(out, false);
+        body.sendTo(out, true);
         return this;
     }
 
     /**
      * DSA 2.n encodes a string into the the given buffer.
      */
-    public void writeString(CharSequence str, ByteBuffer buf) {
+    public void writeString(CharSequence str, DSByteBuffer buf) {
         CharBuffer chars = getCharBuffer(str);
         ByteBuffer strBuffer = getStringBuffer(
                 chars.position() * (int) utf8encoder.maxBytesPerChar());
         utf8encoder.encode(chars, strBuffer, false);
-        int len = strBuffer.position();
-        writeShortLE((short) len, buf);
-        strBuffer.flip();
+        buf.putShort((short) strBuffer.position(), false);
         buf.put(strBuffer);
     }
 
     /**
      * Writes a little endian integer to the buffer.
+     public void writeIntLE(int v, ByteBuffer buf) {
+     buf.put((byte) ((v >>> 0) & 0xFF));
+     buf.put((byte) ((v >>> 8) & 0xFF));
+     buf.put((byte) ((v >>> 16) & 0xFF));
+     buf.put((byte) ((v >>> 32) & 0xFF));
+     }
      */
-    public void writeIntLE(int v, ByteBuffer buf) {
-        buf.put((byte) ((v >>> 0) & 0xFF));
-        buf.put((byte) ((v >>> 8) & 0xFF));
-        buf.put((byte) ((v >>> 16) & 0xFF));
-        buf.put((byte) ((v >>> 32) & 0xFF));
-    }
 
     /**
      * Writes a little endian integer to the buffer.
+     public void writeIntLE(int v, ByteBuffer buf, int idx) {
+     buf.put(idx, (byte) ((v >>> 0) & 0xFF));
+     buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
+     buf.put(++idx, (byte) ((v >>> 16) & 0xFF));
+     buf.put(++idx, (byte) ((v >>> 32) & 0xFF));
+     }
      */
-    public void writeIntLE(int v, ByteBuffer buf, int idx) {
-        buf.put(idx, (byte) ((v >>> 0) & 0xFF));
-        buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
-        buf.put(++idx, (byte) ((v >>> 16) & 0xFF));
-        buf.put(++idx, (byte) ((v >>> 32) & 0xFF));
-    }
 
     /**
      * Writes a little endian short to the buffer.
+     public void writeShortLE(short v, ByteBuffer buf) {
+     buf.put((byte) ((v >>> 0) & 0xFF));
+     buf.put((byte) ((v >>> 8) & 0xFF));
+     }
      */
-    public void writeShortLE(short v, ByteBuffer buf) {
-        buf.put((byte) ((v >>> 0) & 0xFF));
-        buf.put((byte) ((v >>> 8) & 0xFF));
-    }
 
     /**
      * Writes a little endian short to the buffer.
+     public void writeShortLE(short v, ByteBuffer buf, int idx) {
+     buf.put(idx, (byte) ((v >>> 0) & 0xFF));
+     buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
+     }
      */
-    public void writeShortLE(short v, ByteBuffer buf, int idx) {
-        buf.put(idx, (byte) ((v >>> 0) & 0xFF));
-        buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
-    }
 
     /**
      * Writes an unsigned 16 bit little endian integer to the buffer.
+     public void writeU16LE(int v, ByteBuffer buf) {
+     buf.put((byte) ((v >>> 0) & 0xFF));
+     buf.put((byte) ((v >>> 8) & 0xFF));
+     }
      */
-    public void writeU16LE(int v, ByteBuffer buf) {
-        buf.put((byte) ((v >>> 0) & 0xFF));
-        buf.put((byte) ((v >>> 8) & 0xFF));
-    }
 
     /**
      * Writes an unsigned 16 bit little endian integer to the buffer.
+     public void writeU16LE(int v, ByteBuffer buf, int idx) {
+     buf.put(idx, (byte) ((v >>> 0) & 0xFF));
+     buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
+     }
      */
-    public void writeU16LE(int v, ByteBuffer buf, int idx) {
-        buf.put(idx, (byte) ((v >>> 0) & 0xFF));
-        buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
-    }
 
     /**
      * Writes an unsigned 32 bit little endian integer to the buffer.
+     public void writeU32LE(long v, ByteBuffer buf) {
+     buf.put((byte) ((v >>> 0) & 0xFF));
+     buf.put((byte) ((v >>> 8) & 0xFF));
+     buf.put((byte) ((v >>> 16) & 0xFF));
+     buf.put((byte) ((v >>> 32) & 0xFF));
+     }
      */
-    public void writeU32LE(long v, ByteBuffer buf) {
-        buf.put((byte) ((v >>> 0) & 0xFF));
-        buf.put((byte) ((v >>> 8) & 0xFF));
-        buf.put((byte) ((v >>> 16) & 0xFF));
-        buf.put((byte) ((v >>> 32) & 0xFF));
-    }
 
     /**
      * Writes an unsigned 32 bit little endian integer to the buffer.
+     public void writeU32LE(long v, ByteBuffer buf, int idx) {
+     buf.put(idx, (byte) ((v >>> 0) & 0xFF));
+     buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
+     buf.put(++idx, (byte) ((v >>> 16) & 0xFF));
+     buf.put(++idx, (byte) ((v >>> 32) & 0xFF));
+     }
      */
-    public void writeU32LE(long v, ByteBuffer buf, int idx) {
-        buf.put(idx, (byte) ((v >>> 0) & 0xFF));
-        buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
-        buf.put(++idx, (byte) ((v >>> 16) & 0xFF));
-        buf.put(++idx, (byte) ((v >>> 32) & 0xFF));
-    }
 
 }

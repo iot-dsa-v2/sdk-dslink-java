@@ -18,9 +18,17 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSSession extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
+    // Constants
+    ///////////////////////////////////////////////////////////////////////////
+
+    private static final int MAX_MSG_ID = 2147483647;
+
+    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private int nextAck = -1;
+    private int nextMessage = 1;
     private boolean connected = false;
     private DSLinkConnection connection;
     private Logger logger;
@@ -134,6 +142,26 @@ public abstract class DSSession extends DSNode {
         return logger;
     }
 
+    /**
+     * The next ack id, or -1.
+     */
+    public synchronized int getNextAck() {
+        int ret = nextAck;
+        nextAck = -1;
+        return ret;
+    }
+
+    /**
+     * Returns the next new message id.
+     */
+    public synchronized int getNextMessageId() {
+        int ret = nextMessage;
+        if (++nextMessage > MAX_MSG_ID) {
+            nextMessage = 1;
+        }
+        return ret;
+    }
+
     public abstract DSIRequester getRequester();
 
     public DSTransport getTransport() {
@@ -144,6 +172,9 @@ public abstract class DSSession extends DSNode {
      * True if there are any outbound requests or responses queued up.
      */
     protected final boolean hasMessagesToSend() {
+        if (nextAck > 0) {
+            return true;
+        }
         if (!outgoingResponses.isEmpty()) {
             return true;
         }
@@ -204,6 +235,14 @@ public abstract class DSSession extends DSNode {
             outgoingRequests.clear();
             outgoingResponses.clear();
         }
+    }
+
+    /**
+     * Call for each incoming message id that needs to be acked.
+     */
+    protected synchronized void setNextAck(int nextAck) {
+        this.nextAck = nextAck;
+        notifyOutgoing();
     }
 
     /**

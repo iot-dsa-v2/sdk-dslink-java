@@ -1,7 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
-import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
@@ -33,7 +32,7 @@ import org.iot.dsa.node.event.DSTopic;
  *
  * @author Aaron Hansen
  */
-public abstract class DSInboundList extends DSInboundRequest
+public class DSInboundList extends DSInboundRequest
         implements DSISubscriber, DSStream, InboundListRequest, OutboundMessage,
         OutboundListResponse, Runnable {
 
@@ -63,10 +62,6 @@ public abstract class DSInboundList extends DSInboundRequest
     private int state = STATE_INIT;
     private Update updateHead;
     private Update updateTail;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods in alphabetical order
@@ -570,8 +565,7 @@ public abstract class DSInboundList extends DSInboundRequest
             return;
         }
         if (isClosePending() && (updateHead == null) && (closeReason != null)) {
-            ErrorResponse res = makeError(closeReason);
-            res.write(writer);
+            getResponder().sendError(this, closeReason);
             doClose();
             return;
         }
@@ -600,7 +594,7 @@ public abstract class DSInboundList extends DSInboundRequest
             out.key("stream").value("open");
         } else if (isClosePending() && (updateHead == null)) {
             if (closeReason != null) {
-                getResponder().sendResponse(makeError(closeReason));
+                getResponder().sendError(this, closeReason);
             } else {
                 out.key("stream").value("closed");
             }

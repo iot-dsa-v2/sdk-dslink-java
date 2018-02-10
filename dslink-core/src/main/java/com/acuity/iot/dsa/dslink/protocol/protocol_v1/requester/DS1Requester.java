@@ -1,7 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester;
 
-import com.acuity.iot.dsa.dslink.protocol.message.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1Session;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -137,7 +137,7 @@ public class DS1Requester extends DSNode implements DSIRequester {
 
     void sendClose(Integer rid) {
         requests.remove(rid);
-        sendRequest(new CloseMessage(rid));
+        sendRequest(new CloseMessage(rid, true));
     }
 
     void sendRequest(OutboundMessage res) {

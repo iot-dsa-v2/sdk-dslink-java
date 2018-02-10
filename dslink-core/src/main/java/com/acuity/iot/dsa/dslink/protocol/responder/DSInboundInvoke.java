@@ -1,7 +1,6 @@
-package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
+package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
-import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
@@ -27,7 +26,7 @@ import org.iot.dsa.security.DSPermission;
  *
  * @author Aaron Hansen
  */
-class DS1InboundInvoke extends DS1InboundRequest
+public class DSInboundInvoke extends DSInboundRequest
         implements DSStream, InboundInvokeRequest, OutboundMessage, Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
@@ -58,11 +57,9 @@ class DS1InboundInvoke extends DS1InboundRequest
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1InboundInvoke(DSMap request) {
-        setRequest(request);
-        String permit = request.get("permit", "config");
-        permission = DSPermission.forString(permit);
-        parameters = request.getMap("params");
+    public DSInboundInvoke(DSMap parameters, DSPermission permission) {
+        this.parameters = parameters;
+        this.permission = permission;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -164,36 +161,6 @@ class DS1InboundInvoke extends DS1InboundRequest
     }
 
     /**
-     * Invokes the action and will then enqueueUpdate the outgoing response.
-     */
-    public void run() {
-        try {
-            RequestPath path = new RequestPath(getPath(), getLink());
-            if (path.isResponder()) {
-                DSIResponder responder = (DSIResponder) path.getTarget();
-                setPath(path.getPath());
-                result = responder.onInvoke(this);
-            }
-            DSInfo info = path.getInfo();
-            if (!info.isAction()) {
-                throw new DSRequestException("Not an action " + path.getPath());
-            }
-            //TODO verify incoming permission
-            DSAction action = info.getAction();
-            result = action.invoke(info, this);
-        } catch (Exception x) {
-            severe(getPath(), x);
-            close(x);
-            return;
-        }
-        if (result == null) {
-            close();
-        } else {
-            enqueueResponse();
-        }
-    }
-
-    /**
      * Any parameters supplied by the requester for the invocation, or null.
      */
     @Override
@@ -204,6 +171,13 @@ class DS1InboundInvoke extends DS1InboundRequest
     @Override
     public DSPermission getPermission() {
         return permission;
+    }
+
+    /**
+     * Returns "updates" for v1.
+     */
+    protected String getRowsName() {
+        return "updates";
     }
 
     @Override
@@ -246,6 +220,36 @@ class DS1InboundInvoke extends DS1InboundRequest
         enqueueUpdate(new Update(rows, index, len, UpdateType.REPLACE));
     }
 
+    /**
+     * Invokes the action and will then enqueueUpdate the outgoing response.
+     */
+    public void run() {
+        try {
+            RequestPath path = new RequestPath(getPath(), getLink());
+            if (path.isResponder()) {
+                DSIResponder responder = (DSIResponder) path.getTarget();
+                setPath(path.getPath());
+                result = responder.onInvoke(this);
+            }
+            DSInfo info = path.getInfo();
+            if (!info.isAction()) {
+                throw new DSRequestException("Not an action " + path.getPath());
+            }
+            //TODO verify incoming permission
+            DSAction action = info.getAction();
+            result = action.invoke(info, this);
+        } catch (Exception x) {
+            severe(getPath(), x);
+            close(x);
+            return;
+        }
+        if (result == null) {
+            close();
+        } else {
+            enqueueResponse();
+        }
+    }
+
     @Override
     public void send(DSList row) {
         enqueueUpdate(new Update(row));
@@ -253,49 +257,65 @@ class DS1InboundInvoke extends DS1InboundRequest
 
     @Override
     public void write(MessageWriter writer) {
-        DSIWriter out = writer.getWriter();
         enqueued = false;
         if (isClosed()) {
             return;
         }
         if (isClosePending() && (updateHead == null) && (closeReason != null)) {
-            ErrorResponse res = new ErrorResponse(closeReason);
-            res.parseRequest(getRequest());
-            res.write(writer);
+            getResponder().sendError(this, closeReason);
             doClose();
             return;
         }
-        out.beginMap();
-        out.key("rid").value(getRequestId());
+        writeBegin(writer);
         switch (state) {
             case STATE_INIT:
-                writeColumns(out);
-                writeInitialResults(out);
+                writeColumns(writer);
+                writeInitialResults(writer);
                 break;
             case STATE_ROWS:
-                writeInitialResults(out);
+                writeInitialResults(writer);
                 break;
             case STATE_CLOSE_PENDING:
             case STATE_UPDATES:
-                writeUpdates(out);
+                writeUpdates(writer);
                 break;
             default:
                 ;
         }
         if (isClosePending() && (updateHead == null)) {
             if (closeReason != null) {
-                ErrorResponse res = new ErrorResponse(closeReason);
-                res.parseRequest(getRequest());
-                getResponder().sendResponse(res);
+                getResponder().sendError(this, closeReason);
             } else {
-                out.key("stream").value("closed");
+                writeClose(writer);
             }
             doClose();
         }
-        out.endMap();
+        writeEnd(writer);
     }
 
-    private void writeColumns(DSIWriter out) {
+    /**
+     * Override point for v2, handles v1.
+     */
+    protected void writeBegin(MessageWriter writer) {
+        writer.getWriter().beginMap().key("rid").value(getRequestId());
+    }
+
+    /**
+     * Override point for v2, handles v1.
+     */
+    protected void writeClose(MessageWriter writer) {
+        writer.getWriter().key("stream").value("closed");
+    }
+
+    /**
+     * Override point for v2, handles v1.
+     */
+    protected void writeEnd(MessageWriter writer) {
+        writer.getWriter().endMap();
+    }
+
+    private void writeColumns(MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
         if (result instanceof ActionValues) {
             out.key("columns").beginList();
             Iterator<DSMap> it = result.getAction().getValueResults();
@@ -325,9 +345,10 @@ class DS1InboundInvoke extends DS1InboundRequest
         }
     }
 
-    private void writeInitialResults(DSIWriter out) {
+    private void writeInitialResults(MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
         state = STATE_ROWS;
-        out.key("updates").beginList();
+        out.key(getRowsName()).beginList();
         if (result instanceof ActionValues) {
             out.beginList();
             Iterator<DSIValue> values = ((ActionValues) result).getValues();
@@ -342,7 +363,7 @@ class DS1InboundInvoke extends DS1InboundRequest
             if (rows == null) {
                 rows = ((ActionTable) result).getRows();
             }
-            DS1Responder session = getResponder();
+            DSResponder session = getResponder();
             while (rows.hasNext()) {
                 out.value(rows.next());
                 if (session.shouldEndMessage()) {
@@ -352,18 +373,25 @@ class DS1InboundInvoke extends DS1InboundRequest
                 }
             }
         }
-        out.endList();
         if ((result == null) || !result.getAction().getResultType().isOpen()) {
-            out.key("stream").value("closed");
+            writeClose(writer);
             state = STATE_CLOSED;
             doClose();
         } else {
-            out.key("stream").value("open");
+            writeOpen(writer);
             state = STATE_UPDATES;
         }
     }
 
-    private void writeUpdates(DSIWriter out) {
+    /**
+     * Override point for v2, handles v1.
+     */
+    protected void writeOpen(MessageWriter writer) {
+        writer.getWriter().key("stream").value("open");
+    }
+
+    private void writeUpdates(MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
         Update update = updateHead; //peak ahead
         if (update == null) {
             return;
@@ -375,8 +403,8 @@ class DS1InboundInvoke extends DS1InboundRequest
                .key("meta").beginMap().endMap()
                .endMap();
         }
-        out.key("updates").beginList();
-        DS1Responder session = getResponder();
+        out.key(getRowsName()).beginList();
+        DSResponder responder = getResponder();
         while (true) {
             update = dequeueUpdate();
             if (update.rows != null) {
@@ -389,7 +417,7 @@ class DS1InboundInvoke extends DS1InboundRequest
             if ((updateHead == null) || (updateHead.type != null)) {
                 break;
             }
-            if (session.shouldEndMessage()) {
+            if (responder.shouldEndMessage()) {
                 enqueueResponse();
                 break;
             }
@@ -404,7 +432,7 @@ class DS1InboundInvoke extends DS1InboundRequest
     /**
      * Used to described more complex updates.
      */
-    private enum UpdateType {
+    protected enum UpdateType {
         INSERT("insert"),
         REFRESH("refresh"),
         REPLACE("replace");
@@ -423,7 +451,7 @@ class DS1InboundInvoke extends DS1InboundRequest
     /**
      * Describes an update to be sent to the requester.
      */
-    private static class Update {
+    protected static class Update {
 
         int beginIndex = -1;
         int endIndex = -1;

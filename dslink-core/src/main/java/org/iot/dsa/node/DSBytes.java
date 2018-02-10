@@ -319,6 +319,9 @@ public class DSBytes extends DSElement {
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
+        if (arg instanceof DSBytes) {
+            return (DSBytes) arg;
+        }
         if (arg instanceof DSString) {
             return valueOf(arg.toString());
         }
