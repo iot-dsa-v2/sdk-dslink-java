@@ -1,5 +1,6 @@
 package org.iot.dsa.node;
 
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

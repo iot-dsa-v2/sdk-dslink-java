@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2.responder;
 
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageReader;
@@ -11,6 +12,7 @@ import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import java.util.Map;
 import org.iot.dsa.DSRuntime;
+import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;
@@ -78,13 +80,12 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     }
 
     public void onDisconnect() {
-        finer(finer() ? "Close" : null);
         subscriptions.close();
         for (Map.Entry<Integer, DSStream> entry : getRequests().entrySet()) {
             try {
                 entry.getValue().onClose(entry.getKey());
             } catch (Exception x) {
-                finer(finer() ? "Close" : null, x);
+                severe(getPath(), x);
             }
         }
         getRequests().clear();
@@ -147,6 +148,11 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         Object obj = msg.getHeader(MessageConstants.HDR_MAX_PERMISSION);
         if (obj != null) {
             perm = DSPermission.valueOf(obj.hashCode());
+        }
+        int metaLen = DSBytes.readShort(msg.getBody(), false);
+        if (metaLen > 0) {
+            //what to do with it?
+            msg.getBodyReader().getElement();
         }
         DSElement value = msg.getBodyReader().getElement();
         DSInboundSet setImpl = new DSInboundSet(value, perm);

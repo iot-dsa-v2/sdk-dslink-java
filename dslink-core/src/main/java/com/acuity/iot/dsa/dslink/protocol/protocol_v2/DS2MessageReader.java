@@ -160,6 +160,7 @@ public class DS2MessageReader implements MessageConstants {
             case MSG_INVOKE_REQ:
             case MSG_LIST_REQ:
             case MSG_OBSERVE_REQ:
+            case MSG_SET_REQ:
                 return true;
         }
         return false;

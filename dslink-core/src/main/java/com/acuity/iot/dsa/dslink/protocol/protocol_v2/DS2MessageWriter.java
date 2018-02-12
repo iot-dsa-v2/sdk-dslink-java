@@ -1,11 +1,13 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
+import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSString;
 
 /**
@@ -15,7 +17,7 @@ import org.iot.dsa.node.DSString;
  *
  * @author Aaron Hansen
  */
-public class DS2MessageWriter implements MessageConstants {
+public class DS2MessageWriter implements MessageConstants, MessageWriter {
 
     // Fields
     // ------
@@ -26,6 +28,7 @@ public class DS2MessageWriter implements MessageConstants {
     private byte method;
     private ByteBuffer strBuffer;
     private CharsetEncoder utf8encoder;
+    private MsgpackWriter writer;
 
     // Constructors
     // ------------
@@ -33,6 +36,7 @@ public class DS2MessageWriter implements MessageConstants {
     public DS2MessageWriter() {
         header = new DSByteBuffer();
         body = new DSByteBuffer();
+        writer = new MsgpackWriter(body);
         utf8encoder = DSString.UTF8.newEncoder();
         init(-1, -1);
     }
@@ -83,12 +87,12 @@ public class DS2MessageWriter implements MessageConstants {
         header.replace(6, method);
     }
 
-    public int getBodyLength() {
-        return body.length();
+    public DSByteBuffer getBody() {
+        return body;
     }
 
-    public int getHeaderLength() {
-        return header.length();
+    public int getBodyLength() {
+        return body.length();
     }
 
     /**
@@ -117,6 +121,10 @@ public class DS2MessageWriter implements MessageConstants {
         return charBuffer;
     }
 
+    public int getHeaderLength() {
+        return header.length();
+    }
+
     /**
      * Called by writeString(), returns a bytebuffer for the given capacity ready for writing
      * (putting).  Attempts to reuse the same buffer as much as possible.
@@ -140,8 +148,9 @@ public class DS2MessageWriter implements MessageConstants {
         return strBuffer;
     }
 
-    public DSByteBuffer getBody() {
-        return body;
+    @Override
+    public MsgpackWriter getWriter() {
+        return writer;
     }
 
     /**
@@ -152,6 +161,7 @@ public class DS2MessageWriter implements MessageConstants {
      */
     public DS2MessageWriter init(int requestId, int ackId) {
         body.clear();
+        writer.reset();
         header.clear();
         header.skip(7);
         if (requestId >= 0) {

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import javax.net.ssl.SSLSocketFactory;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -89,7 +90,16 @@ public class SocketTransport extends DSBinaryTransport {
             throw new IllegalStateException("Already open");
         }
         try {
-            socket = new Socket(getConnectionUrl(), 443);
+            String url = getConnectionUrl();
+            if (url.startsWith("dss:")) {
+                url = url.substring(4);
+                socket = SSLSocketFactory.getDefault().createSocket(url, 4128);
+            } else if (url.startsWith("ds:")) {
+                url = url.substring(3);
+                socket = new Socket(url, 4120);
+            } else {
+                throw new IllegalArgumentException("Invalid broker URI: " + url);
+            }
             socket.setSoTimeout((int) getReadTimeout());
             open = true;
             fine(fine() ? "SocketTransport open" : null);

@@ -165,14 +165,17 @@ public class DSPath {
         }
         boolean modified = false;
         int pathLength = name.length();
-        CharArrayWriter charArrayWriter = new CharArrayWriter();
+        CharArrayWriter charArrayWriter = null;
         char c;
         for (int i = 0; i < pathLength; ) {
             c = name.charAt(i);
-            if (!shouldEncode(c)) {
-                buf.append((char) c);
+            if (!shouldEncode(c, i)) {
+                buf.append(c);
                 i++;
             } else {
+                if (charArrayWriter == null) {
+                    charArrayWriter = new CharArrayWriter();
+                }
                 do {
                     charArrayWriter.write(c);
                     if (c >= 0xD800 && c <= 0xDBFF) {
@@ -185,7 +188,7 @@ public class DSPath {
                         }
                     }
                     i++;
-                } while (i < pathLength && shouldEncode((c = name.charAt(i))));
+                } while (i < pathLength && shouldEncode((c = name.charAt(i)),i));
                 charArrayWriter.flush();
                 String str = new String(charArrayWriter.toCharArray());
                 byte[] bytes = str.getBytes(utf8);
@@ -237,21 +240,28 @@ public class DSPath {
     /**
      * Returns true for characters that should be encoded.
      */
-    public static boolean shouldEncode(int ch) {
+    public static boolean shouldEncode(int ch, int pos) {
         switch (ch) {
             case '.':
             case '/':
             case '\\':
+            case '\'':
+            case '"':
             case '?':
             case '*':
-            case ':':
-            case '"':
+            case '|':
             case '<':
             case '>':
+            case '=':
+            case ':':
+            case ';':
             case '%':
                 return true;
+            case '@':
+            case '$':
+                return pos == 0;
             default:
-                return false;
+                return ch < 0x20;
         }
     }
 

@@ -1,9 +1,11 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2;
 
 import com.acuity.iot.dsa.dslink.DSSession;
+import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.requester.DS1Requester;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.responder.DS2Responder;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.node.DSInfo;
@@ -22,9 +24,7 @@ public class DS2Session extends DSSession implements MessageConstants {
 
     static final int END_MSG_THRESHOLD = 48000;
     static final String LAST_ACK_RECV = "Last Ack Recv";
-    static final String LAST_ACK_SENT = "Last Ack Sent";
 
-    static final int MAX_MSG_ID = 2147483647;
     static final int MAX_MSG_IVL = 45000;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -32,14 +32,12 @@ public class DS2Session extends DSSession implements MessageConstants {
     ///////////////////////////////////////////////////////////////////////////
 
     private DSInfo lastAckRecv = getInfo(LAST_ACK_RECV);
-    private DSInfo lastAckSent = getInfo(LAST_ACK_SENT);
     private long lastMessageSent;
     private DS2MessageReader messageReader;
-    private int nextAck = -1;
-    private int nextMsg = 1;
+    private DS2MessageWriter messageWriter;
     private boolean requestsNext = false;
     private DS1Requester requester;// = new DS1Requester(this);
-    private DS2Responder responder = null;//new DS2Responder(this); //todo
+    private DS2Responder responder = new DS2Responder(this);
 
     /////////////////////////////////////////////////////////////////
     // Constructors
@@ -59,7 +57,6 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     protected void declareDefaults() {
         declareDefault(LAST_ACK_RECV, DSInt.NULL).setReadOnly(true);
-        declareDefault(LAST_ACK_SENT, DSInt.NULL).setReadOnly(true);
     }
 
     @Override
@@ -81,25 +78,26 @@ public class DS2Session extends DSSession implements MessageConstants {
 
     @Override
     protected void doSendMessage() {
-        /*
         DSTransport transport = getTransport();
-        long endTime = System.currentTimeMillis() + 2000;
         requestsNext = !requestsNext;
         transport.beginMessage();
         if (hasMessagesToSend()) {
-            send(requestsNext, endTime);
-            if ((System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
-                send(!requestsNext, endTime);
-            }
+            send(requestsNext);
         }
         transport.endMessage();
         lastMessageSent = System.currentTimeMillis();
-        */
     }
 
     @Override
     public DS2LinkConnection getConnection() {
         return (DS2LinkConnection) super.getConnection();
+    }
+
+    private DS2MessageWriter getMessageWriter() {
+        if (messageWriter == null) {
+            messageWriter = new DS2MessageWriter();
+        }
+        return messageWriter;
     }
 
     @Override
@@ -119,9 +117,6 @@ public class DS2Session extends DSSession implements MessageConstants {
      * Override point, returns true if there are any pending acks or outbound messages queued up.
      */
     protected boolean hasSomethingToSend() {
-        if (nextAck > 0) {
-            return true;
-        }
         if (hasPingToSend()) {
             return true;
         }
@@ -139,30 +134,46 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     public void onConnect() {
         super.onConnect();
-        requester.onConnect();
+        //requester.onConnect();
         responder.onConnect();
     }
 
     @Override
     public void onConnectFail() {
         super.onConnectFail();
-        requester.onConnectFail();
+        //requester.onConnectFail();
         responder.onConnectFail();
     }
 
     @Override
     public void onDisconnect() {
         super.onDisconnect();
-        requester.onDisconnect();
+        //requester.onDisconnect();
         responder.onDisconnect();
     }
 
     /**
-     * We need to send an ack to the broker.
+     * Send messages from one of the queues.
+     *
+     * @param requests Determines which queue to use; True for outgoing requests, false for
+     *                 responses.
      */
-    private synchronized void sendAck(int msg) {
-        nextAck = msg;
-        notifyOutgoing();
+    private void send(boolean requests) {
+        boolean hasSomething = false;
+        if (requests) {
+            hasSomething = hasOutgoingRequests();
+        } else {
+            hasSomething = hasOutgoingResponses();
+        }
+        OutboundMessage msg = null;
+        if (hasSomething) {
+            msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
+        } else if (hasPingToSend()) {
+            msg = new PingMessage(this);
+        }
+        if (msg != null) {
+            msg.write(getMessageWriter());
+        }
     }
 
     /**

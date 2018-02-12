@@ -132,14 +132,12 @@ public class DS2LinkConnection extends DSLinkConnection {
             } catch (Exception x) {
                 DSException.throwRuntime(x);
             }
-        } else {
+        } else if (uri.startsWith("ds")) {
             transport = new SocketTransport();
         }
         config(config() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
-        transport.setReadTimeout(getLink().getConfig().getConfig(
-                DSLinkConfig.CFG_READ_TIMEOUT, 60000));
     }
 
     @Override
