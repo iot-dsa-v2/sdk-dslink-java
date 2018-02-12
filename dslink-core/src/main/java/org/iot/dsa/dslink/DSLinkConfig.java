@@ -24,7 +24,6 @@ public class DSLinkConfig {
     public static final String CFG_KEY_FILE = "key";
     public static final String CFG_LOG_LEVEL = "log";
     public static final String CFG_NODE_FILE = "nodes";
-    public static final String CFG_PROTOCOL_VERSION = "protocolVersion";
 
     public static final String CFG_CONNECTION_TYPE = "connectionType";
     public static final String CFG_READ_TIMEOUT = "readTimeout";
@@ -66,6 +65,7 @@ public class DSLinkConfig {
      */
     public DSLinkConfig(File workingDir) {
         this.workingDir = workingDir;
+        setDslinkJson(new File(workingDir, "dslink.json"));
     }
 
     /**
@@ -73,6 +73,7 @@ public class DSLinkConfig {
      * character.
      */
     public DSLinkConfig(String args) {
+        setDslinkJson(new File("dslink.json"));
         parse(args.split(" +"));
     }
 
@@ -80,6 +81,7 @@ public class DSLinkConfig {
      * Constructor for the arguments pass to a main method.
      */
     public DSLinkConfig(String[] args) {
+        setDslinkJson(new File("dslink.json"));
         parse(args);
     }
 

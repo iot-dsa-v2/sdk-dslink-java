@@ -1,26 +1,13 @@
 {
   "name": "dslink-java-v2-test",
-  "dsaVersion": "2.0",
   "version": "1.0.0",
+  "dsa-version": "1.0",
   "description": "Testing Link",
   "main": "bin/dslink-java-v2-test",
   "configs": {
     "handler_class": {
-      "desc1": "*************** THIS IS REQUIRED AND MUST BE CHANGED ***************",
-      "desc2": "Fully qualified class name of the root node of the link.",
       "type": "string",
       "value": "org.iot.dsa.dslink.test.MainNode"
-    },
-    "broker": {
-      "desc1": "*************** OPTIONAL CONFIGS IN ALPHABETICAL ORDER ***************",
-      "desc2": "URL to broker.",
-      "type": "url",
-      "value": null
-    },
-    "key": {
-      "desc": "Path to public/private key pair.",
-      "type": "path",
-      "value": ".key"
     },
     "log": {
       "desc": "debug, info, warn, error, none",

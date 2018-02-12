@@ -91,11 +91,11 @@ public class SocketTransport extends DSBinaryTransport {
         }
         try {
             String url = getConnectionUrl();
-            if (url.startsWith("dss:")) {
-                url = url.substring(4);
+            if (url.startsWith("dss://")) {
+                url = url.substring(6);
                 socket = SSLSocketFactory.getDefault().createSocket(url, 4128);
-            } else if (url.startsWith("ds:")) {
-                url = url.substring(3);
+            } else if (url.startsWith("ds://")) {
+                url = url.substring(5);
                 socket = new Socket(url, 4120);
             } else {
                 throw new IllegalArgumentException("Invalid broker URI: " + url);

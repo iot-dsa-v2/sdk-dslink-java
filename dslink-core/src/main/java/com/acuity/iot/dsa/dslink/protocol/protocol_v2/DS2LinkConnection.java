@@ -73,6 +73,7 @@ public class DS2LinkConnection extends DSLinkConnection {
         declareDefault(LAST_CONNECT_OK, DSDateTime.NULL).setTransient(true).setReadOnly(true);
         declareDefault(LAST_CONNECT_FAIL, DSDateTime.NULL).setTransient(true).setReadOnly(true);
         declareDefault(FAIL_CAUSE, DSString.NULL).setTransient(true).setReadOnly(true);
+        declareDefault(BROKER_URI, DSString.NULL).setTransient(true).setReadOnly(true);
         declareDefault(BROKER_PATH, DSString.NULL).setTransient(true).setReadOnly(true);
         declareDefault(BROKER_ID, DSString.NULL).setTransient(true).setReadOnly(true);
         declareDefault(BROKER_AUTH, DSBytes.NULL)
@@ -195,12 +196,21 @@ public class DS2LinkConnection extends DSLinkConnection {
         }
         //TODO check for header status
         put(brokerDsId, DSString.valueOf(reader.readString(in)));
+        System.out.println(brokerDsId.getElement().toString());
         byte[] tmp = new byte[65];
-        in.read(tmp);
+        int len = in.read(tmp);
+        if (len != 65) {
+            throw new IllegalStateException("Broker pub key not 65 bytes: " + len);
+        }
         put(BROKER_PUB_KEY, DSBytes.valueOf(tmp));
+        System.out.println(brokerPubKey.getElement().toString());
         tmp = new byte[32];
-        in.read(tmp);
+        len = in.read(tmp);
+        if (len != 32) {
+            throw new IllegalStateException("Broker salt not 32 bytes: " + len);
+        }
         put(BROKER_SALT, DSBytes.valueOf(tmp));
+        System.out.println(brokerSalt.getElement().toString());
     }
 
     private void recvF3() throws IOException {

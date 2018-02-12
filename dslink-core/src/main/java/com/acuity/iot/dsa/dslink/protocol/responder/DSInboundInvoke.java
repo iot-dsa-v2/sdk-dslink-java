@@ -373,6 +373,7 @@ public class DSInboundInvoke extends DSInboundRequest
                 }
             }
         }
+        out.endList();
         if ((result == null) || !result.getAction().getResultType().isOpen()) {
             writeClose(writer);
             state = STATE_CLOSED;

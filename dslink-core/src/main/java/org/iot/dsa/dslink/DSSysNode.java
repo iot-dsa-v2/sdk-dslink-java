@@ -44,7 +44,7 @@ public class DSSysNode extends DSNode {
     void init() {
         DSLinkConfig config = getLink().getConfig();
         try {
-            String ver = config.getConfig(DSLinkConfig.CFG_PROTOCOL_VERSION, "1");
+            String ver = config.getDsaVersion();
             DSLinkConnection conn;
             if (ver.startsWith("1")) {
                 String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
