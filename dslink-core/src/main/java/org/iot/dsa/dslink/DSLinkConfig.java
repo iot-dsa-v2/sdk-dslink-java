@@ -188,8 +188,16 @@ public class DSLinkConfig {
     }
 
     public String getDsaVersion() {
+        String brokerUri = getBrokerUri();
+        if (brokerUri != null) {
+            if (brokerUri.startsWith("http")) {
+                if (brokerUri.indexOf("/conn") > 0) {
+                    return "1.0";
+                }
+            }
+        }
         if (dsaVersion == null) {
-            dsaVersion = getDslinkJson().getString("dsa-version");
+            dsaVersion = getDslinkJson().get("dsa-version", "2.0");
         }
         return dsaVersion;
     }
