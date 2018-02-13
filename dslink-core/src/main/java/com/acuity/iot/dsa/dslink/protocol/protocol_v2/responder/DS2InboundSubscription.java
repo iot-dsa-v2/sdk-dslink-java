@@ -38,7 +38,7 @@ public class DS2InboundSubscription extends DSInboundSubscription implements Mes
     protected void write(Update update, MessageWriter writer, StringBuilder buf) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(getSubscriptionId(), getSession().getNextAck());
-        out.setMethod((byte)MSG_SUBSCRIBE_RES);
+        out.setMethod((byte) MSG_SUBSCRIBE_RES);
         DSByteBuffer byteBuffer = out.getBody();
         byteBuffer.skip(2);
         MsgpackWriter msgpackWriter = new MsgpackWriter(byteBuffer);
@@ -52,7 +52,7 @@ public class DS2InboundSubscription extends DSInboundSubscription implements Mes
         msgpackWriter.endMap();
         byteBuffer.replaceShort(0, (short) msgpackWriter.length(), false);
         msgpackWriter.value(update.value.toElement());
-        out.write((DSBinaryTransport)getResponder().getTransport());
+        out.write((DSBinaryTransport) getResponder().getTransport());
     }
 
 }

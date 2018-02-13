@@ -2,9 +2,7 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2LinkConnection;
-import java.util.logging.Logger;
 import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
@@ -67,7 +65,7 @@ public class DSSysNode extends DSNode {
     public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
         if (action == save) {
             getLink().save();
-        } else if (action == stop){
+        } else if (action == stop) {
             getLink().shutdown();
         } else {
             super.onInvoke(action, invocation);

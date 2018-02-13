@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.protocol_v2.responder;
 
-import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageReader;

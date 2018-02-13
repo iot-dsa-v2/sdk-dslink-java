@@ -246,7 +246,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                //case LAST_INIT:
+                    //case LAST_INIT:
                     //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:
@@ -274,7 +274,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error");
-                //case LAST_INIT:
+                    //case LAST_INIT:
                     //throw new IllegalStateException("Not expecting byte[] value");
                 case LAST_VAL:
                 case LAST_END:
@@ -302,7 +302,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                //case LAST_INIT:
+                    //case LAST_INIT:
                     //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:
@@ -330,7 +330,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                //case LAST_INIT:
+                    //case LAST_INIT:
                     //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:
@@ -358,7 +358,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                //case LAST_INIT:
+                    //case LAST_INIT:
                     //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:
@@ -386,7 +386,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                //case LAST_INIT:
+                    //case LAST_INIT:
                     //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:

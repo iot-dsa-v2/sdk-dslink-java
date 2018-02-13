@@ -20,7 +20,7 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
         out.init(getRequestId(), getSession().getNextAck());
         out.setMethod((byte) MSG_LIST_RES);
         super.write(writer);
-        out.write((DSBinaryTransport)getResponder().getTransport());
+        out.write((DSBinaryTransport) getResponder().getTransport());
         //if has multipart
     }
 

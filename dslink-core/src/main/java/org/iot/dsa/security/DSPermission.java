@@ -57,13 +57,13 @@ public enum DSPermission {
 
     public static DSPermission valueOf(int v2byte) {
         switch (v2byte) {
-            case 0x10 :
+            case 0x10:
                 return LIST;
-            case 0x20 :
+            case 0x20:
                 return READ;
-            case 0x30 :
+            case 0x30:
                 return WRITE;
-            case 0x40 :
+            case 0x40:
                 return CONFIG;
         }
         throw new IllegalArgumentException("Unknown permission: " + v2byte);

@@ -1,7 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.DSSession;
-import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.responder.InboundRequest;
 import org.iot.dsa.logging.DSLogger;

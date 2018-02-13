@@ -46,7 +46,8 @@ public class DSInboundSubscription extends DSInboundRequest
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    protected DSInboundSubscription(DSInboundSubscriptions manager, Integer sid, String path, int qos) {
+    protected DSInboundSubscription(DSInboundSubscriptions manager, Integer sid, String path,
+                                    int qos) {
         this.manager = manager;
         this.sid = sid;
         setPath(path);

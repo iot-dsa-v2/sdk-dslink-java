@@ -188,7 +188,7 @@ public class DSPath {
                         }
                     }
                     i++;
-                } while (i < pathLength && shouldEncode((c = name.charAt(i)),i));
+                } while (i < pathLength && shouldEncode((c = name.charAt(i)), i));
                 charArrayWriter.flush();
                 String str = new String(charArrayWriter.toCharArray());
                 byte[] bytes = str.getBytes(utf8);
