@@ -1,7 +1,7 @@
 {
   "name": "dslink-java-v2-test",
   "version": "1.0.0",
-  "dsa-version": "1.0",
+  "dsa-version": "2.0",
   "description": "Testing Link",
   "main": "bin/dslink-java-v2-test",
   "configs": {

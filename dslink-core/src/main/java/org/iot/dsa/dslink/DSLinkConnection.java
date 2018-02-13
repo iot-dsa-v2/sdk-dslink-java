@@ -3,7 +3,6 @@ package org.iot.dsa.dslink;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
-import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.time.DSTime;
 
@@ -190,20 +189,15 @@ public abstract class DSLinkConnection extends DSNode {
                     severe(getPath(), x);
                     continue;
                 }
-                DSRuntime.runDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (listeners != null) {
-                            for (Listener listener : listeners.keySet()) {
-                                try {
-                                    listener.onConnect(DSLinkConnection.this);
-                                } catch (Exception x) {
-                                    severe(listener.toString(), x);
-                                }
-                            }
+                if (listeners != null) {
+                    for (Listener listener : listeners.keySet()) {
+                        try {
+                            listener.onConnect(DSLinkConnection.this);
+                        } catch (Exception x) {
+                            severe(listener.toString(), x);
                         }
                     }
-                }, 1000);
+                }
                 try {
                     onRun();
                     reconnectRate = 1000;

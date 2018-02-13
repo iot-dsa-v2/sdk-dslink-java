@@ -6,7 +6,6 @@ import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import org.iot.dsa.dslink.DSIRequester;
@@ -144,11 +143,18 @@ public class DS2LinkConnection extends DSLinkConnection {
     @Override
     protected void onConnect() {
         transport.open();
-        performHandshake();
+        session.onConnect();
+        try {
+            performHandshake();
+        } catch (Exception x) {
+            session.onConnectFail();
+            DSException.throwRuntime(x);
+        }
     }
 
     @Override
     protected void onDisconnect() {
+        session.onDisconnect();
         put(STATUS, DSStatus.down);
     }
 
@@ -196,21 +202,18 @@ public class DS2LinkConnection extends DSLinkConnection {
         }
         //TODO check for header status
         put(brokerDsId, DSString.valueOf(reader.readString(in)));
-        System.out.println(brokerDsId.getElement().toString());
         byte[] tmp = new byte[65];
         int len = in.read(tmp);
         if (len != 65) {
             throw new IllegalStateException("Broker pub key not 65 bytes: " + len);
         }
         put(BROKER_PUB_KEY, DSBytes.valueOf(tmp));
-        System.out.println(brokerPubKey.getElement().toString());
         tmp = new byte[32];
         len = in.read(tmp);
         if (len != 32) {
             throw new IllegalStateException("Broker salt not 32 bytes: " + len);
         }
         put(BROKER_SALT, DSBytes.valueOf(tmp));
-        System.out.println(brokerSalt.getElement().toString());
     }
 
     private void recvF3() throws IOException {
@@ -258,12 +261,15 @@ public class DS2LinkConnection extends DSLinkConnection {
         byte[] sharedSecret = getLink().getKeys().generateSharedSecret(
                 brokerPubKey.getElement().toBytes());
         byte[] tmp = brokerSalt.getElement().toBytes();
+        byte[] authBytes = DSKeys.generateHmacSHA256Signature(tmp, sharedSecret);
+        /*
         byte[] authBytes = new byte[tmp.length + sharedSecret.length];
         System.arraycopy(tmp, 0, authBytes, 0, tmp.length);
         System.arraycopy(sharedSecret, 0, authBytes, tmp.length, sharedSecret.length);
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         messageDigest.update(authBytes);
         authBytes = messageDigest.digest();
+        */
         buffer.put(authBytes);
         writer.write(transport);
     }
