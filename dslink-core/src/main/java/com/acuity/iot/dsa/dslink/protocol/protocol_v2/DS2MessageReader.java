@@ -20,7 +20,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DS2MessageReader implements MessageConstants {
+public class DS2MessageReader extends DS2Message {
 
     // Fields
     // ------
@@ -28,7 +28,7 @@ public class DS2MessageReader implements MessageConstants {
     private int ackId;
     private int bodyLength;
     private CharBuffer charBuffer;
-    private Map<Byte, Object> headers = new HashMap<Byte, Object>();
+    private Map<Integer, Object> headers = new HashMap<Integer, Object>();
     private InputStream input;
     private int method;
     private DSIReader reader;
@@ -81,11 +81,11 @@ public class DS2MessageReader implements MessageConstants {
         return charBuffer;
     }
 
-    public Object getHeader(Byte key) {
+    public Object getHeader(Integer key) {
         return headers.get(key);
     }
 
-    public Object getHeader(Byte key, Object def) {
+    public Object getHeader(Integer key, Object def) {
         Object ret = headers.get(key);
         if (ret == null) {
             ret = def;
@@ -93,7 +93,7 @@ public class DS2MessageReader implements MessageConstants {
         return ret;
     }
 
-    public Map<Byte, Object> getHeaders() {
+    public Map<Integer, Object> getHeaders() {
         return headers;
     }
 
@@ -139,19 +139,32 @@ public class DS2MessageReader implements MessageConstants {
             hlen -= 7;
             requestId = -1;
             ackId = -1;
-            if (hlen > 4) {
+            if (hlen >= 4) {
                 requestId = DSBytes.readInt(in, false);
                 hlen -= 4;
-                if (hlen > 4) {
+                if (hlen >= 4) {
                     ackId = DSBytes.readInt(in, false);
                     hlen -= 4;
                 }
-                parseDynamicHeaders(in, hlen);
+                if (hlen > 0) {
+                    parseDynamicHeaders(in, hlen, headers);
+                }
+            }
+            if (isDebug()) {
+                debugSummary();
             }
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
         return this;
+    }
+
+    public boolean isAck() {
+        return method == MSG_ACK;
+    }
+
+    public boolean isPing() {
+        return method == MSG_PING;
     }
 
     public boolean isRequest() {
@@ -170,33 +183,34 @@ public class DS2MessageReader implements MessageConstants {
         return (method & 0x80) != 0;
     }
 
-    private void parseDynamicHeaders(InputStream in, int len) throws IOException {
-        byte code;
+    void parseDynamicHeaders(InputStream in, int len, Map<Integer, Object> headers)
+            throws IOException {
+        int code;
         Object val;
         while (len > 0) {
-            code = (byte) in.read();
+            code = in.read() & 0xFF;
             val = null;
             len--;
             switch (code) {
-                case 0:
-                case 8:
-                case 12:
-                case 32:
+                case 0x00:
+                case 0x08:
+                case 0x12:
+                case 0x32:
                     val = in.read();
                     len--;
                     break;
-                case 1:
-                case 2:
-                case 14:
-                case 15:
+                case 0x01:
+                case 0x02:
+                case 0x14:
+                case 0x15:
                     val = DSBytes.readInt(in, false);
                     len -= 4;
                     break;
-                case 21:
-                case 41:
-                case 60:
-                case 80:
-                case 81:
+                case 0x21:
+                case 0x41:
+                case 0x60:
+                case 0x80:
+                case 0x81:
                     short slen = DSBytes.readShort(in, false);
                     len -= 2;
                     len -= slen;
@@ -206,6 +220,28 @@ public class DS2MessageReader implements MessageConstants {
                     val = code;
             }
             headers.put(code, val);
+        }
+    }
+
+    public void debugSummary() {
+        StringBuilder buf = getDebug();
+        buf.append("RECV ");
+        debugMethod(getMethod(), buf);
+        if (requestId >= 0) {
+            buf.append(", ").append("Rid ").append(requestId);
+        }
+        if (ackId >= 0) {
+            buf.append(", ").append("Ack ").append(ackId);
+        }
+        Object target = headers.get(HDR_TARGET_PATH);
+        if (target != null) {
+            buf.append(", ").append(target);
+        }
+        for (Map.Entry<Integer, Object> e : headers.entrySet()) {
+            buf.append(", ");
+            debugHeader(e.getKey(), buf);
+            buf.append("=");
+            buf.append(e.getValue());
         }
     }
 

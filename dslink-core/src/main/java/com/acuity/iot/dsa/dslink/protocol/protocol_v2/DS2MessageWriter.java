@@ -17,15 +17,17 @@ import org.iot.dsa.node.DSString;
  *
  * @author Aaron Hansen
  */
-public class DS2MessageWriter implements MessageConstants, MessageWriter {
+public class DS2MessageWriter extends DS2Message implements MessageWriter {
 
     // Fields
     // ------
 
+    private int ackId = -1;
     private DSByteBuffer body;
     private CharBuffer charBuffer;
     private DSByteBuffer header;
-    private byte method;
+    private int method;
+    private int requestId = -1;
     private ByteBuffer strBuffer;
     private CharsetEncoder utf8encoder;
     private MsgpackWriter writer;
@@ -55,7 +57,7 @@ public class DS2MessageWriter implements MessageConstants, MessageWriter {
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public DS2MessageWriter addHeader(byte key, byte value) {
+    public DS2MessageWriter addHeader(byte key, Byte value) {
         header.put(key);
         header.put(value);
         return this;
@@ -79,12 +81,28 @@ public class DS2MessageWriter implements MessageConstants, MessageWriter {
         return this;
     }
 
-    private void encodeHeaderLengths() {
+    private void debugSummary() {
+        StringBuilder debug = getDebug();
+        StringBuilder buf = debug;
+        boolean insert = buf.length() > 0;
+        if (insert) {
+            buf = new StringBuilder();
+        }
+        buf.append("SEND ");
+        debugMethod(method, buf);
+        buf.append(", Rid ").append(requestId < 0 ? 0 : requestId);
+        buf.append(", Ack ").append(ackId < 0 ? 0 : ackId);
+        if (insert) {
+            debug.insert(0, buf);
+        }
+    }
+
+    private void finishHeader() {
         int hlen = header.length();
         int blen = body.length();
         header.replaceInt(0, hlen + blen, false);
         header.replaceShort(4, (short) hlen, false);
-        header.replace(6, method);
+        header.replace(6, (byte) method);
     }
 
     public DSByteBuffer getBody() {
@@ -157,23 +175,29 @@ public class DS2MessageWriter implements MessageConstants, MessageWriter {
      * Initialize a new message.
      *
      * @param requestId The request ID or -1 to omit.
-     * @param ackId     -1 to omit, but can only be -1 when the requestId is also -1.
+     * @param ackId     -1 to omit.
      */
     public DS2MessageWriter init(int requestId, int ackId) {
+        this.requestId = requestId;
+        this.ackId = ackId;
         body.clear();
         writer.reset();
         header.clear();
         header.skip(7);
-        if (requestId >= 0) {
-            header.putInt(requestId);
-            if (ackId >= 0) {
-                header.putInt(requestId);
+        if ((requestId >= 0) || (ackId >= 0)) {
+            if (requestId < 0) {
+                requestId = 0;
             }
+            header.putInt(requestId, false);
+            if (ackId < 0) {
+                ackId = 0;
+            }
+            header.putInt(ackId, false);
         }
         return this;
     }
 
-    public DS2MessageWriter setMethod(byte method) {
+    public DS2MessageWriter setMethod(int method) {
         this.method = method;
         return this;
     }
@@ -183,7 +207,7 @@ public class DS2MessageWriter implements MessageConstants, MessageWriter {
      */
     public byte[] toByteArray() {
         ByteArrayOutputStream out = new ByteArrayOutputStream(header.length() + body.length());
-        encodeHeaderLengths();
+        finishHeader();
         header.sendTo(out);
         body.sendTo(out);
         return out.toByteArray();
@@ -193,10 +217,25 @@ public class DS2MessageWriter implements MessageConstants, MessageWriter {
      * Writes the message to the transport.
      */
     public DS2MessageWriter write(DSBinaryTransport out) {
-        encodeHeaderLengths();
+        finishHeader();
+        if (isDebug()) {
+            debugSummary();
+        }
         header.sendTo(out, false);
         body.sendTo(out, true);
         return this;
+    }
+
+    /**
+     * DSA 2.n encodes a string into the body.
+     */
+    public void writeString(CharSequence str) {
+        CharBuffer chars = getCharBuffer(str);
+        ByteBuffer strBuffer = getStringBuffer(
+                chars.position() * (int) utf8encoder.maxBytesPerChar());
+        utf8encoder.encode(chars, strBuffer, false);
+        body.putShort((short) strBuffer.position(), false);
+        body.put(strBuffer);
     }
 
     /**
@@ -210,77 +249,5 @@ public class DS2MessageWriter implements MessageConstants, MessageWriter {
         buf.putShort((short) strBuffer.position(), false);
         buf.put(strBuffer);
     }
-
-    /**
-     * Writes a little endian integer to the buffer.
-     public void writeIntLE(int v, ByteBuffer buf) {
-     buf.put((byte) ((v >>> 0) & 0xFF));
-     buf.put((byte) ((v >>> 8) & 0xFF));
-     buf.put((byte) ((v >>> 16) & 0xFF));
-     buf.put((byte) ((v >>> 32) & 0xFF));
-     }
-     */
-
-    /**
-     * Writes a little endian integer to the buffer.
-     public void writeIntLE(int v, ByteBuffer buf, int idx) {
-     buf.put(idx, (byte) ((v >>> 0) & 0xFF));
-     buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
-     buf.put(++idx, (byte) ((v >>> 16) & 0xFF));
-     buf.put(++idx, (byte) ((v >>> 32) & 0xFF));
-     }
-     */
-
-    /**
-     * Writes a little endian short to the buffer.
-     public void writeShortLE(short v, ByteBuffer buf) {
-     buf.put((byte) ((v >>> 0) & 0xFF));
-     buf.put((byte) ((v >>> 8) & 0xFF));
-     }
-     */
-
-    /**
-     * Writes a little endian short to the buffer.
-     public void writeShortLE(short v, ByteBuffer buf, int idx) {
-     buf.put(idx, (byte) ((v >>> 0) & 0xFF));
-     buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
-     }
-     */
-
-    /**
-     * Writes an unsigned 16 bit little endian integer to the buffer.
-     public void writeU16LE(int v, ByteBuffer buf) {
-     buf.put((byte) ((v >>> 0) & 0xFF));
-     buf.put((byte) ((v >>> 8) & 0xFF));
-     }
-     */
-
-    /**
-     * Writes an unsigned 16 bit little endian integer to the buffer.
-     public void writeU16LE(int v, ByteBuffer buf, int idx) {
-     buf.put(idx, (byte) ((v >>> 0) & 0xFF));
-     buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
-     }
-     */
-
-    /**
-     * Writes an unsigned 32 bit little endian integer to the buffer.
-     public void writeU32LE(long v, ByteBuffer buf) {
-     buf.put((byte) ((v >>> 0) & 0xFF));
-     buf.put((byte) ((v >>> 8) & 0xFF));
-     buf.put((byte) ((v >>> 16) & 0xFF));
-     buf.put((byte) ((v >>> 32) & 0xFF));
-     }
-     */
-
-    /**
-     * Writes an unsigned 32 bit little endian integer to the buffer.
-     public void writeU32LE(long v, ByteBuffer buf, int idx) {
-     buf.put(idx, (byte) ((v >>> 0) & 0xFF));
-     buf.put(++idx, (byte) ((v >>> 8) & 0xFF));
-     buf.put(++idx, (byte) ((v >>> 16) & 0xFF));
-     buf.put(++idx, (byte) ((v >>> 32) & 0xFF));
-     }
-     */
 
 }

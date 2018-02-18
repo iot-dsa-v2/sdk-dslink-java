@@ -15,7 +15,7 @@ import org.iot.dsa.time.DSTime;
  *
  * @author Aaron Hansen
  */
-public abstract class AsyncLogHandler extends Handler {
+public abstract class AsyncLogHandler extends Handler implements DSILevels {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -199,6 +199,29 @@ public abstract class AsyncLogHandler extends Handler {
         }
     }
 
+    private String toString(Level level) {
+        switch (level.intValue()) {
+            case TRACE: //finest
+                return "Trace";
+            case DEBUG: //finer
+                return "Debug";
+            case FINE: //fine
+            case CONFIG: //config
+                return "Fine ";
+            case WARN: //custom
+                return "Warn ";
+            case INFO: //info
+                return "Info ";
+            case ERROR: //warn
+                return "Error";
+            case ADMIN: //custom
+                return "Admin";
+            case FATAL: //severe
+                return "Fatal";
+        }
+        return level.getLocalizedName();
+    }
+
     /**
      * Formats and writes the logging record the underlying stream.
      */
@@ -208,11 +231,11 @@ public abstract class AsyncLogHandler extends Handler {
             out.println(formatter.format(record));
             return;
         }
+        // severity
+        builder.append(toString(record.getLevel())).append(' ');
         // timestamp
         calendar.setTimeInMillis(record.getMillis());
         DSTime.encodeForLogs(calendar, builder);
-        // severity
-        builder.append(' ').append(record.getLevel().getLocalizedName());
         // log name
         String name = record.getLoggerName();
         if ((name != null) && !name.isEmpty()) {
@@ -220,27 +243,26 @@ public abstract class AsyncLogHandler extends Handler {
             builder.append(record.getLoggerName());
             builder.append(']');
         } else {
-            builder.append(" [default]");
+            builder.append(" [Default]");
         }
         // class
         if (record.getSourceClassName() != null) {
-            builder.append(" - ");
             builder.append(record.getSourceClassName());
+            builder.append(" - ");
         }
         // method
         if (record.getSourceMethodName() != null) {
-            builder.append(" - ");
             builder.append(record.getSourceMethodName());
+            builder.append(" - ");
         }
         // message
         String msg = record.getMessage();
         if ((msg != null) && (msg.length() > 0)) {
             Object[] params = record.getParameters();
-            if (params != null) {
+            if ((params != null) && (params.length > 0)) {
                 msg = String.format(msg, params);
             }
-            builder.append(" - ");
-            builder.append(msg);
+            builder.append(' ').append(msg);
         }
         out.println(builder.toString());
         builder.setLength(0);

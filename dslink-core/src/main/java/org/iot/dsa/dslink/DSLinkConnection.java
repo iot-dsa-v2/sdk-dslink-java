@@ -2,7 +2,6 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.time.DSTime;
 
@@ -22,7 +21,6 @@ public abstract class DSLinkConnection extends DSNode {
     private boolean connected = false;
     private String connectionId;
     private ConcurrentHashMap<Listener, Listener> listeners;
-    private Logger logger;
 
     // Methods
     // -------
@@ -42,7 +40,7 @@ public abstract class DSLinkConnection extends DSNode {
             try {
                 listener.onConnect(this);
             } catch (Exception x) {
-                severe(getPath(), x);
+                error(getPath(), x);
             }
         }
     }
@@ -89,11 +87,8 @@ public abstract class DSLinkConnection extends DSNode {
     }
 
     @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(getLink().getLinkName() + ".connection");
-        }
-        return logger;
+    protected String getLogName() {
+        return getClass().getSimpleName();
     }
 
     public DSSysNode getSys() {
@@ -179,14 +174,14 @@ public abstract class DSLinkConnection extends DSNode {
                 try {
                     onInitialize();
                 } catch (Exception x) {
-                    severe(getPath(), x);
+                    error(getPath(), x);
                     continue;
                 }
                 try {
                     onConnect();
                     connected = true;
                 } catch (Exception x) {
-                    severe(getPath(), x);
+                    error(getPath(), x);
                     continue;
                 }
                 if (listeners != null) {
@@ -194,7 +189,7 @@ public abstract class DSLinkConnection extends DSNode {
                         try {
                             listener.onConnect(DSLinkConnection.this);
                         } catch (Exception x) {
-                            severe(listener.toString(), x);
+                            error(listener.toString(), x);
                         }
                     }
                 }
@@ -203,19 +198,19 @@ public abstract class DSLinkConnection extends DSNode {
                     reconnectRate = 1000;
                 } catch (Throwable x) {
                     reconnectRate = Math.min(reconnectRate * 2, DSTime.MILLIS_MINUTE);
-                    severe(getConnectionId(), x);
+                    error(getConnectionId(), x);
                 }
                 try {
                     onDisconnect();
                 } catch (Exception x) {
-                    severe(getPath(), x);
+                    error(getPath(), x);
                 }
                 if (listeners != null) {
                     for (Listener listener : listeners.keySet()) {
                         try {
                             listener.onDisconnect(DSLinkConnection.this);
                         } catch (Exception x) {
-                            severe(listener.toString(), x);
+                            error(listener.toString(), x);
                         }
                     }
                 }

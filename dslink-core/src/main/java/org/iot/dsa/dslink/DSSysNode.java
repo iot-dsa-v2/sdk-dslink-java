@@ -39,6 +39,11 @@ public class DSSysNode extends DSNode {
         return (DSLink) getParent();
     }
 
+    @Override
+    protected String getLogName() {
+        return "Sys";
+    }
+
     void init() {
         DSLinkConfig config = getLink().getConfig();
         try {
@@ -47,7 +52,7 @@ public class DSSysNode extends DSNode {
             if (ver.startsWith("1")) {
                 String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
                 if (type != null) {
-                    config(config() ? "Connection type: " + type : null);
+                    fine(fine() ? "Connection type: " + type : null);
                     conn = (DSLinkConnection) Class.forName(type).newInstance();
                 } else {
                     conn = new DS1LinkConnection();

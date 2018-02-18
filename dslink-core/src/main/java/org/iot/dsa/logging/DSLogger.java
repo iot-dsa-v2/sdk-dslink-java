@@ -1,17 +1,19 @@
 package org.iot.dsa.logging;
 
-import static java.util.logging.Level.CONFIG;
-import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.FINER;
-import static java.util.logging.Level.FINEST;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
-
 import java.util.logging.Logger;
 
 /**
- * Adds a convenience layer to Java Util Logging.
+ * Adds an abstraction layer on Java Util Logging for two purposes:
+ *
+ * <ul>
+ *
+ * <li>To use the DSA levels.
+ *
+ * <li>So JUL can be replaced with other logging frameworks if desired.
+ *
+ * </ul>
+ *
+ * This has methods that enables conditional logging (most efficient) using ternary statements.
  *
  * <p>
  *
@@ -20,9 +22,8 @@ import java.util.logging.Logger;
  * <pre>
  *
  * {@code
- * if (myLogger.isLoggable(Level.FINE) {
- *   myLogger.fine(someMessage());
- * }
+ * if (myLogger.isLoggable(Level.INFO))
+ *     myLogger.info(someMessage());
  * }
  *
  * </pre>
@@ -32,156 +33,211 @@ import java.util.logging.Logger;
  * <pre>
  *
  * {@code
- * fine(fine() ? someMessage() : null);
+ * info(info() ? someMessage() : null);
  * }
  *
  * </pre>
  *
  * <p>
  *
- * Level Guidelines:
+ * DSA defines levels differently than JUL, however, all JUL levels will be mapped / formatted
+ * for DSA.  Level guidelines:
  *
  * <ul>
  *
- * <li>finest = verbose or trace
+ * <li>trace() = DSA trace  = JUL finest
  *
- * <li>finer  = debug
+ * <li>debug() = DSA debug  = JUL finer
  *
- * <li>fine   = common or frequent event
+ * <li>fine()  = DSA info   = JUL fine, config
  *
- * <li>config = configuration info
+ * <li>warn()  = DSA warn   = Custom level
  *
- * <li>info   = major lifecycle event
+ * <li>info()  = DSA sys    = JUL info
  *
- * <li>warn   = unusual and infrequent, but not critical
+ * <li>error() = DSA error  = JUL warning
  *
- * <li>severe = critical / fatal error or event
+ * <li>admin() = DSA admin  = Custom level
+ *
+ * <li>fatal() = DSA fatal  = JUL severe
  *
  * </ul>
  *
  * @author Aaron Hansen
  */
-public class DSLogger {
+public class DSLogger implements DSILevels {
+
+    private Logger logger;
+
+    /**
+     * Override point, returns the console logger by default.
+     */
+    private Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger(getLogName());
+        }
+        return logger;
+    }
+
+    /**
+     * Override point, returns the simple class name by default.
+     */
+    protected String getLogName() {
+        return getClass().getSimpleName();
+    }
 
     /////////////////////////////////////////////////////////////////
-    // Methods - In alphabetical order by method name.
+    // Logging methods, ordered from lowest severity to highest
     /////////////////////////////////////////////////////////////////
 
     /**
      * True if the level is loggable.
      */
-    public boolean config() {
-        return getLogger().isLoggable(CONFIG);
-    }
-
-    public void config(Object msg) {
-        getLogger().log(CONFIG, string(msg));
+    public boolean trace() {
+        return getLogger().isLoggable(trace);
     }
 
     /**
-     * Override point, returns the console logger by default.
+     * Log a trace or verbose event.
      */
-    public Logger getLogger() {
-        return DSLogging.getDefaultLogger();
+    public void trace(Object msg) {
+        getLogger().log(trace, string(msg));
+    }
+
+    /**
+     * Log a trace or verbose event.
+     */
+    public void trace(Object msg, Throwable x) {
+        getLogger().log(trace, string(msg), x);
+    }
+
+    /**
+     * True if the level is loggable.
+     */
+    public boolean debug() {
+        return getLogger().isLoggable(debug);
+    }
+
+    /**
+     * Log a debug event.
+     */
+    public void debug(Object msg) {
+        getLogger().log(debug, string(msg));
+    }
+
+    /**
+     * Log a debug event.
+     */
+    public void debug(Object msg, Throwable x) {
+        getLogger().log(debug, string(msg), x);
     }
 
     /**
      * True if the level is loggable.
      */
     public boolean fine() {
-        return getLogger().isLoggable(FINE);
+        return getLogger().isLoggable(fine);
     }
 
     /**
      * Log a frequent event.
      */
     public void fine(Object msg) {
-        getLogger().log(FINE, string(msg));
+        getLogger().log(fine, string(msg));
     }
 
     /**
      * Log a frequent event.
      */
     public void fine(Object msg, Throwable x) {
-        getLogger().log(FINE, string(msg), x);
+        getLogger().log(fine, string(msg), x);
     }
 
     /**
      * True if the level is loggable.
      */
-    public boolean finer() {
-        return getLogger().isLoggable(FINER);
+    public boolean warn() {
+        return getLogger().isLoggable(warn);
     }
 
     /**
-     * Log a debug event.
+     * Log an unusual but not critical event.
      */
-    public void finer(Object msg) {
-        getLogger().log(FINER, string(msg));
+    public void warn(Object msg) {
+        getLogger().log(warn, string(msg));
     }
 
     /**
-     * Log a debug event.
+     * Log an unusual but not critical event.
      */
-    public void finer(Object msg, Throwable x) {
-        getLogger().log(FINER, string(msg), x);
-    }
-
-    /**
-     * True if the level is loggable.
-     */
-    public boolean finest() {
-        return getLogger().isLoggable(FINEST);
-    }
-
-    /**
-     * Log a trace or verbose event.
-     */
-    public void finest(Object msg) {
-        getLogger().log(FINEST, string(msg));
-    }
-
-    /**
-     * Log a trace or verbose event.
-     */
-    public void finest(Object msg, Throwable x) {
-        getLogger().log(FINEST, string(msg), x);
+    public void warn(Object msg, Throwable x) {
+        getLogger().log(warn, string(msg), x);
     }
 
     /**
      * True if the level is loggable.
      */
     public boolean info() {
-        return getLogger().isLoggable(INFO);
+        return getLogger().isLoggable(info);
     }
 
     /**
      * Log an infrequent major lifecycle event.
      */
     public void info(Object msg) {
-        getLogger().log(INFO, string(msg));
+        getLogger().log(info, string(msg));
     }
 
     /**
      * Log an infrequent major lifecycle event.
      */
     public void info(Object msg, Throwable x) {
-        getLogger().log(INFO, string(msg), x);
+        getLogger().log(info, string(msg), x);
     }
 
     /**
      * True if the level is loggable.
      */
-    public boolean severe() {
-        return getLogger().isLoggable(SEVERE);
+    public boolean error() {
+        return getLogger().isLoggable(warn);
     }
 
-    public void severe(Object msg) {
-        getLogger().log(SEVERE, string(msg));
+    public void error(Object msg) {
+        getLogger().log(warn, string(msg));
     }
 
-    public void severe(Object msg, Throwable x) {
-        getLogger().log(SEVERE, string(msg), x);
+    public void error(Object msg, Throwable x) {
+        getLogger().log(warn, string(msg), x);
+    }
+
+    /**
+     * True if the level is loggable.
+     */
+    public boolean admin() {
+        return getLogger().isLoggable(admin);
+    }
+
+    public void admin(Object msg) {
+        getLogger().log(admin, string(msg));
+    }
+
+    public void admin(Object msg, Throwable x) {
+        getLogger().log(admin, string(msg), x);
+    }
+
+    /**
+     * True if the level is loggable.
+     */
+    public boolean fatal() {
+        return getLogger().isLoggable(fatal);
+    }
+
+    public void fatal(Object msg) {
+        getLogger().log(fatal, string(msg));
+    }
+
+    public void fatal(Object msg, Throwable x) {
+        getLogger().log(fatal, string(msg), x);
     }
 
     private String string(Object obj) {
@@ -189,27 +245,6 @@ public class DSLogger {
             return null;
         }
         return obj.toString();
-    }
-
-    /**
-     * True if the level is loggable.
-     */
-    public boolean warn() {
-        return getLogger().isLoggable(WARNING);
-    }
-
-    /**
-     * Log an unusual but not critical event.
-     */
-    public void warn(Object msg) {
-        getLogger().log(WARNING, string(msg));
-    }
-
-    /**
-     * Log an unusual but not critical event.
-     */
-    public void warn(Object msg, Throwable x) {
-        getLogger().log(WARNING, string(msg), x);
     }
 
 

@@ -92,6 +92,9 @@ public class DSPath {
      * Splits the path and decodes each individual name.
      */
     public static String[] decodePath(String path) {
+        if (path == null) {
+            return new String[0];
+        }
         String[] elems = splitPath(path);
         for (int i = 0, len = elems.length; i < len; i++) {
             elems[i] = decodePathName(elems[i]);
@@ -145,7 +148,7 @@ public class DSPath {
      */
     public static String encodeName(String name) {
         StringBuilder builder = new StringBuilder();
-        if (encodeName(name, builder)) {
+        if (encodeName(name, builder, false)) {
             return builder.toString();
         }
         return name;
@@ -160,6 +163,28 @@ public class DSPath {
      * @return True if the name was modified in any way.
      */
     public static boolean encodeName(String name, StringBuilder buf) {
+        return encodeName(name, buf, false);
+    }
+
+    /**
+     * Encodes a DSA v1 name for use outside of a path.
+     *
+     * @return True if the name was modified in any way.
+     */
+    public static boolean encodeNameV1(String name, StringBuilder buf) {
+        return encodeName(name, buf, true);
+    }
+
+    /**
+     * Encodes a name.
+     *
+     * @param name The raw un-encoded name.
+     * @param buf  When to put the encoded name.  Characters will be put into the buf no matter
+     *             what.
+     * @param v1   True if for v1.
+     * @return True if the name was modified in any way.
+     */
+    private static boolean encodeName(String name, StringBuilder buf, boolean v1) {
         if (name == null) {
             return false;
         }
@@ -167,9 +192,11 @@ public class DSPath {
         int pathLength = name.length();
         CharArrayWriter charArrayWriter = null;
         char c;
+        boolean encode = false;
         for (int i = 0; i < pathLength; ) {
             c = name.charAt(i);
-            if (!shouldEncode(c, i)) {
+            encode = v1 ? shouldEncodeV1(c, i) : shouldEncode(c, i);
+            if (!encode) {
                 buf.append(c);
                 i++;
             } else {
@@ -240,7 +267,7 @@ public class DSPath {
     /**
      * Returns true for characters that should be encoded.
      */
-    public static boolean shouldEncode(int ch, int pos) {
+    private static boolean shouldEncode(int ch, int pos) {
         switch (ch) {
             case '.':
             case '/':
@@ -255,6 +282,22 @@ public class DSPath {
             case '=':
             case ':':
             case ';':
+            case '%':
+                return true;
+            case '@':
+            case '$':
+                return pos == 0;
+            default:
+                return ch < 0x20;
+        }
+    }
+
+    /**
+     * Returns true for characters that should be encoded.
+     */
+    private static boolean shouldEncodeV1(int ch, int pos) {
+        switch (ch) {
+            case '/':
             case '%':
                 return true;
             case '@':
@@ -295,13 +338,5 @@ public class DSPath {
         }
         return path.split("/");
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
 
 }

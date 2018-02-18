@@ -87,6 +87,7 @@ public class DS1Requester extends DSNode implements DSIRequester {
 
     public void onConnect() {
         subscriptions.onConnect();
+        session.setRequesterAllowed();
     }
 
     public void onConnectFail() {

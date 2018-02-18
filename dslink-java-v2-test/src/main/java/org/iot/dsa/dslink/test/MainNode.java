@@ -65,6 +65,7 @@ public class MainNode extends DSMainNode implements Runnable {
         action.addValueResult("bool", DSBool.TRUE);
         action.addValueResult("long", DSLong.valueOf(0));
         declareDefault("Values Action", action);
+        declareDefault("T./,<>?;:'\"[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
     }
 
     @Override

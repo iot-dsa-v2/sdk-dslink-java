@@ -64,7 +64,7 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
             }
             sendClose();
         } catch (Exception x) {
-            severe(getPath(), x);
+            error(getPath(), x);
             getResponder().sendError(this, x);
         }
     }

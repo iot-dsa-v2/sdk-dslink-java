@@ -73,7 +73,7 @@ class DS1OutboundListStub extends DS1OutboundStub {
                 request.onInitialized();
             }
         } catch (Exception x) {
-            getRequester().severe(getRequester().getPath(), x);
+            getRequester().error(getRequester().getPath(), x);
         }
     }
 

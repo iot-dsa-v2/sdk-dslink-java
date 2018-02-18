@@ -27,7 +27,7 @@ public abstract class PushBinaryTransport extends DSBinaryTransport {
     /////////////////////////////////////////////////////////////////
 
     @Override
-    public DSTransport beginMessage() {
+    public DSTransport beginSendMessage() {
         return this;
     }
 
@@ -46,7 +46,7 @@ public abstract class PushBinaryTransport extends DSBinaryTransport {
     }
 
     @Override
-    public DSTransport endMessage() {
+    public DSTransport endSendMessage() {
         return this;
     }
 

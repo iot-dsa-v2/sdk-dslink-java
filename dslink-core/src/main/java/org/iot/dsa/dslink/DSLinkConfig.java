@@ -3,6 +3,7 @@ package org.iot.dsa.dslink;
 import java.io.File;
 import java.util.logging.Level;
 import org.iot.dsa.io.json.JsonReader;
+import org.iot.dsa.logging.DSILevels;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSKeys;
 
@@ -13,7 +14,7 @@ import org.iot.dsa.security.DSKeys;
  *
  * @author Aaron Hansen
  */
-public class DSLinkConfig {
+public class DSLinkConfig implements DSILevels {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -474,16 +475,31 @@ public class DSLinkConfig {
      */
     public DSLinkConfig setLogLevel(String level) {
         level = level.toUpperCase();
-        if (level.equals("DEBUG")) {
-            level = "FINEST";
+        if (level.equals("TRACE")) {
+            logLevel = trace;
+        } else if (level.equals("DEBUG")) {
+            logLevel = debug;
+        } else if (level.equals("FINE")) {
+            logLevel = fine;
+        } else if (level.equals("CONFIG")) {
+            logLevel = fine;
+        } else if (level.equals("WARN")) {
+            logLevel = warn;
+        } else if (level.equals("INFO")) {
+            logLevel = info;
         } else if (level.equals("ERROR")) {
-            level = "WARNING";
+            logLevel = error;
+        } else if (level.equals("ADMIN")) {
+            logLevel = admin;
         } else if (level.equals("CRITICAL")) {
-            level = "SEVERE";
+            logLevel = fatal;
+        } else if (level.equals("FATAL")) {
+            logLevel = fatal;
         } else if (level.equals("NONE")) {
-            level = "OFF";
+            logLevel = off;
+        } else {
+            logLevel = Level.parse(level);
         }
-        logLevel = Level.parse(level);
         return setConfig(CFG_LOG_LEVEL, level);
     }
 

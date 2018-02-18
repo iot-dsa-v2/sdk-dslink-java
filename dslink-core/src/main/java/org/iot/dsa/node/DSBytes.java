@@ -316,6 +316,22 @@ public class DSBytes extends DSElement {
     /**
      * Converts the bytes into a hex string.
      *
+     * @param val What to convert.
+     * @param buf Where to put the results, can be null.
+     * @return The buf parameter, or a new StringBuilder if the param was null.
+     */
+    public static StringBuilder toHex(byte val, StringBuilder buf) {
+        if (buf == null) {
+            buf = new StringBuilder();
+        }
+        buf.append(HEX[(val >>> 4) & 0x0F]);
+        buf.append(HEX[val & 0x0F]);
+        return buf;
+    }
+
+    /**
+     * Converts the bytes into a hex string.
+     *
      * @param bytes What to convert.
      * @param buf   Where to put the results, can be null.
      * @return The buf parameter, or a new StringBuilder if the param was null.
@@ -326,7 +342,7 @@ public class DSBytes extends DSElement {
         }
         for (int i = 0, len = bytes.length; i < len; i++) {
             int val = bytes[i] & 0xFF;
-            buf.append(HEX[val >>> 4]);
+            buf.append(HEX[val >>> 4] & 0x0F);
             buf.append(HEX[val & 0x0F]);
         }
         return buf;

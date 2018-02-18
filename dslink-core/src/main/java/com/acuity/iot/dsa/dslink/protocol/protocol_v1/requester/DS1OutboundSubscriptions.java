@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
@@ -37,7 +36,6 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
     ///////////////////////////////////////////////////////////////////////////
 
     private boolean enqueued = false;
-    private Logger logger;
     private int nextSid = 1;
     private final ConcurrentLinkedQueue<DS1OutboundSubscribeStubs> pendingSubscribe =
             new ConcurrentLinkedQueue<DS1OutboundSubscribeStubs>();
@@ -60,14 +58,6 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
     ///////////////////////////////////////////////////////////////////////////
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = requester.getLogger();
-        }
-        return logger;
-    }
 
     /**
      * This is already synchronized by the subscribe method.
@@ -101,7 +91,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
             DSList updateList = (DSList) updateElement;
             int cols = updateList.size();
             if (cols < 3) {
-                finest(finest() ? "Update incomplete: " + updateList.toString() : null);
+                trace(trace() ? "Update incomplete: " + updateList.toString() : null);
                 return;
             }
             sid = updateList.get(0, -1);
@@ -118,12 +108,12 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
             return;
         }
         if (sid < 0) {
-            finer(finer() ? "Update missing sid: " + updateElement.toString() : null);
+            debug(debug() ? "Update missing sid: " + updateElement.toString() : null);
             return;
         }
         DS1OutboundSubscribeStubs stub = sidMap.get(sid);
         if (stub == null) {
-            finer(finer() ? ("Unexpected subscription update sid=" + sid) : null);
+            debug(debug() ? ("Unexpected subscription update sid=" + sid) : null);
             return;
         }
         DSDateTime timestamp = null;
@@ -183,7 +173,7 @@ class DS1OutboundSubscriptions extends DSLogger implements OutboundMessage {
         try {
             req.onInit(path, stubs.getQos(), stub);
         } catch (Exception x) {
-            severe(path, x);
+            error(path, x);
         }
         sendMessage();
         return req;

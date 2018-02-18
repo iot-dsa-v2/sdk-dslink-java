@@ -95,7 +95,7 @@ public class DS1Responder extends DSResponder {
                 case 'r':  //remove
                     if (method.equals("remove")) {
                         //Does this even make sense in a link?
-                        severe("Remove method called");
+                        error("Remove method called");
                         sendClose(rid);
                     } else {
                         sendInvalidMethod(rid, method);
@@ -134,7 +134,7 @@ public class DS1Responder extends DSResponder {
         } catch (DSProtocolException x) {
             sendError(rid, x);
         } catch (Throwable x) {
-            severe(getPath(), x);
+            error(getPath(), x);
             sendError(rid, x);
         }
     }
@@ -146,13 +146,13 @@ public class DS1Responder extends DSResponder {
     }
 
     public void onDisconnect() {
-        finer(finer() ? "Close" : null);
+        debug(debug() ? "Close" : null);
         subscriptions.close();
         for (Map.Entry<Integer, DSStream> entry : getRequests().entrySet()) {
             try {
                 entry.getValue().onClose(entry.getKey());
             } catch (Exception x) {
-                finer(finer() ? "Close" : null, x);
+                debug(debug() ? "Close" : null, x);
             }
         }
         getRequests().clear();
@@ -242,7 +242,7 @@ public class DS1Responder extends DSResponder {
                     sid = list.getInt(i);
                     subscriptions.unsubscribe(sid);
                 } catch (Exception x) {
-                    severe(fine() ? "Unsubscribe: " + sid : null, x);
+                    error(fine() ? "Unsubscribe: " + sid : null, x);
                 }
             }
         }
@@ -265,7 +265,7 @@ public class DS1Responder extends DSResponder {
      */
     private void sendInvalidMethod(int rid, String methodName) {
         String msg = "Invalid method: " + methodName;
-        severe(msg);
+        error(msg);
         sendResponse(new ErrorMessage(rid, msg).setType("invalidMethod"));
     }
 

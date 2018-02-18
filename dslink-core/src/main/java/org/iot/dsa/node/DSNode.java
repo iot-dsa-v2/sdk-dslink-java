@@ -3,11 +3,9 @@ package org.iot.dsa.node;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.logging.DSLogging;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.event.DSIEvent;
@@ -228,7 +226,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             try {
                 onChildAdded(info);
             } catch (Exception x) {
-                severe(getPath(), x);
+                error(getPath(), x);
             }
             fire(INFO_TOPIC, DSInfoTopic.Event.CHILD_ADDED, info);
         }
@@ -419,7 +417,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 try {
                     sub.subscriber.onEvent(topic, event, this, child, params);
                 } catch (Exception x) {
-                    severe(getPath(), x);
+                    error(getPath(), x);
                 }
             }
             sub = sub.next;
@@ -536,17 +534,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         return lastChild;
     }
 
-    /**
-     * Ascends the tree until a logger is found.  If overriding, call super.getLogger and set the
-     * result as the parent logger of your new logger.
-     */
     @Override
-    public Logger getLogger() {
+    protected String getLogName() {
         DSNode parent = getParent();
         if (parent != null) {
-            return parent.getLogger();
+            return parent.getLogName();
         }
-        return DSLogging.getDefaultLogger();
+        return super.getLogName();
     }
 
     /**
@@ -1012,7 +1006,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 try {
                     onChildChanged(info);
                 } catch (Exception x) {
-                    severe(getPath(), x);
+                    error(getPath(), x);
                 }
                 fire(VALUE_TOPIC, DSValueTopic.Event.CHILD_CHANGED, info);
             }
@@ -1064,7 +1058,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             try {
                 onChildRemoved(info);
             } catch (Exception x) {
-                severe(getPath(), x);
+                error(getPath(), x);
             }
             fire(INFO_TOPIC, DSInfoTopic.Event.CHILD_REMOVED, info);
             Subscription sub = subscription;
@@ -1141,7 +1135,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         try {
             onStable();
         } catch (Exception x) {
-            severe(getPath(), x);
+            error(getPath(), x);
         }
     }
 
@@ -1165,7 +1159,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         try {
             onStarted();
         } catch (Exception x) {
-            severe(getPath(), x);
+            error(getPath(), x);
         }
     }
 
@@ -1246,20 +1240,20 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         try {
             onSubscribe(topic, child, subscriber);
         } catch (Exception x) {
-            severe(getParent(), x);
+            error(getParent(), x);
         }
         if (count == 0) {
             try {
                 onSubscribed(topic, child);
             } catch (Exception x) {
-                severe(getParent(), x);
+                error(getParent(), x);
             }
         }
         if (firstSubscription) {
             try {
                 onSubscribed();
             } catch (Exception x) {
-                severe(getParent(), x);
+                error(getParent(), x);
             }
         }
     }
@@ -1305,20 +1299,20 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             try {
                 onUnsubscribe(topic, child, subscriber);
             } catch (Exception x) {
-                severe(getParent(), x);
+                error(getParent(), x);
             }
             if (count == 0) {
                 try {
                     onUnsubscribed(topic, child);
                 } catch (Exception x) {
-                    severe(getParent(), x);
+                    error(getParent(), x);
                 }
             }
             if (subscription == null) {
                 try {
                     onUnsubscribed();
                 } catch (Exception x) {
-                    severe(getParent(), x);
+                    error(getParent(), x);
                 }
             }
             removed.unsubscribe();
@@ -1446,7 +1440,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             try {
                 subscriber.onUnsubscribed(topic, DSNode.this, child);
             } catch (Exception x) {
-                severe(getPath(), x);
+                error(getPath(), x);
             }
         }
 

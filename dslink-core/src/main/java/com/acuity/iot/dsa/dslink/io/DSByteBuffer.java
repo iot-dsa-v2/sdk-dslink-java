@@ -1,8 +1,12 @@
 package com.acuity.iot.dsa.dslink.io;
 
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -11,7 +15,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSByteBuffer {
+public class DSByteBuffer extends InputStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -69,6 +73,28 @@ public class DSByteBuffer {
      */
     public int length() {
         return length;
+    }
+
+    /**
+     * Prints the current contents of the buffer, doesn't modify it in any way.
+     */
+    public void print(PrintStream out, int cols) {
+        StringBuilder buf = new StringBuilder();
+        int buflen;
+        for (int i = offset, len = offset + length; i < len; i++) {
+            buflen = buf.length();
+            if ((buflen + 3) > cols) {
+                out.println(buf.toString());
+                buf.setLength(0);
+            }
+            if (buflen > 0) {
+                buf.append(' ');
+            }
+            DSBytes.toHex(buffer[i], buf);
+        }
+        if (buf.length() > 0) {
+            out.println(buf.toString());
+        }
     }
 
     /**
@@ -240,6 +266,24 @@ public class DSByteBuffer {
             length += len;
         }
         return this;
+    }
+
+    public int put(InputStream in, int len) {
+        int count = 0;
+        try {
+            int ch;
+            while (count < len) {
+                ch = in.read();
+                if (ch < 0) {
+                    return count;
+                }
+                put((byte) ch);
+                count++;
+            }
+        } catch (IOException x) {
+            DSException.throwRuntime(x);
+        }
+        return count;
     }
 
     /**
@@ -430,10 +474,6 @@ public class DSByteBuffer {
      * @param bigEndian Whether to encode in big or little endian byte ordering.
      */
     public DSByteBuffer replaceInt(int dest, int v, boolean bigEndian) {
-        if (offset > 0) {
-            System.arraycopy(buffer, offset, buffer, 0, length);
-            offset = 0;
-        }
         if (bigEndian) {
             return replace(dest, (byte) ((v >>> 24) & 0xFF),
                            (byte) ((v >>> 16) & 0xFF),
@@ -455,10 +495,6 @@ public class DSByteBuffer {
      * @param bigEndian Whether to encode in big or little endian byte ordering.
      */
     public DSByteBuffer replaceShort(int dest, short v, boolean bigEndian) {
-        if (offset > 0) {
-            System.arraycopy(buffer, offset, buffer, 0, length);
-            offset = 0;
-        }
         if (bigEndian) {
             return replace(dest, (byte) ((v >>> 8) & 0xFF), (byte) ((v >>> 0) & 0xFF));
         }

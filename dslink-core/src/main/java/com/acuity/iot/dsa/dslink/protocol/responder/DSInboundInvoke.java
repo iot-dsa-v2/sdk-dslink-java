@@ -122,7 +122,7 @@ public class DSInboundInvoke extends DSInboundRequest
                 try {
                     result.onClose();
                 } catch (Exception x) {
-                    severe(getPath(), x);
+                    error(getPath(), x);
                 }
             }
         });
@@ -204,7 +204,7 @@ public class DSInboundInvoke extends DSInboundRequest
             return;
         }
         state = STATE_CLOSED;
-        fine(finer() ? getPath() + " invoke closed" : null);
+        fine(debug() ? getPath() + " invoke closed" : null);
         synchronized (this) {
             updateHead = updateTail = null;
         }
@@ -239,7 +239,7 @@ public class DSInboundInvoke extends DSInboundRequest
             DSAction action = info.getAction();
             result = action.invoke(info, this);
         } catch (Exception x) {
-            severe(getPath(), x);
+            error(getPath(), x);
             close(x);
             return;
         }

@@ -45,6 +45,7 @@ public class DS2LinkConnection extends DSLinkConnection {
     private static final String REQUESTER_ALLOWED = "Requester Allowed";
     private static final String SESSION = "Status";
     private static final String STATUS = "Status";
+    private static final String TRANSPORT = "Transport";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -134,7 +135,8 @@ public class DS2LinkConnection extends DSLinkConnection {
         } else if (uri.startsWith("ds")) {
             transport = new SocketTransport();
         }
-        config(config() ? "Connection URL = " + uri : null);
+        put(TRANSPORT, transport);
+        fine(fine() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
     }
@@ -224,7 +226,11 @@ public class DS2LinkConnection extends DSLinkConnection {
                                                     Integer.toHexString(reader.getMethod()));
         }
         //TODO check for header status
-        put(requesterAllowed, DSBool.valueOf(in.read() == 1));
+        boolean allowed = in.read() == 1;
+        put(requesterAllowed, DSBool.valueOf(allowed));
+        if (allowed) {
+            session.setRequesterAllowed();
+        }
         String pathOnBroker = reader.readString(in);
         put(brokerPath, DSString.valueOf(pathOnBroker));
         byte[] tmp = new byte[32];

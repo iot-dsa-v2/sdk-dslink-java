@@ -113,13 +113,13 @@ public class DS1LinkConnection extends DSLinkConnection {
             DSException.throwRuntime(x);
         }
         String uri = init.makeWsUrl(wsUri);
-        config(config() ? "Connection URL = " + uri : null);
+        fine(fine() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
         transport.setReadTimeout(getLink().getConfig().getConfig(
                 DSLinkConfig.CFG_READ_TIMEOUT, 60000));
         setTransport(transport);
-        config(config() ? "Transport type: " + transport.getClass().getName() : null);
+        fine(fine() ? "Transport type: " + transport.getClass().getName() : null);
         return transport;
     }
 

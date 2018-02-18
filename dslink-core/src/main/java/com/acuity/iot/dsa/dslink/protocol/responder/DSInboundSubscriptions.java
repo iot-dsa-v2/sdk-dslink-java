@@ -5,7 +5,6 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.node.DSNode;
 
@@ -27,7 +26,6 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     ///////////////////////////////////////////////////////////////////////////
 
     private boolean enqueued = false;
-    private Logger logger;
     private ConcurrentLinkedQueue<DSInboundSubscription> outbound =
             new ConcurrentLinkedQueue<DSInboundSubscription>();
     private Map<String, DSInboundSubscription> pathMap =
@@ -76,15 +74,6 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         return responder.getConnection().getLink();
     }
 
-    @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(responder.getConnection().getLink().getLinkName()
-                                              + ".responderSubscriptions");
-        }
-        return logger;
-    }
-
     /**
      * This returns a DSInboundSubscription for v1, this will be overridden for v2.
      *
@@ -100,7 +89,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
      * Create or update a subscription.
      */
     public void subscribe(Integer sid, String path, int qos) {
-        finest(finest() ? "Subscribing " + path : null);
+        trace(trace() ? "Subscribing " + path : null);
         DSInboundSubscription subscription = sidMap.get(sid);
         if (subscription == null) {
             subscription = makeSubscription(sid, path, qos);
@@ -121,7 +110,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     public void unsubscribe(Integer sid) {
         DSInboundSubscription subscription = sidMap.remove(sid);
         if (subscription != null) {
-            finest(finest() ? "Unsubscribing " + subscription.getPath() : null);
+            trace(trace() ? "Unsubscribing " + subscription.getPath() : null);
             pathMap.remove(subscription.getPath());
             try {
                 subscription.onClose();

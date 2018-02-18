@@ -138,16 +138,16 @@ public class DS1Session extends DSSession {
         DSIWriter writer = getWriter();
         writer.reset();
         requestsNext = !requestsNext;
-        transport.beginMessage();
+        transport.beginSendMessage();
         beginMessage();
-        if (hasMessagesToSend()) {
+        if (this.hasSomethingToSend()) {
             send(requestsNext, endTime);
             if ((System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
                 send(!requestsNext, endTime);
             }
         }
         endMessage();
-        transport.endMessage();
+        transport.endSendMessage();
         lastMessageSent = System.currentTimeMillis();
     }
 
@@ -286,14 +286,14 @@ public class DS1Session extends DSSession {
                     throw new IllegalStateException("Allowed not a boolean");
                 }
                 if (reader.getBoolean()) {
-                    config(config() ? "Requester allowed" : null);
+                    fine(fine() ? "Requester allowed" : null);
                     getConnection().setRequesterAllowed();
                 }
             } else if (key.equals("salt")) {
                 if (reader.next() != Token.STRING) {
                     throw new IllegalStateException("Salt not a string");
                 }
-                config(config() ? "Next salt: " + reader.getString() : null);
+                fine(fine() ? "Next salt: " + reader.getString() : null);
                 getConnection().updateSalt(reader.getString());
             }
             next = reader.next();
@@ -322,7 +322,7 @@ public class DS1Session extends DSSession {
             req = reader.getMap();
             rid = req.get("rid", -1);
             if (rid < 0) {
-                finest(finest() ? "No request ID: " + req.toString() : null);
+                trace(trace() ? "No request ID: " + req.toString() : null);
                 throw new DSProtocolException("Response missing rid");
             }
             if (areRequests) {

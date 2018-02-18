@@ -6,7 +6,6 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSNode;
@@ -29,7 +28,6 @@ public abstract class DSResponder extends DSNode {
     private DSLinkConnection connection;
     private ConcurrentHashMap<Integer, DSStream> inboundRequests = new ConcurrentHashMap<Integer, DSStream>();
     private DSLink link;
-    private Logger logger;
     private DSSession session;
     private DSResponder responder;
 
@@ -60,12 +58,8 @@ public abstract class DSResponder extends DSNode {
     }
 
     @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(
-                    getConnection().getLink().getLinkName() + ".responder");
-        }
-        return logger;
+    protected String getLogName() {
+        return getClass().getSimpleName();
     }
 
     public Map<Integer, DSStream> getRequests() {
@@ -78,6 +72,13 @@ public abstract class DSResponder extends DSNode {
 
     public DSTransport getTransport() {
         return getConnection().getTransport();
+    }
+
+    /**
+     * V2 override point, this returns true.
+     */
+    public boolean isV1() {
+        return true;
     }
 
     public void onConnect() {

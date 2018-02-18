@@ -68,7 +68,7 @@ abstract class DS1OutboundStub implements OutboundMessage, OutboundStream {
         try {
             getHandler().onClose();
         } catch (Exception x) {
-            getRequester().severe(getRequester().getPath(), x);
+            getRequester().error(getRequester().getPath(), x);
         }
         getRequester().removeRequest(getRequestId());
     }
@@ -91,7 +91,7 @@ abstract class DS1OutboundStub implements OutboundMessage, OutboundStream {
             }
             getHandler().onError(type, msg, detail);
         } catch (Exception x) {
-            getRequester().severe(getRequester().getPath(), x);
+            getRequester().error(getRequester().getPath(), x);
         }
     }
 

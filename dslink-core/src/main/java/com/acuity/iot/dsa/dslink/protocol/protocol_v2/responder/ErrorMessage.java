@@ -54,15 +54,18 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
         }
         if (reason instanceof DSRequestException) {
             if (reason instanceof DSInvalidPathException) {
-                out.addHeader(MessageConstants.HDR_STATUS, MessageConstants.STS_NOT_AVAILABLE);
+                out.addHeader((byte) MessageConstants.HDR_STATUS,
+                              MessageConstants.STS_NOT_AVAILABLE);
             } else if (reason instanceof DSPermissionException) {
-                out.addHeader(MessageConstants.HDR_STATUS, MessageConstants.STS_PERMISSION_DENIED);
+                out.addHeader((byte) MessageConstants.HDR_STATUS,
+                              MessageConstants.STS_PERMISSION_DENIED);
             } else {
-                out.addHeader(MessageConstants.HDR_STATUS, MessageConstants.STS_INVALID_MESSAGE);
+                out.addHeader((byte) MessageConstants.HDR_STATUS,
+                              MessageConstants.STS_INVALID_MESSAGE);
             }
         } else {
             //todo need server error
-            out.addHeader(MessageConstants.HDR_STATUS, MessageConstants.STS_INVALID_MESSAGE);
+            out.addHeader((byte) MessageConstants.HDR_STATUS, MessageConstants.STS_INVALID_MESSAGE);
         }
         out.write((DSBinaryTransport) req.getResponder().getTransport());
     }

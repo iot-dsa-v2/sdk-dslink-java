@@ -2,8 +2,6 @@ package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
@@ -83,11 +81,6 @@ public class DSInboundSubscription extends DSInboundRequest
         return ret;
     }
 
-    @Override
-    public Logger getLogger() {
-        return manager.getLogger();
-    }
-
     /**
      * Unique subscription id for this path.
      */
@@ -134,14 +127,14 @@ public class DSInboundSubscription extends DSInboundRequest
                 closeHandler.onClose(getSubscriptionId());
             }
         } catch (Exception x) {
-            getLogger().log(Level.WARNING, toString(), x);
+            manager.warn(manager.getPath(), x);
         }
         try {
             if (node != null) {
                 node.unsubscribe(DSNode.VALUE_TOPIC, child, this);
             }
         } catch (Exception x) {
-            getLogger().log(Level.WARNING, toString(), x);
+            manager.warn(manager.getPath(), x);
         }
     }
 
@@ -174,7 +167,7 @@ public class DSInboundSubscription extends DSInboundRequest
         if (!open) {
             return;
         }
-        finest(finest() ? "Update " + getPath() + " to " + value : null);
+        trace(trace() ? "Update " + getPath() + " to " + value : null);
         if (qos == 0) {
             synchronized (this) {
                 if (updateHead == null) {

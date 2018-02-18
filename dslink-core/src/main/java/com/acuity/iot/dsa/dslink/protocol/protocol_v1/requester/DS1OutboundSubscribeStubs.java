@@ -68,7 +68,7 @@ class DS1OutboundSubscribeStubs {
                 try {
                     stub.process(lastTs, lastValue, lastStatus);
                 } catch (Exception x) {
-                    subscriptions.severe(path, x);
+                    subscriptions.error(path, x);
                 }
             }
         }
@@ -138,7 +138,7 @@ class DS1OutboundSubscribeStubs {
             try {
                 stub.process(ts, value, status);
             } catch (Exception x) {
-                subscriptions.severe(path, x);
+                subscriptions.error(path, x);
             }
             stub = stub.getNext();
         }

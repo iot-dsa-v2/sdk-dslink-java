@@ -4,7 +4,6 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSNode;
@@ -31,7 +30,6 @@ public abstract class DSSession extends DSNode {
     private int nextMessage = 1;
     private boolean connected = false;
     private DSLinkConnection connection;
-    private Logger logger;
     private Object outgoingMutex = new Object();
     private List<OutboundMessage> outgoingRequests = new LinkedList<OutboundMessage>();
     private List<OutboundMessage> outgoingResponses = new LinkedList<OutboundMessage>();
@@ -135,11 +133,8 @@ public abstract class DSSession extends DSNode {
     }
 
     @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(getConnection().getLink().getLinkName() + ".session");
-        }
-        return logger;
+    protected String getLogName() {
+        return "Session";
     }
 
     /**
@@ -168,20 +163,8 @@ public abstract class DSSession extends DSNode {
         return getConnection().getTransport();
     }
 
-    /**
-     * True if there are any outbound requests or responses queued up.
-     */
-    protected final boolean hasMessagesToSend() {
-        if (nextAck > 0) {
-            return true;
-        }
-        if (!outgoingResponses.isEmpty()) {
-            return true;
-        }
-        if (!outgoingRequests.isEmpty()) {
-            return true;
-        }
-        return false;
+    protected boolean hasAckToSend() {
+        return nextAck > 0;
     }
 
     protected boolean hasOutgoingRequests() {
@@ -196,7 +179,16 @@ public abstract class DSSession extends DSNode {
      * Override point, this returns the result of hasMessagesToSend.
      */
     protected boolean hasSomethingToSend() {
-        return hasMessagesToSend();
+        if (nextAck > 0) {
+            return true;
+        }
+        if (!outgoingResponses.isEmpty()) {
+            return true;
+        }
+        if (!outgoingRequests.isEmpty()) {
+            return true;
+        }
+        return false;
     }
 
     protected boolean isConnected() {
@@ -240,9 +232,11 @@ public abstract class DSSession extends DSNode {
     /**
      * Call for each incoming message id that needs to be acked.
      */
-    protected synchronized void setNextAck(int nextAck) {
-        this.nextAck = nextAck;
-        notifyOutgoing();
+    public synchronized void setNextAck(int nextAck) {
+        if (nextAck > 0) {
+            this.nextAck = nextAck;
+            notifyOutgoing();
+        }
     }
 
     /**
@@ -267,7 +261,7 @@ public abstract class DSSession extends DSNode {
                 getTransport().close();
                 if (connected) {
                     connected = false;
-                    severe(getPath(), x);
+                    error(getPath(), x);
                 }
             }
         }
@@ -295,7 +289,7 @@ public abstract class DSSession extends DSNode {
                             try {
                                 outgoingMutex.wait(5000);
                             } catch (InterruptedException x) {
-                                fine(getPath(), x);
+                                warn(getPath(), x);
                             }
                             continue;
                         }
@@ -306,7 +300,7 @@ public abstract class DSSession extends DSNode {
                 if (connected) {
                     connected = false;
                     getTransport().close();
-                    severe(getPath(), x);
+                    error(getPath(), x);
                 }
             }
         }

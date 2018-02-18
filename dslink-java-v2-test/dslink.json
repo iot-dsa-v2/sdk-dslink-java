@@ -10,9 +10,9 @@
       "value": "org.iot.dsa.dslink.test.MainNode"
     },
     "log": {
-      "desc": "debug, info, warn, error, none",
+      "desc": "all, trace, debug, info, warn, sys, error, admin, fatal, none",
       "type": "enum",
-      "value": "info"
+      "value": "debug"
     },
     "token": {
       "desc": "Authentication token for the broker.",

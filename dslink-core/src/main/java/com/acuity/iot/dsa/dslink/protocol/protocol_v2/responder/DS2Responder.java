@@ -45,6 +45,11 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         return (DSBinaryTransport) getConnection().getTransport();
     }
 
+    @Override
+    public boolean isV1() {
+        return false;
+    }
+
     /**
      * Process an individual request.
      */
@@ -84,7 +89,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
             try {
                 entry.getValue().onClose(entry.getKey());
             } catch (Exception x) {
-                severe(getPath(), x);
+                error(getPath(), x);
             }
         }
         getRequests().clear();

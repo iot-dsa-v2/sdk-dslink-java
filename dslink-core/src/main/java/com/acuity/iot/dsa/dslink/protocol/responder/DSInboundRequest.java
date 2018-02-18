@@ -27,7 +27,15 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
     ///////////////////////////////////////////////////////////////////////////
 
     public DSLink getLink() {
+        if (link == null) {
+            link = responder.getLink();
+        }
         return link;
+    }
+
+    @Override
+    protected String getLogName() {
+        return getClass().getSimpleName();
     }
 
     public String getPath() {

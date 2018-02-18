@@ -55,7 +55,6 @@ public class DSLink extends DSNode implements Runnable {
     private DSLinkConfig config;
     private String dsId;
     private DSKeys keys;
-    private Logger logger;
     private DSInfo main = getInfo(MAIN);
     private String name;
     private Thread runThread;
@@ -126,12 +125,9 @@ public class DSLink extends DSNode implements Runnable {
         return name;
     }
 
-    /**
-     * The logger as defined in dslink.json.
-     */
     @Override
-    public Logger getLogger() {
-        return logger;
+    protected String getLogName() {
+        return getClass().getSimpleName();
     }
 
     public DSMainNode getMain() {
@@ -152,7 +148,6 @@ public class DSLink extends DSNode implements Runnable {
         DSLogging.setDefaultLevel(config.getLogLevel());
         name = config.getLinkName();
         keys = config.getKeys();
-        logger = Logger.getLogger(name);
         getSys().init();
         return this;
     }
@@ -189,7 +184,7 @@ public class DSLink extends DSNode implements Runnable {
             if (type == null) {
                 throw new IllegalStateException("Config missing the main node type");
             }
-            ret.config("Main type: " + type);
+            ret.fine("Main type: " + type);
             try {
                 DSNode node = (DSNode) Class.forName(type).newInstance();
                 ret.put(MAIN, node);
@@ -270,7 +265,7 @@ public class DSLink extends DSNode implements Runnable {
                     }
                 }
             } catch (Exception x) {
-                severe(getLinkName(), x);
+                error(getLinkName(), x);
                 stop();
                 DSException.throwRuntime(x);
             }
@@ -349,21 +344,21 @@ public class DSLink extends DSNode implements Runnable {
             time = System.currentTimeMillis() - time;
             info("Node database saved: " + time + "ms");
         } catch (Exception x) {
-            severe("Saving node database", x);
+            error("Saving node database", x);
         }
         try {
             if (in != null) {
                 in.close();
             }
         } catch (IOException x) {
-            severe("Closing input", x);
+            error("Closing input", x);
         }
         try {
             if (zos != null) {
                 zos.close();
             }
         } catch (IOException x) {
-            severe("Closing output", x);
+            error("Closing output", x);
         }
     }
 

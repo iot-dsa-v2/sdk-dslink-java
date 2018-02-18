@@ -30,6 +30,12 @@ public class RequestPath {
     ///////////////////////////////////////////////////////////////////////////
 
     public RequestPath(String path, DSNode root) {
+        if (root == null) {
+            throw new NullPointerException("Null root");
+        }
+        if (path == null) {
+            path = "";
+        }
         this.path = path;
         this.root = root;
         names = DSPath.decodePath(path);

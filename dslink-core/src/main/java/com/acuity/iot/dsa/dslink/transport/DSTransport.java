@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.transport;
 
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSNode;
@@ -26,18 +25,28 @@ public abstract class DSTransport extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
 
     private DSLinkConnection connection;
-    private Logger logger;
+    private StringBuilder debugIn;
+    private StringBuilder debugOut;
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
     /**
+     * Called at the start of a new inbound message.
+     *
+     * @return This
+     */
+    public DSTransport beginRecvMessage() {
+        return this;
+    }
+
+    /**
      * Called at the start of a new outbound message.
      *
      * @return This
      */
-    public abstract DSTransport beginMessage();
+    public abstract DSTransport beginSendMessage();
 
     /**
      * Close the actual connection and clean up resources.  Calling when already closed will have no
@@ -58,7 +67,7 @@ public abstract class DSTransport extends DSNode {
      *
      * @return This
      */
-    public abstract DSTransport endMessage();
+    public abstract DSTransport endSendMessage();
 
     public DSLinkConnection getConnection() {
         return connection;
@@ -68,13 +77,19 @@ public abstract class DSTransport extends DSNode {
         return String.valueOf(get(CONNECTION_URL));
     }
 
-    @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(getConnection().getLink().getLinkName() + ".transport");
-        }
-        return logger;
+    public StringBuilder getDebugIn() {
+        return debugIn;
     }
+
+    public StringBuilder getDebugOut() {
+        return debugOut;
+    }
+
+    @Override
+    protected String getLogName() {
+        return getClass().getSimpleName();
+    }
+
 
     public long getReadTimeout() {
         return ((DSLong) get(READ_TIMEOUT)).toLong();
@@ -109,6 +124,16 @@ public abstract class DSTransport extends DSNode {
      */
     public DSTransport setConnectionUrl(String url) {
         put(CONNECTION_URL, DSString.valueOf(url)).setReadOnly(true);
+        return this;
+    }
+
+    public DSTransport setDebugIn(StringBuilder buf) {
+        this.debugIn = buf;
+        return this;
+    }
+
+    public DSTransport setDebugOut(StringBuilder buf) {
+        this.debugOut = buf;
         return this;
     }
 
