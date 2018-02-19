@@ -61,6 +61,7 @@ public class DSInboundList extends DSInboundRequest
     private OutboundListResponse response;
     private boolean enqueued = false;
     private int state = STATE_INIT;
+    private boolean stream = true;
     private Update updateHead;
     private Update updateTail;
 
@@ -372,7 +373,7 @@ public class DSInboundList extends DSInboundRequest
                     break;
                 default:
                     cacheBuf.setLength(0);
-                    cacheBuf.append("@"); //TODO ?
+                    cacheBuf.append("$");
                     cacheBuf.append(encodeName(name));
                     name = cacheBuf.toString();
 
@@ -491,13 +492,13 @@ public class DSInboundList extends DSInboundRequest
                     arg.put(DSMetadata.EDITOR, cacheBuf.toString());
                 }
             }
-        } else if ("enum".equals(type)) {
+        } else if ("enum".equals(type) || "string".equals(type)) {
             DSList range = (DSList) arg.remove(DSMetadata.ENUM_RANGE);
             if (range == null) {
                 return arg;
             }
             cacheBuf.setLength(0);
-            cacheBuf.append(type);
+            cacheBuf.append("enum");
             cacheBuf.append('[');
             for (int i = 0, len = range.size(); i < len; i++) {
                 if (i > 0) {
@@ -605,6 +606,14 @@ public class DSInboundList extends DSInboundRequest
         }
     }
 
+    /**
+     * V2 only, set to false to auto close after sending the initial state.
+     */
+    public DSInboundList setStream(boolean stream) {
+        this.stream = stream;
+        return this;
+    }
+
     @Override
     public void write(MessageWriter writer) {
         enqueued = false;
@@ -634,8 +643,15 @@ public class DSInboundList extends DSInboundRequest
                 break;
         }
         endUpdates(writer);
-        if ((state != last) && (state == STATE_UPDATES)) {
-            endMessage(writer, Boolean.TRUE);
+        if (state != last) {
+            if (state == STATE_UPDATES) {
+                if (stream) {
+                    endMessage(writer, Boolean.TRUE);
+                } else {
+                    endMessage(writer, Boolean.FALSE);
+                    doClose();
+                }
+            }
         } else if (isClosePending() && (updateHead == null)) {
             if (closeReason != null) {
                 getResponder().sendError(this, closeReason);

@@ -30,6 +30,7 @@ public class DSInboundSubscription extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     private DSInfo child;
+    private boolean closeAfterUpdate = false;
     private SubscriptionCloseHandler closeHandler;
     private boolean enqueued = false;
     private DSInboundSubscriptions manager;
@@ -113,7 +114,14 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     /**
-     * Called by DSSubcriptions no matter how closed.
+     * For v2 only.
+     */
+    public boolean isCloseAfterUpdate() {
+        return closeAfterUpdate;
+    }
+
+    /**
+     * Called no matter how closed.
      */
     void onClose() {
         synchronized (this) {
@@ -196,13 +204,13 @@ public class DSInboundSubscription extends DSInboundRequest
         manager.enqueue(this);
     }
 
-    protected DSInboundSubscription setQos(int qos) {
-        this.qos = qos;
+    public DSInboundSubscription setCloseAfterUpdate(boolean closeAfterUpdate) {
+        this.closeAfterUpdate = closeAfterUpdate;
         return this;
     }
 
-    protected DSInboundSubscription setSubscriptionId(Integer sid) {
-        this.sid = sid;
+    protected DSInboundSubscription setQos(int qos) {
+        this.qos = qos;
         return this;
     }
 

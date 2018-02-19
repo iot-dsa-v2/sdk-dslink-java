@@ -7,6 +7,7 @@ import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2Session;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscription;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import java.util.Map;
@@ -113,14 +114,19 @@ public class DS2Responder extends DSResponder implements MessageConstants {
      */
     private void processInvoke(DS2MessageReader msg) {
         int rid = msg.getRequestId();
-        DSMap params = msg.getBodyReader().getMap();
+        DSMap params = null;
+        if (msg.getBodyLength() > 0) {
+            params = msg.getBodyReader().getMap();
+        }
         DSPermission perm = DSPermission.READ;
         Object obj = msg.getHeader(MessageConstants.HDR_MAX_PERMISSION);
         if (obj != null) {
             perm = DSPermission.valueOf(obj.hashCode());
         }
+        boolean stream = msg.getHeader(MessageConstants.HDR_NO_STREAM) == null;
         DS2InboundInvoke invokeImpl = new DS2InboundInvoke(params, perm);
-        invokeImpl.setPath((String) msg.getHeader(HDR_TARGET_PATH))
+        invokeImpl.setStream(stream)
+                  .setPath((String) msg.getHeader(HDR_TARGET_PATH))
                   .setSession(getSession())
                   .setRequestId(rid)
                   .setResponder(this);
@@ -134,8 +140,10 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     private void processList(DS2MessageReader msg) {
         int rid = msg.getRequestId();
         String path = (String) msg.getHeader(HDR_TARGET_PATH);
+        boolean stream = msg.getHeader(MessageConstants.HDR_NO_STREAM) == null;
         DS2InboundList listImpl = new DS2InboundList();
-        listImpl.setPath(path)
+        listImpl.setStream(stream)
+                .setPath(path)
                 .setSession(getSession())
                 .setRequestId(rid)
                 .setResponder(this);
@@ -172,13 +180,17 @@ public class DS2Responder extends DSResponder implements MessageConstants {
      */
     private void processSubscribe(DS2MessageReader msg) {
         Integer sid = msg.getRequestId();
+        //todo if no stream
         String path = (String) msg.getHeader(HDR_TARGET_PATH);
         Integer qos = (Integer) msg.getHeader(MessageConstants.HDR_QOS);
         if (qos == null) {
             qos = Integer.valueOf(0);
         }
         //Integer queueSize = (Integer) msg.getHeader(MessageConstants.HDR_QUEUE_SIZE);
-        subscriptions.subscribe(sid, path, qos);
+        DSInboundSubscription sub = subscriptions.subscribe(sid, path, qos);
+        if (msg.getHeader(MessageConstants.HDR_NO_STREAM) != null) {
+            sub.setCloseAfterUpdate(true);
+        }
     }
 
     @Override

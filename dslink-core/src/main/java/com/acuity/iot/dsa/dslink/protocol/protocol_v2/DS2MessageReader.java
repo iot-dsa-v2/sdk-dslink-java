@@ -45,6 +45,24 @@ public class DS2MessageReader extends DS2Message {
     // Methods
     // -------
 
+    public void debugSummary() {
+        StringBuilder buf = getDebug();
+        buf.append("RECV ");
+        debugMethod(getMethod(), buf);
+        if (requestId >= 0) {
+            buf.append(", ").append("Rid ").append(requestId);
+        }
+        if (ackId >= 0) {
+            buf.append(", ").append("Ack ").append(ackId);
+        }
+        for (Map.Entry<Integer, Object> e : headers.entrySet()) {
+            buf.append(", ");
+            debugHeader(e.getKey(), buf);
+            buf.append("=");
+            buf.append(e.getValue());
+        }
+    }
+
     public int getAckId() {
         return ackId;
     }
@@ -173,6 +191,7 @@ public class DS2MessageReader extends DS2Message {
             case MSG_INVOKE_REQ:
             case MSG_LIST_REQ:
             case MSG_OBSERVE_REQ:
+            case MSG_SUBSCRIBE_REQ:
             case MSG_SET_REQ:
                 return true;
         }
@@ -220,28 +239,6 @@ public class DS2MessageReader extends DS2Message {
                     val = code;
             }
             headers.put(code, val);
-        }
-    }
-
-    public void debugSummary() {
-        StringBuilder buf = getDebug();
-        buf.append("RECV ");
-        debugMethod(getMethod(), buf);
-        if (requestId >= 0) {
-            buf.append(", ").append("Rid ").append(requestId);
-        }
-        if (ackId >= 0) {
-            buf.append(", ").append("Ack ").append(ackId);
-        }
-        Object target = headers.get(HDR_TARGET_PATH);
-        if (target != null) {
-            buf.append(", ").append(target);
-        }
-        for (Map.Entry<Integer, Object> e : headers.entrySet()) {
-            buf.append(", ");
-            debugHeader(e.getKey(), buf);
-            buf.append("=");
-            buf.append(e.getValue());
         }
     }
 

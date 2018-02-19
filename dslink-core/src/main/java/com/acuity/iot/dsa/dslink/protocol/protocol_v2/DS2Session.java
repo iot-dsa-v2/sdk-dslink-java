@@ -22,7 +22,7 @@ public class DS2Session extends DSSession implements MessageConstants {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    static final int END_MSG_THRESHOLD = 48000;
+    static final int END_MSG_THRESHOLD = 48 * 1024;
     static final String LAST_ACK_RECV = "Last Ack Recv";
     static final int MAX_MSG_IVL = 45000;
 
@@ -251,9 +251,10 @@ public class DS2Session extends DSSession implements MessageConstants {
      * Returns true if the current message size has crossed a message size threshold.
      */
     public boolean shouldEndMessage() {
-        //todo
-        //return (messageWriter.length() + getTransport().messageSize()) > END_MSG_THRESHOLD;
-        return getTransport().messageSize() > END_MSG_THRESHOLD;
+        if (getMessageWriter().getBodyLength() > END_MSG_THRESHOLD) {
+            return true;
+        }
+        return (System.currentTimeMillis() - lastMessageSent) > 1000;
     }
 
 }

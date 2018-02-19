@@ -74,6 +74,10 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         return responder.getConnection().getLink();
     }
 
+    public DSResponder getResponder() {
+        return responder;
+    }
+
     /**
      * This returns a DSInboundSubscription for v1, this will be overridden for v2.
      *
@@ -88,7 +92,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     /**
      * Create or update a subscription.
      */
-    public void subscribe(Integer sid, String path, int qos) {
+    public DSInboundSubscription subscribe(Integer sid, String path, int qos) {
         trace(trace() ? "Subscribing " + path : null);
         DSInboundSubscription subscription = sidMap.get(sid);
         if (subscription == null) {
@@ -97,11 +101,12 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
             pathMap.put(path, subscription);
         } else if (!path.equals(subscription.getPath())) {
             unsubscribe(sid);
-            subscribe(sid, path, qos);
+            return subscribe(sid, path, qos);
         } else {
             subscription.setQos(qos);
             //TODO refresh subscription, align w/v2
         }
+        return subscription;
     }
 
     /**
@@ -130,6 +135,9 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
                 break;
             }
             sub.write(writer, timestampBuffer);
+            if (sub.isCloseAfterUpdate()) {
+                unsubscribe(sub.getSubscriptionId());
+            }
         }
         writeEnd(writer);
         synchronized (this) {

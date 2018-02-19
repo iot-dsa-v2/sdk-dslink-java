@@ -49,6 +49,7 @@ public class DSInboundInvoke extends DSInboundRequest
     private DSPermission permission;
     private ActionResult result;
     private Iterator<DSList> rows;
+    private boolean stream = true;
     private int state = STATE_INIT;
     private Update updateHead;
     private Update updateTail;
@@ -255,6 +256,14 @@ public class DSInboundInvoke extends DSInboundRequest
         enqueueUpdate(new Update(row));
     }
 
+    /**
+     * For v2 only, set to false to auto close the stream after sending the initial state.
+     */
+    public DSInboundInvoke setStream(boolean stream) {
+        this.stream = stream;
+        return this;
+    }
+
     @Override
     public void write(MessageWriter writer) {
         enqueued = false;
@@ -374,7 +383,7 @@ public class DSInboundInvoke extends DSInboundRequest
             }
         }
         out.endList();
-        if ((result == null) || !result.getAction().getResultType().isOpen()) {
+        if ((result == null) || !result.getAction().getResultType().isOpen() || !stream) {
             writeClose(writer);
             state = STATE_CLOSED;
             doClose();

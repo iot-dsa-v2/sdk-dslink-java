@@ -30,4 +30,22 @@ class DS2InboundInvoke extends DSInboundInvoke implements MessageConstants {
         //if has multipart
     }
 
+    @Override
+    protected void writeBegin(MessageWriter writer) {
+        writer.getWriter().beginMap();
+    }
+
+    @Override
+    protected void writeClose(MessageWriter writer) {
+        DS2MessageWriter out = (DS2MessageWriter) writer;
+        out.addHeader((byte) HDR_STATUS, MessageConstants.STS_CLOSED);
+    }
+
+    @Override
+    protected void writeOpen(MessageWriter writer) {
+        DS2MessageWriter out = (DS2MessageWriter) writer;
+        out.addHeader((byte) HDR_STATUS, MessageConstants.STS_OK);
+    }
+
+
 }

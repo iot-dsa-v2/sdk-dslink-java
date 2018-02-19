@@ -34,7 +34,10 @@ public class DS2InboundSubscriptions extends DSInboundSubscriptions {
 
     @Override
     protected DSInboundSubscription makeSubscription(Integer sid, String path, int qos) {
-        return new DS2InboundSubscription(this, sid, path, qos);
+        DSInboundSubscription ret = new DS2InboundSubscription(this, sid, path, qos);
+        ret.setResponder(getResponder());
+        ret.setSession(getResponder().getSession());
+        return ret;
     }
 
     @Override

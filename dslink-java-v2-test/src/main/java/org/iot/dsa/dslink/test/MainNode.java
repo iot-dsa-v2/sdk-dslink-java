@@ -11,6 +11,7 @@ import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSJavaEnum;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSLong;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.ActionInvocation;
@@ -72,8 +73,12 @@ public class MainNode extends DSMainNode implements Runnable {
     public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {
         if (actionInfo == this.reset) {
             put(incrementingInt, DSElement.make(0));
-            DSElement arg = invocation.getParameters().get("Arg");
-            put("Message", arg);
+            DSMap map = invocation.getParameters();
+            DSElement arg = null;
+            if (map != null) {
+                arg = invocation.getParameters().get("Arg");
+                put("Message", arg);
+            }
             clear();
             return null;
         } else if (actionInfo == this.test) {

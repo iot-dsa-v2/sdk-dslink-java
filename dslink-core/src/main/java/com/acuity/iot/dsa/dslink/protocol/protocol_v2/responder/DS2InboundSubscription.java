@@ -7,7 +7,7 @@ import com.acuity.iot.dsa.dslink.protocol.protocol_v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscription;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
-import org.iot.dsa.io.msgpack.MsgpackWriter;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -36,23 +36,26 @@ public class DS2InboundSubscription extends DSInboundSubscription implements Mes
 
     @Override
     protected void write(Update update, MessageWriter writer, StringBuilder buf) {
-        DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(getSubscriptionId(), getSession().getNextAck());
-        out.setMethod((byte) MSG_SUBSCRIBE_RES);
-        DSByteBuffer byteBuffer = out.getBody();
+        DS2MessageWriter messageWriter = (DS2MessageWriter) writer;
+        messageWriter.init(getSubscriptionId(), getSession().getNextAck());
+        messageWriter.setMethod((byte) MSG_SUBSCRIBE_RES);
+        DSIWriter dsiWriter = messageWriter.getWriter();
+        DSByteBuffer byteBuffer = messageWriter.getBody();
         byteBuffer.skip(2);
-        MsgpackWriter msgpackWriter = new MsgpackWriter(byteBuffer);
-        msgpackWriter.beginMap();
+        int start = byteBuffer.length();
+        dsiWriter.beginMap();
         buf.setLength(0);
         DSTime.encode(update.timestamp, true, buf);
-        msgpackWriter.key("timestamp").value(buf.toString());
+        dsiWriter.key("timestamp").value(buf.toString());
         if (!update.quality.isOk()) {
-            msgpackWriter.key("status").value(update.quality.toElement());
+            dsiWriter.key("status").value(update.quality.toElement());
         }
-        msgpackWriter.endMap();
-        byteBuffer.replaceShort(0, (short) msgpackWriter.length(), false);
-        msgpackWriter.value(update.value.toElement());
-        out.write((DSBinaryTransport) getResponder().getTransport());
+        dsiWriter.endMap();
+        int end = byteBuffer.length();
+        byteBuffer.replaceShort(start - 2, (short) (end - start), false);
+        dsiWriter.reset();
+        dsiWriter.value(update.value.toElement());
+        messageWriter.write((DSBinaryTransport) getResponder().getTransport());
     }
 
 }
