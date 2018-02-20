@@ -2,9 +2,9 @@ package com.acuity.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSNode;
@@ -18,12 +18,22 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSSession extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
+    // Constants
+    ///////////////////////////////////////////////////////////////////////////
+
+    private static final int MAX_MSG_ID = 2147483647;
+    private static final long MSG_TIMEOUT = 60000;
+
+    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private long lastRecv;
+    private long lastSend;
+    private int nextAck = -1;
+    private int nextMessage = 1;
     private boolean connected = false;
     private DSLinkConnection connection;
-    private Logger logger;
     private Object outgoingMutex = new Object();
     private List<OutboundMessage> outgoingRequests = new LinkedList<OutboundMessage>();
     private List<OutboundMessage> outgoingResponses = new LinkedList<OutboundMessage>();
@@ -127,11 +137,28 @@ public abstract class DSSession extends DSNode {
     }
 
     @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(getConnection().getLink().getLinkName() + ".session");
+    protected String getLogName() {
+        return "Session";
+    }
+
+    /**
+     * The next ack id, or -1.
+     */
+    public synchronized int getNextAck() {
+        int ret = nextAck;
+        nextAck = -1;
+        return ret;
+    }
+
+    /**
+     * Returns the next new message id.
+     */
+    public synchronized int getNextMessageId() {
+        int ret = nextMessage;
+        if (++nextMessage > MAX_MSG_ID) {
+            nextMessage = 1;
         }
-        return logger;
+        return ret;
     }
 
     public abstract DSIRequester getRequester();
@@ -140,17 +167,8 @@ public abstract class DSSession extends DSNode {
         return getConnection().getTransport();
     }
 
-    /**
-     * True if there are any outbound requests or responses queued up.
-     */
-    protected final boolean hasMessagesToSend() {
-        if (!outgoingResponses.isEmpty()) {
-            return true;
-        }
-        if (!outgoingRequests.isEmpty()) {
-            return true;
-        }
-        return false;
+    protected boolean hasAckToSend() {
+        return nextAck > 0;
     }
 
     protected boolean hasOutgoingRequests() {
@@ -165,7 +183,16 @@ public abstract class DSSession extends DSNode {
      * Override point, this returns the result of hasMessagesToSend.
      */
     protected boolean hasSomethingToSend() {
-        return hasMessagesToSend();
+        if (nextAck > 0) {
+            return true;
+        }
+        if (!outgoingResponses.isEmpty()) {
+            return true;
+        }
+        if (!outgoingRequests.isEmpty()) {
+            return true;
+        }
+        return false;
     }
 
     protected boolean isConnected() {
@@ -207,6 +234,16 @@ public abstract class DSSession extends DSNode {
     }
 
     /**
+     * Call for each incoming message id that needs to be acked.
+     */
+    public synchronized void setNextAck(int nextAck) {
+        if (nextAck > 0) {
+            this.nextAck = nextAck;
+            notifyOutgoing();
+        }
+    }
+
+    /**
      * Called when the broker signifies that requests are allowed.
      */
     public void setRequesterAllowed() {
@@ -220,17 +257,32 @@ public abstract class DSSession extends DSNode {
      * implementation.  A separate thread is spun off to manage writing.
      */
     public void run() {
+        lastRecv = lastSend = System.currentTimeMillis();
         new WriteThread(getConnection().getLink().getLinkName() + " Writer").start();
         while (connected) {
             try {
+                verifyLastSend();
                 doRecvMessage();
+                lastRecv = System.currentTimeMillis();
             } catch (Exception x) {
                 getTransport().close();
                 if (connected) {
                     connected = false;
-                    severe(getPath(), x);
+                    error(getPath(), x);
                 }
             }
+        }
+    }
+
+    private void verifyLastRead() throws IOException {
+        if ((System.currentTimeMillis() - lastRecv) > MSG_TIMEOUT) {
+            throw new IOException("No message received in " + MSG_TIMEOUT + "ms");
+        }
+    }
+
+    private void verifyLastSend() throws IOException {
+        if ((System.currentTimeMillis() - lastSend) > MSG_TIMEOUT) {
+            throw new IOException("No message sent in " + MSG_TIMEOUT + "ms");
         }
     }
 
@@ -251,23 +303,25 @@ public abstract class DSSession extends DSNode {
         public void run() {
             try {
                 while (connected) {
+                    verifyLastRead();
                     synchronized (outgoingMutex) {
                         if (!hasSomethingToSend()) {
                             try {
                                 outgoingMutex.wait(5000);
                             } catch (InterruptedException x) {
-                                fine(getPath(), x);
+                                warn(getPath(), x);
                             }
                             continue;
                         }
                     }
                     doSendMessage();
+                    lastSend = System.currentTimeMillis();
                 }
             } catch (Exception x) {
                 if (connected) {
                     connected = false;
                     getTransport().close();
-                    severe(getPath(), x);
+                    error(getPath(), x);
                 }
             }
         }

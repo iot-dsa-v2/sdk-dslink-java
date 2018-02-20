@@ -46,7 +46,7 @@ public class WsTextTransport extends DSTextTransport {
     /////////////////////////////////////////////////////////////////
 
     @Override
-    public DSTransport beginMessage() {
+    public DSTransport beginSendMessage() {
         messageSize = 0;
         return this;
     }
@@ -62,7 +62,7 @@ public class WsTextTransport extends DSTextTransport {
                 session.close();
             }
         } catch (Exception x) {
-            finer(getConnection().getConnectionId(), x);
+            debug(getConnection().getConnectionId(), x);
         }
         session = null;
         buffer.close();
@@ -70,7 +70,7 @@ public class WsTextTransport extends DSTextTransport {
     }
 
     @Override
-    public DSTransport endMessage() {
+    public DSTransport endSendMessage() {
         write("", true);
         messageSize = 0;
         return this;
@@ -112,14 +112,14 @@ public class WsTextTransport extends DSTextTransport {
     public void onError(Session session, Throwable err) {
         if (open) {
             open = false;
-            severe(getConnectionUrl(), err);
+            error(getConnectionUrl(), err);
             buffer.close(DSException.makeRuntime(err));
         }
     }
 
     @OnMessage
     public void onMessage(Session session, String msgPart, boolean isLast) {
-        finest(finest() ? "Recv: " + msgPart : null);
+        trace(trace() ? "Recv: " + msgPart : null);
         buffer.put(msgPart);
     }
 
@@ -164,7 +164,7 @@ public class WsTextTransport extends DSTextTransport {
             int len = text.length();
             messageSize += len;
             if (len > 0) {
-                finest(finest() ? "Send: " + text : null);
+                trace(trace() ? "Send: " + text : null);
             }
             basic.sendText(text, isLast);
         } catch (IOException x) {

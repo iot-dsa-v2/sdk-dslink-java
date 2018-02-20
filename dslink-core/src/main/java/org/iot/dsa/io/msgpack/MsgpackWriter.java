@@ -31,6 +31,10 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     public MsgpackWriter() {
     }
 
+    public MsgpackWriter(DSByteBuffer buffer) {
+        this.byteBuffer = buffer;
+    }
+
     // Methods
     // -------
 
@@ -340,6 +344,17 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         }
     }
 
+    /**
+     * Writes the UTF8 bytes to the underlying buffer.
+     */
+    public void writeUTF8(CharSequence arg) {
+        CharBuffer chars = getCharBuffer(arg);
+        ByteBuffer strBuffer = getStringBuffer(chars.position() * (int) encoder.maxBytesPerChar());
+        encoder.encode(chars, strBuffer, false);
+        byteBuffer.put(strBuffer);
+        encoder.reset();
+    }
+
     @Override
     protected void writeValue(CharSequence arg) throws IOException {
         if (frame != null) {
@@ -373,7 +388,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
 
         void writeSize() {
             if (offset >= 0) {
-                byteBuffer.overwriteShort(offset, (short) size, true);
+                byteBuffer.replaceShort(offset, (short) size, true);
             }
         }
     }

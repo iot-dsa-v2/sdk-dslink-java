@@ -1,6 +1,5 @@
 package org.iot.dsa.dslink;
 
-import java.util.logging.Logger;
 import org.iot.dsa.node.DSNode;
 
 /**
@@ -12,20 +11,29 @@ import org.iot.dsa.node.DSNode;
 public class DSMainNode extends DSNode {
 
     /**
-     * Creates a child logger of the link.
-     */
-    protected Logger getLogger(String name) {
-        if (name.startsWith(".")) {
-            return Logger.getLogger(getLink().getLinkName() + name);
-        }
-        return Logger.getLogger(getLink().getLinkName() + '.' + name);
-    }
-
-    /**
      * The parent link or null.
      */
     public DSLink getLink() {
         return (DSLink) getParent();
+    }
+
+    @Override
+    protected String getLogName() {
+        return "Main";
+    }
+
+    /**
+     * Override point, returns true by default.
+     */
+    public boolean isRequester() {
+        return true;
+    }
+
+    /**
+     * Override point, returns true by default.
+     */
+    public boolean isResponder() {
+        return true;
     }
 
     /**

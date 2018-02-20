@@ -1,16 +1,15 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageWriter;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
 import javax.xml.bind.DatatypeConverter;
-import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.security.DSKeys;
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,14 +24,6 @@ public class V2HandshakeTest {
     ///////////////////////////////////////////////////////////////////////////
 
     private final static char[] HEXCHARS = "0123456789abcdef".toCharArray();
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
@@ -86,7 +77,7 @@ public class V2HandshakeTest {
         //construct the message
         DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf0);
-        ByteBuffer buffer = writer.getBody();
+        DSByteBuffer buffer = writer.getBody();
         buffer.put((byte) 2).put((byte) 0); //dsa version
         writer.writeString(dsId, buffer);
         buffer.put(dsKeys.encodePublic());
@@ -113,13 +104,13 @@ public class V2HandshakeTest {
         //construct the message
         DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf1);
-        ByteBuffer buffer = writer.getBody();
+        DSByteBuffer buffer = writer.getBody();
         //dsa version
         writer.writeString(dsId, buffer);
         byte[] publicKey = dsKeys.encodePublic();
         buffer.put(publicKey);
         buffer.put(saltBytes);
-        int bodyLength = buffer.position();
+        int bodyLength = buffer.length();
         byte[] bytes = writer.toByteArray();
         //what to test against
         String correctResult = "9c0000000700f1320062726f6b65722d67363735676153516f677a4d786a4a46764c374873436279533842304c79325f4162686b775f2d6734694904f9e64edcec5ea0a645bd034e46ff209dd9fb21d8aba74a5531dc6dcbea28d696c6c9386d924ebc2f48092a1d6c8b2ca907005cca7e8d2a58783b8a765d8eb29deccbc87e4b5ce2fe28308fd9f2a7baf3a87ff679a2f3e71d9181a67b7542122c"
@@ -160,16 +151,14 @@ public class V2HandshakeTest {
         //construct the message
         DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf2);
-        ByteBuffer buffer = writer.getBody();
+        DSByteBuffer buffer = writer.getBody();
         writer.writeString("sample_token_string", buffer);
         buffer.put((byte) 0x01); //isResponder
-        writer.writeString("", buffer); //blank session string
-        writer.writeIntLE(0, buffer); //last ack
         writer.writeString("", buffer); //blank server path
         buffer.put(auth);
         byte[] tmp = writer.toByteArray();
         //what to test against
-        String correctResult = "450000000700f2130073616d706c655f746f6b656e5f737472696e67010000000000000000f58c10e212a82bf327a020679c424fc63e852633a53253119df74114fac8b2ba"
+        String correctResult = "3f0000000700f2130073616d706c655f746f6b656e5f737472696e67010000f58c10e212a82bf327a020679c424fc63e852633a53253119df74114fac8b2ba"
                 .toUpperCase();
         byte[] correctBytes = toBytesFromHex(correctResult);
         Assert.assertArrayEquals(tmp, correctBytes);
@@ -193,16 +182,14 @@ public class V2HandshakeTest {
         //construct the message
         DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod((byte) 0xf3);
-        ByteBuffer buffer = writer.getBody();
+        DSByteBuffer buffer = writer.getBody();
         buffer.put((byte) 1); // allow requester
-        writer.writeString("sampe-session-001", buffer); //client session id
-        writer.writeIntLE(0, buffer); //last ack id
         writer.writeString("/downstream/mlink1", buffer);
         buffer.put(auth);
         int bodyLength = writer.getBodyLength();
         byte[] tmp = writer.toByteArray();
         //what to test against
-        String correctResult = "530000000700f301110073616d70652d73657373696f6e2d3030310000000012002f646f776e73747265616d2f6d6c696e6b31e709059f1ebb84cfb8c34d53fdba7fbf20b1fe3dff8c343050d2b5c7c62be85a"
+        String correctResult = "3c0000000700f30112002f646f776e73747265616d2f6d6c696e6b31e709059f1ebb84cfb8c34d53fdba7fbf20b1fe3dff8c343050d2b5c7c62be85a"
                 .toUpperCase();
         byte[] correctBytes = toBytesFromHex(correctResult);
         Assert.assertTrue(Arrays.equals(tmp, correctBytes));
@@ -213,8 +200,6 @@ public class V2HandshakeTest {
         Assert.assertEquals(0xf3, reader.getMethod());
         Assert.assertEquals(bodyLength, reader.getBodyLength());
         Assert.assertEquals(in.read(), 1); //allow requester
-        Assert.assertEquals("sampe-session-001", reader.readString(in));
-        Assert.assertEquals(DSBytes.readInt(in, false), 0);
         Assert.assertEquals("/downstream/mlink1", reader.readString(in));
         tmp = new byte[auth.length];
         in.read(tmp);
@@ -228,13 +213,5 @@ public class V2HandshakeTest {
     public static String toHexFromBytes(byte[] bytes) {
         return DatatypeConverter.printHexBinary(bytes);
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
 
 }

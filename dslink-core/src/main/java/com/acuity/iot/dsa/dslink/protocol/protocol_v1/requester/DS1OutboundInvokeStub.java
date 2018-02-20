@@ -94,7 +94,7 @@ class DS1OutboundInvokeStub extends DS1OutboundStub {
                 handler.onUpdate(updates.get(i).toList());
             }
         } catch (Exception x) {
-            getRequester().severe(getRequester().getPath(), x);
+            getRequester().error(getRequester().getPath(), x);
         }
     }
 

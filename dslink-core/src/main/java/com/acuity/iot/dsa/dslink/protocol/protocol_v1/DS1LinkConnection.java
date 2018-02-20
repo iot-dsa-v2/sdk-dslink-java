@@ -113,13 +113,13 @@ public class DS1LinkConnection extends DSLinkConnection {
             DSException.throwRuntime(x);
         }
         String uri = init.makeWsUrl(wsUri);
-        config(config() ? "Connection URL = " + uri : null);
+        fine(fine() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
         transport.setReadTimeout(getLink().getConfig().getConfig(
                 DSLinkConfig.CFG_READ_TIMEOUT, 60000));
         setTransport(transport);
-        config(config() ? "Transport type: " + transport.getClass().getName() : null);
+        fine(fine() ? "Transport type: " + transport.getClass().getName() : null);
         return transport;
     }
 
@@ -173,7 +173,7 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     @Override
     protected void onStable() {
-        this.link = (DSLink) getParent();
+        this.link = getLink();
         super.onStable();
     }
 
@@ -191,16 +191,6 @@ public class DS1LinkConnection extends DSLinkConnection {
             writer = new MsgpackWriter() {
                 @Override
                 public void onComplete() {
-                    /* How to debug
-                    try {
-                        MsgpackReader reader = new MsgpackReader(
-                                new ByteArrayInputStream(byteBuffer.array());
-                        System.out.println(reader.getMap());
-                        reader.close();
-                    } catch (Exception x) {
-                        x.printStackTrace();
-                    }
-                    */
                     writeTo(trans);
                 }
             };

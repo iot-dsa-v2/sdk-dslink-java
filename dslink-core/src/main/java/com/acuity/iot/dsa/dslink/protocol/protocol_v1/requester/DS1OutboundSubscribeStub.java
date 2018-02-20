@@ -56,7 +56,7 @@ class DS1OutboundSubscribeStub implements OutboundStream {
         try {
             request.onClose();
         } catch (Exception x) {
-            stubs.getSubscriptions().severe(path, x);
+            stubs.getSubscriptions().error(path, x);
         }
     }
 
@@ -84,7 +84,7 @@ class DS1OutboundSubscribeStub implements OutboundStream {
         try {
             request.onUpdate(ts, value, status);
         } catch (Exception x) {
-            stubs.getSubscriptions().severe(path, x);
+            stubs.getSubscriptions().error(path, x);
         }
     }
 

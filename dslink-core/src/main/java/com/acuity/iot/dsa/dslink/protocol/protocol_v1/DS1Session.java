@@ -37,7 +37,6 @@ public class DS1Session extends DSSession {
     static final String LAST_ACK_RECV = "Last Ack Recv";
     static final String LAST_ACK_SENT = "Last Ack Sent";
 
-    static final int MAX_MSG_ID = 2147483647;
     static final int MAX_MSG_IVL = 45000;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -48,8 +47,6 @@ public class DS1Session extends DSSession {
     private DSInfo lastAckSent = getInfo(LAST_ACK_SENT);
     private long lastMessageSent;
     private MessageWriter messageWriter;
-    private int nextAck = -1;
-    private int nextMsg = 1;
     private boolean requestsNext = false;
     private DS1Requester requester = new DS1Requester(this);
     private DS1Responder responder = new DS1Responder(this);
@@ -80,16 +77,11 @@ public class DS1Session extends DSSession {
     protected void beginMessage() {
         DSIWriter out = getWriter();
         out.beginMap();
-        if (++nextMsg > MAX_MSG_ID) {
-            nextMsg = 1;
-        }
-        out.key("msg").value(nextMsg);
-        synchronized (this) {
-            if (nextAck > 0) {
-                out.key("ack").value(nextAck);
-                put(lastAckSent, DSInt.valueOf(nextAck));
-                nextAck = -1;
-            }
+        out.key("msg").value(getNextMessageId());
+        int nextAck = getNextAck();
+        if (nextAck > 0) {
+            out.key("ack").value(nextAck);
+            put(lastAckSent, DSInt.valueOf(nextAck));
         }
     }
 
@@ -146,16 +138,16 @@ public class DS1Session extends DSSession {
         DSIWriter writer = getWriter();
         writer.reset();
         requestsNext = !requestsNext;
-        transport.beginMessage();
+        transport.beginSendMessage();
         beginMessage();
-        if (hasMessagesToSend()) {
+        if (this.hasSomethingToSend()) {
             send(requestsNext, endTime);
             if ((System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
                 send(!requestsNext, endTime);
             }
         }
         endMessage();
-        transport.endMessage();
+        transport.endSendMessage();
         lastMessageSent = System.currentTimeMillis();
     }
 
@@ -219,9 +211,6 @@ public class DS1Session extends DSSession {
      * Override point, returns true if there are any pending acks or outbound messages queued up.
      */
     protected boolean hasSomethingToSend() {
-        if (nextAck > 0) {
-            return true;
-        }
         if (hasPingToSend()) {
             return true;
         }
@@ -297,20 +286,20 @@ public class DS1Session extends DSSession {
                     throw new IllegalStateException("Allowed not a boolean");
                 }
                 if (reader.getBoolean()) {
-                    config(config() ? "Requester allowed" : null);
+                    fine(fine() ? "Requester allowed" : null);
                     getConnection().setRequesterAllowed();
                 }
             } else if (key.equals("salt")) {
                 if (reader.next() != Token.STRING) {
                     throw new IllegalStateException("Salt not a string");
                 }
-                config(config() ? "Next salt: " + reader.getString() : null);
+                fine(fine() ? "Next salt: " + reader.getString() : null);
                 getConnection().updateSalt(reader.getString());
             }
             next = reader.next();
         } while (next != END_MAP);
         if (sendAck && (msg >= 0)) {
-            sendAck(msg);
+            setNextAck(msg);
         }
     }
 
@@ -333,7 +322,7 @@ public class DS1Session extends DSSession {
             req = reader.getMap();
             rid = req.get("rid", -1);
             if (rid < 0) {
-                finest(finest() ? "No request ID: " + req.toString() : null);
+                trace(trace() ? "No request ID: " + req.toString() : null);
                 throw new DSProtocolException("Response missing rid");
             }
             if (areRequests) {
@@ -385,14 +374,6 @@ public class DS1Session extends DSSession {
         } else {
             endResponses();
         }
-    }
-
-    /**
-     * We need to send an ack to the broker.
-     */
-    private synchronized void sendAck(int msg) {
-        nextAck = msg;
-        notifyOutgoing();
     }
 
     /**

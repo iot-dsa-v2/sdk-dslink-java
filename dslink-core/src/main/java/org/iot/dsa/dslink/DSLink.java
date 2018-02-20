@@ -1,6 +1,5 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.protocol.protocol_v1.DS1LinkConnection;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -13,7 +12,6 @@ import java.util.Calendar;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.iot.dsa.DSRuntime;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
@@ -21,9 +19,6 @@ import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.logging.DSLogging;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.security.DSKeys;
 import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
@@ -51,7 +46,6 @@ public class DSLink extends DSNode implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
 
     static final String MAIN = "main";
-    static final String SAVE = "Save";
     static final String SYS = "sys";
 
     ///////////////////////////////////////////////////////////////////////////
@@ -59,14 +53,11 @@ public class DSLink extends DSNode implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
 
     private DSLinkConfig config;
-    private DSLinkConnection connection;
     private String dsId;
     private DSKeys keys;
-    private Logger logger;
     private DSInfo main = getInfo(MAIN);
     private String name;
     private Thread runThread;
-    private DSInfo save = getInfo(SAVE);
     private boolean saveEnabled = true;
     private DSInfo sys = getInfo(SYS);
 
@@ -91,9 +82,8 @@ public class DSLink extends DSNode implements Runnable {
      */
     @Override
     protected void declareDefaults() {
-        declareDefault(SAVE, new DSAction()).setAdmin(true);
         declareDefault(MAIN, new DSNode());
-        declareDefault(SYS, new DSNode()).setTransient(true);
+        declareDefault(SYS, new DSSysNode()).setAdmin(true);
     }
 
     public DSLinkConfig getConfig() {
@@ -101,7 +91,7 @@ public class DSLink extends DSNode implements Runnable {
     }
 
     public DSLinkConnection getConnection() {
-        return connection;
+        return getSys().getConnection();
     }
 
     /**
@@ -135,19 +125,17 @@ public class DSLink extends DSNode implements Runnable {
         return name;
     }
 
-    /**
-     * The logger as defined in dslink.json.
-     */
     @Override
-    public Logger getLogger() {
-        return logger;
+    protected String getLogName() {
+        return getClass().getSimpleName();
     }
 
-    /**
-     * Returns the root of the node tree.
-     */
     public DSMainNode getMain() {
         return (DSMainNode) main.getNode();
+    }
+
+    public DSSysNode getSys() {
+        return (DSSysNode) sys.getNode();
     }
 
     /**
@@ -160,28 +148,7 @@ public class DSLink extends DSNode implements Runnable {
         DSLogging.setDefaultLevel(config.getLogLevel());
         name = config.getLinkName();
         keys = config.getKeys();
-        if (config.getLogFile() != null) {
-            logger = DSLogging.getLogger(name, config.getLogFile());
-        } else {
-            logger = Logger.getLogger(name);
-        }
-        try {
-            String ver = config.getConfig(DSLinkConfig.CFG_PROTOCOL_VERSION, "1");
-            if (ver.startsWith("1")) {
-                String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
-                if (type != null) {
-                    config(config() ? "Connection type: " + type : null);
-                    connection = (DSLinkConnection) Class.forName(type).newInstance();
-                } else {
-                    connection = new DS1LinkConnection();
-                }
-            } else { //2
-                ; //TODO
-            }
-            put(sys, connection);
-        } catch (Exception x) {
-            DSException.throwRuntime(x);
-        }
+        getSys().init();
         return this;
     }
 
@@ -217,7 +184,7 @@ public class DSLink extends DSNode implements Runnable {
             if (type == null) {
                 throw new IllegalStateException("Config missing the main node type");
             }
-            ret.config("Main type: " + type);
+            ret.fine("Main type: " + type);
             try {
                 DSNode node = (DSNode) Class.forName(type).newInstance();
                 ret.put(MAIN, node);
@@ -243,22 +210,6 @@ public class DSLink extends DSNode implements Runnable {
         } catch (Exception x) {
             x.printStackTrace();
         }
-    }
-
-    /**
-     * Handles the save action.
-     */
-    public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {
-        if (actionInfo == save) {
-            DSRuntime.run(new Runnable() {
-                @Override
-                public void run() {
-                    save();
-                }
-            });
-            return null;
-        }
-        return super.onInvoke(actionInfo, invocation);
     }
 
     /**
@@ -314,7 +265,7 @@ public class DSLink extends DSNode implements Runnable {
                     }
                 }
             } catch (Exception x) {
-                severe(getLinkName(), x);
+                error(getLinkName(), x);
                 stop();
                 DSException.throwRuntime(x);
             }
@@ -393,21 +344,21 @@ public class DSLink extends DSNode implements Runnable {
             time = System.currentTimeMillis() - time;
             info("Node database saved: " + time + "ms");
         } catch (Exception x) {
-            severe("Saving node database", x);
+            error("Saving node database", x);
         }
         try {
             if (in != null) {
                 in.close();
             }
         } catch (IOException x) {
-            severe("Closing input", x);
+            error("Closing input", x);
         }
         try {
             if (zos != null) {
                 zos.close();
             }
         } catch (IOException x) {
-            severe("Closing output", x);
+            error("Closing output", x);
         }
     }
 

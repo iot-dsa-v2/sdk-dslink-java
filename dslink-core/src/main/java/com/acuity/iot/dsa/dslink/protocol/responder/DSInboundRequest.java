@@ -1,7 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.DSSession;
-import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.responder.InboundRequest;
 import org.iot.dsa.logging.DSLogger;
@@ -28,7 +27,15 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
     ///////////////////////////////////////////////////////////////////////////
 
     public DSLink getLink() {
+        if (link == null) {
+            link = responder.getLink();
+        }
         return link;
+    }
+
+    @Override
+    protected String getLogName() {
+        return getClass().getSimpleName();
     }
 
     public String getPath() {
@@ -46,8 +53,6 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
     public DSSession getSession() {
         return session;
     }
-
-    protected abstract ErrorResponse makeError(Throwable reason);
 
     public DSInboundRequest setLink(DSLink link) {
         this.link = link;

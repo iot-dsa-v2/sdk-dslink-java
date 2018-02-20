@@ -17,6 +17,7 @@ public class DSBytes extends DSElement {
     // Constants
     // ---------
 
+    private final static char[] HEX = "0123456789ABCDEF".toCharArray();
     public static final DSBytes NULL = new DSBytes(new byte[0]);
     private static final String PREFIX = "\u001Bbytes:";
 
@@ -59,6 +60,19 @@ public class DSBytes extends DSElement {
             return Arrays.equals(value, other.value);
         }
         return false;
+    }
+
+    /**
+     * Converts a hex string into a byte array.
+     */
+    public static byte[] fromHex(CharSequence s) {
+        int len = s.length();
+        byte[] ret = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            ret[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return ret;
     }
 
     /**
@@ -299,6 +313,41 @@ public class DSBytes extends DSElement {
         return value;
     }
 
+    /**
+     * Converts the bytes into a hex string.
+     *
+     * @param val What to convert.
+     * @param buf Where to put the results, can be null.
+     * @return The buf parameter, or a new StringBuilder if the param was null.
+     */
+    public static StringBuilder toHex(byte val, StringBuilder buf) {
+        if (buf == null) {
+            buf = new StringBuilder();
+        }
+        buf.append(HEX[(val >>> 4) & 0x0F]);
+        buf.append(HEX[val & 0x0F]);
+        return buf;
+    }
+
+    /**
+     * Converts the bytes into a hex string.
+     *
+     * @param bytes What to convert.
+     * @param buf   Where to put the results, can be null.
+     * @return The buf parameter, or a new StringBuilder if the param was null.
+     */
+    public static StringBuilder toHex(byte[] bytes, StringBuilder buf) {
+        if (buf == null) {
+            buf = new StringBuilder();
+        }
+        for (int i = 0, len = bytes.length; i < len; i++) {
+            int val = bytes[i] & 0xFF;
+            buf.append(HEX[val >>> 4] & 0x0F);
+            buf.append(HEX[val & 0x0F]);
+        }
+        return buf;
+    }
+
     @Override
     public String toString() {
         if (isNull()) {
@@ -318,6 +367,9 @@ public class DSBytes extends DSElement {
     public DSBytes valueOf(DSElement arg) {
         if ((arg == null) || arg.isNull()) {
             return NULL;
+        }
+        if (arg instanceof DSBytes) {
+            return (DSBytes) arg;
         }
         if (arg instanceof DSString) {
             return valueOf(arg.toString());

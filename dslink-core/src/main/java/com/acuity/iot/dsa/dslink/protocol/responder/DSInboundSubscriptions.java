@@ -1,21 +1,19 @@
-package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
+package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.logging.DSLogger;
+import org.iot.dsa.node.DSNode;
 
 /**
  * Subscribe implementation for the responder.
  *
  * @author Aaron Hansen
  */
-class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
+public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -28,21 +26,20 @@ class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
     ///////////////////////////////////////////////////////////////////////////
 
     private boolean enqueued = false;
-    private Logger logger;
-    private ConcurrentLinkedQueue<DS1InboundSubscription> outbound =
-            new ConcurrentLinkedQueue<DS1InboundSubscription>();
-    private Map<String, DS1InboundSubscription> pathMap =
-            new ConcurrentHashMap<String, DS1InboundSubscription>();
-    private DS1Responder responder;
-    private Map<Integer, DS1InboundSubscription> sidMap =
-            new ConcurrentHashMap<Integer, DS1InboundSubscription>();
+    private ConcurrentLinkedQueue<DSInboundSubscription> outbound =
+            new ConcurrentLinkedQueue<DSInboundSubscription>();
+    private Map<String, DSInboundSubscription> pathMap =
+            new ConcurrentHashMap<String, DSInboundSubscription>();
+    private DSResponder responder;
+    private Map<Integer, DSInboundSubscription> sidMap =
+            new ConcurrentHashMap<Integer, DSInboundSubscription>();
     private StringBuilder timestampBuffer = new StringBuilder();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DS1InboundSubscriptions(DS1Responder responder) {
+    public DSInboundSubscriptions(DSResponder responder) {
         this.responder = responder;
     }
 
@@ -53,7 +50,7 @@ class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
     /**
      * Unsubscribes all.
      */
-    void close() {
+    public void close() {
         for (Integer i : sidMap.keySet()) {
             unsubscribe(i);
         }
@@ -62,7 +59,7 @@ class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
     /**
      * Add to the outbound queue if not already enqueued.
      */
-    void enqueue(DS1InboundSubscription subscription) {
+    protected void enqueue(DSInboundSubscription subscription) {
         synchronized (this) {
             outbound.add(subscription);
             if (enqueued) {
@@ -77,41 +74,48 @@ class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
         return responder.getConnection().getLink();
     }
 
-    @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(responder.getConnection().getLink().getLinkName()
-                                              + ".responderSubscriptions");
-        }
-        return logger;
+    public DSResponder getResponder() {
+        return responder;
+    }
+
+    /**
+     * This returns a DSInboundSubscription for v1, this will be overridden for v2.
+     *
+     * @param sid  Subscription ID.
+     * @param path Path being subscribed to.
+     * @param qos  Qualityf of service.
+     */
+    protected DSInboundSubscription makeSubscription(Integer sid, String path, int qos) {
+        return new DSInboundSubscription(this, sid, path, qos);
     }
 
     /**
      * Create or update a subscription.
      */
-    void subscribe(Integer sid, String path, int qos) {
-        finest(finest() ? "Subscribing " + path : null);
-        DS1InboundSubscription subscription = sidMap.get(sid);
+    public DSInboundSubscription subscribe(Integer sid, String path, int qos) {
+        trace(trace() ? "Subscribing " + path : null);
+        DSInboundSubscription subscription = sidMap.get(sid);
         if (subscription == null) {
-            subscription = new DS1InboundSubscription(this, sid, path, qos);
+            subscription = makeSubscription(sid, path, qos);
             sidMap.put(sid, subscription);
             pathMap.put(path, subscription);
         } else if (!path.equals(subscription.getPath())) {
             unsubscribe(sid);
-            subscribe(sid, path, qos);
+            return subscribe(sid, path, qos);
         } else {
             subscription.setQos(qos);
             //TODO refresh subscription, align w/v2
         }
+        return subscription;
     }
 
     /**
      * Remove the subscription and call onClose.
      */
-    void unsubscribe(Integer sid) {
-        DS1InboundSubscription subscription = sidMap.remove(sid);
+    public void unsubscribe(Integer sid) {
+        DSInboundSubscription subscription = sidMap.remove(sid);
         if (subscription != null) {
-            finest(finest() ? "Unsubscribing " + subscription.getPath() : null);
+            trace(trace() ? "Unsubscribing " + subscription.getPath() : null);
             pathMap.remove(subscription.getPath());
             try {
                 subscription.onClose();
@@ -123,21 +127,19 @@ class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
 
     @Override
     public void write(MessageWriter writer) {
-        DSIWriter out = writer.getWriter();
-        out.beginMap();
-        out.key("rid").value(ZERO);
-        out.key("updates").beginList();
-        DS1InboundSubscription sub;
+        writeBegin(writer);
+        DSInboundSubscription sub;
         while (!responder.shouldEndMessage()) {
             sub = outbound.poll();
             if (sub == null) {
                 break;
             }
-            sub.write(out, timestampBuffer);
+            sub.write(writer, timestampBuffer);
+            if (sub.isCloseAfterUpdate()) {
+                unsubscribe(sub.getSubscriptionId());
+            }
         }
-        out.endList();
-        out.endMap();
-        timestampBuffer.setLength(0);
+        writeEnd(writer);
         synchronized (this) {
             if (outbound.isEmpty()) {
                 enqueued = false;
@@ -145,6 +147,25 @@ class DS1InboundSubscriptions extends DSLogger implements OutboundMessage {
             }
         }
         responder.sendResponse(this);
+    }
+
+    /**
+     * Override point for v2.
+     */
+    protected void writeBegin(MessageWriter writer) {
+        writer.getWriter()
+              .beginMap()
+              .key("rid").value(ZERO)
+              .key("updates").beginList();
+    }
+
+    /**
+     * Override point for v2.
+     */
+    protected void writeEnd(MessageWriter writer) {
+        writer.getWriter()
+              .endList()
+              .endMap();
     }
 
 }

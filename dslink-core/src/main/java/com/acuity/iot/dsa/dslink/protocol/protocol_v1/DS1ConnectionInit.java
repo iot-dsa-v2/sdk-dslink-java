@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
-import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.io.DSBase64;
@@ -44,7 +43,6 @@ public class DS1ConnectionInit extends DSNode {
     private String brokerUri;
     private DS1LinkConnection connection;
     private DSLink link;
-    private Logger logger;
     private DSMap response;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -57,17 +55,6 @@ public class DS1ConnectionInit extends DSNode {
 
     DSLink getLink() {
         return connection.getLink();
-    }
-
-    /**
-     * Uses the connection's logger.
-     */
-    @Override
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = connection.getLogger();
-        }
-        return logger;
     }
 
     /**
@@ -85,7 +72,7 @@ public class DS1ConnectionInit extends DSNode {
      */
     void initializeConnection() throws Exception {
         String uri = makeBrokerUrl();
-        config(config() ? "Broker URI " + uri : null);
+        fine(fine() ? "Broker URI " + uri : null);
         HttpURLConnection conn = (HttpURLConnection) new URL(uri).openConnection();
         conn.setDoInput(true);
         conn.setDoOutput(true);
@@ -106,7 +93,7 @@ public class DS1ConnectionInit extends DSNode {
             in = new JsonReader(conn.getInputStream(), "UTF-8");
             response = in.getMap();
             put(BROKER_RES, response).setReadOnly(true);
-            finest(finest() ? response : null);
+            trace(trace() ? response : null);
         } finally {
             if (in != null) {
                 in.close();
@@ -245,8 +232,8 @@ public class DS1ConnectionInit extends DSNode {
             out = new JsonWriter(conn.getOutputStream());
             DSMap map = new DSMap();
             map.put("publicKey", DSBase64.encodeUrl(link.getKeys().encodePublic()));
-            map.put("isRequester", link.getConfig().isRequester());
-            map.put("isResponder", link.getConfig().isResponder());
+            map.put("isRequester", link.getMain().isRequester());
+            map.put("isResponder", link.getMain().isResponder());
             map.put("linkData", new DSMap());
             map.put("version", DSA_VERSION);
             DSList list = map.putList("formats");
@@ -255,7 +242,7 @@ public class DS1ConnectionInit extends DSNode {
             }
             map.put("enableWebSocketCompression", false);
             put(BROKER_REQ, map).setReadOnly(true);
-            finest(finest() ? map.toString() : null);
+            trace(trace() ? map.toString() : null);
             out.value(map);
         } finally {
             if (out != null) {

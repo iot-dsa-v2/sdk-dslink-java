@@ -8,7 +8,7 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Aaron Hansen
  */
-public class BaseMessage implements OutboundMessage {
+public class AbstractMessage implements OutboundMessage {
 
     /////////////////////////////////////////////////////////////////
     // Fields
@@ -23,10 +23,10 @@ public class BaseMessage implements OutboundMessage {
     // Constructors
     /////////////////////////////////////////////////////////////////
 
-    public BaseMessage() {
+    public AbstractMessage() {
     }
 
-    public BaseMessage(Integer requestId) {
+    public AbstractMessage(Integer requestId) {
         this.rid = requestId;
     }
 
@@ -39,7 +39,7 @@ public class BaseMessage implements OutboundMessage {
     }
 
     public String getMethod() {
-        return path;
+        return method;
     }
 
     public Integer getRequestId() {
@@ -53,7 +53,7 @@ public class BaseMessage implements OutboundMessage {
     /**
      * Looks for the path, method and request ID.
      */
-    public BaseMessage parseRequest(DSMap map) {
+    public AbstractMessage parseRequest(DSMap map) {
         setPath(map.get("path", null));
         setMethod(map.get("method", null));
         setRequestId(map.get("rid", -1));
@@ -63,7 +63,7 @@ public class BaseMessage implements OutboundMessage {
     /**
      * Optional, null by default.
      */
-    public BaseMessage setPath(String arg) {
+    public AbstractMessage setPath(String arg) {
         path = arg;
         return this;
     }
@@ -71,7 +71,7 @@ public class BaseMessage implements OutboundMessage {
     /**
      * Optional, null by default.
      */
-    public BaseMessage setMethod(String arg) {
+    public AbstractMessage setMethod(String arg) {
         method = arg;
         return this;
     }
@@ -87,7 +87,7 @@ public class BaseMessage implements OutboundMessage {
     /**
      * Optional, null by default.
      */
-    public BaseMessage setStream(String arg) {
+    public AbstractMessage setStream(String arg) {
         stream = arg;
         return this;
     }

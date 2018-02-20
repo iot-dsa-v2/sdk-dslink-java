@@ -3,16 +3,22 @@ package com.acuity.iot.dsa.dslink.protocol.protocol_v1.responder;
 import com.acuity.iot.dsa.dslink.DSProtocolException;
 import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
-import com.acuity.iot.dsa.dslink.protocol.message.CloseMessage;
-import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse;
+import com.acuity.iot.dsa.dslink.protocol.protocol_v1.CloseMessage;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundInvoke;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundList;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import java.util.Map;
 import org.iot.dsa.DSRuntime;
+import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.security.DSPermission;
 
 /**
- * Implements DSA 1.1.2
+ * Implementation DSA v1.
  *
  * @author Aaron Hansen
  */
@@ -22,8 +28,7 @@ public class DS1Responder extends DSResponder {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DS1InboundSubscriptions subscriptions =
-            new DS1InboundSubscriptions(this);
+    private DSInboundSubscriptions subscriptions = new DSInboundSubscriptions(this);
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -48,10 +53,6 @@ public class DS1Responder extends DSResponder {
         return path;
     }
 
-    public DS1InboundSubscriptions getSubscriptions() {
-        return subscriptions;
-    }
-
     /**
      * Process an individual request.
      */
@@ -59,12 +60,12 @@ public class DS1Responder extends DSResponder {
         String method = map.get("method", null);
         try {
             if ((method == null) || method.isEmpty()) {
-                throwInvalidMethod(method, map);
+                sendInvalidMethod(rid, method);
             }
             switch (method.charAt(0)) {
                 case 'c':  //close
                     if (!method.equals("close")) {
-                        throwInvalidMethod(method, map);
+                        sendInvalidMethod(rid, method);
                     }
                     final DSStream req = removeRequest(rid);
                     if (req != null) {
@@ -81,24 +82,23 @@ public class DS1Responder extends DSResponder {
                     break;
                 case 'i':  //invoke
                     if (!method.equals("invoke")) {
-                        throwInvalidMethod(method, map);
+                        sendInvalidMethod(rid, method);
                     }
                     processInvoke(rid, map);
                     break;
                 case 'l':  //list
                     if (!method.equals("list")) {
-                        throwInvalidMethod(method, map);
+                        sendInvalidMethod(rid, method);
                     }
                     processList(rid, map);
                     break;
                 case 'r':  //remove
                     if (method.equals("remove")) {
                         //Does this even make sense in a link?
-                        severe("Remove method called");
-                        sendResponse(
-                                new CloseMessage(rid).setMethod(null).setStream("closed"));
+                        error("Remove method called");
+                        sendClose(rid);
                     } else {
-                        throwInvalidMethod(method, map);
+                        sendInvalidMethod(rid, method);
                     }
                     break;
                 case 's':  //set, subscribe
@@ -111,14 +111,14 @@ public class DS1Responder extends DSResponder {
                                 processSubscribe(rid, map);
                             }
                         });
-                        sendResponse(new CloseMessage(rid).setMethod(null));
+                        sendClose(rid);
                     } else {
-                        throwInvalidMethod(method, map);
+                        sendInvalidMethod(rid, method);
                     }
                     break;
                 case 'u':
                     if (!method.equals("unsubscribe")) {
-                        throwInvalidMethod(method, map);
+                        sendInvalidMethod(rid, method);
                     }
                     DSRuntime.run(new Runnable() {
                         @Override
@@ -126,18 +126,16 @@ public class DS1Responder extends DSResponder {
                             processUnsubscribe(rid, map);
                         }
                     });
-                    sendResponse(new CloseMessage(rid).setMethod(null));
+                    sendClose(rid);
                     break;
                 default:
-                    throwInvalidMethod(method, map);
+                    sendInvalidMethod(rid, method);
             }
         } catch (DSProtocolException x) {
-            sendResponse(new ErrorResponse(x).parseRequest(map));
+            sendError(rid, x);
         } catch (Throwable x) {
-            DSProtocolException px = new DSProtocolException(x.getMessage());
-            px.setDetail(x);
-            px.setType("serverError");
-            sendResponse(new ErrorResponse(px).parseRequest(map));
+            error(getPath(), x);
+            sendError(rid, x);
         }
     }
 
@@ -148,13 +146,13 @@ public class DS1Responder extends DSResponder {
     }
 
     public void onDisconnect() {
-        finer(finer() ? "Close" : null);
+        debug(debug() ? "Close" : null);
         subscriptions.close();
         for (Map.Entry<Integer, DSStream> entry : getRequests().entrySet()) {
             try {
                 entry.getValue().onClose(entry.getKey());
             } catch (Exception x) {
-                finer(finer() ? "Close" : null, x);
+                debug(debug() ? "Close" : null, x);
             }
         }
         getRequests().clear();
@@ -164,9 +162,10 @@ public class DS1Responder extends DSResponder {
      * Handles an invoke request.
      */
     private void processInvoke(Integer rid, DSMap req) {
-        DS1InboundInvoke invokeImpl = new DS1InboundInvoke(req);
-        invokeImpl.setRequest(req)
-                  .setPath(getPath(req))
+        String permit = req.get("permit", "config");
+        DSPermission permission = DSPermission.forString(permit);
+        DSInboundInvoke invokeImpl = new DSInboundInvoke(req.getMap("params"), permission);
+        invokeImpl.setPath(getPath(req))
                   .setSession(getSession())
                   .setRequestId(rid)
                   .setLink(getLink())
@@ -179,9 +178,8 @@ public class DS1Responder extends DSResponder {
      * Handles a list request.
      */
     private void processList(Integer rid, DSMap req) {
-        DS1InboundList listImpl = new DS1InboundList();
-        listImpl.setRequest(req)
-                .setPath(getPath(req))
+        DSInboundList listImpl = new DSInboundList();
+        listImpl.setPath(getPath(req))
                 .setSession(getSession())
                 .setRequestId(rid)
                 .setLink(getLink())
@@ -194,9 +192,11 @@ public class DS1Responder extends DSResponder {
      * Handles a set request.
      */
     private void processSet(Integer rid, DSMap req) {
-        DS1InboundSet setImpl = new DS1InboundSet(req);
-        setImpl.setRequest(req)
-               .setPath(getPath(req))
+        String permit = req.get("permit", "config");
+        DSPermission permission = DSPermission.forString(permit);
+        DSElement value = req.get("value");
+        DSInboundSet setImpl = new DSInboundSet(value, permission);
+        setImpl.setPath(getPath(req))
                .setSession(getSession())
                .setRequestId(rid)
                .setLink(getLink())
@@ -242,19 +242,31 @@ public class DS1Responder extends DSResponder {
                     sid = list.getInt(i);
                     subscriptions.unsubscribe(sid);
                 } catch (Exception x) {
-                    fine(fine() ? "Unsubscribe: " + sid : null, x);
+                    error(fine() ? "Unsubscribe: " + sid : null, x);
                 }
             }
         }
     }
 
+    public void sendClose(int rid) {
+        sendResponse(new CloseMessage(rid));
+    }
+
+    public void sendError(int rid, Throwable reason) {
+        sendResponse(new ErrorMessage(rid, reason));
+    }
+
+    public void sendError(DSInboundRequest req, Throwable reason) {
+        sendResponse(new ErrorMessage(req.getRequestId(), reason));
+    }
+
     /**
      * Used throughout processRequest.
      */
-    private void throwInvalidMethod(String methodName, DSMap request) {
-        String msg = "Invalid method name " + methodName;
-        finest(finest() ? (msg + ": " + request.toString()) : null);
-        throw new DSProtocolException(msg).setType("invalidMethod");
+    private void sendInvalidMethod(int rid, String methodName) {
+        String msg = "Invalid method: " + methodName;
+        error(msg);
+        sendResponse(new ErrorMessage(rid, msg).setType("invalidMethod"));
     }
 
 }

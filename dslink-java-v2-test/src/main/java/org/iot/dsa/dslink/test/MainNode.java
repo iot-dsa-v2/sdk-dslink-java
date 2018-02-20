@@ -11,11 +11,13 @@ import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSJavaEnum;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSLong;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSActionValues;
 
 /**
  * Link main class and node.
@@ -37,6 +39,7 @@ public class MainNode extends DSMainNode implements Runnable {
     private DSInfo incrementingInt = getInfo("Incrementing Int");
     private DSInfo reset = getInfo("Reset");
     private DSInfo test = getInfo("Test");
+    private DSInfo valuesAction = getInfo("Values Action");
     private DSRuntime.Timer timer;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -59,14 +62,23 @@ public class MainNode extends DSMainNode implements Runnable {
                             "My action description");
         declareDefault("Reset", action);
         declareDefault("Test", DSAction.DEFAULT);
+        action = new DSAction();
+        action.addValueResult("bool", DSBool.TRUE);
+        action.addValueResult("long", DSLong.valueOf(0));
+        declareDefault("Values Action", action);
+        declareDefault("T./,<>?;:'\"[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
     }
 
     @Override
     public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {
         if (actionInfo == this.reset) {
             put(incrementingInt, DSElement.make(0));
-            DSElement arg = invocation.getParameters().get("Arg");
-            put("Message", arg);
+            DSMap map = invocation.getParameters();
+            DSElement arg = null;
+            if (map != null) {
+                arg = invocation.getParameters().get("Arg");
+                put("Message", arg);
+            }
             clear();
             return null;
         } else if (actionInfo == this.test) {
@@ -77,6 +89,10 @@ public class MainNode extends DSMainNode implements Runnable {
                 }
             });
             return null;
+        } else if (actionInfo == this.valuesAction) {
+            return new DSActionValues(this.valuesAction.getAction())
+                    .addResult(DSBool.TRUE)
+                    .addResult(DSLong.valueOf(1234));
         }
         return super.onInvoke(actionInfo, invocation);
     }

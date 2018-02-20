@@ -1,8 +1,12 @@
 package com.acuity.iot.dsa.dslink.io;
 
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -11,7 +15,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSByteBuffer {
+public class DSByteBuffer extends InputStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -44,9 +48,10 @@ public class DSByteBuffer {
         return length;
     }
 
-    public void clear() {
+    public DSByteBuffer clear() {
         length = 0;
         offset = 0;
+        return this;
     }
 
     /**
@@ -71,85 +76,53 @@ public class DSByteBuffer {
     }
 
     /**
-     * Overwrites bytes in the internal buffer, does not change the current length or position.
+     * Prints the current contents of the buffer, doesn't modify it in any way.
      */
-    public void overwrite(int dest, byte b1, byte b2) {
-        buffer[dest] = b1;
-        buffer[++dest] = b2;
-    }
-
-    /**
-     * Overwrites bytes in the internal buffer, does not change the current length or position.
-     */
-    public void overwrite(int dest, byte b1, byte b2, byte b3, byte b4) {
-        buffer[dest] = b1;
-        buffer[++dest] = b2;
-        buffer[++dest] = b3;
-        buffer[++dest] = b4;
-    }
-
-    /**
-     * Overwrites the primitive in the internal buffer.  Does not change the buffer length or
-     * position.
-     *
-     * @param dest      The offset in the internal buffer to write the bytes.
-     * @param v         The value to encode.
-     * @param bigEndian Whether to encode in big or little endian byte ordering.
-     */
-    public void overwriteInt(int dest, int v, boolean bigEndian) {
-        if (bigEndian) {
-            overwrite(dest, (byte) ((v >>> 24) & 0xFF),
-                      (byte) ((v >>> 16) & 0xFF),
-                      (byte) ((v >>> 8) & 0xFF),
-                      (byte) ((v >>> 0) & 0xFF));
-        } else {
-            overwrite(dest, (byte) ((v >>> 0) & 0xFF),
-                      (byte) ((v >>> 8) & 0xFF),
-                      (byte) ((v >>> 16) & 0xFF),
-                      (byte) ((v >>> 24) & 0xFF));
+    public void print(PrintStream out, int cols) {
+        StringBuilder buf = new StringBuilder();
+        int buflen;
+        for (int i = offset, len = offset + length; i < len; i++) {
+            buflen = buf.length();
+            if ((buflen + 3) > cols) {
+                out.println(buf.toString());
+                buf.setLength(0);
+            }
+            if (buflen > 0) {
+                buf.append(' ');
+            }
+            DSBytes.toHex(buffer[i], buf);
+        }
+        if (buf.length() > 0) {
+            out.println(buf.toString());
         }
     }
 
     /**
-     * Overwrites the primitive in the internal buffer.  Does not change the buffer length or*
-     * position.
-     *
-     * @param dest      The offset in the internal buffer to write the bytes.
-     * @param v         The value to encode.
-     * @param bigEndian Whether to encode in big or little endian byte ordering.
-     */
-    public void overwriteShort(int dest, short v, boolean bigEndian) {
-        if (bigEndian) {
-            overwrite(dest, (byte) ((v >>> 8) & 0xFF), (byte) ((v >>> 0) & 0xFF));
-        } else {
-            overwrite(dest, (byte) ((v >>> 0) & 0xFF), (byte) ((v >>> 8) & 0xFF));
-        }
-    }
-
-    /**
+     * /**
      * Gets the bytes from the given buffer, which will be flipped, then cleared.
      */
-    public void put(ByteBuffer buf) {
-        int len = buf.position();
+    public DSByteBuffer put(ByteBuffer buf) {
+        int pos = buf.position();
         int bufLen = buffer.length;
-        if ((len + length + offset) >= bufLen) {
-            if ((len + length) > bufLen) {  //the buffer is too small
-                growBuffer(len + length);
+        if ((pos + length + offset) >= bufLen) {
+            if ((pos + length) > bufLen) {  //the buffer is too small
+                growBuffer(pos + length);
             } else { //offset must be > 0, shift everything to index 0
                 System.arraycopy(buffer, offset, buffer, 0, length);
                 offset = 0;
             }
         }
         buf.flip();
-        buf.get(buffer, length + offset, len);
+        buf.get(buffer, length + offset, pos);
         buf.clear();
-        length += len;
+        length += pos;
+        return this;
     }
 
     /**
      * Add the byte to the buffer for reading.
      */
-    public void put(byte b) {
+    public DSByteBuffer put(byte b) {
         int bufLen = buffer.length;
         int msgLen = 1;
         if ((msgLen + length + offset) >= bufLen) {
@@ -162,12 +135,13 @@ public class DSByteBuffer {
         }
         buffer[length + offset] = b;
         length++;
+        return this;
     }
 
     /**
      * Add the byte to the buffer for reading.
      */
-    public void put(byte b1, byte b2) {
+    public DSByteBuffer put(byte b1, byte b2) {
         int bufLen = buffer.length;
         int msgLen = 2;
         if ((msgLen + length + offset) >= bufLen) {
@@ -182,12 +156,13 @@ public class DSByteBuffer {
         buffer[idx] = b1;
         buffer[++idx] = b2;
         length += msgLen;
+        return this;
     }
 
     /**
      * Add the byte to the buffer for reading.
      */
-    public void put(byte b1, byte b2, byte b3, byte b4) {
+    public DSByteBuffer put(byte b1, byte b2, byte b3, byte b4) {
         int bufLen = buffer.length;
         int msgLen = 4;
         if ((msgLen + length + offset) >= bufLen) {
@@ -204,12 +179,14 @@ public class DSByteBuffer {
         buffer[++idx] = b3;
         buffer[++idx] = b4;
         length += msgLen;
+        return this;
     }
 
     /**
      * Add the byte to the buffer for reading.
      */
-    public void put(byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7, byte b8) {
+    public DSByteBuffer put(byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7,
+                            byte b8) {
         int bufLen = buffer.length;
         int msgLen = 8;
         if ((msgLen + length + offset) >= bufLen) {
@@ -230,6 +207,7 @@ public class DSByteBuffer {
         buffer[++idx] = b7;
         buffer[++idx] = b8;
         length += msgLen;
+        return this;
     }
 
     /**
@@ -237,8 +215,8 @@ public class DSByteBuffer {
      *
      * @param msg The data source.
      */
-    public void put(byte[] msg) {
-        put(msg, 0, msg.length);
+    public DSByteBuffer put(byte[] msg) {
+        return put(msg, 0, msg.length);
     }
 
     /**
@@ -248,7 +226,7 @@ public class DSByteBuffer {
      * @param off The start offset in the buffer to put data.
      * @param len The maximum number of bytes to read.
      */
-    public void put(byte[] msg, int off, int len) {
+    public DSByteBuffer put(byte[] msg, int off, int len) {
         int bufLen = buffer.length;
         if ((len + length + offset) >= bufLen) {
             if ((len + length) > bufLen) {  //the buffer is too small
@@ -260,6 +238,7 @@ public class DSByteBuffer {
         }
         System.arraycopy(msg, off, buffer, length + offset, len);
         length += len;
+        return this;
     }
 
     /**
@@ -270,7 +249,7 @@ public class DSByteBuffer {
      * @param off  The start offset in the msg to put data.
      * @param len  The maximum number of bytes to put.
      */
-    public void put(int dest, byte[] msg, int off, int len) {
+    public DSByteBuffer put(int dest, byte[] msg, int off, int len) {
         if (offset > 0) {
             System.arraycopy(buffer, offset, buffer, 0, length);
             offset = 0;
@@ -286,13 +265,32 @@ public class DSByteBuffer {
         if ((dest + len) > length) {
             length += len;
         }
+        return this;
+    }
+
+    public int put(InputStream in, int len) {
+        int count = 0;
+        try {
+            int ch;
+            while (count < len) {
+                ch = in.read();
+                if (ch < 0) {
+                    return count;
+                }
+                put((byte) ch);
+                count++;
+            }
+        } catch (IOException x) {
+            DSException.throwRuntime(x);
+        }
+        return count;
     }
 
     /**
      * Encodes the primitive into buffer using big endian encoding.
      */
-    public void putDouble(double v) {
-        putDouble(v, true);
+    public DSByteBuffer putDouble(double v) {
+        return putDouble(v, true);
     }
 
     /**
@@ -301,15 +299,15 @@ public class DSByteBuffer {
      * @param v         The value to encode.
      * @param bigEndian Whether to encode in big or little endian byte ordering.
      */
-    public void putDouble(double v, boolean bigEndian) {
-        putLong(Double.doubleToRawLongBits(v), bigEndian);
+    public DSByteBuffer putDouble(double v, boolean bigEndian) {
+        return putLong(Double.doubleToRawLongBits(v), bigEndian);
     }
 
     /**
      * Encodes the primitive into buffer using big endian encoding.
      */
-    public void putFloat(float v) {
-        putFloat(v, true);
+    public DSByteBuffer putFloat(float v) {
+        return putFloat(v, true);
     }
 
     /**
@@ -318,15 +316,15 @@ public class DSByteBuffer {
      * @param v         The value to encode.
      * @param bigEndian Whether to encode in big or little endian byte ordering.
      */
-    public void putFloat(float v, boolean bigEndian) {
-        putInt(Float.floatToIntBits(v), bigEndian);
+    public DSByteBuffer putFloat(float v, boolean bigEndian) {
+        return putInt(Float.floatToIntBits(v), bigEndian);
     }
 
     /**
      * Encodes the primitive into buffer using big endian encoding.
      */
-    public void putInt(int v) {
-        putInt(v, true);
+    public DSByteBuffer putInt(int v) {
+        return putInt(v, true);
     }
 
     /**
@@ -335,25 +333,24 @@ public class DSByteBuffer {
      * @param v         The value to encode.
      * @param bigEndian Whether to encode in big or little endian byte ordering.
      */
-    public void putInt(int v, boolean bigEndian) {
+    public DSByteBuffer putInt(int v, boolean bigEndian) {
         if (bigEndian) {
-            put((byte) ((v >>> 24) & 0xFF),
-                (byte) ((v >>> 16) & 0xFF),
-                (byte) ((v >>> 8) & 0xFF),
-                (byte) ((v >>> 0) & 0xFF));
-        } else {
-            put((byte) ((v >>> 0) & 0xFF),
-                (byte) ((v >>> 8) & 0xFF),
-                (byte) ((v >>> 16) & 0xFF),
-                (byte) ((v >>> 24) & 0xFF));
+            return put((byte) ((v >>> 24) & 0xFF),
+                       (byte) ((v >>> 16) & 0xFF),
+                       (byte) ((v >>> 8) & 0xFF),
+                       (byte) ((v >>> 0) & 0xFF));
         }
+        return put((byte) ((v >>> 0) & 0xFF),
+                   (byte) ((v >>> 8) & 0xFF),
+                   (byte) ((v >>> 16) & 0xFF),
+                   (byte) ((v >>> 24) & 0xFF));
     }
 
     /**
      * Encodes the primitive into the buffer using big endian encoding.
      */
-    public void putLong(long v) {
-        putLong(v, true);
+    public DSByteBuffer putLong(long v) {
+        return putLong(v, true);
     }
 
     /**
@@ -362,33 +359,32 @@ public class DSByteBuffer {
      * @param v         The value to encode.
      * @param bigEndian Whether to encode in big or little endian byte ordering.
      */
-    public void putLong(long v, boolean bigEndian) {
+    public DSByteBuffer putLong(long v, boolean bigEndian) {
         if (bigEndian) {
-            put((byte) (v >>> 56),
-                (byte) (v >>> 48),
-                (byte) (v >>> 40),
-                (byte) (v >>> 32),
-                (byte) (v >>> 24),
-                (byte) (v >>> 16),
-                (byte) (v >>> 8),
-                (byte) (v >>> 0));
-        } else {
-            put((byte) (v >>> 0),
-                (byte) (v >>> 8),
-                (byte) (v >>> 16),
-                (byte) (v >>> 24),
-                (byte) (v >>> 32),
-                (byte) (v >>> 40),
-                (byte) (v >>> 48),
-                (byte) (v >>> 56));
+            return put((byte) (v >>> 56),
+                       (byte) (v >>> 48),
+                       (byte) (v >>> 40),
+                       (byte) (v >>> 32),
+                       (byte) (v >>> 24),
+                       (byte) (v >>> 16),
+                       (byte) (v >>> 8),
+                       (byte) (v >>> 0));
         }
+        return put((byte) (v >>> 0),
+                   (byte) (v >>> 8),
+                   (byte) (v >>> 16),
+                   (byte) (v >>> 24),
+                   (byte) (v >>> 32),
+                   (byte) (v >>> 40),
+                   (byte) (v >>> 48),
+                   (byte) (v >>> 56));
     }
 
     /**
      * Encodes the primitive into the buffer using big endian.
      */
-    public void putShort(short v) {
-        putShort(v, true);
+    public DSByteBuffer putShort(short v) {
+        return putShort(v, true);
     }
 
     /**
@@ -397,12 +393,11 @@ public class DSByteBuffer {
      * @param v         The value to encode.
      * @param bigEndian Whether to encode in big or little endian byte ordering.
      */
-    public void putShort(short v, boolean bigEndian) {
+    public DSByteBuffer putShort(short v, boolean bigEndian) {
         if (bigEndian) {
-            put((byte) ((v >>> 8) & 0xFF), (byte) ((v >>> 0) & 0xFF));
-        } else {
-            put((byte) ((v >>> 0) & 0xFF), (byte) ((v >>> 8) & 0xFF));
+            return put((byte) ((v >>> 8) & 0xFF), (byte) ((v >>> 0) & 0xFF));
         }
+        return put((byte) ((v >>> 0) & 0xFF), (byte) ((v >>> 8) & 0xFF));
     }
 
     /**
@@ -416,6 +411,94 @@ public class DSByteBuffer {
         offset++;
         length--;
         return ret;
+    }
+
+    /**
+     * Overwrites byte in the internal buffer.
+     *
+     * @param dest The logical offset in the internal buffer to write the byte.
+     */
+    public DSByteBuffer replace(int dest, byte b1) {
+        if (offset > 0) {
+            System.arraycopy(buffer, offset, buffer, 0, length);
+            offset = 0;
+        }
+        buffer[dest] = b1;
+        return this;
+    }
+
+    /**
+     * Overwrites bytes in the internal buffer.
+     *
+     * @param dest The logical offset in the internal buffer to write the bytes.
+     */
+    public DSByteBuffer replace(int dest, byte b1, byte b2) {
+        if (offset > 0) {
+            System.arraycopy(buffer, offset, buffer, 0, length);
+            offset = 0;
+        }
+        if ((dest + 2) > length) {
+            throw new IllegalArgumentException("Replace cannot grow the buffer");
+        }
+        buffer[dest] = b1;
+        buffer[++dest] = b2;
+        return this;
+    }
+
+    /**
+     * Overwrites bytes in the internal buffer.
+     *
+     * @param dest The logical offset in the internal buffer to write the bytes.
+     */
+    public DSByteBuffer replace(int dest, byte b1, byte b2, byte b3, byte b4) {
+        if (offset > 0) {
+            System.arraycopy(buffer, offset, buffer, 0, length);
+            offset = 0;
+        }
+        if ((dest + 4) > length) {
+            throw new IllegalArgumentException("Replace cannot grow the buffer");
+        }
+        buffer[dest] = b1;
+        buffer[++dest] = b2;
+        buffer[++dest] = b3;
+        buffer[++dest] = b4;
+        return this;
+    }
+
+    /**
+     * Overwrites the primitive in the internal buffer.  Does not change the buffer length or
+     * position.
+     *
+     * @param dest      The logical offset in the internal buffer to write the bytes.
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public DSByteBuffer replaceInt(int dest, int v, boolean bigEndian) {
+        if (bigEndian) {
+            return replace(dest, (byte) ((v >>> 24) & 0xFF),
+                           (byte) ((v >>> 16) & 0xFF),
+                           (byte) ((v >>> 8) & 0xFF),
+                           (byte) ((v >>> 0) & 0xFF));
+        }
+        return replace(dest, (byte) ((v >>> 0) & 0xFF),
+                       (byte) ((v >>> 8) & 0xFF),
+                       (byte) ((v >>> 16) & 0xFF),
+                       (byte) ((v >>> 24) & 0xFF));
+    }
+
+    /**
+     * Overwrites the primitive in the internal buffer.  Does not change the buffer length or*
+     * position.
+     *
+     * @param dest      The offset in the internal buffer to write the bytes.
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public DSByteBuffer replaceShort(int dest, short v, boolean bigEndian) {
+        if (bigEndian) {
+            return replace(dest, (byte) ((v >>> 8) & 0xFF), (byte) ((v >>> 0) & 0xFF));
+        }
+        return replace(dest, (byte) ((v >>> 0) & 0xFF), (byte) ((v >>> 8) & 0xFF));
     }
 
     /**
@@ -485,6 +568,22 @@ public class DSByteBuffer {
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
+    }
+
+    /**
+     * Skip forward some bytes, usually to be replaced later.
+     */
+    public void skip(int len) {
+        int bufLen = buffer.length;
+        if ((len + length + offset) >= bufLen) {
+            if ((len + length) > bufLen) {
+                growBuffer(len + length);
+            } else { //offset must be > 0
+                System.arraycopy(buffer, offset, buffer, 0, length);
+                offset = 0;
+            }
+        }
+        length += len;
     }
 
     /**

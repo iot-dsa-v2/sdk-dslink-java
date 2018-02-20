@@ -14,7 +14,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class ErrorResponse extends BaseMessage implements OutboundMessage {
+public class ErrorResponse extends AbstractMessage implements OutboundMessage {
 
     /////////////////////////////////////////////////////////////////
     // Fields
