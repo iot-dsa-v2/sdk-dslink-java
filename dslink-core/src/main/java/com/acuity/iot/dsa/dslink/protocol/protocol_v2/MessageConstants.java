@@ -15,6 +15,7 @@ public interface MessageConstants {
     int HDR_STATUS = 0x0;
     int HDR_SEQ_ID = 0x01;
     int HDR_PAGE_ID = 0x02;
+    int HDR_ERROR_DETAIL = 0x05;
     int HDR_ALIAS_COUNT = 0x08;
     int HDR_PRIORITY = 0x10;
     int HDR_NO_STREAM = 0x11;
@@ -58,6 +59,7 @@ public interface MessageConstants {
     Byte STS_INVALID_MESSAGE = 0x44;
     Byte STS_INVALID_PARAMETER = 0x45;
     Byte STS_BUSY = 0x48;
+    Byte STS_INTERNAL_ERR = 0x50;
     Byte STS_ALIAS_LOOP = 0x61;
     Byte STS_INVALID_AUTH = (byte) (0xF9 & 0xFF);
 

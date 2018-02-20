@@ -31,11 +31,11 @@ public class DS2Session extends DSSession implements MessageConstants {
     ///////////////////////////////////////////////////////////////////////////
 
     private boolean debugRecv = false;
-    private StringBuilder debugRecvTranport = new StringBuilder();
-    private StringBuilder debugRecvMessage = new StringBuilder();
+    private StringBuilder debugRecvTranport = null;
+    private StringBuilder debugRecvMessage = null;
     private boolean debugSend = false;
-    private StringBuilder debugSendTranport = new StringBuilder();
-    private StringBuilder debugSendMessage = new StringBuilder();
+    private StringBuilder debugSendTranport = null;
+    private StringBuilder debugSendMessage = null;
     private DSInfo lastAckRecv = getInfo(LAST_ACK_RECV);
     private long lastMessageSent;
     private DS2MessageReader messageReader;
@@ -200,6 +200,20 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     public void onConnect() {
         super.onConnect();
+        messageReader = null;
+        messageWriter = null;
+        if (debugRecv) {
+            debugRecvMessage = new StringBuilder();
+            debugRecvTranport = new StringBuilder();
+            getMessageReader().setDebug(debugRecvMessage);
+            getTransport().setDebugIn(debugRecvTranport);
+        }
+        if (debugSend) {
+            debugSendMessage = new StringBuilder();
+            debugSendTranport = new StringBuilder();
+            getMessageWriter().setDebug(debugSendMessage);
+            getTransport().setDebugOut(debugSendTranport);
+        }
         //requester.onConnect();
         responder.onConnect();
     }

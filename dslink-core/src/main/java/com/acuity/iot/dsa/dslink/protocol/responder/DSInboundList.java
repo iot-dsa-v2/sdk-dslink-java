@@ -314,6 +314,7 @@ public class DSInboundList extends DSInboundRequest
                 DSMap param;
                 while (params.hasNext()) {
                     param = params.next();
+                    fixRange(param);
                     if (dsAction != null) {
                         dsAction.prepareParameter(info, param);
                     }
@@ -336,6 +337,7 @@ public class DSInboundList extends DSInboundRequest
                     DSMap param;
                     while (cols.hasNext()) {
                         param = cols.next();
+                        fixRange(param);
                         if (dsAction != null) {
                             dsAction.prepareParameter(info, param);
                         }
@@ -415,7 +417,7 @@ public class DSInboundList extends DSInboundRequest
                 }
             }
         }
-        fixType(meta.getMap());
+        fixRange(meta.getMap());
         DSElement e = cacheMap.remove(DSMetadata.TYPE);
         if (e == null) {
             throw new IllegalArgumentException("Missing type");
@@ -472,7 +474,7 @@ public class DSInboundList extends DSInboundRequest
     /**
      * Combines boolean and enum ranges into the type name.
      */
-    private DSMap fixType(DSMap arg) {
+    private DSMap fixRange(DSMap arg) {
         String type = arg.getString(DSMetadata.TYPE);
         if ("bool".equals(type)) {
             DSList range = (DSList) arg.remove(DSMetadata.BOOLEAN_RANGE);

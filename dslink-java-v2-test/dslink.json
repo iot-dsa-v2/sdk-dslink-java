@@ -10,7 +10,7 @@
       "value": "org.iot.dsa.dslink.test.MainNode"
     },
     "log": {
-      "desc": "all, trace, debug, info, warn, sys, error, admin, fatal, none",
+      "desc": "all, trace, debug, fine, warn, info, error, admin, fatal, none",
       "type": "enum",
       "value": "debug"
     },

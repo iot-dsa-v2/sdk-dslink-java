@@ -9,6 +9,7 @@ import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.dslink.DSInvalidPathException;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
+import org.iot.dsa.util.DSException;
 
 /**
  * Responder uses to close streams without errors.
@@ -24,20 +25,6 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
         this.req = req;
         this.reason = reason;
     }
-
-    /*
-    private String toString(Throwable arg) {
-        String msg = arg.getMessage();
-        if ((msg != null) && (msg.length() > 0)) {
-            return msg;
-        }
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        arg.printStackTrace(pw);
-        pw.close();
-        return sw.toString();
-    }
-    */
 
     @Override
     public void write(MessageWriter writer) {
@@ -64,9 +51,9 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
                               MessageConstants.STS_INVALID_MESSAGE);
             }
         } else {
-            //todo need server error
-            out.addHeader((byte) MessageConstants.HDR_STATUS, MessageConstants.STS_INVALID_MESSAGE);
+            out.addHeader((byte) MessageConstants.HDR_STATUS, MessageConstants.STS_INTERNAL_ERR);
         }
+        out.addHeader((byte) HDR_ERROR_DETAIL, DSException.makeMessage(reason));
         out.write((DSBinaryTransport) req.getResponder().getTransport());
     }
 

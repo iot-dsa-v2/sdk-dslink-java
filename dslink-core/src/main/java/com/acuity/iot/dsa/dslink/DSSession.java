@@ -2,6 +2,7 @@ package com.acuity.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import org.iot.dsa.dslink.DSIRequester;
@@ -21,11 +22,14 @@ public abstract class DSSession extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int MAX_MSG_ID = 2147483647;
+    private static final long MSG_TIMEOUT = 60000;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private long lastRecv;
+    private long lastSend;
     private int nextAck = -1;
     private int nextMessage = 1;
     private boolean connected = false;
@@ -253,10 +257,13 @@ public abstract class DSSession extends DSNode {
      * implementation.  A separate thread is spun off to manage writing.
      */
     public void run() {
+        lastRecv = lastSend = System.currentTimeMillis();
         new WriteThread(getConnection().getLink().getLinkName() + " Writer").start();
         while (connected) {
             try {
+                verifyLastSend();
                 doRecvMessage();
+                lastRecv = System.currentTimeMillis();
             } catch (Exception x) {
                 getTransport().close();
                 if (connected) {
@@ -264,6 +271,18 @@ public abstract class DSSession extends DSNode {
                     error(getPath(), x);
                 }
             }
+        }
+    }
+
+    private void verifyLastRead() throws IOException {
+        if ((System.currentTimeMillis() - lastRecv) > MSG_TIMEOUT) {
+            throw new IOException("No message received in " + MSG_TIMEOUT + "ms");
+        }
+    }
+
+    private void verifyLastSend() throws IOException {
+        if ((System.currentTimeMillis() - lastSend) > MSG_TIMEOUT) {
+            throw new IOException("No message sent in " + MSG_TIMEOUT + "ms");
         }
     }
 
@@ -284,6 +303,7 @@ public abstract class DSSession extends DSNode {
         public void run() {
             try {
                 while (connected) {
+                    verifyLastRead();
                     synchronized (outgoingMutex) {
                         if (!hasSomethingToSend()) {
                             try {
@@ -295,6 +315,7 @@ public abstract class DSSession extends DSNode {
                         }
                     }
                     doSendMessage();
+                    lastSend = System.currentTimeMillis();
                 }
             } catch (Exception x) {
                 if (connected) {

@@ -191,16 +191,6 @@ public class DS1LinkConnection extends DSLinkConnection {
             writer = new MsgpackWriter() {
                 @Override
                 public void onComplete() {
-                    /* How to debug
-                    try {
-                        MsgpackReader reader = new MsgpackReader(
-                                new ByteArrayInputStream(byteBuffer.array());
-                        System.out.println(reader.getMap());
-                        reader.close();
-                    } catch (Exception x) {
-                        x.printStackTrace();
-                    }
-                    */
                     writeTo(trans);
                 }
             };
