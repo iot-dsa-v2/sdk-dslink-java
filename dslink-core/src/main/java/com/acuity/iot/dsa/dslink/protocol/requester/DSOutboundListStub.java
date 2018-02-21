@@ -1,5 +1,6 @@
-package com.acuity.iot.dsa.dslink.protocol.v1.requester;
+package com.acuity.iot.dsa.dslink.protocol.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.message.MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
@@ -14,7 +15,7 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundListStub extends DS1OutboundStub {
+public class DSOutboundListStub extends DSOutboundStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -26,10 +27,10 @@ class DS1OutboundListStub extends DS1OutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DS1OutboundListStub(DS1Requester requester,
-                               Integer requestId,
-                               String path,
-                               OutboundListHandler request) {
+    public DSOutboundListStub(DSRequester requester,
+                              Integer requestId,
+                              String path,
+                              OutboundListHandler request) {
         super(requester, requestId, path);
         this.request = request;
     }
@@ -43,9 +44,13 @@ class DS1OutboundListStub extends DS1OutboundStub {
         return request;
     }
 
+    /**
+     * Reads the v1 response.
+     */
     @Override
-    protected void handleResponse(DSMap response) {
+    protected void handleResponse(MessageReader reader) {
         try {
+            DSMap response = reader.getReader().getMap();
             DSList updates = response.getList("updates");
             if (updates != null) {
                 String name;
@@ -77,6 +82,9 @@ class DS1OutboundListStub extends DS1OutboundStub {
         }
     }
 
+    /**
+     * Writes the v1 request.
+     */
     @Override
     public void write(MessageWriter writer) {
         DSIWriter out = writer.getWriter();

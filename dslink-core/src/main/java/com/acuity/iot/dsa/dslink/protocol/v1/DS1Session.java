@@ -328,7 +328,7 @@ public class DS1Session extends DSSession {
             if (areRequests) {
                 responder.handleRequest(rid, req);
             } else {
-                requester.processResponse(rid, req);
+                requester.handleResponse(rid, req);
             }
 
         }

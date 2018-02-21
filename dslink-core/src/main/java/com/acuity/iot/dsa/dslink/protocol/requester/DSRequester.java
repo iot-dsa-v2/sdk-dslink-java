@@ -2,7 +2,6 @@ package com.acuity.iot.dsa.dslink.protocol.requester;
 
 import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.v1.CloseMessage;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -11,7 +10,6 @@ import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
-import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
@@ -21,7 +19,7 @@ import org.iot.dsa.node.DSNode;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-public class DSRequester extends DSNode implements DSIRequester {
+public abstract class DSRequester extends DSNode implements DSIRequester {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -56,24 +54,20 @@ public class DSRequester extends DSNode implements DSIRequester {
 
     @Override
     public OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler req) {
-        /*
-        DS1OutboundInvokeStub stub = new DS1OutboundInvokeStub(this, getNextRid(),
-                                                               path, params, req);
+        DSOutboundInvokeStub stub = new DSOutboundInvokeStub(this, getNextRid(),
+                                                             path, params, req);
         requests.put(stub.getRequestId(), stub);
         req.onInit(path, params, stub);
         session.enqueueOutgoingRequest(stub);
-        */
         return req;
     }
 
     @Override
     public OutboundListHandler list(String path, OutboundListHandler req) {
-        /*
-        DS1OutboundListStub stub = new DS1OutboundListStub(this, getNextRid(), path, req);
+        DSOutboundListStub stub = new DSOutboundListStub(this, getNextRid(), path, req);
         requests.put(stub.getRequestId(), stub);
         req.onInit(path, stub);
         session.enqueueOutgoingRequest(stub);
-        */
         return req;
     }
 
@@ -92,36 +86,29 @@ public class DSRequester extends DSNode implements DSIRequester {
 
     @Override
     public OutboundRequestHandler remove(String path, OutboundRequestHandler req) {
-        /*
-        DS1OutboundRemoveStub stub = new DS1OutboundRemoveStub(this,
-                                                               getNextRid(), path, req);
+        DSOutboundRemoveStub stub = new DSOutboundRemoveStub(this,
+                                                             getNextRid(), path, req);
         requests.put(stub.getRequestId(), stub);
         session.enqueueOutgoingRequest(stub);
-        */
         return req;
     }
 
-    void removeRequest(Integer rid) {
+    public void removeRequest(Integer rid) {
         requests.remove(rid);
     }
 
-    void sendClose(Integer rid) {
-        requests.remove(rid);
-        sendRequest(new CloseMessage(rid, true));
-    }
+    protected abstract void sendClose(Integer rid);
 
-    void sendRequest(OutboundMessage res) {
+    public void sendRequest(OutboundMessage res) {
         session.enqueueOutgoingRequest(res);
     }
 
     @Override
     public OutboundRequestHandler set(String path, DSIValue value, OutboundRequestHandler req) {
-        /*
-        DS1OutboundSetStub stub = new DS1OutboundSetStub(this, getNextRid(),
-                                                         path, value, req);
+        DSOutboundSetStub stub = new DSOutboundSetStub(this, getNextRid(),
+                                                       path, value, req);
         requests.put(stub.getRequestId(), stub);
         session.enqueueOutgoingRequest(stub);
-        */
         return req;
     }
 

@@ -1,9 +1,9 @@
-package com.acuity.iot.dsa.dslink.protocol.v1.requester;
+package com.acuity.iot.dsa.dslink.protocol.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.message.MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.node.DSMap;
 
 /**
  * Manages the lifecycle of a remove request and is also the outbound stream passed to the
@@ -11,7 +11,7 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundRemoveStub extends DS1OutboundStub {
+public class DSOutboundRemoveStub extends DSOutboundStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -23,10 +23,10 @@ class DS1OutboundRemoveStub extends DS1OutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DS1OutboundRemoveStub(DS1Requester requester,
-                                 Integer requestId,
-                                 String path,
-                                 OutboundRequestHandler request) {
+    public DSOutboundRemoveStub(DSRequester requester,
+                                Integer requestId,
+                                String path,
+                                OutboundRequestHandler request) {
         super(requester, requestId, path);
         this.request = request;
     }
@@ -39,10 +39,16 @@ class DS1OutboundRemoveStub extends DS1OutboundStub {
         return request;
     }
 
+    /**
+     * Does nothing.
+     */
     @Override
-    protected void handleResponse(DSMap map) {
+    protected void handleResponse(MessageReader reader) {
     }
 
+    /**
+     * Writes the v1 version.
+     */
     @Override
     public void write(MessageWriter writer) {
         DSIWriter out = writer.getWriter();

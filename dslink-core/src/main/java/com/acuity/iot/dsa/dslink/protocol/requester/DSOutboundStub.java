@@ -13,7 +13,7 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-abstract class DSOutboundStub implements OutboundMessage, OutboundStream {
+public abstract class DSOutboundStub implements OutboundMessage, OutboundStream {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -61,7 +61,7 @@ abstract class DSOutboundStub implements OutboundMessage, OutboundStream {
         return requestId;
     }
 
-    protected void handleClose() {
+    public void handleClose() {
         if (!open) {
             return;
         }
@@ -74,7 +74,7 @@ abstract class DSOutboundStub implements OutboundMessage, OutboundStream {
         getRequester().removeRequest(getRequestId());
     }
 
-    protected void handleError(DSElement details) {
+    public void handleError(DSElement details) {
         if (!open) {
             return;
         }

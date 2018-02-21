@@ -46,6 +46,9 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
         return handler;
     }
 
+    /**
+     * Writes the v1 response by default.  V2 probably only needs to add some headers.
+     */
     @Override
     protected void handleResponse(MessageReader reader) {
         DSMap response = reader.getReader().getMap();

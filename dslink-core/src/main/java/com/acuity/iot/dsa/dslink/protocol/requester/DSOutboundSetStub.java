@@ -1,17 +1,17 @@
-package com.acuity.iot.dsa.dslink.protocol.v1.requester;
+package com.acuity.iot.dsa.dslink.protocol.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.message.MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSMap;
 
 /**
  * Manages the lifecycle of a set request and is also the outbound stream passed to the requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DS1OutboundSetStub extends DS1OutboundStub {
+public class DSOutboundSetStub extends DSOutboundStub {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -24,11 +24,11 @@ class DS1OutboundSetStub extends DS1OutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DS1OutboundSetStub(DS1Requester requester,
-                              Integer requestId,
-                              String path,
-                              DSIValue value,
-                              OutboundRequestHandler request) {
+    public DSOutboundSetStub(DSRequester requester,
+                             Integer requestId,
+                             String path,
+                             DSIValue value,
+                             OutboundRequestHandler request) {
         super(requester, requestId, path);
         this.value = value;
         this.request = request;
@@ -42,10 +42,16 @@ class DS1OutboundSetStub extends DS1OutboundStub {
         return request;
     }
 
+    /**
+     * Does nothing, there is no response.
+     */
     @Override
-    protected void handleResponse(DSMap map) {
+    protected void handleResponse(MessageReader reader) {
     }
 
+    /**
+     * Writes the v1 request.
+     */
     @Override
     public void write(MessageWriter writer) {
         DSIWriter out = writer.getWriter();
