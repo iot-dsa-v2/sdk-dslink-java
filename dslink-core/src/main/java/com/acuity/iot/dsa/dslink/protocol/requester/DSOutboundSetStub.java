@@ -1,10 +1,10 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
-import com.acuity.iot.dsa.dslink.protocol.message.MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSMap;
 
 /**
  * Manages the lifecycle of a set request and is also the outbound stream passed to the requester.
@@ -24,11 +24,11 @@ public class DSOutboundSetStub extends DSOutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSOutboundSetStub(DSRequester requester,
-                             Integer requestId,
-                             String path,
-                             DSIValue value,
-                             OutboundRequestHandler request) {
+    DSOutboundSetStub(DSRequester requester,
+                      Integer requestId,
+                      String path,
+                      DSIValue value,
+                      OutboundRequestHandler request) {
         super(requester, requestId, path);
         this.value = value;
         this.request = request;
@@ -46,7 +46,7 @@ public class DSOutboundSetStub extends DSOutboundStub {
      * Does nothing, there is no response.
      */
     @Override
-    protected void handleResponse(MessageReader reader) {
+    public void handleResponse(DSMap response) {
     }
 
     /**

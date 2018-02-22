@@ -48,8 +48,16 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
         return nextRid.incrementAndGet();
     }
 
-    DSSession getSession() {
+    protected DSOutboundStub getRequest(Integer rid) {
+        return requests.get(rid);
+    }
+
+    protected DSSession getSession() {
         return session;
+    }
+
+    protected DSOutboundSubscriptions getSubscriptions() {
+        return subscriptions;
     }
 
     @Override

@@ -79,11 +79,11 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     }
 
     /**
-     * This returns a DSInboundSubscription for v1, this will be overridden for v2.
+     * Returns a DSInboundSubscription for v1.
      *
      * @param sid  Subscription ID.
      * @param path Path being subscribed to.
-     * @param qos  Qualityf of service.
+     * @param qos  Quality of service.
      */
     protected DSInboundSubscription makeSubscription(Integer sid, String path, int qos) {
         return new DSInboundSubscription(this, sid, path, qos);

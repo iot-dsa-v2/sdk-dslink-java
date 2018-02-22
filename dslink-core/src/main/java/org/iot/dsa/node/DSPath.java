@@ -40,7 +40,7 @@ public class DSPath {
     /**
      * Un-escapes a name.
      */
-    public static String decodePathName(String pathName) {
+    public static String decodeName(String pathName) {
         boolean modified = false;
         int len = pathName.length();
         StringBuilder sb = new StringBuilder(len > 500 ? len / 2 : len);
@@ -97,30 +97,31 @@ public class DSPath {
         }
         String[] elems = splitPath(path);
         for (int i = 0, len = elems.length; i < len; i++) {
-            elems[i] = decodePathName(elems[i]);
+            elems[i] = decodeName(elems[i]);
         }
         return elems;
     }
 
     /**
-     * Ascends the tree and creates pretty printing path.
-     public static String encodeDisplayPath(DSNode node) {
-     ArrayList<DSNode> nodes = new ArrayList<DSNode>();
-     while (node != null) {
-     if (node.getName() != null) {
-     nodes.add(node);
-     break;
-     }
-     node = node.getParent();
-     }
-     StringBuilder builder = new StringBuilder();
-     for (int i = nodes.size(); --i >= 0; ) {
-     builder.append('/');
-     builder.append(node.getName());
-     }
-     return builder.toString();
-     }
+     * Creates a properly encoded path from the given names.
+     *
+     * @param leadingSlash Whether or not to prepend a slash to the path.
+     * @param names        The names to encode in the given order.
+     * @return A properly encoded path name.
      */
+    public static String encodePath(boolean leadingSlash, String... names) {
+        StringBuilder builder = new StringBuilder();
+        if (leadingSlash) {
+            builder.append('/');
+        }
+        for (int i = 0, len = names.length; i < len; i++) {
+            if (i > 0) {
+                builder.append('/');
+            }
+            encodeName(names[i], builder);
+        }
+        return builder.toString();
+    }
 
     /**
      * Ascends the tree and encodes all the node names into a path.

@@ -1,9 +1,9 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
-import com.acuity.iot.dsa.dslink.protocol.message.MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.node.DSMap;
 
 /**
  * Manages the lifecycle of a remove request and is also the outbound stream passed to the
@@ -23,10 +23,10 @@ public class DSOutboundRemoveStub extends DSOutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSOutboundRemoveStub(DSRequester requester,
-                                Integer requestId,
-                                String path,
-                                OutboundRequestHandler request) {
+    DSOutboundRemoveStub(DSRequester requester,
+                         Integer requestId,
+                         String path,
+                         OutboundRequestHandler request) {
         super(requester, requestId, path);
         this.request = request;
     }
@@ -43,7 +43,7 @@ public class DSOutboundRemoveStub extends DSOutboundStub {
      * Does nothing.
      */
     @Override
-    protected void handleResponse(MessageReader reader) {
+    public void handleResponse(DSMap response) {
     }
 
     /**

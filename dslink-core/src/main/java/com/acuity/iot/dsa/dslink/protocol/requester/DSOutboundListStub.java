@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
-import com.acuity.iot.dsa.dslink.protocol.message.MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
@@ -8,6 +7,7 @@ import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSPath;
 
 /**
  * Manages the lifecycle of an list request and is also the outbound stream passed to the
@@ -27,10 +27,10 @@ public class DSOutboundListStub extends DSOutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSOutboundListStub(DSRequester requester,
-                              Integer requestId,
-                              String path,
-                              OutboundListHandler request) {
+    DSOutboundListStub(DSRequester requester,
+                       Integer requestId,
+                       String path,
+                       OutboundListHandler request) {
         super(requester, requestId, path);
         this.request = request;
     }
@@ -48,9 +48,8 @@ public class DSOutboundListStub extends DSOutboundStub {
      * Reads the v1 response.
      */
     @Override
-    protected void handleResponse(MessageReader reader) {
+    public void handleResponse(DSMap response) {
         try {
-            DSMap response = reader.getReader().getMap();
             DSList updates = response.getList("updates");
             if (updates != null) {
                 String name;
@@ -60,7 +59,7 @@ public class DSOutboundListStub extends DSOutboundStub {
                     if (elem.isList()) {
                         list = (DSList) elem;
                         name = list.getString(0);
-                        request.onUpdate(name, list.get(1));
+                        request.onUpdate(DSPath.decodeName(name), list.get(1));
                     } else if (elem.isMap()) {
                         map = (DSMap) elem;
                         name = map.getString("name");

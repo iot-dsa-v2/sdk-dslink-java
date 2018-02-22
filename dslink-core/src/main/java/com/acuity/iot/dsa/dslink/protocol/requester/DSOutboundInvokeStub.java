@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
-import com.acuity.iot.dsa.dslink.protocol.message.MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler.Mode;
@@ -27,11 +26,11 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSOutboundInvokeStub(DSRequester requester,
-                                Integer requestId,
-                                String path,
-                                DSMap params,
-                                OutboundInvokeHandler handler) {
+    DSOutboundInvokeStub(DSRequester requester,
+                         Integer requestId,
+                         String path,
+                         DSMap params,
+                         OutboundInvokeHandler handler) {
         super(requester, requestId, path);
         this.params = params;
         this.handler = handler;
@@ -50,8 +49,7 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
      * Writes the v1 response by default.  V2 probably only needs to add some headers.
      */
     @Override
-    protected void handleResponse(MessageReader reader) {
-        DSMap response = reader.getReader().getMap();
+    public void handleResponse(DSMap response) {
         try {
             DSList updates = response.getList("updates");
             DSMap meta = response.getMap("meta");

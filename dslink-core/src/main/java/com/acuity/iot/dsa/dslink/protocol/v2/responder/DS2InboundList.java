@@ -8,6 +8,7 @@ import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundList;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSPath;
 
 /**
  * List implementation for a responder.
@@ -67,17 +68,21 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
     }
 
     @Override
-    protected String encodeName(String name) {
+    protected String encodeName(String name, StringBuilder buf) {
+        buf.setLength(0);
+        if (DSPath.encodeName(name, buf)) {
+            return buf.toString();
+        }
         return name;
     }
 
     @Override
-    protected void encodeUpdate(Update update, MessageWriter writer) {
+    protected void encodeUpdate(Update update, MessageWriter writer, StringBuilder buf) {
         if (update.added) {
             encodeChild(update.child, writer);
         } else {
             DS2MessageWriter out = (DS2MessageWriter) writer;
-            out.writeString(encodeName(update.child.getName()));
+            out.writeString(encodeName(update.child.getName(), buf));
             out.getBody().put((byte) 0, (byte) 0);
         }
     }

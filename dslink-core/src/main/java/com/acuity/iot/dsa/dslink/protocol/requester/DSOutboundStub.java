@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
-import com.acuity.iot.dsa.dslink.protocol.message.MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundStream;
@@ -96,7 +95,10 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
         }
     }
 
-    protected abstract void handleResponse(MessageReader reader);
+    /**
+     * Handle the V1 response map.
+     */
+    public abstract void handleResponse(DSMap map);
 
     public boolean isStreamOpen() {
         return open;

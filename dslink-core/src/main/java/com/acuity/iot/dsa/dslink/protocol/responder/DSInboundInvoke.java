@@ -177,7 +177,7 @@ public class DSInboundInvoke extends DSInboundRequest
     /**
      * Returns "updates" for v1.
      */
-    protected String getRowsName() {
+    private String getRowsName() {
         return "updates";
     }
 
@@ -190,7 +190,7 @@ public class DSInboundInvoke extends DSInboundRequest
         return state == STATE_CLOSED;
     }
 
-    public boolean isClosePending() {
+    private boolean isClosePending() {
         return state == STATE_CLOSE_PENDING;
     }
 
@@ -288,8 +288,6 @@ public class DSInboundInvoke extends DSInboundRequest
             case STATE_UPDATES:
                 writeUpdates(writer);
                 break;
-            default:
-                ;
         }
         if (isClosePending() && (updateHead == null)) {
             if (closeReason != null) {

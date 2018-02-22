@@ -18,10 +18,6 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSResponder extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
@@ -90,7 +86,7 @@ public abstract class DSResponder extends DSNode {
     public void onDisconnect() {
     }
 
-    public DSStream putRequest(Integer rid, DSStream request) {
+    protected DSStream putRequest(Integer rid, DSStream request) {
         return inboundRequests.put(rid, request);
     }
 

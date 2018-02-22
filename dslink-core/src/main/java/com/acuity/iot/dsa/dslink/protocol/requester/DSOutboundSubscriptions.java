@@ -12,8 +12,6 @@ import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSList;
-import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
@@ -23,7 +21,7 @@ import org.iot.dsa.time.DSDateTime;
  *
  * @author Aaron Hansen
  */
-class DSOutboundSubscriptions extends DSLogger implements OutboundMessage {
+public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -83,41 +81,18 @@ class DSOutboundSubscriptions extends DSLogger implements OutboundMessage {
     public void onDisconnect() {
     }
 
-    void processUpdate(DSElement updateElement) {
-        int sid = -1;
-        DSElement value;
-        String ts, sts = null;
-        if (updateElement instanceof DSList) {
-            DSList updateList = (DSList) updateElement;
-            int cols = updateList.size();
-            if (cols < 3) {
-                trace(trace() ? "Update incomplete: " + updateList.toString() : null);
-                return;
-            }
-            sid = updateList.get(0, -1);
-            value = updateList.get(1);
-            ts = updateList.getString(2);
-            sts = updateList.get(3, (String) null);
-        } else if (updateElement instanceof DSMap) {
-            DSMap updateMap = (DSMap) updateElement;
-            sid = updateMap.get("sid", -1);
-            value = updateMap.get("value");
-            ts = updateMap.getString("ts");
-            sts = updateMap.get("status", (String) null);
-        } else {
-            return;
-        }
+    public void handleUpdate(int sid, String ts, String sts, DSElement value) {
         if (sid < 0) {
-            debug(debug() ? "Update missing sid: " + updateElement.toString() : null);
+            debug(debug() ? "Update missing sid" : null);
             return;
         }
         DSOutboundSubscribeStubs stub = sidMap.get(sid);
         if (stub == null) {
-            debug(debug() ? ("Unexpected subscription update sid=" + sid) : null);
+            debug(debug() ? ("Unexpected subscription sid " + sid) : null);
             return;
         }
         DSDateTime timestamp = null;
-        if (ts == null) {
+        if ((ts == null) || ts.isEmpty()) {
             timestamp = DSDateTime.currentTime();
         } else {
             timestamp = DSDateTime.valueOf(ts);
@@ -130,14 +105,6 @@ class DSOutboundSubscriptions extends DSLogger implements OutboundMessage {
             value = DSNull.NULL;
         }
         stub.process(timestamp, value, status);
-    }
-
-    void processUpdates(DSMap map) {
-        DSList updates = map.getList("updates");
-        for (int i = 0; i < updates.size(); i++) {
-            DSElement update = updates.get(i);
-            processUpdate(update);
-        }
     }
 
     private void sendMessage() {
