@@ -8,7 +8,7 @@ import java.nio.charset.CharsetDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.msgpack.MsgpackReader;
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.util.DSException;
@@ -31,7 +31,7 @@ public class DS2MessageReader extends DS2Message {
     private Map<Integer, Object> headers = new HashMap<Integer, Object>();
     private InputStream input;
     private int method;
-    private DSIReader reader;
+    private MsgpackReader reader;
     private int requestId;
     private ByteBuffer strBuffer;
     private CharsetDecoder utf8decoder = DSString.UTF8.newDecoder();
@@ -71,7 +71,7 @@ public class DS2MessageReader extends DS2Message {
         return input;
     }
 
-    public DSIReader getBodyReader() {
+    public MsgpackReader getBodyReader() {
         if (reader == null) {
             reader = new MsgpackReader(input);
         }

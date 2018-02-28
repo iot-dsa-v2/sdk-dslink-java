@@ -7,7 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
-import org.iot.dsa.io.msgpack.MsgpackWriter;
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSString;
 
 /**
@@ -57,7 +57,7 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public DS2MessageWriter addHeader(byte key, Byte value) {
+    public DS2MessageWriter addHeader(byte key, byte value) {
         header.put(key);
         header.put(value);
         return this;
@@ -65,12 +65,12 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
 
     /**
      * Encodes the key value pair into the header buffer.
-     */
     public DS2MessageWriter addHeader(byte key, int value) {
         header.put(key);
         header.putInt(value, false);
         return this;
     }
+     */
 
     /**
      * Encodes the key value pair into the header buffer.

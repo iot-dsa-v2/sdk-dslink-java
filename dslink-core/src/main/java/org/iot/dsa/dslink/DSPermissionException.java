@@ -7,6 +7,9 @@ package org.iot.dsa.dslink;
  */
 public class DSPermissionException extends DSRequestException {
 
+    public DSPermissionException() {
+    }
+
     public DSPermissionException(String message) {
         super(message);
     }

@@ -24,11 +24,11 @@ public class DSOutboundSetStub extends DSOutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DSOutboundSetStub(DSRequester requester,
-                      Integer requestId,
-                      String path,
-                      DSIValue value,
-                      OutboundRequestHandler request) {
+    protected DSOutboundSetStub(DSRequester requester,
+                                Integer requestId,
+                                String path,
+                                DSIValue value,
+                                OutboundRequestHandler request) {
         super(requester, requestId, path);
         this.value = value;
         this.request = request;
@@ -40,6 +40,10 @@ public class DSOutboundSetStub extends DSOutboundStub {
 
     public OutboundRequestHandler getHandler() {
         return request;
+    }
+
+    protected DSIValue getValue() {
+        return value;
     }
 
     /**

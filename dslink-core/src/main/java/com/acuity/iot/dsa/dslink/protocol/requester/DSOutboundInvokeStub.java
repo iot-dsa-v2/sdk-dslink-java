@@ -26,11 +26,11 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DSOutboundInvokeStub(DSRequester requester,
-                         Integer requestId,
-                         String path,
-                         DSMap params,
-                         OutboundInvokeHandler handler) {
+    protected DSOutboundInvokeStub(DSRequester requester,
+                                   Integer requestId,
+                                   String path,
+                                   DSMap params,
+                                   OutboundInvokeHandler handler) {
         super(requester, requestId, path);
         this.params = params;
         this.handler = handler;
@@ -43,6 +43,10 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
     @Override
     public OutboundInvokeHandler getHandler() {
         return handler;
+    }
+
+    protected DSMap getParams() {
+        return params;
     }
 
     /**
@@ -110,7 +114,6 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
         out.beginMap();
         out.key("rid").value(getRequestId());
         out.key("method").value("invoke");
-        out.key("permit").value("config");
         out.key("path").value(getPath());
         if (params == null) {
             params = new DSMap();

@@ -1,9 +1,11 @@
 package com.acuity.iot.dsa.dslink.protocol.v1.requester;
 
 import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundStub;
+import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSRequester;
 import com.acuity.iot.dsa.dslink.protocol.v1.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1Session;
+import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -27,6 +29,46 @@ public class DS1Requester extends DSRequester {
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    private void handleError(DSOutboundStub stub, DSElement details) {
+        try {
+            ErrorType type = ErrorType.internalError;
+            String msg;
+            if (details.isMap()) {
+                String detail = null;
+                DSMap map = details.toMap();
+                String tmp = map.getString("type");
+                if (tmp.equals("permissionDenied")) {
+                    type = ErrorType.permissionDenied;
+                } else if (tmp.equals("invalidRequest")) {
+                    type = ErrorType.badRequest;
+                } else if (tmp.equals("invalidPath")) {
+                    type = ErrorType.badRequest;
+                } else if (tmp.equals("notSupported")) {
+                    type = ErrorType.notSupported;
+                } else {
+                    type = ErrorType.internalError;
+                }
+                msg = map.getString("msg");
+                detail = map.getString("detail");
+                if (msg == null) {
+                    msg = detail;
+                }
+                if (msg == null) {
+                    msg = details.toString();
+                }
+            } else {
+                type = ErrorType.internalError;
+                msg = details.toString();
+            }
+            if (msg == null) {
+                msg = "";
+            }
+            stub.handleError(type, msg);
+        } catch (Exception x) {
+            error(getPath(), x);
+        }
+    }
+
     /**
      * Called by the parent session to handle response messages.
      */
@@ -36,13 +78,16 @@ public class DS1Requester extends DSRequester {
         } else {
             DSOutboundStub stub = getRequest(rid);
             if (stub != null) {
-                stub.handleResponse(map);
                 if (isError(map)) {
-                    stub.handleError(map.get("error"));
-                }
-                if (isStreamClosed(map)) {
+                    handleError(stub, map.get("error"));
                     stub.handleClose();
                     removeRequest(rid);
+                } else {
+                    stub.handleResponse(map);
+                    if (isStreamClosed(map)) {
+                        stub.handleClose();
+                        removeRequest(rid);
+                    }
                 }
             } else {
                 if (!isStreamClosed(map)) {

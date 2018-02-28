@@ -3,6 +3,7 @@ package com.acuity.iot.dsa.dslink.protocol.v2;
 import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.v1.requester.DS1Requester;
+import com.acuity.iot.dsa.dslink.protocol.v2.requester.DS2Requester;
 import com.acuity.iot.dsa.dslink.protocol.v2.responder.DS2Responder;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
@@ -41,7 +42,7 @@ public class DS2Session extends DSSession implements MessageConstants {
     private DS2MessageReader messageReader;
     private DS2MessageWriter messageWriter;
     private boolean requestsNext = false;
-    private DSIRequester requester = null;//new DS2Requester(this);
+    private DS2Requester requester = new DS2Requester(this);
     private DS2Responder responder = new DS2Responder(this);
 
     /////////////////////////////////////////////////////////////////
@@ -100,8 +101,9 @@ public class DS2Session extends DSSession implements MessageConstants {
         } else if (reader.isAck()) {
             put(lastAckRecv, DSInt.valueOf(DSBytes.readInt(reader.getBody(), false)));
         } else if (reader.isPing()) {
+            ;
         } else if (reader.isResponse()) {
-            //requester.handleResponse(reader);
+            requester.handleResponse(reader);
             setNextAck(reader.getRequestId());
         }
         if (debug) {

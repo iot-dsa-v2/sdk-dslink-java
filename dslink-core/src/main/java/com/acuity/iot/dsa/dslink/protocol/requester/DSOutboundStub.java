@@ -1,6 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundStream;
 import org.iot.dsa.node.DSElement;
@@ -78,18 +79,50 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
             return;
         }
         try {
-            String type = null;
-            String msg = null;
-            String detail = null;
+            ErrorType type = ErrorType.internalError;
+            String msg;
             if (details.isMap()) {
+                String detail = null;
                 DSMap map = details.toMap();
-                type = map.getString("type");
+                String tmp = map.getString("type");
+                if (tmp.equals("permissionDenied")) {
+                    type = ErrorType.permissionDenied;
+                } else if (tmp.equals("invalidRequest")) {
+                    type = ErrorType.badRequest;
+                } else if (tmp.equals("invalidPath")) {
+                    type = ErrorType.badRequest;
+                } else if (tmp.equals("notSupported")) {
+                    type = ErrorType.notSupported;
+                } else {
+                    type = ErrorType.internalError;
+                }
                 msg = map.getString("msg");
                 detail = map.getString("detail");
+                if (msg == null) {
+                    msg = detail;
+                }
+                if (msg == null) {
+                    msg = details.toString();
+                }
             } else {
+                type = ErrorType.internalError;
                 msg = details.toString();
             }
-            getHandler().onError(type, msg, detail);
+            if (msg == null) {
+                msg = "";
+            }
+            getHandler().onError(type, msg);
+        } catch (Exception x) {
+            getRequester().error(getRequester().getPath(), x);
+        }
+    }
+
+    public void handleError(ErrorType type, String message) {
+        if (!open) {
+            return;
+        }
+        try {
+            getHandler().onError(type, message);
         } catch (Exception x) {
             getRequester().error(getRequester().getPath(), x);
         }

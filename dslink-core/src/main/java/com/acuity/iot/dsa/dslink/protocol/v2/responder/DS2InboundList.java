@@ -6,7 +6,7 @@ import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundList;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
-import org.iot.dsa.io.msgpack.MsgpackWriter;
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSPath;
 
@@ -91,11 +91,11 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
     protected void endMessage(MessageWriter writer, Boolean streamOpen) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         if (streamOpen == null) {
-            out.addHeader((byte) HDR_STATUS, MessageConstants.STS_INITIALIZING);
+            out.addHeader((byte) HDR_STATUS, STS_INITIALIZING);
         } else if (streamOpen) {
-            out.addHeader((byte) HDR_STATUS, MessageConstants.STS_OK);
+            out.addHeader((byte) HDR_STATUS, STS_OK);
         } else {
-            out.addHeader((byte) HDR_STATUS, MessageConstants.STS_CLOSED);
+            out.addHeader((byte) HDR_STATUS, STS_CLOSED);
         }
     }
 

@@ -1,4 +1,4 @@
-package org.iot.dsa.io.msgpack;
+package com.acuity.iot.dsa.dslink.io.msgpack;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;

@@ -27,10 +27,10 @@ public class DSOutboundListStub extends DSOutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DSOutboundListStub(DSRequester requester,
-                       Integer requestId,
-                       String path,
-                       OutboundListHandler request) {
+    protected DSOutboundListStub(DSRequester requester,
+                                 Integer requestId,
+                                 String path,
+                                 OutboundListHandler request) {
         super(requester, requestId, path);
         this.request = request;
     }

@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.protocol.message.ErrorResponse.Phase;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -16,8 +15,6 @@ public class DSProtocolException extends RuntimeException {
     /////////////////////////////////////////////////////////////////
 
     private String detail;
-    private Phase phase = Phase.REQUEST;
-    private String type;
 
     /////////////////////////////////////////////////////////////////
     // Constructors
@@ -33,14 +30,6 @@ public class DSProtocolException extends RuntimeException {
 
     public String getDetail() {
         return detail;
-    }
-
-    public Phase getPhase() {
-        return phase;
-    }
-
-    public String getType() {
-        return type;
     }
 
     /**
@@ -62,45 +51,5 @@ public class DSProtocolException extends RuntimeException {
         detail = sw.toString();
         return this;
     }
-
-    /**
-     * Only needs called for responses, the default is request.
-     */
-    public DSProtocolException setPhase(Phase arg) {
-        phase = arg;
-        return this;
-    }
-
-    /**
-     * Optional.
-     */
-    public DSProtocolException setType(String arg) {
-        type = arg;
-        return this;
-    }
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Protected and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Package and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Private and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Inner Classes - in alphabetical order by class name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Facets - in alphabetical order by field name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
 
 }

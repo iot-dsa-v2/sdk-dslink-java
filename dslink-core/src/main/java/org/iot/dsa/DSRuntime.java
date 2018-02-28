@@ -375,8 +375,9 @@ public class DSRuntime {
     static {
         Runtime.getRuntime().addShutdownHook(new ShutdownThread());
         threadPool = new DSThreadPool("DSRuntime");
-        int min = Math.max(1, DSThreadPool.getNumProcessors());
-        threadPool.setMinMax(min, DSThreadPool.getNumProcessors() * 25);
+        int min = Math.max(4, DSThreadPool.getNumProcessors());
+        threadPool.setMinMax(min, -1);
+        //threadPool.setMinMax(min, DSThreadPool.getNumProcessors() * 25);
         runtimeThread = new RuntimeThread();
         runtimeThread.start();
     }

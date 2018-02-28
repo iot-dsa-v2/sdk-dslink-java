@@ -2,6 +2,7 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.TestLink;
 import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
+import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.SimpleRequestHandler;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
@@ -58,7 +59,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
                     }
 
                     @Override
-                    public void onError(String type, String msg, String detail) {
+                    public void onError(ErrorType type, String msg) {
                         Thread.dumpStack();
                     }
                 });
@@ -124,7 +125,7 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
                     }
 
                     @Override
-                    public void onError(String type, String msg, String detail) {
+                    public void onError(ErrorType type, String msg) {
                     }
                 });
         synchronized (node) {

@@ -1,20 +1,21 @@
 package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
-import com.acuity.iot.dsa.dslink.protocol.v2.CloseMessage;
-import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
-import com.acuity.iot.dsa.dslink.protocol.v2.DS2Session;
-import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscription;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
+import com.acuity.iot.dsa.dslink.protocol.v2.CloseMessage;
+import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
+import com.acuity.iot.dsa.dslink.protocol.v2.DS2Session;
+import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import java.util.Map;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSPath;
 import org.iot.dsa.security.DSPermission;
 
 /**
@@ -168,7 +169,12 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         }
         DSElement value = msg.getBodyReader().getElement();
         DSInboundSet setImpl = new DSInboundSet(value, perm);
-        setImpl.setPath((String) msg.getHeader(HDR_TARGET_PATH))
+        String path = (String) msg.getHeader(MessageConstants.HDR_TARGET_PATH);
+        String attr = (String) msg.getHeader(MessageConstants.HDR_ATTRIBUTE_FIELD);
+        if ((attr != null) && !attr.isEmpty()) {
+            path = DSPath.concat(path, attr, null).toString();
+        }
+        setImpl.setPath(path)
                .setSession(getSession())
                .setRequestId(rid)
                .setResponder(this);

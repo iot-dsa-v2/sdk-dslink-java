@@ -48,19 +48,19 @@ public interface MessageConstants {
     int MSG_HANDSHAKE_3 = (0xF2 & 0xFF);
     int MSG_HANDSHAKE_4 = (0xF3 & 0xFF);
 
-    Byte STS_OK = 0;
-    Byte STS_INITIALIZING = 0x01;
-    Byte STS_NOT_AVAILABLE = 0x0E;
-    Byte STS_DROPPED = 0x10;
-    Byte STS_CLOSED = 0x20;
-    Byte STS_DISCONNECTED = 0x2E;
-    Byte STS_PERMISSION_DENIED = 0x40;
-    Byte STS_NOT_SUPPORTED = 0x41;
-    Byte STS_INVALID_MESSAGE = 0x44;
-    Byte STS_INVALID_PARAMETER = 0x45;
-    Byte STS_BUSY = 0x48;
-    Byte STS_INTERNAL_ERR = 0x50;
-    Byte STS_ALIAS_LOOP = 0x61;
-    Byte STS_INVALID_AUTH = (byte) (0xF9 & 0xFF);
+    byte STS_OK = 0;
+    byte STS_INITIALIZING = 0x01;
+    byte STS_NOT_AVAILABLE = 0x0E;
+    byte STS_DROPPED = 0x10;
+    byte STS_CLOSED = 0x20;
+    byte STS_DISCONNECTED = 0x2E;
+    byte STS_PERMISSION_DENIED = 0x40;
+    byte STS_NOT_SUPPORTED = 0x41;
+    byte STS_INVALID_MESSAGE = 0x44;
+    byte STS_INVALID_PARAMETER = 0x45;
+    byte STS_BUSY = 0x48;
+    byte STS_INTERNAL_ERR = 0x50;
+    byte STS_ALIAS_LOOP = 0x61;
+    byte STS_INVALID_AUTH = (byte) (0xF9 & 0xFF);
 
 }

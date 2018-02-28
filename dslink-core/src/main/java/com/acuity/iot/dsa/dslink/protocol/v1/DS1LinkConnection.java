@@ -11,8 +11,8 @@ import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
-import org.iot.dsa.io.msgpack.MsgpackReader;
-import org.iot.dsa.io.msgpack.MsgpackWriter;
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import org.iot.dsa.util.DSException;
 
 /**

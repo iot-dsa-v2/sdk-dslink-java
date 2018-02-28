@@ -1,4 +1,4 @@
-package org.iot.dsa.io.msgpack;
+package com.acuity.iot.dsa.dslink.io.msgpack;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -315,13 +315,17 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
                     throw new IllegalStateException("Unknown string type: " + b);
             }
         }
-        byte[] bytes = readBytes(size);
-        ByteBuffer byteBuf = getByteBuffer(bytes, 0, size);
-        CharBuffer charBuf = getCharBuffer(size);
+        setNextValue(readUTF(size));
+        return last();
+    }
+
+    public String readUTF(int len) throws IOException {
+        byte[] bytes = readBytes(len);
+        ByteBuffer byteBuf = getByteBuffer(bytes, 0, len);
+        CharBuffer charBuf = getCharBuffer(len);
         decoder.decode(byteBuf, charBuf, false);
         charBuf.flip();
-        setNextValue(charBuf.toString());
-        return last();
+        return charBuf.toString();
     }
 
     // Inner Classes

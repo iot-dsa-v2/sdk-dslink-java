@@ -23,10 +23,10 @@ public class DSOutboundRemoveStub extends DSOutboundStub {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DSOutboundRemoveStub(DSRequester requester,
-                         Integer requestId,
-                         String path,
-                         OutboundRequestHandler request) {
+    protected DSOutboundRemoveStub(DSRequester requester,
+                                   Integer requestId,
+                                   String path,
+                                   OutboundRequestHandler request) {
         super(requester, requestId, path);
         this.request = request;
     }
