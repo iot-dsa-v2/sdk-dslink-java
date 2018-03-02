@@ -38,13 +38,13 @@ class DS2InboundInvoke extends DSInboundInvoke implements MessageConstants {
     @Override
     protected void writeClose(MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.addHeader((byte) HDR_STATUS, STS_CLOSED);
+        out.addByteHeader((byte) HDR_STATUS, STS_CLOSED);
     }
 
     @Override
     protected void writeOpen(MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.addHeader((byte) HDR_STATUS, STS_OK);
+        out.addByteHeader((byte) HDR_STATUS, STS_OK);
     }
 
 

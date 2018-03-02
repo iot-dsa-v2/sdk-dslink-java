@@ -57,7 +57,7 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public DS2MessageWriter addHeader(byte key, byte value) {
+    public DS2MessageWriter addByteHeader(byte key, byte value) {
         header.put(key);
         header.put(value);
         return this;
@@ -65,17 +65,17 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
 
     /**
      * Encodes the key value pair into the header buffer.
-    public DS2MessageWriter addHeader(byte key, int value) {
+     */
+    public DS2MessageWriter addIntHeader(byte key, int value) {
         header.put(key);
         header.putInt(value, false);
         return this;
     }
-     */
 
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public DS2MessageWriter addHeader(byte key, String value) {
+    public DS2MessageWriter addStringHeader(byte key, String value) {
         header.put(key);
         writeString(value, header);
         return this;

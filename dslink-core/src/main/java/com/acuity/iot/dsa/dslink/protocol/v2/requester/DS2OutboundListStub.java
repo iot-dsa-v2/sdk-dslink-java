@@ -13,7 +13,6 @@ import java.io.InputStream;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.util.DSException;
 
@@ -68,7 +67,7 @@ public class DS2OutboundListStub extends DSOutboundListStub
         //if has multipart remaining send that
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(getRequestId(), MSG_LIST_REQ);
-        out.addHeader((byte)HDR_TARGET_PATH, getPath());
+        out.addStringHeader((byte)HDR_TARGET_PATH, getPath());
         out.write((DSBinaryTransport) getRequester().getTransport());
         //if multipart
     }

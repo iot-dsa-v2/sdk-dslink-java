@@ -39,10 +39,10 @@ public class DS2OutboundSetStub extends DSOutboundSetStub
                 idx = elems.length - 1;
                 String attr = elems[idx];
                 path = DSPath.encodePath(path.charAt(0) == '/', elems, idx);
-                out.addHeader((byte) HDR_ATTRIBUTE_FIELD, attr);
+                out.addStringHeader((byte) HDR_ATTRIBUTE_FIELD, attr);
             }
         }
-        out.addHeader((byte) HDR_TARGET_PATH, path);
+        out.addStringHeader((byte) HDR_TARGET_PATH, path);
         out.getBody().put((byte) 0, (byte) 0);
         out.getWriter().value(getValue().toElement());
         out.write((DSBinaryTransport) getRequester().getTransport());

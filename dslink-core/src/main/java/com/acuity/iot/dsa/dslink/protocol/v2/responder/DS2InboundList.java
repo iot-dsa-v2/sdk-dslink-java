@@ -91,11 +91,11 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
     protected void endMessage(MessageWriter writer, Boolean streamOpen) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         if (streamOpen == null) {
-            out.addHeader((byte) HDR_STATUS, STS_INITIALIZING);
+            out.addByteHeader((byte) HDR_STATUS, STS_INITIALIZING);
         } else if (streamOpen) {
-            out.addHeader((byte) HDR_STATUS, STS_OK);
+            out.addByteHeader((byte) HDR_STATUS, STS_OK);
         } else {
-            out.addHeader((byte) HDR_STATUS, STS_CLOSED);
+            out.addByteHeader((byte) HDR_STATUS, STS_CLOSED);
         }
     }
 

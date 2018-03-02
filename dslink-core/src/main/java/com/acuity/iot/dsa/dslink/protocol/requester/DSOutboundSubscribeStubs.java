@@ -33,10 +33,8 @@ class DSOutboundSubscribeStubs {
 
     public DSOutboundSubscribeStubs(
             String path,
-            Integer sid,
             DSOutboundSubscriptions subscriptions) {
         this.path = path;
-        this.sid = sid;
         this.subscriptions = subscriptions;
     }
 
@@ -112,6 +110,10 @@ class DSOutboundSubscribeStubs {
         return subscriptions;
     }
 
+    public boolean hasSid() {
+        return sid != null;
+    }
+
     /**
      * Null if the arg is the first in the list, last if stub is not contained.
      */
@@ -166,6 +168,11 @@ class DSOutboundSubscribeStubs {
         if (--size == 0) {
             subscriptions.unsubscribe(this);
         }
+    }
+
+    public DSOutboundSubscribeStubs setSid(Integer sid) {
+        this.sid = sid;
+        return this;
     }
 
     void setState(State state) {

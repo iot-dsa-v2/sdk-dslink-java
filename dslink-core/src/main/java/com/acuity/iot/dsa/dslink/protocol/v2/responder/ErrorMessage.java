@@ -41,19 +41,19 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
         }
         if (reason instanceof DSRequestException) {
             if (reason instanceof DSInvalidPathException) {
-                out.addHeader((byte) MessageConstants.HDR_STATUS,
-                              MessageConstants.STS_NOT_AVAILABLE);
+                out.addByteHeader((byte) MessageConstants.HDR_STATUS,
+                                  MessageConstants.STS_NOT_AVAILABLE);
             } else if (reason instanceof DSPermissionException) {
-                out.addHeader((byte) MessageConstants.HDR_STATUS,
-                              MessageConstants.STS_PERMISSION_DENIED);
+                out.addByteHeader((byte) MessageConstants.HDR_STATUS,
+                                  MessageConstants.STS_PERMISSION_DENIED);
             } else {
-                out.addHeader((byte) MessageConstants.HDR_STATUS,
-                              MessageConstants.STS_INVALID_MESSAGE);
+                out.addByteHeader((byte) MessageConstants.HDR_STATUS,
+                                  MessageConstants.STS_INVALID_MESSAGE);
             }
         } else {
-            out.addHeader((byte) MessageConstants.HDR_STATUS, MessageConstants.STS_INTERNAL_ERR);
+            out.addByteHeader((byte) MessageConstants.HDR_STATUS, MessageConstants.STS_INTERNAL_ERR);
         }
-        out.addHeader((byte) HDR_ERROR_DETAIL, DSException.makeMessage(reason));
+        out.addStringHeader((byte) HDR_ERROR_DETAIL, DSException.makeMessage(reason));
         out.write((DSBinaryTransport) req.getResponder().getTransport());
     }
 

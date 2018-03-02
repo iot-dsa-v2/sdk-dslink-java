@@ -8,7 +8,6 @@ import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
-import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
 
 public class DS2OutboundInvokeStub extends DSOutboundInvokeStub
@@ -31,7 +30,7 @@ public class DS2OutboundInvokeStub extends DSOutboundInvokeStub
         //if has multipart remaining send that
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(getRequestId(), MSG_INVOKE_REQ);
-        out.addHeader((byte)HDR_TARGET_PATH, getPath());
+        out.addStringHeader((byte)HDR_TARGET_PATH, getPath());
         DSMap params = getParams();
         if (params != null) {
             out.getWriter().value(params);

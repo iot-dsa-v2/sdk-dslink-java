@@ -16,6 +16,8 @@ import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSList;
@@ -72,12 +74,12 @@ public class DS2Requester extends DSRequester implements MessageConstants {
         }
     }
 
-    private boolean isError(DS2MessageReader reader, Byte status, DSOutboundStub stub) {
+    private boolean handleError(DS2MessageReader reader, Byte status, DSOutboundStub stub) {
         if (status == null) {
             return false;
         }
-        ErrorType type = null;
-        String message = null;
+        ErrorType type;
+        String message;
         switch (status) {
             case STS_ALIAS_LOOP:
                 type = ErrorType.badRequest;
@@ -122,17 +124,11 @@ public class DS2Requester extends DSRequester implements MessageConstants {
         return true;
     }
 
-    private boolean isStreamClosed(Byte status) {
-        switch (status) {
-            case STS_BUSY :
-            case STS_CLOSED :
-            case STS_DISCONNECTED :
-                return true;
-        }
-        return false;
-    }
 
     public void handleResponse(DS2MessageReader reader) {
+        if (handleSubscription(reader)) {
+            return;
+        }
         Integer rid = reader.getRequestId();
         DSOutboundStub stub = getRequest(rid);
         if (stub == null) {
@@ -142,21 +138,46 @@ public class DS2Requester extends DSRequester implements MessageConstants {
             return;
         }
         Byte status = (Byte) reader.getHeader(MessageConstants.HDR_STATUS);
-        if (isError(reader, status, stub)) {
+        if (handleError(reader, status, stub)) {
             stub.handleClose();
             removeRequest(rid);
             return;
         }
-        boolean isSubscription = false;
-        if (isSubscription) {
-            //todo
-        } else {
-            ((DS2OutboundStub) stub).handleResponse(reader);
-        }
+        ((DS2OutboundStub) stub).handleResponse(reader);
         if (isStreamClosed(status)) {
             stub.handleClose();
             removeRequest(rid);
         }
+    }
+
+    private boolean handleSubscription(DS2MessageReader reader) {
+        if (reader.getMethod() != MessageConstants.MSG_SUBSCRIBE_RES) {
+            return false;
+        }
+        String ts = null;
+        String sts = null;
+        InputStream in = reader.getBody();
+        DSIReader dsiReader = reader.getBodyReader();
+        int len = DSBytes.readShort(reader.getBody(), false);
+        if (len > 0) {
+            DSMap map = dsiReader.getMap();
+            ts = map.getString("timestamp");
+            sts = map.getString("status");
+            dsiReader.reset();
+        }
+        DSElement value = dsiReader.getElement();
+        getSubscriptions().handleUpdate(reader.getRequestId(), ts, sts, value);
+        return true;
+    }
+
+    private boolean isStreamClosed(Byte status) {
+        switch (status) {
+            case STS_BUSY:
+            case STS_CLOSED:
+            case STS_DISCONNECTED:
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -180,50 +201,9 @@ public class DS2Requester extends DSRequester implements MessageConstants {
         return new DS2OutboundSetStub(this, getNextRid(), path, value, req);
     }
 
-    /*
     @Override
     protected DSOutboundSubscriptions makeSubscriptions() {
         return new DS2OutboundSubscriptions(this);
-    }
-    */
-
-    private void processUpdate(DSElement updateElement) {
-        int sid = -1;
-        DSElement value;
-        String ts, sts = null;
-        if (updateElement instanceof DSList) {
-            DSList updateList = (DSList) updateElement;
-            int cols = updateList.size();
-            if (cols < 3) {
-                trace(trace() ? "Update incomplete: " + updateList.toString() : null);
-                return;
-            }
-            sid = updateList.get(0, -1);
-            value = updateList.get(1);
-            ts = updateList.getString(2);
-            sts = updateList.get(3, (String) null);
-        } else if (updateElement instanceof DSMap) {
-            DSMap updateMap = (DSMap) updateElement;
-            sid = updateMap.get("sid", -1);
-            value = updateMap.get("value");
-            ts = updateMap.getString("ts");
-            sts = updateMap.get("status", (String) null);
-        } else {
-            return;
-        }
-        if (sid < 0) {
-            debug(debug() ? "Update missing sid: " + updateElement.toString() : null);
-            return;
-        }
-        getSubscriptions().handleUpdate(sid, ts, sts, value);
-    }
-
-    private void processUpdates(DSMap map) {
-        DSList updates = map.getList("updates");
-        for (int i = 0; i < updates.size(); i++) {
-            DSElement update = updates.get(i);
-            processUpdate(update);
-        }
     }
 
     @Override
