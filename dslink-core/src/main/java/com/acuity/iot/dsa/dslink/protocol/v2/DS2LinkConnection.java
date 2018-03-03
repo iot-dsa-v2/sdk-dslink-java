@@ -38,13 +38,13 @@ public class DS2LinkConnection extends DSLinkConnection {
     private static final String BROKER_PUB_KEY = "Broker Public Key";
     private static final String BROKER_SALT = "Broker Salt";
     private static final String BROKER_URI = "Broker URI";
-    private static final String LAST_CONNECT_OK = "Last Connect Ok";
+    protected static final String LAST_CONNECT_OK = "Last Connect Ok";
     private static final String LAST_CONNECT_FAIL = "Last Connect Fail";
     private static final String LINK_SALT = "Link Salt";
     private static final String FAIL_CAUSE = "Fail Cause";
     private static final String REQUESTER_ALLOWED = "Requester Allowed";
     private static final String SESSION = "Status";
-    private static final String STATUS = "Status";
+    protected static final String STATUS = "Status";
     private static final String TRANSPORT = "Transport";
 
     ///////////////////////////////////////////////////////////////////////////
@@ -109,6 +109,11 @@ public class DS2LinkConnection extends DSLinkConnection {
     }
 
     @Override
+    public DS2Session getSession() {
+        return session;
+    }
+
+    @Override
     public DSBinaryTransport getTransport() {
         return transport;
     }
@@ -117,7 +122,7 @@ public class DS2LinkConnection extends DSLinkConnection {
      * Looks at the connection initialization response to determine the type of transport then
      * instantiates the correct type fom the config.
      */
-    protected void makeTransport() {
+    protected DSBinaryTransport makeTransport() {
         DSTransport.Factory factory = null;
         String uri = getLink().getConfig().getBrokerUri();
         put(brokerUri, DSString.valueOf(uri));
@@ -135,10 +140,9 @@ public class DS2LinkConnection extends DSLinkConnection {
         } else if (uri.startsWith("ds")) {
             transport = new SocketTransport();
         }
-        put(TRANSPORT, transport);
-        fine(fine() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
-        transport.setConnection(this);
+        fine(fine() ? "Connection URL = " + uri : null);
+        return transport;
     }
 
     @Override
@@ -165,7 +169,9 @@ public class DS2LinkConnection extends DSLinkConnection {
             session = new DS2Session(this);
             put(SESSION, session);
         }
-        makeTransport();
+        transport = makeTransport();
+        put(TRANSPORT, transport);
+        transport.setConnection(this);
     }
 
     /**
@@ -177,7 +183,7 @@ public class DS2LinkConnection extends DSLinkConnection {
         session.run();
     }
 
-    private void performHandshake() {
+    protected void performHandshake() {
         try {
             sendF0();
             recvF1();
@@ -267,14 +273,6 @@ public class DS2LinkConnection extends DSLinkConnection {
                 brokerPubKey.getElement().toBytes());
         byte[] tmp = brokerSalt.getElement().toBytes();
         byte[] authBytes = DSKeys.generateHmacSHA256Signature(tmp, sharedSecret);
-        /*
-        byte[] authBytes = new byte[tmp.length + sharedSecret.length];
-        System.arraycopy(tmp, 0, authBytes, 0, tmp.length);
-        System.arraycopy(sharedSecret, 0, authBytes, tmp.length, sharedSecret.length);
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-        messageDigest.update(authBytes);
-        authBytes = messageDigest.digest();
-        */
         buffer.put(authBytes);
         writer.write(transport);
     }

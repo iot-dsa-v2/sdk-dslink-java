@@ -66,7 +66,8 @@ public class DS2OutboundListStub extends DSOutboundListStub
     public void write(MessageWriter writer) {
         //if has multipart remaining send that
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(getRequestId(), MSG_LIST_REQ);
+        out.init(getRequestId(), getSession().getNextAck());
+        out.setMethod(MSG_LIST_REQ);
         out.addStringHeader((byte)HDR_TARGET_PATH, getPath());
         out.write((DSBinaryTransport) getRequester().getTransport());
         //if multipart

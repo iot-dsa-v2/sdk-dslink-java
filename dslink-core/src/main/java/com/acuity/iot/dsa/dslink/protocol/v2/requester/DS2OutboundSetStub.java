@@ -30,7 +30,8 @@ public class DS2OutboundSetStub extends DSOutboundSetStub
     public void write(MessageWriter writer) {
         //if has multipart remaining send that
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(getRequestId(), MessageConstants.MSG_SET_REQ);
+        out.init(getRequestId(), getSession().getNextAck());
+        out.setMethod(MSG_SET_REQ);
         String path = getPath();
         int idx = 1 + path.lastIndexOf('/');
         if ((idx > 0) && (path.length() > idx)) {

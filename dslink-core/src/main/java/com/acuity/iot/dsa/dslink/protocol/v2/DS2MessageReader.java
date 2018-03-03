@@ -149,6 +149,7 @@ public class DS2MessageReader extends DS2Message {
     public DS2MessageReader init(InputStream in) {
         try {
             input = in;
+            getBodyReader().reset();
             headers.clear();
             int tlen = DSBytes.readInt(in, false);
             int hlen = DSBytes.readShort(in, false);
@@ -215,7 +216,7 @@ public class DS2MessageReader extends DS2Message {
                 case 0x08:
                 case 0x12:
                 case 0x32:
-                    val = in.read();
+                    val = (byte) in.read();
                     len--;
                     break;
                 case 0x01:
@@ -236,7 +237,7 @@ public class DS2MessageReader extends DS2Message {
                     val = readString(in, slen);
                     break;
                 default:
-                    val = code;
+                    val = (byte) code;
             }
             headers.put(code, val);
         }

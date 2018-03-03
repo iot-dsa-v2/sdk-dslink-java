@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
+import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
@@ -59,6 +60,10 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
 
     public Integer getRequestId() {
         return requestId;
+    }
+
+    public DSSession getSession() {
+        return requester.getSession();
     }
 
     public void handleClose() {

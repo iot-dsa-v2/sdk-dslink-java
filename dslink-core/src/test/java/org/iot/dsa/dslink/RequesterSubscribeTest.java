@@ -157,6 +157,11 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
         }
 
         @Override
+        public synchronized void onSubscribed() {
+            System.out.println("subscribed!");//todo
+        }
+
+        @Override
         public synchronized void onUnsubscribed() {
             notifyAll();
         }

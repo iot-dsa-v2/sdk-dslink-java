@@ -49,17 +49,15 @@ public class DSSysNode extends DSNode {
         try {
             String ver = config.getDsaVersion();
             DSLinkConnection conn;
-            if (ver.startsWith("1")) {
-                String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
-                if (type != null) {
-                    fine(fine() ? "Connection type: " + type : null);
-                    conn = (DSLinkConnection) Class.forName(type).newInstance();
-                } else {
-                    conn = new DS1LinkConnection();
-                }
+            String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
+            if (type != null) {
+                conn = (DSLinkConnection) Class.forName(type).newInstance();
+            } else if (ver.startsWith("1")) {
+                conn = new DS1LinkConnection();
             } else { //2
                 conn = new DS2LinkConnection();
             }
+            fine(fine() ? "Connection type: " + conn.getClass().getName() : null);
             put(connection, conn);
         } catch (Exception x) {
             DSException.throwRuntime(x);

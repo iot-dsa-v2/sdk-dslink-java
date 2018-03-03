@@ -52,7 +52,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
         return requests.get(rid);
     }
 
-    protected DSSession getSession() {
+    public DSSession getSession() {
         return session;
     }
 

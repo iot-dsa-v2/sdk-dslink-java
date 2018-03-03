@@ -45,7 +45,8 @@ public class DS2OutboundSubscriptions extends DSOutboundSubscriptions implements
     @Override
     protected void doWriteSubscribe(MessageWriter writer, String path, Integer sid, int qos) {
         DS2MessageWriter ds2 = (DS2MessageWriter) writer;
-        ds2.init(sid, MessageConstants.MSG_SUBSCRIBE_REQ);
+        ds2.init(sid, getRequester().getSession().getNextAck());
+        ds2.setMethod(MSG_SUBSCRIBE_REQ);
         ds2.addStringHeader((byte) HDR_TARGET_PATH, path);
         ds2.addIntHeader((byte) HDR_QOS, qos);
         ds2.write((DSBinaryTransport) getRequester().getTransport());

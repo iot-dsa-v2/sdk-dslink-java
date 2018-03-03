@@ -121,7 +121,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         return ret;
     }
 
-    protected DSRequester getRequester() {
+    public DSRequester getRequester() {
         return requester;
     }
 

@@ -22,15 +22,18 @@ public class DS2OutboundInvokeStub extends DSOutboundInvokeStub
     }
 
     public void handleResponse(DS2MessageReader response) {
-        handleResponse(response.getBodyReader().getMap());
+        if (response.getBodyLength() > 0) {
+            handleResponse(response.getBodyReader().getMap());
+        }
     }
 
     @Override
     public void write(MessageWriter writer) {
         //if has multipart remaining send that
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(getRequestId(), MSG_INVOKE_REQ);
-        out.addStringHeader((byte)HDR_TARGET_PATH, getPath());
+        out.init(getRequestId(), getSession().getNextAck());
+        out.setMethod(MSG_INVOKE_REQ);
+        out.addStringHeader((byte) HDR_TARGET_PATH, getPath());
         DSMap params = getParams();
         if (params != null) {
             out.getWriter().value(params);

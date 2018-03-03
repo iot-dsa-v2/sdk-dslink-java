@@ -139,7 +139,7 @@ public class DS2Session extends DSSession implements MessageConstants {
         }
         if (this.hasSomethingToSend()) {
             transport.beginSendMessage();
-            boolean sent = send(requestsNext != requestsNext);  //alternate reqs and resps
+            boolean sent = send(requestsNext = !requestsNext);  //alternate reqs and resps
             if (sent && debug) {
                 debug(debugSendMessage);
                 debug(debugSendTranport);

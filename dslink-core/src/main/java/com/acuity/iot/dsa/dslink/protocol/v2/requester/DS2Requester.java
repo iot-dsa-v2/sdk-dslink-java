@@ -20,7 +20,6 @@ import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.util.DSException;
 
@@ -116,7 +115,7 @@ public class DS2Requester extends DSRequester implements MessageConstants {
             return false;
         }
         drain(reader);
-        String tmp = (String) reader.getHeader(MessageConstants.HDR_ERROR_DETAIL);
+        String tmp = (String) reader.getHeader(HDR_ERROR_DETAIL);
         if (tmp != null) {
             message = tmp;
         }
@@ -137,7 +136,7 @@ public class DS2Requester extends DSRequester implements MessageConstants {
             sendClose(rid);
             return;
         }
-        Byte status = (Byte) reader.getHeader(MessageConstants.HDR_STATUS);
+        Byte status = (Byte) reader.getHeader(HDR_STATUS);
         if (handleError(reader, status, stub)) {
             stub.handleClose();
             removeRequest(rid);
@@ -151,7 +150,7 @@ public class DS2Requester extends DSRequester implements MessageConstants {
     }
 
     private boolean handleSubscription(DS2MessageReader reader) {
-        if (reader.getMethod() != MessageConstants.MSG_SUBSCRIBE_RES) {
+        if (reader.getMethod() != MSG_SUBSCRIBE_RES) {
             return false;
         }
         String ts = null;
@@ -171,6 +170,9 @@ public class DS2Requester extends DSRequester implements MessageConstants {
     }
 
     private boolean isStreamClosed(Byte status) {
+        if (status == null) {
+            return false;
+        }
         switch (status) {
             case STS_BUSY:
             case STS_CLOSED:
