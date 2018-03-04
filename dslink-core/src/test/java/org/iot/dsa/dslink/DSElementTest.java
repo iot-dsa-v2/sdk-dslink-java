@@ -1,6 +1,5 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.iot.dsa.io.json.JsonReader;
@@ -20,18 +19,18 @@ public class DSElementTest {
 
     @Test
     public void tmp() throws Exception {
-        System.out.println("max: " +  Long.MAX_VALUE);
-        System.out.println("min: " +  Long.MAX_VALUE);
+        System.out.println("max: " + Long.MAX_VALUE);
+        System.out.println("min: " + Long.MAX_VALUE);
         long time = System.nanoTime();
-        System.out.println("now: " +  time);
+        System.out.println("now: " + time);
         time /= DSTime.NANOS_IN_MS;
-        System.out.println("now millis: " +  time);
+        System.out.println("now millis: " + time);
         time /= 60000;
-        System.out.println("now minutes: " +  time);
-        System.out.println("currentTimeMIllis: " +  System.currentTimeMillis());
+        System.out.println("now minutes: " + time);
+        System.out.println("currentTimeMIllis: " + System.currentTimeMillis());
         long tmp = Long.MAX_VALUE - 2;
         tmp += 3;
-        System.out.println("rollover: " +  tmp);
+        System.out.println("rollover: " + tmp);
     }
 
     @Test

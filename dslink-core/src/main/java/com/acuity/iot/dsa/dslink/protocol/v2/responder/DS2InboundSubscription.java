@@ -2,10 +2,10 @@ package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
-import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
-import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscription;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
+import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
+import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.time.DSTime;

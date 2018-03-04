@@ -188,12 +188,12 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         Integer sid = msg.getRequestId();
         //todo if no stream
         String path = (String) msg.getHeader(HDR_TARGET_PATH);
-        Integer qos = (Integer) msg.getHeader(MessageConstants.HDR_QOS);
+        Number qos = (Number) msg.getHeader(MessageConstants.HDR_QOS);
         if (qos == null) {
             qos = Integer.valueOf(0);
         }
         //Integer queueSize = (Integer) msg.getHeader(MessageConstants.HDR_QUEUE_SIZE);
-        DSInboundSubscription sub = subscriptions.subscribe(sid, path, qos);
+        DSInboundSubscription sub = subscriptions.subscribe(sid, path, qos.intValue());
         if (msg.getHeader(MessageConstants.HDR_NO_STREAM) != null) {
             sub.setCloseAfterUpdate(true);
         }
@@ -201,7 +201,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
 
     @Override
     public void sendClose(int rid) {
-        sendResponse(new CloseMessage(this, rid));
+        sendResponse(new CloseMessage(getSession(), rid));
     }
 
     @Override

@@ -2,9 +2,9 @@ package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
-import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.dslink.DSInvalidPathException;
 import org.iot.dsa.dslink.DSPermissionException;
@@ -51,7 +51,8 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
                                   MessageConstants.STS_INVALID_MESSAGE);
             }
         } else {
-            out.addByteHeader((byte) MessageConstants.HDR_STATUS, MessageConstants.STS_INTERNAL_ERR);
+            out.addByteHeader((byte) MessageConstants.HDR_STATUS,
+                              MessageConstants.STS_INTERNAL_ERR);
         }
         out.addStringHeader((byte) HDR_ERROR_DETAIL, DSException.makeMessage(reason));
         out.write((DSBinaryTransport) req.getResponder().getTransport());

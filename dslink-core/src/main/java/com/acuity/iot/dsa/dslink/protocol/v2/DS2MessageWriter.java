@@ -1,13 +1,13 @@
 package com.acuity.iot.dsa.dslink.protocol.v2;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
-import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSString;
 
 /**

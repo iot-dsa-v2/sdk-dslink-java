@@ -1,8 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.v2;
 
-import com.acuity.iot.dsa.dslink.DSSession;
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.v1.requester.DS1Requester;
 import com.acuity.iot.dsa.dslink.protocol.v2.requester.DS2Requester;
 import com.acuity.iot.dsa.dslink.protocol.v2.responder.DS2Responder;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
@@ -217,21 +216,21 @@ public class DS2Session extends DSSession implements MessageConstants {
             getMessageWriter().setDebug(debugSendMessage);
             getTransport().setDebugOut(debugSendTranport);
         }
-        //requester.onConnect();
+        requester.onConnect();
         responder.onConnect();
     }
 
     @Override
     public void onConnectFail() {
         super.onConnectFail();
-        //requester.onConnectFail();
+        requester.onConnectFail();
         responder.onConnectFail();
     }
 
     @Override
     public void onDisconnect() {
         super.onDisconnect();
-        //requester.onDisconnect();
+        requester.onDisconnect();
         responder.onDisconnect();
     }
 

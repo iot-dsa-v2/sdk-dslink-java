@@ -1,9 +1,9 @@
 package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundInvoke;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
-import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundInvoke;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;

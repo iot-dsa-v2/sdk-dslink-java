@@ -1,7 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.v1.requester;
 
 import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundStub;
-import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSRequester;
 import com.acuity.iot.dsa.dslink.protocol.v1.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1Session;

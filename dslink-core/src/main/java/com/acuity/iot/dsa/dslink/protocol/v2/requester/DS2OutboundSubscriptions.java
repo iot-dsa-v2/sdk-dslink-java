@@ -48,7 +48,7 @@ public class DS2OutboundSubscriptions extends DSOutboundSubscriptions implements
         ds2.init(sid, getRequester().getSession().getNextAck());
         ds2.setMethod(MSG_SUBSCRIBE_REQ);
         ds2.addStringHeader((byte) HDR_TARGET_PATH, path);
-        ds2.addIntHeader((byte) HDR_QOS, qos);
+        ds2.addByteHeader((byte) HDR_QOS, (byte) qos);
         ds2.write((DSBinaryTransport) getRequester().getTransport());
     }
 

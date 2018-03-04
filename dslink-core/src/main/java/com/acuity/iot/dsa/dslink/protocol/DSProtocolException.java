@@ -1,4 +1,4 @@
-package com.acuity.iot.dsa.dslink;
+package com.acuity.iot.dsa.dslink.protocol;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

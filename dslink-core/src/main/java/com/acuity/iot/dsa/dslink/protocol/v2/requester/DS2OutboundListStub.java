@@ -68,7 +68,7 @@ public class DS2OutboundListStub extends DSOutboundListStub
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(getRequestId(), getSession().getNextAck());
         out.setMethod(MSG_LIST_REQ);
-        out.addStringHeader((byte)HDR_TARGET_PATH, getPath());
+        out.addStringHeader((byte) HDR_TARGET_PATH, getPath());
         out.write((DSBinaryTransport) getRequester().getTransport());
         //if multipart
     }

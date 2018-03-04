@@ -1,5 +1,7 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -7,8 +9,6 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import org.iot.dsa.io.DSIReader;
-import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
-import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSString;

@@ -6,8 +6,8 @@ import static org.iot.dsa.io.DSIReader.Token.END_LIST;
 import static org.iot.dsa.io.DSIReader.Token.END_MAP;
 import static org.iot.dsa.io.DSIReader.Token.NULL;
 
-import com.acuity.iot.dsa.dslink.DSProtocolException;
-import com.acuity.iot.dsa.dslink.DSSession;
+import com.acuity.iot.dsa.dslink.protocol.DSProtocolException;
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.v1.requester.DS1Requester;

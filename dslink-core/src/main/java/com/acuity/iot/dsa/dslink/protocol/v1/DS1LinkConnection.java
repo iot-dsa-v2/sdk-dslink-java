@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.v1;
 
-import com.acuity.iot.dsa.dslink.DSSession;
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;

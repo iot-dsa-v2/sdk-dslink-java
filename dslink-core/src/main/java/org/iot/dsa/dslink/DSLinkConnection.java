@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.DSSession;
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.concurrent.ConcurrentHashMap;
 import org.iot.dsa.node.DSNode;

@@ -1,6 +1,5 @@
 package org.iot.dsa.dslink.requester;
 
-import com.acuity.iot.dsa.dslink.DSProtocolException;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
