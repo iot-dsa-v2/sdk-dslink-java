@@ -4,7 +4,6 @@ org.iot.dsa.dslink.requester
 org.iot.dsa.dslink.responder
 org.iot.dsa.io
 org.iot.dsa.io.json
-org.iot.dsa.io.msgpack
 org.iot.dsa.logging
 org.iot.dsa.node
 org.iot.dsa.node.action
