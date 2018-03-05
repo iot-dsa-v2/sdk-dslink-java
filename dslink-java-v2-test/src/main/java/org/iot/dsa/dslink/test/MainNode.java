@@ -66,7 +66,14 @@ public class MainNode extends DSMainNode implements Runnable {
         action.addValueResult("bool", DSBool.TRUE);
         action.addValueResult("long", DSLong.valueOf(0));
         declareDefault("Values Action", action);
-        declareDefault("T./,<>?;:'\"[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
+        //declareDefault("T./,;'<>?:\"[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
+        //notice the missing chars from above, dglux gets funky with the chars: <>?:\"
+        declareDefault("T./,;'[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
+        action = new DSAction();
+        action.addParameter("Arg",
+                            DSString.valueOf(""),
+                            "My action description");
+        declareDefault("Foo", action);
     }
 
     @Override

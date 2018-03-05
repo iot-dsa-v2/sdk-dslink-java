@@ -31,7 +31,7 @@ public class SimpleRequestHandler implements OutboundRequestHandler {
      * {@inheritDoc}
      */
     @Override
-    public void onError(String type, String msg, String detail) {
+    public void onError(ErrorType type, String msg) {
     }
 
 }

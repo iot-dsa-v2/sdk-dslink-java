@@ -1,8 +1,8 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageReader;
-import com.acuity.iot.dsa.dslink.protocol.protocol_v2.DS2MessageWriter;
+import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
+import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.KeyPair;

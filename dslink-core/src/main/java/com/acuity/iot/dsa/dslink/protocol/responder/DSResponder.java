@@ -1,6 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
-import com.acuity.iot.dsa.dslink.DSSession;
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
@@ -18,10 +18,6 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSResponder extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
@@ -29,7 +25,6 @@ public abstract class DSResponder extends DSNode {
     private ConcurrentHashMap<Integer, DSStream> inboundRequests = new ConcurrentHashMap<Integer, DSStream>();
     private DSLink link;
     private DSSession session;
-    private DSResponder responder;
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -90,7 +85,7 @@ public abstract class DSResponder extends DSNode {
     public void onDisconnect() {
     }
 
-    public DSStream putRequest(Integer rid, DSStream request) {
+    protected DSStream putRequest(Integer rid, DSStream request) {
         return inboundRequests.put(rid, request);
     }
 

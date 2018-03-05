@@ -38,9 +38,39 @@ public class DSPath {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
+     * Concatenates the two paths into the given bucket.  Insures a single forward slash character
+     * separates them. The bucket will not be cleared, the path will be appended to it.
+     *
+     * @param bucket Can be null, in which case a new buffer will be created.
+     * @return The given bucket, or a new one if that was null, with the complete path appended.
+     */
+    public static StringBuilder concat(String leading, String trailing, StringBuilder bucket) {
+        if (bucket == null) {
+            bucket = new StringBuilder();
+        }
+        if ((leading != null) && !leading.isEmpty()) {
+            bucket.append(leading);
+        }
+        if ((trailing == null) || trailing.isEmpty()) {
+            return bucket;
+        }
+        if (leading.charAt(leading.length() - 1) == '/') {
+            if (trailing.charAt(0) == '/') {
+                bucket.append(trailing.substring(1));
+            }
+        } else {
+            if (trailing.charAt(0) != '/') {
+                bucket.append('/');
+                bucket.append(trailing);
+            }
+        }
+        return bucket;
+    }
+
+    /**
      * Un-escapes a name.
      */
-    public static String decodePathName(String pathName) {
+    public static String decodeName(String pathName) {
         boolean modified = false;
         int len = pathName.length();
         StringBuilder sb = new StringBuilder(len > 500 ? len / 2 : len);
@@ -97,30 +127,43 @@ public class DSPath {
         }
         String[] elems = splitPath(path);
         for (int i = 0, len = elems.length; i < len; i++) {
-            elems[i] = decodePathName(elems[i]);
+            elems[i] = decodeName(elems[i]);
         }
         return elems;
     }
 
     /**
-     * Ascends the tree and creates pretty printing path.
-     public static String encodeDisplayPath(DSNode node) {
-     ArrayList<DSNode> nodes = new ArrayList<DSNode>();
-     while (node != null) {
-     if (node.getName() != null) {
-     nodes.add(node);
-     break;
-     }
-     node = node.getParent();
-     }
-     StringBuilder builder = new StringBuilder();
-     for (int i = nodes.size(); --i >= 0; ) {
-     builder.append('/');
-     builder.append(node.getName());
-     }
-     return builder.toString();
-     }
+     * Creates a properly encoded path from the given names.
+     *
+     * @param leadingSlash Whether or not to prepend a slash to the path.
+     * @param names        The names to encode in the given order.
+     * @return A properly encoded path name.
      */
+    public static String encodePath(boolean leadingSlash, String... names) {
+        return encodePath(leadingSlash, names, names.length);
+    }
+
+    /**
+     * Creates a properly encoded path from the given names.
+     *
+     * @param leadingSlash Whether or not to prepend a slash to the path.
+     * @param names        The names to encode in the given order.
+     * @param len          The number of elements from the names array to use start at index 0.
+     * @return A properly encoded path name.
+     */
+    public static String encodePath(boolean leadingSlash, String[] names, int len) {
+        StringBuilder builder = new StringBuilder();
+        if (leadingSlash) {
+            builder.append('/');
+        }
+        for (int i = 0; i < len; i++) {
+            if (i > 0) {
+                builder.append('/');
+            }
+            encodeName(names[i], builder);
+        }
+        return builder.toString();
+    }
 
     /**
      * Ascends the tree and encodes all the node names into a path.
@@ -195,7 +238,7 @@ public class DSPath {
         boolean encode = false;
         for (int i = 0; i < pathLength; ) {
             c = name.charAt(i);
-            encode = v1 ? shouldEncodeV1(c, i) : shouldEncode(c, i);
+            encode = v1 ? shouldEncodeV1(c) : shouldEncode(c);
             if (!encode) {
                 buf.append(c);
                 i++;
@@ -215,7 +258,7 @@ public class DSPath {
                         }
                     }
                     i++;
-                } while (i < pathLength && shouldEncode((c = name.charAt(i)), i));
+                } while (i < pathLength && shouldEncode((c = name.charAt(i))));
                 charArrayWriter.flush();
                 String str = new String(charArrayWriter.toCharArray());
                 byte[] bytes = str.getBytes(utf8);
@@ -267,7 +310,7 @@ public class DSPath {
     /**
      * Returns true for characters that should be encoded.
      */
-    private static boolean shouldEncode(int ch, int pos) {
+    private static boolean shouldEncode(int ch) {
         switch (ch) {
             case '.':
             case '/':
@@ -284,9 +327,6 @@ public class DSPath {
             case ';':
             case '%':
                 return true;
-            case '@':
-            case '$':
-                return pos == 0;
             default:
                 return ch < 0x20;
         }
@@ -295,14 +335,11 @@ public class DSPath {
     /**
      * Returns true for characters that should be encoded.
      */
-    private static boolean shouldEncodeV1(int ch, int pos) {
+    private static boolean shouldEncodeV1(int ch) {
         switch (ch) {
             case '/':
             case '%':
                 return true;
-            case '@':
-            case '$':
-                return pos == 0;
             default:
                 return ch < 0x20;
         }

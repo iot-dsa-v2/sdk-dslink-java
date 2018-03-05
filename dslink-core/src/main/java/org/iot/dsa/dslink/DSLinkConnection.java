@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.concurrent.ConcurrentHashMap;
 import org.iot.dsa.node.DSNode;
@@ -96,6 +97,8 @@ public abstract class DSLinkConnection extends DSNode {
     }
 
     public abstract DSIRequester getRequester();
+
+    public abstract DSSession getSession();
 
     public abstract DSTransport getTransport();
 

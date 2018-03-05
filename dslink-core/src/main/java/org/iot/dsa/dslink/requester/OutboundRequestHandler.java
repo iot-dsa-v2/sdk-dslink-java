@@ -14,9 +14,9 @@ public interface OutboundRequestHandler {
     public void onClose();
 
     /**
-     * Callback for when an error is received.  If the stream is also closed, onClose will also be
-     * closed.  Does nothing by default.
+     * Callback for when an error is received.  onClose will also be called after this.
+     * Does nothing by default.
      */
-    public void onError(String type, String msg, String detail);
+    public void onError(ErrorType type, String msg);
 
 }

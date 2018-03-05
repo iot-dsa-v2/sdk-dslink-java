@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink.requester;
 
-import com.acuity.iot.dsa.dslink.DSProtocolException;
+import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 
@@ -72,9 +72,9 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
     /**
      * Will create an exception to be thrown by getResult.
      */
-    public void onError(String type, String msg, String detail) {
+    public void onError(ErrorType type, String msg) {
         synchronized (this) {
-            error = new DSProtocolException(msg).setType(type).setDetail(detail);
+            error = ErrorType.makeException(type, msg);
             getStream().closeStream();
             notifyAll();
         }
@@ -91,7 +91,7 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
      */
     public void onInsert(int index, DSList rows) {
         synchronized (this) {
-            error = new IllegalArgumentException("Tables and streams not supported");
+            error = new DSRequestException("Tables and streams not supported");
             getStream().closeStream();
             notifyAll();
         }
@@ -108,7 +108,7 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
      */
     public void onReplace(int start, int end, DSList rows) {
         synchronized (this) {
-            error = new IllegalArgumentException("Tables and streams not supported");
+            error = new DSRequestException("Tables and streams not supported");
             getStream().closeStream();
             notifyAll();
         }

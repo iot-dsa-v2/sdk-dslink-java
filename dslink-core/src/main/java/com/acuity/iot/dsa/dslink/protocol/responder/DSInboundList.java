@@ -125,8 +125,7 @@ public class DSInboundList extends DSInboundRequest
         if (updateHead == null) {
             return null;
         }
-        Update ret = null;
-        ret = updateHead;
+        Update ret = updateHead;
         if (updateHead == updateTail) {
             updateHead = null;
             updateTail = null;
@@ -189,17 +188,17 @@ public class DSInboundList extends DSInboundRequest
     /**
      * Override point for v2.
      */
-    protected String encodeName(String name) {
-        cacheBuf.setLength(0);
-        if (DSPath.encodeNameV1(name, cacheBuf)) {
-            return cacheBuf.toString();
+    protected String encodeName(String name, StringBuilder buf) {
+        buf.setLength(0);
+        if (DSPath.encodeNameV1(name, buf)) {
+            return buf.toString();
         }
         return name;
     }
 
     protected void encodeChild(ApiObject child, MessageWriter writer) {
         String name = child.getName();
-        String safe = encodeName(name);
+        String safe = encodeName(name, cacheBuf);
         DSMap map = new DSMap();
         child.getMetadata(cacheMap.clear());
         DSElement e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
@@ -267,7 +266,7 @@ public class DSInboundList extends DSInboundRequest
         }
         e = cacheMap.get("$name");
         if (e == null) {
-            encode("$name", encodeName(object.getName()), writer);
+            encode("$name", object.getName(), writer);
         } else {
             encode("$name", e, writer);
         }
@@ -314,7 +313,7 @@ public class DSInboundList extends DSInboundRequest
                 DSMap param;
                 while (params.hasNext()) {
                     param = params.next();
-                    fixRange(param);
+                    fixRangeTypes(param);
                     if (dsAction != null) {
                         dsAction.prepareParameter(info, param);
                     }
@@ -337,7 +336,7 @@ public class DSInboundList extends DSInboundRequest
                     DSMap param;
                     while (cols.hasNext()) {
                         param = cols.next();
-                        fixRange(param);
+                        fixRangeTypes(param);
                         if (dsAction != null) {
                             dsAction.prepareParameter(info, param);
                         }
@@ -374,9 +373,8 @@ public class DSInboundList extends DSInboundRequest
                 case '@':
                     break;
                 default:
-                    cacheBuf.setLength(0);
-                    cacheBuf.append("$");
-                    cacheBuf.append(encodeName(name));
+                    cacheBuf.append(encodeName(name, cacheBuf));
+                    cacheBuf.insert(0, '$');
                     name = cacheBuf.toString();
 
             }
@@ -417,7 +415,7 @@ public class DSInboundList extends DSInboundRequest
                 }
             }
         }
-        fixRange(meta.getMap());
+        fixRangeTypes(meta.getMap());
         DSElement e = cacheMap.remove(DSMetadata.TYPE);
         if (e == null) {
             throw new IllegalArgumentException("Missing type");
@@ -428,12 +426,12 @@ public class DSInboundList extends DSInboundRequest
     /**
      * Override point for v2.
      */
-    protected void encodeUpdate(Update update, MessageWriter writer) {
+    protected void encodeUpdate(Update update, MessageWriter writer, StringBuilder buf) {
         if (update.added) {
             encodeChild(update.child, writer);
         } else {
             writer.getWriter().beginMap()
-                  .key("name").value(encodeName(update.child.getName()))
+                  .key("name").value(encodeName(update.child.getName(), buf))
                   .key("change").value("remove")
                   .endMap();
         }
@@ -472,14 +470,14 @@ public class DSInboundList extends DSInboundRequest
     }
 
     /**
-     * Combines boolean and enum ranges into the type name.
+     * Properly formats boolean and enum ranges for v1 and v2.
      */
-    private DSMap fixRange(DSMap arg) {
+    private void fixRangeTypes(DSMap arg) {
         String type = arg.getString(DSMetadata.TYPE);
         if ("bool".equals(type)) {
             DSList range = (DSList) arg.remove(DSMetadata.BOOLEAN_RANGE);
             if ((range == null) || (range.size() != 2)) {
-                return arg;
+                return;
             } else {
                 cacheBuf.setLength(0);
                 cacheBuf.append(type);
@@ -497,7 +495,7 @@ public class DSInboundList extends DSInboundRequest
         } else if ("enum".equals(type) || "string".equals(type)) {
             DSList range = (DSList) arg.remove(DSMetadata.ENUM_RANGE);
             if (range == null) {
-                return arg;
+                return;
             }
             cacheBuf.setLength(0);
             cacheBuf.append("enum");
@@ -515,7 +513,6 @@ public class DSInboundList extends DSInboundRequest
                 arg.put(DSMetadata.EDITOR, cacheBuf.toString());
             }
         }
-        return arg;
     }
 
     @Override
@@ -705,7 +702,7 @@ public class DSInboundList extends DSInboundRequest
             if (update == null) {
                 break;
             }
-            encodeUpdate(update, writer);
+            encodeUpdate(update, writer, cacheBuf);
             if (responder.shouldEndMessage()) {
                 enqueueResponse();
                 break;
