@@ -16,6 +16,7 @@ public interface MessageConstants {
     int HDR_STATUS = 0x0;
     int HDR_SEQ_ID = 0x01;
     int HDR_PAGE_ID = 0x02;
+    int HDR_AUDIT = 0x04;
     int HDR_ERROR_DETAIL = 0x05;
     int HDR_ALIAS_COUNT = 0x08;
     int HDR_PRIORITY = 0x10;

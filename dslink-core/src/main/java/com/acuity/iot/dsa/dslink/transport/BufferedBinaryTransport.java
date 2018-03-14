@@ -208,7 +208,10 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
                     throw new DSIoException("Read timeout");
                 }
                 int ch = readBuffer.read();
-                if (trace() && (ch >= 0)) {
+                if (ch == -1) {
+                    return ch;
+                }
+                if (trace()) {
                     if (traceInSize > 0) {
                         traceIn.append(' ');
                     }

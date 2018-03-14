@@ -236,6 +236,8 @@ public class DS2MessageReader extends DS2Message {
                     val = DSBytes.readInt(in, false);
                     len -= 4;
                     break;
+                case HDR_AUDIT:
+                case HDR_ERROR_DETAIL:
                 case HDR_PUB_PATH:
                 case HDR_ATTRIBUTE_FIELD:
                 case HDR_PERMISSION_TOKEN:

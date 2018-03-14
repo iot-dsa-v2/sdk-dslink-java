@@ -87,6 +87,12 @@ abstract class DS2Message extends DSLogger implements MessageConstants {
             case HDR_PAGE_ID:
                 buf.append("Page ID");
                 break;
+            case HDR_AUDIT:
+                buf.append("Audit");
+                break;
+            case HDR_ERROR_DETAIL:
+                buf.append("Error Detail");
+                break;
             case HDR_ALIAS_COUNT:
                 buf.append("Alias Ct");
                 break;
@@ -127,7 +133,7 @@ abstract class DS2Message extends DSLogger implements MessageConstants {
                 buf.append("Target Path");
                 break;
             case HDR_SOURCE_PATH:
-                buf.append("Sourth Path");
+                buf.append("Source Path");
                 break;
             default:
                 buf.append("0x");

@@ -195,7 +195,10 @@ public abstract class StreamBinaryTransport extends DSBinaryTransport {
                 return -1;
             }
             int ch = innerIn.read();
-            if (trace() && (ch >= 0)) {
+            if (ch == -1) {
+                return ch;
+            }
+            if (trace()) {
                 if (traceInSize > 0) {
                     traceIn.append(' ');
                 }
