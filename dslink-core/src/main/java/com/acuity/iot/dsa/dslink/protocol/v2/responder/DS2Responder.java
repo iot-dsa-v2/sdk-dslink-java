@@ -120,11 +120,11 @@ public class DS2Responder extends DSResponder implements MessageConstants {
             params = msg.getBodyReader().getMap();
         }
         DSPermission perm = DSPermission.READ;
-        Object obj = msg.getHeader(MessageConstants.HDR_MAX_PERMISSION);
+        Object obj = msg.getHeader(HDR_MAX_PERMISSION);
         if (obj != null) {
             perm = DSPermission.valueOf(obj.hashCode());
         }
-        boolean stream = msg.getHeader(MessageConstants.HDR_NO_STREAM) == null;
+        boolean stream = msg.getHeader(HDR_NO_STREAM) == null;
         DS2InboundInvoke invokeImpl = new DS2InboundInvoke(params, perm);
         invokeImpl.setStream(stream)
                   .setPath((String) msg.getHeader(HDR_TARGET_PATH))
@@ -141,7 +141,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     private void processList(DS2MessageReader msg) {
         int rid = msg.getRequestId();
         String path = (String) msg.getHeader(HDR_TARGET_PATH);
-        boolean stream = msg.getHeader(MessageConstants.HDR_NO_STREAM) == null;
+        boolean stream = msg.getHeader(HDR_NO_STREAM) == null;
         DS2InboundList listImpl = new DS2InboundList();
         listImpl.setStream(stream)
                 .setPath(path)
@@ -158,7 +158,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     private void processSet(DS2MessageReader msg) {
         int rid = msg.getRequestId();
         DSPermission perm = DSPermission.READ;
-        Object obj = msg.getHeader(MessageConstants.HDR_MAX_PERMISSION);
+        Object obj = msg.getHeader(HDR_MAX_PERMISSION);
         if (obj != null) {
             perm = DSPermission.valueOf(obj.hashCode());
         }
@@ -169,8 +169,8 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         }
         DSElement value = msg.getBodyReader().getElement();
         DSInboundSet setImpl = new DSInboundSet(value, perm);
-        String path = (String) msg.getHeader(MessageConstants.HDR_TARGET_PATH);
-        String attr = (String) msg.getHeader(MessageConstants.HDR_ATTRIBUTE_FIELD);
+        String path = (String) msg.getHeader(HDR_TARGET_PATH);
+        String attr = (String) msg.getHeader(HDR_ATTRIBUTE_FIELD);
         if ((attr != null) && !attr.isEmpty()) {
             path = DSPath.concat(path, attr, null).toString();
         }
@@ -188,13 +188,13 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         Integer sid = msg.getRequestId();
         //todo if no stream
         String path = (String) msg.getHeader(HDR_TARGET_PATH);
-        Number qos = (Number) msg.getHeader(MessageConstants.HDR_QOS);
+        Number qos = (Number) msg.getHeader(HDR_QOS);
         if (qos == null) {
             qos = Integer.valueOf(0);
         }
         //Integer queueSize = (Integer) msg.getHeader(MessageConstants.HDR_QUEUE_SIZE);
         DSInboundSubscription sub = subscriptions.subscribe(sid, path, qos.intValue());
-        if (msg.getHeader(MessageConstants.HDR_NO_STREAM) != null) {
+        if (msg.getHeader(HDR_NO_STREAM) != null) {
             sub.setCloseAfterUpdate(true);
         }
     }

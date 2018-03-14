@@ -4,6 +4,7 @@ import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSRequester;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
+import com.acuity.iot.dsa.dslink.protocol.v2.DS2Session;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 
@@ -45,10 +46,11 @@ public class DS2OutboundSubscriptions extends DSOutboundSubscriptions implements
     @Override
     protected void doWriteSubscribe(MessageWriter writer, String path, Integer sid, int qos) {
         DS2MessageWriter ds2 = (DS2MessageWriter) writer;
-        ds2.init(sid, getRequester().getSession().getNextAck());
+        DS2Session session = (DS2Session) getRequester().getSession();
+        ds2.init(sid, session.getNextAck());
         ds2.setMethod(MSG_SUBSCRIBE_REQ);
-        ds2.addStringHeader((byte) HDR_TARGET_PATH, path);
-        ds2.addByteHeader((byte) HDR_QOS, (byte) qos);
+        ds2.addStringHeader(HDR_TARGET_PATH, path);
+        ds2.addByteHeader(HDR_QOS, (byte) qos);
         ds2.write((DSBinaryTransport) getRequester().getTransport());
     }
 

@@ -79,6 +79,7 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
         getRequester().removeRequest(getRequestId());
     }
 
+    /*
     public void handleError(DSElement details) {
         if (!open) {
             return;
@@ -121,6 +122,7 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
             getRequester().error(getRequester().getPath(), x);
         }
     }
+    */
 
     public void handleError(ErrorType type, String message) {
         if (!open) {

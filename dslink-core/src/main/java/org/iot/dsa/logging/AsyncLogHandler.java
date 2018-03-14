@@ -232,18 +232,19 @@ public abstract class AsyncLogHandler extends Handler implements DSILevels {
             return;
         }
         // severity
-        builder.append(toString(record.getLevel())).append(' ');
+        builder.append('[').append(toString(record.getLevel())).append(' ');
         // timestamp
         calendar.setTimeInMillis(record.getMillis());
         DSTime.encodeForLogs(calendar, builder);
+        builder.append(']');
         // log name
         String name = record.getLoggerName();
         if ((name != null) && !name.isEmpty()) {
-            builder.append(" [");
+            builder.append("[");
             builder.append(record.getLoggerName());
             builder.append(']');
         } else {
-            builder.append(" [Default]");
+            builder.append("[Default]");
         }
         // class
         if (record.getSourceClassName() != null) {

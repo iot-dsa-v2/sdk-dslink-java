@@ -1,5 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.v2;
 
+import java.util.Map;
+import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSBytes;
 
 /**
@@ -7,19 +9,15 @@ import org.iot.dsa.node.DSBytes;
  *
  * @author Aaron Hansen
  */
-class DS2Message implements MessageConstants {
+abstract class DS2Message extends DSLogger implements MessageConstants {
 
-    private StringBuilder debug;
-
-    public StringBuilder getDebug() {
-        return debug;
-    }
+    private StringBuilder logBuffer;
 
     protected StringBuilder debugMethod(int arg, StringBuilder buf) {
         if (buf == null) {
             buf = new StringBuilder();
         }
-        switch (arg & 0xFF) {
+        switch (arg) {
             case MSG_SUBSCRIBE_REQ:
                 buf.append("Sub req");
                 break;
@@ -69,13 +67,13 @@ class DS2Message implements MessageConstants {
                 buf.append("Handshake 4");
                 break;
             default:
-                buf.append("?? 0x");
+                buf.append("0x");
                 DSBytes.toHex((byte) arg, buf);
         }
         return buf;
     }
 
-    protected StringBuilder debugHeader(int arg, StringBuilder buf) {
+    private StringBuilder debugHeader(int arg, StringBuilder buf) {
         if (buf == null) {
             buf = new StringBuilder();
         }
@@ -132,18 +130,37 @@ class DS2Message implements MessageConstants {
                 buf.append("Sourth Path");
                 break;
             default:
-                buf.append("?? 0x");
+                buf.append("0x");
                 DSBytes.toHex((byte) arg, buf);
         }
         return buf;
     }
 
-    public boolean isDebug() {
-        return debug != null;
+    protected void debugHeaders(Map<Integer, Object> headers, StringBuilder buf) {
+        for (Map.Entry<Integer, Object> e : headers.entrySet()) {
+            buf.append(", ");
+            debugHeader(e.getKey(), buf);
+            if (e.getValue() != NO_HEADER_VAL) {
+                buf.append("=");
+                buf.append(e.getValue());
+            }
+        }
     }
 
-    public void setDebug(StringBuilder debug) {
-        this.debug = debug;
+    protected abstract void getDebug(StringBuilder buf);
+
+    private StringBuilder getLogBuffer() {
+        if (logBuffer == null) {
+            logBuffer = new StringBuilder();
+        }
+        return logBuffer;
+    }
+
+    protected void printDebug() {
+        StringBuilder buf = getLogBuffer();
+        getDebug(buf);
+        debug(buf.toString());
+        buf.setLength(0);
     }
 
 }

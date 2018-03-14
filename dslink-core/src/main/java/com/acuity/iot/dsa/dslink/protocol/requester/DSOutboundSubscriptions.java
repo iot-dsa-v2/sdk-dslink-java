@@ -4,6 +4,7 @@ import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSubscribeStubs.State;
+import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -217,8 +218,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         if (!pendingSubscribe.isEmpty()) {
             doBeginSubscribe(writer);
             Iterator<DSOutboundSubscribeStubs> it = pendingSubscribe.iterator();
-            //while (it.hasNext() && !session.shouldEndMessage()) {
-            while (it.hasNext()) { //todo
+            while (it.hasNext() && !session.shouldEndMessage()) {
                 DSOutboundSubscribeStubs stubs = it.next();
                 if (!stubs.hasSid()) {
                     synchronized (pathMap) {

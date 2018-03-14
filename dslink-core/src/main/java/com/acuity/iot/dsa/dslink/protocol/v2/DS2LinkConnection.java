@@ -249,7 +249,7 @@ public class DS2LinkConnection extends DSLinkConnection {
         String dsId = link.getDsId();
         DSKeys dsKeys = link.getKeys();
         DS2MessageWriter writer = new DS2MessageWriter();
-        writer.setMethod((byte) 0xf0);
+        writer.setMethod(0xf0);
         DSByteBuffer buffer = writer.getBody();
         buffer.put((byte) 2).put((byte) 0); //dsa version
         writer.writeString(dsId, buffer);
@@ -260,7 +260,7 @@ public class DS2LinkConnection extends DSLinkConnection {
 
     private void sendF2() throws Exception {
         DS2MessageWriter writer = new DS2MessageWriter();
-        writer.setMethod((byte) 0xf2);
+        writer.setMethod(0xf2);
         DSByteBuffer buffer = writer.getBody();
         String token = getLink().getConfig().getToken();
         if (token == null) {

@@ -7,6 +7,7 @@ import com.acuity.iot.dsa.dslink.protocol.requester.DSRequester;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
+import com.acuity.iot.dsa.dslink.protocol.v2.MultipartWriter;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +20,7 @@ import org.iot.dsa.util.DSException;
 public class DS2OutboundListStub extends DSOutboundListStub
         implements DS2OutboundStub, MessageConstants {
 
+    private MultipartWriter multipart;
     private byte state = STS_INITIALIZING;
 
     protected DS2OutboundListStub(DSRequester requester,
@@ -64,13 +66,24 @@ public class DS2OutboundListStub extends DSOutboundListStub
 
     @Override
     public void write(MessageWriter writer) {
-        //if has multipart remaining send that
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(getRequestId(), getSession().getNextAck());
+        if (multipart != null) {
+            if (multipart.update(out, getSession().getNextAck())) {
+                getRequester().sendRequest(this);
+            }
+            return;
+        }
+        int ack = getSession().getNextAck();
+        out.init(getRequestId(), ack);
         out.setMethod(MSG_LIST_REQ);
-        out.addStringHeader((byte) HDR_TARGET_PATH, getPath());
-        out.write((DSBinaryTransport) getRequester().getTransport());
-        //if multipart
+        out.addStringHeader(HDR_TARGET_PATH, getPath());
+        if (out.requiresMultipart()) {
+            multipart = out.makeMultipart();
+            multipart.update(out, ack);
+            getRequester().sendRequest(this);
+        } else {
+            out.write((DSBinaryTransport) getRequester().getTransport());
+        }
     }
 
 }

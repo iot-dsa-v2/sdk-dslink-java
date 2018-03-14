@@ -9,8 +9,9 @@ package com.acuity.iot.dsa.dslink.protocol.v2;
  */
 public interface MessageConstants {
 
-    int MAX_HEADER = 1024 * 48;
-    int MAX_BODY = 16320;
+    int MAX_BODY = 1024 * 48;
+    int MAX_HEADER = 16320;
+    Object NO_HEADER_VAL = new Object();
 
     int HDR_STATUS = 0x0;
     int HDR_SEQ_ID = 0x01;
@@ -28,25 +29,25 @@ public interface MessageConstants {
     int HDR_MAX_PERMISSION = 0x32;
     int HDR_ATTRIBUTE_FIELD = 0x41;
     int HDR_PERMISSION_TOKEN = 0x60;
-    int HDR_TARGET_PATH = (0x80 & 0xFF);
-    int HDR_SOURCE_PATH = (0x81 & 0xFF);
+    int HDR_TARGET_PATH = 0x80;
+    int HDR_SOURCE_PATH = 0x81;
 
     int MSG_SUBSCRIBE_REQ = 0x01;
-    int MSG_SUBSCRIBE_RES = (0x81 & 0xFF);
+    int MSG_SUBSCRIBE_RES = 0x81;
     int MSG_LIST_REQ = 0x02;
-    int MSG_LIST_RES = (0x82 & 0xFF);
+    int MSG_LIST_RES = 0x82;
     int MSG_INVOKE_REQ = 0x03;
-    int MSG_INVOKE_RES = (0x83 & 0xFF);
+    int MSG_INVOKE_RES = 0x83;
     int MSG_SET_REQ = 0x04;
-    int MSG_SET_RES = (0x84 & 0xFF);
+    int MSG_SET_RES = 0x84;
     int MSG_OBSERVE_REQ = 0x0A;
     int MSG_CLOSE = 0x0F;
-    int MSG_ACK = (0xF8 & 0xFF);
-    int MSG_PING = (0xF9 & 0xFF);
-    int MSG_HANDSHAKE_1 = (0xF0 & 0xFF);
-    int MSG_HANDSHAKE_2 = (0xF1 & 0xFF);
-    int MSG_HANDSHAKE_3 = (0xF2 & 0xFF);
-    int MSG_HANDSHAKE_4 = (0xF3 & 0xFF);
+    int MSG_ACK = 0xF8;
+    int MSG_PING = 0xF9;
+    int MSG_HANDSHAKE_1 = 0xF0;
+    int MSG_HANDSHAKE_2 = 0xF1;
+    int MSG_HANDSHAKE_3 = 0xF2;
+    int MSG_HANDSHAKE_4 = 0xF3;
 
     byte STS_OK = 0;
     byte STS_INITIALIZING = 0x01;
@@ -61,6 +62,6 @@ public interface MessageConstants {
     byte STS_BUSY = 0x48;
     byte STS_INTERNAL_ERR = 0x50;
     byte STS_ALIAS_LOOP = 0x61;
-    byte STS_INVALID_AUTH = (byte) (0xF9 & 0xFF);
+    byte STS_INVALID_AUTH = (byte) 0xF9;
 
 }

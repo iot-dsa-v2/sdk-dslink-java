@@ -79,7 +79,7 @@ public class DSInboundInvoke extends DSInboundRequest
         }
         state = STATE_CLOSE_PENDING;
         enqueueResponse();
-        fine(fine() ? getPath() + " list closed locally" : null);
+        fine(fine() ? getPath() + " invoke closed locally" : null);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class DSInboundInvoke extends DSInboundRequest
         closeReason = reason;
         state = STATE_CLOSE_PENDING;
         enqueueResponse();
-        fine(fine() ? getPath() + " list closed locally" : null);
+        fine(fine() ? getPath() + " invoke closed locally" : null);
     }
 
     private synchronized Update dequeueUpdate() {

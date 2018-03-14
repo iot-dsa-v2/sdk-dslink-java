@@ -18,7 +18,7 @@ class AckMessage implements MessageConstants, OutboundMessage {
     public void write(MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(-1, -1);
-        out.setMethod(MessageConstants.MSG_ACK);
+        out.setMethod(MSG_ACK);
         out.getBody().putInt(session.getNextAck(), false);
         out.write(session.getTransport());
     }
