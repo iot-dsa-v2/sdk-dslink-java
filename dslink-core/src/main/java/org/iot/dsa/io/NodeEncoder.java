@@ -122,7 +122,7 @@ public class NodeEncoder {
                     writeObject(info);
                 }
             } catch (IndexOutOfBoundsException x) {
-                //TODO log a fine - modified during save which is okay.
+                arg.trace(arg.getPath(), x);
             }
             info = info.next();
         }

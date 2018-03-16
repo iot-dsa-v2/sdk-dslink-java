@@ -119,7 +119,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         if (msg.getBodyLength() > 0) {
             params = msg.getBodyReader().getMap();
         }
-        DSPermission perm = DSPermission.READ;
+        DSPermission perm = DSPermission.CONFIG;
         Object obj = msg.getHeader(HDR_MAX_PERMISSION);
         if (obj != null) {
             perm = DSPermission.valueOf(obj.hashCode());
@@ -157,7 +157,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
      */
     private void processSet(DS2MessageReader msg) {
         int rid = msg.getRequestId();
-        DSPermission perm = DSPermission.READ;
+        DSPermission perm = DSPermission.CONFIG;
         Object obj = msg.getHeader(HDR_MAX_PERMISSION);
         if (obj != null) {
             perm = DSPermission.valueOf(obj.hashCode());
@@ -186,7 +186,6 @@ public class DS2Responder extends DSResponder implements MessageConstants {
      */
     private void processSubscribe(DS2MessageReader msg) {
         Integer sid = msg.getRequestId();
-        //todo if no stream
         String path = (String) msg.getHeader(HDR_TARGET_PATH);
         Number qos = (Number) msg.getHeader(HDR_QOS);
         if (qos == null) {

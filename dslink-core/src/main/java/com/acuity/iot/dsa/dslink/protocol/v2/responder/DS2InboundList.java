@@ -18,7 +18,8 @@ import org.iot.dsa.node.DSPath;
  */
 class DS2InboundList extends DSInboundList implements MessageConstants {
 
-    MultipartWriter multipart;
+    private MultipartWriter multipart;
+    private int seqId = 0;
 
     @Override
     protected void beginMessage(MessageWriter writer) {
@@ -122,6 +123,8 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
         int ack = getSession().getNextAck();
         out.init(getRequestId(), ack);
         out.setMethod(MSG_LIST_RES);
+        out.addIntHeader(HDR_SEQ_ID,seqId);
+        seqId++;
         super.write(writer);
         if (out.requiresMultipart()) {
             multipart = out.makeMultipart();

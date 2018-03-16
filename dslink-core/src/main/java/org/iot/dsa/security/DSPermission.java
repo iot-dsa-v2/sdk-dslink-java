@@ -29,6 +29,13 @@ public enum DSPermission {
         return this == CONFIG;
     }
 
+    /**
+     * True if this level is higher than the given.
+     */
+    public boolean isGreaterThan(DSPermission arg) {
+        return level >= arg.getLevel();
+    }
+
     public boolean isRead() {
         return this == READ;
     }

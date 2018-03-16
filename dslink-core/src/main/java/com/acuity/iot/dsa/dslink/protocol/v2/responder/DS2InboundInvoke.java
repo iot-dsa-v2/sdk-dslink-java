@@ -16,6 +16,7 @@ import org.iot.dsa.security.DSPermission;
  */
 class DS2InboundInvoke extends DSInboundInvoke implements MessageConstants {
 
+    private int seqId = 0;
     MultipartWriter multipart;
 
     DS2InboundInvoke(DSMap parameters, DSPermission permission) {
@@ -34,6 +35,8 @@ class DS2InboundInvoke extends DSInboundInvoke implements MessageConstants {
         int ack = getSession().getNextAck();
         out.init(getRequestId(), ack);
         out.setMethod(MSG_INVOKE_RES);
+        out.addIntHeader(HDR_SEQ_ID, seqId);
+        seqId++;
         super.write(writer);
         if (out.requiresMultipart()) {
             multipart = out.makeMultipart();

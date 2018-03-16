@@ -7,6 +7,7 @@ import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.responder.InboundInvokeRequest;
 import org.iot.dsa.io.DSIWriter;
@@ -236,7 +237,19 @@ public class DSInboundInvoke extends DSInboundRequest
             if (!info.isAction()) {
                 throw new DSRequestException("Not an action " + path.getPath());
             }
-            //TODO verify incoming permission
+            if (info.isAdmin()) {
+                if (!permission.isConfig()) {
+                    throw new DSPermissionException("Config permission required");
+                }
+            } else if (!info.isReadOnly()) {
+                if (DSPermission.WRITE.isGreaterThan(permission)) {
+                    throw new DSPermissionException("Write permission required");
+                }
+            } else {
+                if (DSPermission.READ.isGreaterThan(permission)) {
+                    throw new DSPermissionException("Read permission required");
+                }
+            }
             DSAction action = info.getAction();
             result = action.invoke(info, this);
         } catch (Exception x) {
