@@ -3,7 +3,9 @@ package com.acuity.iot.dsa.dslink.protocol.requester;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.iot.dsa.dslink.DSIRequester;
@@ -28,8 +30,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
 
     private AtomicInteger nextRid = new AtomicInteger();
     private DSSession session;
-    private Map<Integer, DSOutboundStub> requests =
-            new ConcurrentHashMap<Integer, DSOutboundStub>();
+    private Map<Integer, DSOutboundStub> requests = new ConcurrentHashMap<Integer, DSOutboundStub>();
     private DSOutboundSubscriptions subscriptions = makeSubscriptions();
 
     ///////////////////////////////////////////////////////////////////////////
@@ -120,7 +121,6 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
 
     public void onConnect() {
         subscriptions.onConnect();
-        session.setRequesterAllowed();
     }
 
     public void onConnectFail() {
@@ -129,6 +129,17 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
 
     public void onDisconnect() {
         subscriptions.onDisconnect();
+        Iterator<Entry<Integer, DSOutboundStub>> it = requests.entrySet().iterator();
+        Map.Entry<Integer, DSOutboundStub> me;
+        while (it.hasNext()) {
+            me = it.next();
+            try {
+                me.getValue().getHandler().onClose();
+            } catch (Exception x) {
+                error(getPath(), x);
+            }
+            it.remove();
+        }
     }
 
     @Override

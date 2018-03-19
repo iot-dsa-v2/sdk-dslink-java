@@ -25,8 +25,6 @@ public abstract class DSTransport extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
 
     private DSLinkConnection connection;
-    private StringBuilder debugIn;
-    private StringBuilder debugOut;
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
@@ -37,16 +35,14 @@ public abstract class DSTransport extends DSNode {
      *
      * @return This
      */
-    public DSTransport beginRecvMessage() {
-        return this;
-    }
+    public abstract void beginRecvMessage();
 
     /**
      * Called at the start of a new outbound message.
      *
      * @return This
      */
-    public abstract DSTransport beginSendMessage();
+    public abstract void beginSendMessage();
 
     /**
      * Close the actual connection and clean up resources.  Calling when already closed will have no
@@ -63,11 +59,14 @@ public abstract class DSTransport extends DSNode {
     }
 
     /**
-     * Signifies the end of an outgoing message. Needed because websockets are frame based.
-     *
-     * @return This
+     * Signifies the end of an incoming message.
      */
-    public abstract DSTransport endSendMessage();
+    public abstract void endRecvMessage();
+
+    /**
+     * Signifies the end of an outgoing message.
+     */
+    public abstract void endSendMessage();
 
     public DSLinkConnection getConnection() {
         return connection;
@@ -75,14 +74,6 @@ public abstract class DSTransport extends DSNode {
 
     public String getConnectionUrl() {
         return String.valueOf(get(CONNECTION_URL));
-    }
-
-    public StringBuilder getDebugIn() {
-        return debugIn;
-    }
-
-    public StringBuilder getDebugOut() {
-        return debugOut;
     }
 
     @Override
@@ -124,16 +115,6 @@ public abstract class DSTransport extends DSNode {
      */
     public DSTransport setConnectionUrl(String url) {
         put(CONNECTION_URL, DSString.valueOf(url)).setReadOnly(true);
-        return this;
-    }
-
-    public DSTransport setDebugIn(StringBuilder buf) {
-        this.debugIn = buf;
-        return this;
-    }
-
-    public DSTransport setDebugOut(StringBuilder buf) {
-        this.debugOut = buf;
         return this;
     }
 

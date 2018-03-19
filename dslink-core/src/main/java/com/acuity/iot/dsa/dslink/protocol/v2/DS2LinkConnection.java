@@ -1,5 +1,10 @@
 package com.acuity.iot.dsa.dslink.protocol.v2;
 
+import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.HDR_STATUS;
+import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INITIALIZING;
+import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INVALID_AUTH;
+import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_OK;
+
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
@@ -11,6 +16,7 @@ import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSInfo;
@@ -161,6 +167,9 @@ public class DS2LinkConnection extends DSLinkConnection {
     protected void onDisconnect() {
         session.onDisconnect();
         put(STATUS, DSStatus.down);
+        transport.close();
+        transport = null;
+        remove(TRANSPORT);
     }
 
     @Override
@@ -207,7 +216,19 @@ public class DS2LinkConnection extends DSLinkConnection {
             throw new IllegalStateException("Expecting handshake method 0xF1 not 0x" +
                                                     Integer.toHexString(reader.getMethod()));
         }
-        //TODO check for header status
+        Byte status = (Byte) reader.getHeader(HDR_STATUS);
+        if (status != null) {
+            switch (status.intValue()) {
+                case STS_OK:
+                case STS_INITIALIZING:
+                    break;
+                case STS_INVALID_AUTH:
+                    throw new DSPermissionException("Invalid Auth");
+                default:
+                    throw new IllegalStateException("Unexpected status: 0x" +
+                                                            DSBytes.toHex(status, null));
+            }
+        }
         put(brokerDsId, DSString.valueOf(reader.readString(in)));
         byte[] tmp = new byte[65];
         int len = in.read(tmp);
@@ -231,7 +252,19 @@ public class DS2LinkConnection extends DSLinkConnection {
             throw new IllegalStateException("Expecting handshake method 0xF3 not 0x" +
                                                     Integer.toHexString(reader.getMethod()));
         }
-        //TODO check for header status
+        Byte status = (Byte) reader.getHeader(HDR_STATUS);
+        if (status != null) {
+            switch (status.intValue()) {
+                case STS_OK:
+                case STS_INITIALIZING:
+                    break;
+                case STS_INVALID_AUTH:
+                    throw new DSPermissionException("Invalid Auth");
+                default:
+                    throw new IllegalStateException("Unexpected status: 0x" +
+                                                            DSBytes.toHex(status, null));
+            }
+        }
         boolean allowed = in.read() == 1;
         put(requesterAllowed, DSBool.valueOf(allowed));
         if (allowed) {
@@ -249,7 +282,7 @@ public class DS2LinkConnection extends DSLinkConnection {
         String dsId = link.getDsId();
         DSKeys dsKeys = link.getKeys();
         DS2MessageWriter writer = new DS2MessageWriter();
-        writer.setMethod((byte) 0xf0);
+        writer.setMethod(0xf0);
         DSByteBuffer buffer = writer.getBody();
         buffer.put((byte) 2).put((byte) 0); //dsa version
         writer.writeString(dsId, buffer);
@@ -260,7 +293,7 @@ public class DS2LinkConnection extends DSLinkConnection {
 
     private void sendF2() throws Exception {
         DS2MessageWriter writer = new DS2MessageWriter();
-        writer.setMethod((byte) 0xf2);
+        writer.setMethod(0xf2);
         DSByteBuffer buffer = writer.getBody();
         String token = getLink().getConfig().getToken();
         if (token == null) {

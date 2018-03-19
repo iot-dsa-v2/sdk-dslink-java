@@ -1,8 +1,7 @@
 package org.iot.dsa.dslink.websocket;
 
-import com.acuity.iot.dsa.dslink.io.DSIoException;
+import com.acuity.iot.dsa.dslink.transport.BufferedBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
-import com.acuity.iot.dsa.dslink.transport.PushBinaryTransport;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -25,20 +24,33 @@ import org.iot.dsa.util.DSException;
  * @author Aaron Hansen
  */
 @ClientEndpoint
-public class WsBinaryTransport extends PushBinaryTransport {
+public class WsBinaryTransport extends BufferedBinaryTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private ClientManager client;
-    private int messageSize;
     private Session session;
     private ByteBuffer writeBuffer;
 
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void doWrite(byte[] buf, int off, int len, boolean isLast) {
+        ByteBuffer byteBuffer = getByteBuffer(len);
+        try {
+            byteBuffer.put(buf, off, len);
+            byteBuffer.flip();
+            RemoteEndpoint.Basic basic = session.getBasicRemote();
+            basic.sendBinary(byteBuffer, isLast);
+            byteBuffer.clear();
+        } catch (IOException x) {
+            DSException.throwRuntime(x);
+        }
+    }
 
     /**
      * Called by write(), returns a bytebuffer for the given capacity ready for writing
@@ -63,13 +75,9 @@ public class WsBinaryTransport extends PushBinaryTransport {
         return writeBuffer;
     }
 
-    public int messageSize() {
-        return messageSize;
-    }
-
     @OnClose
     public void onClose(Session session, CloseReason reason) {
-        info(getConnectionUrl() + " remotely closed, reason = " + reason.toString());
+        info(getConnectionUrl() + " closed remotely, reason = " + reason.toString());
         close();
     }
 
@@ -80,7 +88,7 @@ public class WsBinaryTransport extends PushBinaryTransport {
 
     @OnMessage
     public void onMessage(Session session, byte[] msgPart, boolean isLast) {
-        push(msgPart, 0, msgPart.length);
+        receive(msgPart, 0, msgPart.length);
     }
 
     @OnOpen
@@ -98,34 +106,10 @@ public class WsBinaryTransport extends PushBinaryTransport {
             client.connectToServer(this, new URI(getConnectionUrl()));
             fine(fine() ? "Transport open" : null);
         } catch (Exception x) {
-            close(x);
             DSException.throwRuntime(x);
         }
         return this;
     }
 
-    @Override
-    public void write(byte[] buf, int off, int len, boolean isLast) {
-        if (!testOpen()) {
-            throw new DSIoException("Closed");
-        }
-        ByteBuffer byteBuffer = getByteBuffer(len);
-        messageSize += len;
-        try {
-            byteBuffer.put(buf, off, len);
-            byteBuffer.flip();
-            RemoteEndpoint.Basic basic = session.getBasicRemote();
-            basic.sendBinary(byteBuffer, isLast);
-            byteBuffer.clear();
-            if (isLast) {
-                messageSize = 0;
-            }
-        } catch (IOException x) {
-            if (isOpen()) {
-                close();
-                DSException.throwRuntime(x);
-            }
-        }
-    }
 
 }

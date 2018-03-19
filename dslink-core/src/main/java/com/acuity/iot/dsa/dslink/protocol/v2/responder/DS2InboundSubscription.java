@@ -17,30 +17,22 @@ import org.iot.dsa.time.DSTime;
  */
 public class DS2InboundSubscription extends DSInboundSubscription implements MessageConstants {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
+    private int seqId = 0;
 
     protected DS2InboundSubscription(DSInboundSubscriptions manager,
                                      Integer sid, String path, int qos) {
         super(manager, sid, path, qos);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Methods in alphabetical order
-    ///////////////////////////////////////////////////////////////////////////
-
     @Override
     protected void write(Update update, MessageWriter writer, StringBuilder buf) {
-        DS2MessageWriter messageWriter = (DS2MessageWriter) writer;
-        messageWriter.init(getSubscriptionId(), getSession().getNextAck());
-        messageWriter.setMethod((byte) MSG_SUBSCRIBE_RES);
-        DSIWriter dsiWriter = messageWriter.getWriter();
-        DSByteBuffer byteBuffer = messageWriter.getBody();
+        DS2MessageWriter out = (DS2MessageWriter) writer;
+        out.init(getSubscriptionId(), getSession().getNextAck());
+        out.setMethod(MSG_SUBSCRIBE_RES);
+        out.addIntHeader(HDR_SEQ_ID, seqId);
+        seqId++;
+        DSIWriter dsiWriter = out.getWriter();
+        DSByteBuffer byteBuffer = out.getBody();
         byteBuffer.skip(2);
         int start = byteBuffer.length();
         dsiWriter.beginMap();
@@ -55,7 +47,7 @@ public class DS2InboundSubscription extends DSInboundSubscription implements Mes
         byteBuffer.replaceShort(start - 2, (short) (end - start), false);
         dsiWriter.reset();
         dsiWriter.value(update.value.toElement());
-        messageWriter.write((DSBinaryTransport) getResponder().getTransport());
+        out.write((DSBinaryTransport) getResponder().getTransport());
     }
 
 }

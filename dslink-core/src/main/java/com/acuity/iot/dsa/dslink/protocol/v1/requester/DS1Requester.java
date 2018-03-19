@@ -139,6 +139,12 @@ public class DS1Requester extends DSRequester {
         getSubscriptions().handleUpdate(sid, ts, sts, value);
     }
 
+    @Override
+    public void onConnect() {
+        super.onConnect();
+        getSession().setRequesterAllowed();
+    }
+
     private void processUpdates(DSMap map) {
         DSList updates = map.getList("updates");
         for (int i = 0; i < updates.size(); i++) {

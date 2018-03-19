@@ -1,7 +1,6 @@
 package com.acuity.iot.dsa.dslink.io;
 
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -269,21 +268,14 @@ public class DSByteBuffer extends InputStream {
     }
 
     public int put(InputStream in, int len) {
-        int count = 0;
+        growBuffer(offset + len);
         try {
-            int ch;
-            while (count < len) {
-                ch = in.read();
-                if (ch < 0) {
-                    return count;
-                }
-                put((byte) ch);
-                count++;
-            }
-        } catch (IOException x) {
+            len = in.read(buffer, offset, len);
+        } catch (Exception x) {
             DSException.throwRuntime(x);
         }
-        return count;
+        length += len;
+        return len;
     }
 
     /**
@@ -552,6 +544,19 @@ public class DSByteBuffer extends InputStream {
         transport.write(buffer, offset, length, isLast);
         offset = 0;
         length = 0;
+    }
+
+    /**
+     * Push bytes from the internal buffer to the given.
+     */
+    public void sendTo(DSByteBuffer buf, int len) {
+        buf.put(buffer, offset, len);
+        length -= len;
+        if (length == 0) {
+            offset = 0;
+        } else {
+            offset += len;
+        }
     }
 
     /**

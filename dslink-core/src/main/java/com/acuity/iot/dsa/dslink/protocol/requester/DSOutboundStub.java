@@ -5,7 +5,6 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundStream;
-import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSMap;
 
 /**
@@ -77,49 +76,6 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
             getRequester().error(getRequester().getPath(), x);
         }
         getRequester().removeRequest(getRequestId());
-    }
-
-    public void handleError(DSElement details) {
-        if (!open) {
-            return;
-        }
-        try {
-            ErrorType type = ErrorType.internalError;
-            String msg;
-            if (details.isMap()) {
-                String detail = null;
-                DSMap map = details.toMap();
-                String tmp = map.getString("type");
-                if (tmp.equals("permissionDenied")) {
-                    type = ErrorType.permissionDenied;
-                } else if (tmp.equals("invalidRequest")) {
-                    type = ErrorType.badRequest;
-                } else if (tmp.equals("invalidPath")) {
-                    type = ErrorType.badRequest;
-                } else if (tmp.equals("notSupported")) {
-                    type = ErrorType.notSupported;
-                } else {
-                    type = ErrorType.internalError;
-                }
-                msg = map.getString("msg");
-                detail = map.getString("detail");
-                if (msg == null) {
-                    msg = detail;
-                }
-                if (msg == null) {
-                    msg = details.toString();
-                }
-            } else {
-                type = ErrorType.internalError;
-                msg = details.toString();
-            }
-            if (msg == null) {
-                msg = "";
-            }
-            getHandler().onError(type, msg);
-        } catch (Exception x) {
-            getRequester().error(getRequester().getPath(), x);
-        }
     }
 
     public void handleError(ErrorType type, String message) {

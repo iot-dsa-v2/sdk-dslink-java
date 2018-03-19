@@ -132,6 +132,16 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     }
 
     public void onDisconnect() {
+        for (DSOutboundSubscribeStubs stubs : pendingSubscribe) {
+            stubs.onDisconnect();
+        }
+        pendingSubscribe.clear();
+        pendingUnsubscribe.clear();
+        for (DSOutboundSubscribeStubs stubs : pathMap.values()) {
+            stubs.onDisconnect();
+        }
+        sidMap.clear();
+        pathMap.clear();
     }
 
     public void handleUpdate(int sid, String ts, String sts, DSElement value) {
@@ -217,8 +227,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         if (!pendingSubscribe.isEmpty()) {
             doBeginSubscribe(writer);
             Iterator<DSOutboundSubscribeStubs> it = pendingSubscribe.iterator();
-            //while (it.hasNext() && !session.shouldEndMessage()) {
-            while (it.hasNext()) { //todo
+            while (it.hasNext() && !session.shouldEndMessage()) {
                 DSOutboundSubscribeStubs stubs = it.next();
                 if (!stubs.hasSid()) {
                     synchronized (pathMap) {

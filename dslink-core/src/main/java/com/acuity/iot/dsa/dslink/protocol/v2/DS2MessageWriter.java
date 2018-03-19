@@ -8,6 +8,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
+import java.util.HashMap;
+import java.util.Map;
 import org.iot.dsa.node.DSString;
 
 /**
@@ -26,6 +28,7 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     private DSByteBuffer body;
     private CharBuffer charBuffer;
     private DSByteBuffer header;
+    private Map<Integer, Object> headers = new HashMap<Integer, Object>();
     private int method;
     private int requestId = -1;
     private ByteBuffer strBuffer;
@@ -49,16 +52,18 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     /**
      * Encodes the key into the header buffer.
      */
-    public DS2MessageWriter addHeader(byte key) {
-        header.put(key);
+    public DS2MessageWriter addHeader(int key) {
+        headers.put(key, NO_HEADER_VAL);
+        header.put((byte) key);
         return this;
     }
 
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public DS2MessageWriter addByteHeader(byte key, byte value) {
-        header.put(key);
+    public DS2MessageWriter addByteHeader(int key, byte value) {
+        headers.put(key, value);
+        header.put((byte) key);
         header.put(value);
         return this;
     }
@@ -66,8 +71,9 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public DS2MessageWriter addIntHeader(byte key, int value) {
-        header.put(key);
+    public DS2MessageWriter addIntHeader(int key, int value) {
+        headers.put(key, value);
+        header.put((byte) key);
         header.putInt(value, false);
         return this;
     }
@@ -75,34 +81,20 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     /**
      * Encodes the key value pair into the header buffer.
      */
-    public DS2MessageWriter addStringHeader(byte key, String value) {
-        header.put(key);
+    public DS2MessageWriter addStringHeader(int key, String value) {
+        headers.put(key, value);
+        header.put((byte) key);
         writeString(value, header);
         return this;
     }
 
-    private void debugSummary() {
-        StringBuilder debug = getDebug();
-        StringBuilder buf = debug;
-        boolean insert = buf.length() > 0;
-        if (insert) {
-            buf = new StringBuilder();
-        }
-        buf.append("SEND ");
-        debugMethod(method, buf);
-        buf.append(", Rid ").append(requestId < 0 ? 0 : requestId);
-        buf.append(", Ack ").append(ackId < 0 ? 0 : ackId);
-        if (insert) {
-            debug.insert(0, buf);
-        }
-    }
 
     private void finishHeader() {
         int hlen = header.length();
         int blen = body.length();
         header.replaceInt(0, hlen + blen, false);
         header.replaceShort(4, (short) hlen, false);
-        header.replace(6, (byte) method);
+        header.replace(6, (byte) (method & 0xFF));
     }
 
     public DSByteBuffer getBody() {
@@ -139,8 +131,17 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
         return charBuffer;
     }
 
-    public int getHeaderLength() {
-        return header.length();
+    @Override
+    protected void getDebug(StringBuilder buf) {
+        buf.append("SEND ");
+        debugMethod(method, buf);
+        if (requestId > 0) {
+            buf.append(", ").append("Rid ").append(requestId);
+        }
+        if (ackId > 0) {
+            buf.append(", ").append("Ack ").append(ackId);
+        }
+        debugHeaders(headers, buf);
     }
 
     /**
@@ -181,6 +182,7 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
         this.requestId = requestId;
         this.ackId = ackId;
         body.clear();
+        headers.clear();
         writer.reset();
         header.clear();
         header.skip(7);
@@ -195,6 +197,17 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
             header.putInt(ackId, false);
         }
         return this;
+    }
+
+    public MultipartWriter makeMultipart() {
+        DSByteBuffer tmp = body;
+        body = new DSByteBuffer();
+        writer = new MsgpackWriter(body);
+        return new MultipartWriter(requestId, method, headers, tmp);
+    }
+
+    public boolean requiresMultipart() {
+        return getBodyLength() > MAX_BODY;
     }
 
     public DS2MessageWriter setMethod(int method) {
@@ -218,11 +231,11 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
      */
     public DS2MessageWriter write(DSBinaryTransport out) {
         finishHeader();
-        if (isDebug()) {
-            debugSummary();
-        }
         header.sendTo(out, false);
         body.sendTo(out, true);
+        if (debug()) {
+            printDebug();
+        }
         return this;
     }
 

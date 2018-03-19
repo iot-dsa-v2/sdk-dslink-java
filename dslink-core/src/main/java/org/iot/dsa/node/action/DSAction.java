@@ -15,6 +15,11 @@ import org.iot.dsa.security.DSPermission;
 /**
  * Fully describes an action and routes invocations to DSNode.onInvoke.
  *
+ * <b>Permissions</b>
+ * Permissions are determined using info flags.  If the admin flag is set,
+ * the action requires admin level permissions. If the action is readonly, then only read
+ * permissions are required.  Otherwise the action will require write permissions.
+ *
  * @author Aaron Hansen
  * @see org.iot.dsa.node.DSNode#onInvoke(DSInfo, ActionInvocation)
  */
@@ -53,7 +58,7 @@ public class DSAction implements ActionSpec, DSIObject {
 
     /**
      * A convenience which calls addParameter with the same arguments, and also sets the metadata
-     * for default value.
+     * for the default value.
      *
      * @param name        Must not be null.
      * @param value       Must not be null.
@@ -69,7 +74,7 @@ public class DSAction implements ActionSpec, DSIObject {
 
     /**
      * Fully describes a parameter for method invocation.  At the very least, the map should have a
-     * unique name and a value type, use the metadata utility class to build the map.
+     * unique name and a value type.  You should use the metadata utility class to build the map.
      *
      * @return This.
      * @see DSMetadata
@@ -202,9 +207,14 @@ public class DSAction implements ActionSpec, DSIObject {
         return null;
     }
 
+    /**
+     * Not used.  Permissions are determined using info flags.  If the admin flag is set,
+     * the action requires admin level permissions. If the action is readonly, then only read
+     * permissions are required.  Otherwise the action will require write permissions.
+     */
     @Override
     public DSPermission getPermission() {
-        return permission;
+        return DSPermission.WRITE;
     }
 
     @Override
@@ -262,17 +272,6 @@ public class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * Returns this, it is not necessary to set the permission to read.
-     */
-    public DSAction setPermission(DSPermission permission) {
-        if (this == DEFAULT) {
-            throw new IllegalStateException("Cannot modify the default action.");
-        }
-        this.permission = permission;
-        return this;
-    }
-
-    /**
      * Returns this, it is not necessary to set the result to void.
      */
     public DSAction setResultType(ResultType result) {
@@ -290,7 +289,7 @@ public class DSAction implements ActionSpec, DSIObject {
         if (params.isEmpty()) {
             throw new IllegalArgumentException("Empty metadata");
         }
-        String name = params.getString("name");
+        String name = params.getString(DSMetadata.NAME);
         if ((name == null) || name.isEmpty()) {
             throw new IllegalArgumentException("Missing name");
         }
@@ -301,7 +300,7 @@ public class DSAction implements ActionSpec, DSIObject {
             return;
         }
         for (DSMap param : existing) {
-            if (name.equals(param.getString("name"))) {
+            if (name.equals(param.getString(DSMetadata.NAME))) {
                 throw new IllegalArgumentException("Duplicate name: " + name);
             }
         }

@@ -6,6 +6,8 @@ import com.acuity.iot.dsa.dslink.protocol.v2.requester.DS2Requester;
 import com.acuity.iot.dsa.dslink.protocol.v2.responder.DS2Responder;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
+import java.util.HashMap;
+import java.util.Map;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSInfo;
@@ -30,16 +32,11 @@ public class DS2Session extends DSSession implements MessageConstants {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private boolean debugRecv = false;
-    private StringBuilder debugRecvTranport = null;
-    private StringBuilder debugRecvMessage = null;
-    private boolean debugSend = false;
-    private StringBuilder debugSendTranport = null;
-    private StringBuilder debugSendMessage = null;
     private DSInfo lastAckRecv = getInfo(LAST_ACK_RECV);
     private long lastMessageSent;
     private DS2MessageReader messageReader;
     private DS2MessageWriter messageWriter;
+    private Map<Integer, MultipartReader> multiparts = new HashMap<Integer, MultipartReader>();
     private boolean requestsNext = false;
     private DS2Requester requester = new DS2Requester(this);
     private DS2Responder responder = new DS2Responder(this);
@@ -68,31 +65,23 @@ public class DS2Session extends DSSession implements MessageConstants {
     protected void doRecvMessage() {
         DSBinaryTransport transport = getTransport();
         DS2MessageReader reader = getMessageReader();
-        boolean debug = debug();
-        if (debug != debugRecv) {
-            if (debug) {
-                debugRecvMessage = new StringBuilder();
-                debugRecvTranport = new StringBuilder();
-                reader.setDebug(debugRecvMessage);
-                transport.setDebugIn(debugRecvTranport);
-            } else {
-                debugRecvMessage = null;
-                debugRecvTranport = null;
-                reader.setDebug(null);
-                transport.setDebugIn(null);
-            }
-            debugRecv = debug;
-        }
-        if (debug) {
-            debugRecvMessage.setLength(0);
-            debugRecvTranport.setLength(0);
-            debugRecvTranport.append("Bytes read\n");
-        }
         transport.beginRecvMessage();
         reader.init(transport.getInput());
         int ack = reader.getAckId();
         if (ack > 0) {
             put(lastAckRecv, DSInt.valueOf(ack));
+        }
+        if (reader.isMultipart()) {
+            MultipartReader multi = multiparts.get(reader.getRequestId());
+            if (multi == null) {
+                multi = new MultipartReader(reader);
+                multiparts.put(reader.getRequestId(), multi);
+                return;
+            } else if (multi.update(reader)) {
+                return;
+            }
+            multiparts.remove(reader.getRequestId());
+            reader = multi.makeReader();
         }
         if (reader.isRequest()) {
             responder.handleRequest(reader);
@@ -104,47 +93,18 @@ public class DS2Session extends DSSession implements MessageConstants {
         } else if (reader.isResponse()) {
             requester.handleResponse(reader);
             setNextAck(reader.getRequestId());
+        } else {
+            error("Unknown method: " + reader.getMethod());
         }
-        if (debug) {
-            debug(debugRecvMessage);
-            debug(debugRecvTranport);
-            debugRecvMessage.setLength(0);
-            debugRecvTranport.setLength(0);
-        }
+        transport.endRecvMessage();
     }
 
     @Override
     protected void doSendMessage() {
         DSTransport transport = getTransport();
-        boolean debug = debug();
-        if (debug != debugSend) {
-            if (debug) {
-                debugSendMessage = new StringBuilder();
-                debugSendTranport = new StringBuilder();
-                getMessageWriter().setDebug(debugSendMessage);
-                transport.setDebugOut(debugSendTranport);
-            } else {
-                debugSendMessage = null;
-                debugSendTranport = null;
-                getMessageWriter().setDebug(null);
-                transport.setDebugOut(null);
-            }
-            debugSend = debug;
-        }
-        if (debug) {
-            debugSendMessage.setLength(0);
-            debugSendTranport.setLength(0);
-            debugSendTranport.append("Bytes sent\n");
-        }
         if (this.hasSomethingToSend()) {
             transport.beginSendMessage();
-            boolean sent = send(requestsNext = !requestsNext);  //alternate reqs and resps
-            if (sent && debug) {
-                debug(debugSendMessage);
-                debug(debugSendTranport);
-                debugSendMessage.setLength(0);
-                debugSendTranport.setLength(0);
-            }
+            send(requestsNext = !requestsNext);  //alternate reqs and resps
             transport.endSendMessage();
         }
     }
@@ -204,18 +164,6 @@ public class DS2Session extends DSSession implements MessageConstants {
         super.onConnect();
         messageReader = null;
         messageWriter = null;
-        if (debugRecv) {
-            debugRecvMessage = new StringBuilder();
-            debugRecvTranport = new StringBuilder();
-            getMessageReader().setDebug(debugRecvMessage);
-            getTransport().setDebugIn(debugRecvTranport);
-        }
-        if (debugSend) {
-            debugSendMessage = new StringBuilder();
-            debugSendTranport = new StringBuilder();
-            getMessageWriter().setDebug(debugSendMessage);
-            getTransport().setDebugOut(debugSendTranport);
-        }
         requester.onConnect();
         responder.onConnect();
     }
@@ -223,6 +171,9 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     public void onConnectFail() {
         super.onConnectFail();
+        messageReader = null;
+        messageWriter = null;
+        multiparts.clear();
         requester.onConnectFail();
         responder.onConnectFail();
     }
@@ -230,6 +181,9 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     public void onDisconnect() {
         super.onDisconnect();
+        messageReader = null;
+        messageWriter = null;
+        multiparts.clear();
         requester.onDisconnect();
         responder.onDisconnect();
     }
@@ -240,7 +194,7 @@ public class DS2Session extends DSSession implements MessageConstants {
      * @param requests Determines which queue to use; True for outgoing requests, false for
      *                 responses.
      */
-    private boolean send(boolean requests) {
+    private void send(boolean requests) {
         boolean hasSomething = false;
         if (requests) {
             hasSomething = hasOutgoingRequests();
@@ -249,7 +203,11 @@ public class DS2Session extends DSSession implements MessageConstants {
         }
         OutboundMessage msg = null;
         if (hasSomething) {
-            msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
+            if (requests) {
+                msg = dequeueOutgoingRequest();
+            } else {
+                msg = dequeueOutgoingResponse();
+            }
         } else if (hasPingToSend()) {
             msg = new PingMessage(this);
         } else if (hasAckToSend()) {
@@ -257,10 +215,9 @@ public class DS2Session extends DSSession implements MessageConstants {
         }
         if (msg != null) {
             lastMessageSent = System.currentTimeMillis();
-            msg.write(getMessageWriter());
-            return true;
+            DS2MessageWriter out = getMessageWriter();
+            msg.write(out);
         }
-        return false;
     }
 
     /**

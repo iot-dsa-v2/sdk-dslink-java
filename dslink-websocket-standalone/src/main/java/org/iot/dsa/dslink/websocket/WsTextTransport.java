@@ -46,9 +46,12 @@ public class WsTextTransport extends DSTextTransport {
     /////////////////////////////////////////////////////////////////
 
     @Override
-    public DSTransport beginSendMessage() {
+    public void beginRecvMessage() {
+    }
+
+    @Override
+    public void beginSendMessage() {
         messageSize = 0;
-        return this;
     }
 
     @Override
@@ -70,10 +73,13 @@ public class WsTextTransport extends DSTextTransport {
     }
 
     @Override
-    public DSTransport endSendMessage() {
+    public void endRecvMessage() {
+    }
+
+    @Override
+    public void endSendMessage() {
         write("", true);
         messageSize = 0;
-        return this;
     }
 
     public Reader getReader() {

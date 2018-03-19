@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.v2;
 
+import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,22 +45,17 @@ public class DS2MessageReader extends DS2Message {
     // Methods
     // -------
 
-    public void debugSummary() {
-        StringBuilder buf = getDebug();
+    @Override
+    protected void getDebug(StringBuilder buf) {
         buf.append("RECV ");
         debugMethod(getMethod(), buf);
-        if (requestId >= 0) {
+        if (requestId > 0) {
             buf.append(", ").append("Rid ").append(requestId);
         }
-        if (ackId >= 0) {
+        if (ackId > 0) {
             buf.append(", ").append("Ack ").append(ackId);
         }
-        for (Map.Entry<Integer, Object> e : headers.entrySet()) {
-            buf.append(", ");
-            debugHeader(e.getKey(), buf);
-            buf.append("=");
-            buf.append(e.getValue());
-        }
+        debugHeaders(headers, buf);
     }
 
     public int getAckId() {
@@ -145,7 +141,19 @@ public class DS2MessageReader extends DS2Message {
         return strBuffer;
     }
 
-    public DS2MessageReader init(InputStream in) {
+    void init(int requestId,
+              int method,
+              DSByteBuffer body,
+              Map<Integer, Object> headers) {
+        this.requestId = requestId;
+        this.method = method;
+        input = body;
+        bodyLength = body.length();
+        this.headers.clear();
+        this.headers.putAll(headers);
+    }
+
+    public void init(InputStream in) {
         try {
             input = in;
             getBodyReader().reset();
@@ -168,13 +176,12 @@ public class DS2MessageReader extends DS2Message {
                     parseDynamicHeaders(in, hlen, headers);
                 }
             }
-            if (isDebug()) {
-                debugSummary();
+            if (debug()) {
+                printDebug();
             }
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
-        return this;
     }
 
     public boolean isAck() {
@@ -183,6 +190,11 @@ public class DS2MessageReader extends DS2Message {
 
     public boolean isPing() {
         return method == MSG_PING;
+    }
+
+    public boolean isMultipart() {
+        Integer page = (Integer) headers.get(HDR_PAGE_ID);
+        return page != null;
     }
 
     public boolean isRequest() {
@@ -208,35 +220,36 @@ public class DS2MessageReader extends DS2Message {
         Object val;
         while (len > 0) {
             code = in.read() & 0xFF;
-            val = null;
             len--;
             switch (code) {
-                case 0x00:
-                case 0x08:
-                case 0x12:
-                case 0x32:
+                case HDR_STATUS:
+                case HDR_ALIAS_COUNT:
+                case HDR_QOS:
+                case HDR_MAX_PERMISSION:
                     val = (byte) in.read();
                     len--;
                     break;
-                case 0x01:
-                case 0x02:
-                case 0x14:
-                case 0x15:
+                case HDR_SEQ_ID:
+                case HDR_PAGE_ID:
+                case HDR_QUEUE_SIZE:
+                case HDR_QUEUE_DURATION:
                     val = DSBytes.readInt(in, false);
                     len -= 4;
                     break;
-                case 0x21:
-                case 0x41:
-                case 0x60:
-                case 0x80:
-                case 0x81:
+                case HDR_AUDIT:
+                case HDR_ERROR_DETAIL:
+                case HDR_PUB_PATH:
+                case HDR_ATTRIBUTE_FIELD:
+                case HDR_PERMISSION_TOKEN:
+                case HDR_TARGET_PATH:
+                case HDR_SOURCE_PATH:
                     short slen = DSBytes.readShort(in, false);
                     len -= 2;
-                    len -= slen;
                     val = readString(in, slen);
+                    len -= slen;
                     break;
                 default:
-                    val = (byte) code;
+                    val = NO_HEADER_VAL;
             }
             headers.put(code, val);
         }

@@ -27,6 +27,7 @@ import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.node.event.DSTopic;
+import org.iot.dsa.security.DSPermission;
 
 /**
  * List implementation for a responder.
@@ -219,7 +220,11 @@ public class DSInboundList extends DSInboundRequest
             if (e != null) {
                 map.put("$invokable", e);
             } else {
-                map.put("$invokable", action.getPermission().toString());
+                if (child.isAdmin()) {
+                    map.put("$invokable", DSPermission.CONFIG.toString());
+                } else if (!child.isReadOnly()) {
+                    map.put("$invokable", DSPermission.WRITE.toString());
+                }
             }
         } else if (child.isValue()) {
             e = cacheMap.remove("$type");
@@ -301,7 +306,11 @@ public class DSInboundList extends DSInboundRequest
         }
         DSElement e = cacheMap.remove("$invokable");
         if (e == null) {
-            encode("$invokable", action.getPermission().toString(), writer);
+            if (object.isAdmin()) {
+                encode("$invokable", DSPermission.CONFIG.toString(), writer);
+            } else if (!object.isReadOnly()) {
+                encode("$invokable", DSPermission.WRITE.toString(), writer);
+            }
         } else {
             encode("$invokable", e, writer);
         }

@@ -2,6 +2,7 @@ package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
 import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.node.DSElement;
@@ -44,7 +45,13 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
                 if (info.isReadOnly()) {
                     throw new DSRequestException("Not writable: " + getPath());
                 }
-                //TODO verify incoming permission
+                if (!permission.isConfig()) {
+                    if (info.isAdmin()) {
+                        throw new DSPermissionException("Config permission required");
+                    } else if (DSPermission.WRITE.isGreaterThan(permission)) {
+                        throw new DSPermissionException("Write permission required");
+                    }
+                }
                 if (info.isNode()) {
                     info.getNode().onSet(value);
                 } else {

@@ -10,7 +10,6 @@ import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v1.CloseMessage;
-import java.util.Map;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
@@ -51,6 +50,11 @@ public class DS1Responder extends DSResponder {
             throw new DSProtocolException("Request missing path");
         }
         return path;
+    }
+
+    @Override
+    protected DSInboundSubscriptions getSubscriptions() {
+        return subscriptions;
     }
 
     /**
@@ -137,25 +141,6 @@ public class DS1Responder extends DSResponder {
             error(getPath(), x);
             sendError(rid, x);
         }
-    }
-
-    public void onConnect() {
-    }
-
-    public void onConnectFail() {
-    }
-
-    public void onDisconnect() {
-        debug(debug() ? "Close" : null);
-        subscriptions.close();
-        for (Map.Entry<Integer, DSStream> entry : getRequests().entrySet()) {
-            try {
-                entry.getValue().onClose(entry.getKey());
-            } catch (Exception x) {
-                debug(debug() ? "Close" : null, x);
-            }
-        }
-        getRequests().clear();
     }
 
     /**

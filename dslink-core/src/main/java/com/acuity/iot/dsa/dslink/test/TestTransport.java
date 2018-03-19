@@ -1,28 +1,17 @@
 package com.acuity.iot.dsa.dslink.test;
 
-import com.acuity.iot.dsa.dslink.transport.PushBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.BufferedBinaryTransport;
 
 /**
  * Routes requests and responses back to self.
  *
  * @author Aaron Hansen
  */
-public class TestTransport extends PushBinaryTransport {
-
-    private int messageSize;
+public class TestTransport extends BufferedBinaryTransport {
 
     @Override
-    public int messageSize() {
-        return messageSize;
-    }
-
-    @Override
-    public void write(byte[] buf, int off, int len, boolean isLast) {
-        messageSize += len;
-        push(buf, off, len);
-        if (isLast) {
-            messageSize = 0;
-        }
+    protected void doWrite(byte[] buf, int off, int len, boolean isLast) {
+        receive(buf, off, len);
     }
 
 }

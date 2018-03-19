@@ -6,6 +6,7 @@ import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundList;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
+import com.acuity.iot.dsa.dslink.protocol.v2.MultipartWriter;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSPath;
@@ -16,6 +17,9 @@ import org.iot.dsa.node.DSPath;
  * @author Aaron Hansen
  */
 class DS2InboundList extends DSInboundList implements MessageConstants {
+
+    private MultipartWriter multipart;
+    private int seqId = 0;
 
     @Override
     protected void beginMessage(MessageWriter writer) {
@@ -28,9 +32,11 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
     @Override
     protected void encode(String key, DSElement value, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
+        /*
         if (out.isDebug()) {
             out.getDebug().append('\n').append(key).append(" : ").append(value);
         }
+        */
         DSByteBuffer buf = out.getBody();
         MsgpackWriter mp = out.getWriter();
         buf.skip(2);
@@ -49,9 +55,11 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
     @Override
     protected void encode(String key, String value, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
+        /*
         if (out.isDebug()) {
             out.getDebug().append('\n').append(key).append(" : ").append(value);
         }
+        */
         DSByteBuffer buf = out.getBody();
         MsgpackWriter mp = out.getWriter();
         buf.skip(2);
@@ -91,11 +99,11 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
     protected void endMessage(MessageWriter writer, Boolean streamOpen) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         if (streamOpen == null) {
-            out.addByteHeader((byte) HDR_STATUS, STS_INITIALIZING);
+            out.addByteHeader(HDR_STATUS, STS_INITIALIZING);
         } else if (streamOpen) {
-            out.addByteHeader((byte) HDR_STATUS, STS_OK);
+            out.addByteHeader(HDR_STATUS, STS_OK);
         } else {
-            out.addByteHeader((byte) HDR_STATUS, STS_CLOSED);
+            out.addByteHeader(HDR_STATUS, STS_CLOSED);
         }
     }
 
@@ -105,13 +113,26 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
 
     @Override
     public void write(MessageWriter writer) {
-        //if has remaining multipart, send that
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(getRequestId(), getSession().getNextAck());
-        out.setMethod((byte) MSG_LIST_RES);
+        if (multipart != null) {
+            if (multipart.update(out, getSession().getNextAck())) {
+                getResponder().sendResponse(this);
+            }
+            return;
+        }
+        int ack = getSession().getNextAck();
+        out.init(getRequestId(), ack);
+        out.setMethod(MSG_LIST_RES);
+        out.addIntHeader(HDR_SEQ_ID, seqId);
+        seqId++;
         super.write(writer);
-        out.write((DSBinaryTransport) getResponder().getTransport());
-        //if has multipart
+        if (out.requiresMultipart()) {
+            multipart = out.makeMultipart();
+            multipart.update(out, ack);
+            getResponder().sendResponse(this);
+        } else {
+            out.write((DSBinaryTransport) getResponder().getTransport());
+        }
     }
 
 }
