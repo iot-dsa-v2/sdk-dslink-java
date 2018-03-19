@@ -4,13 +4,13 @@ import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscription;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v2.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2Session;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
-import java.util.Map;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
@@ -42,6 +42,11 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
+
+    @Override
+    protected DSInboundSubscriptions getSubscriptions() {
+        return subscriptions;
+    }
 
     public DSBinaryTransport getTransport() {
         return (DSBinaryTransport) getConnection().getTransport();
@@ -83,18 +88,6 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     }
 
     public void onConnectFail() {
-    }
-
-    public void onDisconnect() {
-        subscriptions.close();
-        for (Map.Entry<Integer, DSStream> entry : getRequests().entrySet()) {
-            try {
-                entry.getValue().onClose(entry.getKey());
-            } catch (Exception x) {
-                error(getPath(), x);
-            }
-        }
-        getRequests().clear();
     }
 
     /**

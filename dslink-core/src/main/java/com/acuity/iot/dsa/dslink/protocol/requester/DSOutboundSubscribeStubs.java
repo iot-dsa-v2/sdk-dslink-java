@@ -72,17 +72,6 @@ class DSOutboundSubscribeStubs {
         }
     }
 
-    public void close() {
-        //TODO who calls this and for what purpose
-        /*
-        DSOutboundSubscribeStub cur = first;
-        while (cur != null) {
-            cur.close();
-            cur = cur.getNext();
-        }
-        */
-    }
-
     private boolean contains(DSOutboundSubscribeStub stub) {
         if (stub == first) {
             return true;
@@ -112,6 +101,14 @@ class DSOutboundSubscribeStubs {
 
     public boolean hasSid() {
         return sid != null;
+    }
+
+    public void onDisconnect() {
+        DSOutboundSubscribeStub cur = first;
+        while (cur != null) {
+            cur.closeStream();
+            cur = cur.getNext();
+        }
     }
 
     /**

@@ -64,6 +64,9 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
     @Override
     public DSTransport close() {
         synchronized (this) {
+            if (!open) {
+                return this;
+            }
             open = false;
             notifyAll();
         }

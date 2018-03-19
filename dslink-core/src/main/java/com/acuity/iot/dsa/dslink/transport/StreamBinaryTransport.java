@@ -64,6 +64,9 @@ public abstract class StreamBinaryTransport extends DSBinaryTransport {
     @Override
     public final DSTransport close() {
         synchronized (this) {
+            if (!open) {
+                return this;
+            }
             open = false;
             notifyAll();
         }

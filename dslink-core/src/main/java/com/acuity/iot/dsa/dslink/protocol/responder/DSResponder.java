@@ -4,7 +4,9 @@ import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConnection;
@@ -65,6 +67,8 @@ public abstract class DSResponder extends DSNode {
         return session;
     }
 
+    protected abstract DSInboundSubscriptions getSubscriptions();
+
     public DSTransport getTransport() {
         return getConnection().getTransport();
     }
@@ -83,6 +87,18 @@ public abstract class DSResponder extends DSNode {
     }
 
     public void onDisconnect() {
+        Iterator<Entry<Integer, DSStream>> it = inboundRequests.entrySet().iterator();
+        Map.Entry<Integer, DSStream> me;
+        while (it.hasNext()) {
+            me = it.next();
+            try {
+                me.getValue().onClose(me.getKey());
+            } catch (Exception x) {
+                error(getPath(), x);
+            }
+            it.remove();
+        }
+        getSubscriptions().onDisconnect();
     }
 
     protected DSStream putRequest(Integer rid, DSStream request) {

@@ -123,7 +123,7 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
         int ack = getSession().getNextAck();
         out.init(getRequestId(), ack);
         out.setMethod(MSG_LIST_RES);
-        out.addIntHeader(HDR_SEQ_ID,seqId);
+        out.addIntHeader(HDR_SEQ_ID, seqId);
         seqId++;
         super.write(writer);
         if (out.requiresMultipart()) {

@@ -289,7 +289,7 @@ public class DSAction implements ActionSpec, DSIObject {
         if (params.isEmpty()) {
             throw new IllegalArgumentException("Empty metadata");
         }
-        String name = params.getString("name");
+        String name = params.getString(DSMetadata.NAME);
         if ((name == null) || name.isEmpty()) {
             throw new IllegalArgumentException("Missing name");
         }
@@ -300,7 +300,7 @@ public class DSAction implements ActionSpec, DSIObject {
             return;
         }
         for (DSMap param : existing) {
-            if (name.equals(param.getString("name"))) {
+            if (name.equals(param.getString(DSMetadata.NAME))) {
                 throw new IllegalArgumentException("Duplicate name: " + name);
             }
         }

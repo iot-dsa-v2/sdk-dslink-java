@@ -48,15 +48,6 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Unsubscribes all.
-     */
-    public void close() {
-        for (Integer i : sidMap.keySet()) {
-            unsubscribe(i);
-        }
-    }
-
-    /**
      * Add to the outbound queue if not already enqueued.
      */
     protected void enqueue(DSInboundSubscription subscription) {
@@ -87,6 +78,21 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
      */
     protected DSInboundSubscription makeSubscription(Integer sid, String path, int qos) {
         return new DSInboundSubscription(this, sid, path, qos);
+    }
+
+    public void onConnect() {
+    }
+
+    public void onConnectFail() {
+    }
+
+    /**
+     * Unsubscribes all.
+     */
+    public void onDisconnect() {
+        for (Integer i : sidMap.keySet()) {
+            unsubscribe(i);
+        }
     }
 
     /**

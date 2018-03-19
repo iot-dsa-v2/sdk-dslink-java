@@ -171,6 +171,9 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     public void onConnectFail() {
         super.onConnectFail();
+        messageReader = null;
+        messageWriter = null;
+        multiparts.clear();
         requester.onConnectFail();
         responder.onConnectFail();
     }
@@ -178,6 +181,9 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     public void onDisconnect() {
         super.onDisconnect();
+        messageReader = null;
+        messageWriter = null;
+        multiparts.clear();
         requester.onDisconnect();
         responder.onDisconnect();
     }

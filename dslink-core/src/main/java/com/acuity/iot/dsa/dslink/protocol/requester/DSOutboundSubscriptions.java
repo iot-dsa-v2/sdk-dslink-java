@@ -4,7 +4,6 @@ import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSubscribeStubs.State;
-import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -133,6 +132,16 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     }
 
     public void onDisconnect() {
+        for (DSOutboundSubscribeStubs stubs : pendingSubscribe) {
+            stubs.onDisconnect();
+        }
+        pendingSubscribe.clear();
+        pendingUnsubscribe.clear();
+        for (DSOutboundSubscribeStubs stubs : pathMap.values()) {
+            stubs.onDisconnect();
+        }
+        sidMap.clear();
+        pathMap.clear();
     }
 
     public void handleUpdate(int sid, String ts, String sts, DSElement value) {
