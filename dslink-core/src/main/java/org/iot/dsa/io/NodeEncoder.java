@@ -4,8 +4,10 @@ import java.util.HashMap;
 import org.iot.dsa.io.json.AbstractJsonWriter;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSIStorable;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 
 /**
@@ -22,15 +24,12 @@ import org.iot.dsa.node.DSNode;
 public class NodeEncoder {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private int nextToken = 1;
     private DSIWriter out;
+    private DSMap cacheMap;
     private HashMap<Class, String> classMap = new HashMap<Class, String>();
 
     ///////////////////////////////////////////////////////////////////////////
@@ -123,7 +122,7 @@ public class NodeEncoder {
                     writeObject(info);
                 }
             } catch (IndexOutOfBoundsException x) {
-                //TODO log a fine - modified during save which is okay.
+                arg.trace(arg.getPath(), x);
             }
             info = info.next();
         }
@@ -176,22 +175,19 @@ public class NodeEncoder {
         if (!arg.equalsDefaultState()) {
             out.key("i").value(arg.encodeState());
         }
+        DSIValue v = (DSIValue) arg.getObject();
+        if (v == null) {
+            out.key("v").value((String) null);
+            return;
+        }
         if (!arg.equalsDefaultType()) {
-            DSIValue v = (DSIValue) arg.getObject();
-            if (v != null) {
-                if (!(v instanceof DSElement)) {
-                    out.key("t").value(getToken(v));
-                }
-                out.key("v").value(v.store());
+            out.key("t").value(getToken(v));
+        }
+        if (!arg.equalsDefaultValue()) {
+            if (v instanceof DSIStorable) {
+                out.key("v").value(((DSIStorable) v).store());
             } else {
-                out.key("v").value((String) null);
-            }
-        } else if (!arg.equalsDefaultValue()) {
-            DSIValue v = (DSIValue) arg.getObject();
-            if (v != null) {
-                out.key("v").value(v.store());
-            } else {
-                out.key("v").value((String) null);
+                out.key("v").value(v.toElement());
             }
         }
         out.endMap();

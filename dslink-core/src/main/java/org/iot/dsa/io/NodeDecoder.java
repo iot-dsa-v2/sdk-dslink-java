@@ -4,6 +4,7 @@ import java.util.HashMap;
 import org.iot.dsa.io.DSIReader.Token;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSIStorable;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
@@ -21,10 +22,6 @@ import org.iot.dsa.util.DSException;
  * @see NodeEncoder
  */
 public class NodeDecoder {
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -129,12 +126,16 @@ public class NodeDecoder {
                     throw new IllegalStateException("Missing name");
                 }
                 DSIObject obj = null;
-                if (info != null) {
-                    obj = info.getObject();
-                }
                 if (type != null) {
                     obj = getInstance(type);
-                    info = parent.put(name, obj);
+                    if (info == null) {
+                        info = parent.put(name, obj);
+                    } else {
+                        parent.put(info, obj);
+                    }
+                }
+                if ((info != null) && (obj == null)) {
+                    obj = info.getObject();
                 }
                 if (obj == null) { //dynamic, or declareDefaults was modified
                     in.next();
@@ -145,7 +146,11 @@ public class NodeDecoder {
                 } else {
                     in.next();
                     DSIValue val = (DSIValue) obj;
-                    parent.put(info, val.restore(in.getElement()));
+                    if (val instanceof DSIStorable) {
+                        parent.put(info, ((DSIStorable) val).restore(in.getElement()));
+                    } else {
+                        parent.put(info, val.valueOf(in.getElement()));
+                    }
                 }
                 if (state != null) {
                     info.decodeState(state);

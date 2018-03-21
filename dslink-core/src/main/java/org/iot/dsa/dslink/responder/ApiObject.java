@@ -22,10 +22,7 @@ public interface ApiObject {
      */
     public Iterator<ApiObject> getChildren();
 
-    /**
-     * Add any meta-data for the object to the given map.
-     */
-    public void getMetadata(DSMap metadata);
+    public void getMetadata(DSMap bucket);
 
     /**
      * The display name.
@@ -50,7 +47,7 @@ public interface ApiObject {
     /**
      * Whether or not this object requires configuration permission to read/write.
      */
-    public boolean isConfig();
+    public boolean isAdmin();
 
     /**
      * True if the object should ignored (not be exposed through the api).

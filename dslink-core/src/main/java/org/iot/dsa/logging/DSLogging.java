@@ -2,8 +2,10 @@ package org.iot.dsa.logging;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.util.Enumeration;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
@@ -50,6 +52,21 @@ public class DSLogging {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Closes all async log handlers.
+     */
+    public static void close() {
+        Enumeration<String> logs = LogManager.getLogManager().getLoggerNames();
+        while (logs.hasMoreElements()) {
+            Logger l = Logger.getLogger(logs.nextElement());
+            for (Handler h : l.getHandlers()) {
+                if (h instanceof AsyncLogHandler) {
+                    h.close();
+                }
+            }
+        }
+    }
 
     /**
      * The default logger.
@@ -107,10 +124,6 @@ public class DSLogging {
         defaultLevel = level;
         defaultLogger.setLevel(level);
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Initialization

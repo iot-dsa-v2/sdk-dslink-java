@@ -97,7 +97,7 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
      */
     public DSList addAll(DSList list) {
         for (DSElement e : list) {
-            add(e);
+            add(e.copy());
         }
         return this;
     }

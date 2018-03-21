@@ -1,8 +1,9 @@
 package org.iot.dsa.io.json;
 
+import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -193,9 +194,9 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
     public JsonReader setInput(File file) {
         try {
             if (in instanceof JsonInput) {
-                ((JsonInput) in).setInput(new FileReader(file));
+                ((JsonInput) in).setInput(new BufferedInputStream(new FileInputStream(file)));
             } else {
-                in = new JsonInput(new FileReader(file));
+                in = new JsonInput(new BufferedInputStream(new FileInputStream(file)));
             }
         } catch (Exception x) {
             throw new IllegalStateException(x);
@@ -329,7 +330,7 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
                 ch = (char) in.read();
                 switch (ch) {
                     case 'u':
-                    case 'U' :
+                    case 'U':
                         ch = readUnicode();
                         break;
                     case 'b':

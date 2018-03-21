@@ -6,7 +6,7 @@ import org.iot.dsa.util.DSException;
 
 /**
  * Thread-safe Base64 encoder and decoder.  This only exists because we need to be compatible with
- * Java 6.  While not an exact copy, it borrows heavily from the Java 8 implementation.
+ * Java 6.
  */
 public class DSBase64 {
 

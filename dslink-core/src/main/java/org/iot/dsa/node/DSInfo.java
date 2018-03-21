@@ -3,6 +3,7 @@ package org.iot.dsa.node;
 import java.util.Iterator;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.util.DSUtil;
 
 /**
@@ -37,23 +38,18 @@ import org.iot.dsa.util.DSUtil;
  *
  * @author Aaron Hansen
  */
-public class DSInfo implements ApiObject, DSISubscriber {
+public class DSInfo implements ApiObject {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    //Config vs admin vs operator
-    //
-    static final int CONFIG = 0;
+    static final int ADMIN = 0;
+    static final int DEFAULT_ON_COPY = 5;
     static final int HIDDEN = 1;
-    static final int TRANSIENT = 2;
-    static final int READONLY = 3;
     static final int PERMANENT = 4;
-    //static final int PERMANENTLY_SUBSCRIBED = 5;
-    //static final int NO_ADD_REMOVE_CHILDREN = 5;
-    //static final int NO_MODIFY_FLAGS = 5;
-    //static final int NO_AUDIT      = 5;
+    static final int READONLY = 3;
+    static final int TRANSIENT = 2;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -86,6 +82,13 @@ public class DSInfo implements ApiObject, DSISubscriber {
         DSInfo ret = new DSInfo();
         ret.flags = flags;
         ret.name = name;
+        if (isDefaultOnCopy()) {
+            DSIObject val = getDefaultObject();
+            if (val != null) {
+                ret.setObject(val.copy());
+                return ret;
+            }
+        }
         if (value != null) {
             ret.setObject(value.copy());
         }
@@ -146,8 +149,8 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     private void fireInfoChanged() {
-        if (parent != null) {
-            parent.infoChanged(this);
+        if ((parent != null) && (parent.isRunning())) {
+            parent.fire(DSInfoTopic.INSTANCE, DSInfoTopic.Event.METADATA_CHANGED, this);
         }
     }
 
@@ -164,7 +167,7 @@ public class DSInfo implements ApiObject, DSISubscriber {
     /**
      * If this represents a dynamic child, this just returns the current value.
      */
-    public DSIObject getDefaultObject() { //TODO Maybe dynamic should return null.
+    public DSIObject getDefaultObject() {
         if (value == null) {
             return null;
         }
@@ -186,18 +189,13 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return flags;
     }
 
-    @Override
-    public void getMetadata(DSMap bucket) {
-        if (value instanceof DSIMetadata) {
-            ((DSIMetadata) value).getMetadata(bucket);
-        }
-        if (value instanceof DSNode) {
-            ((DSNode) value).getMetadata(this, bucket);
-        }
-    }
-
     public String getName() {
         return name;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        DSMetadata.getMetadata(this, bucket);
     }
 
     /**
@@ -231,6 +229,11 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
+
     /**
      * True if there is another info after this one.
      */
@@ -239,18 +242,20 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     @Override
-    public int hashCode() {
-        return System.identityHashCode(this);
-    }
-
-    @Override
     public boolean isAction() {
         return value instanceof DSAction;
     }
 
     @Override
-    public boolean isConfig() {
-        return getFlag(CONFIG);
+    public boolean isAdmin() {
+        return getFlag(ADMIN);
+    }
+
+    /**
+     * Whether or not the current value, or the default value is copied.
+     */
+    public boolean isDefaultOnCopy() {
+        return getFlag(DEFAULT_ON_COPY);
     }
 
     /**
@@ -290,8 +295,8 @@ public class DSInfo implements ApiObject, DSISubscriber {
     }
 
     /**
-     * True if the flags and target object are identical.  Two nodes are identical
-     * if their children are in the same order.
+     * True if the flags and target object are identical.  Two nodes are identical if their children
+     * are in the same order.
      */
     public boolean isIdentical(DSInfo arg) {
         if (arg == this) {
@@ -391,24 +396,14 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return cur;
     }
 
-    /**
-     * Routes events from child DSIPublishers to onChildChanged in the parent.
-     */
-    @Override
-    public void onEvent(DSIObject publisher, DSInfo child, DSIPublisher.Event event) {
-        if (parent != null) {
-            parent.onChildChanged(this);
-        }
+    public DSInfo setAdmin(boolean admin) {
+        setFlag(ADMIN, admin);
+        return this;
     }
 
     DSInfo setFlag(int position, boolean on) {
         fireInfoChanged();
         flags = DSUtil.setBit(flags, position, on);
-        return this;
-    }
-
-    public DSInfo setConfig(boolean config) {
-        setFlag(CONFIG, config);
         return this;
     }
 
@@ -447,18 +442,6 @@ public class DSInfo implements ApiObject, DSISubscriber {
         return this;
     }
 
-    void subscribe() {
-        if (value instanceof DSIPublisher) {
-            ((DSIPublisher) value).subscribe(this);
-        }
-    }
-
-    void unsubscribe() {
-        if (value instanceof DSIPublisher) {
-            ((DSIPublisher) value).unsubscribe(this);
-        }
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
@@ -485,8 +468,4 @@ public class DSInfo implements ApiObject, DSISubscriber {
 
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
-
-} //class
+}

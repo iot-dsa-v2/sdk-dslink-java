@@ -11,18 +11,19 @@ public class DSMetadata {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    public static final String BOOLEAN_RANGE = "booleanRange";
-    public static final String DESCRIPTION = "description";
-    public static final String DECIMAL_PLACES = "decimalPlaces";
-    public static final String DEFAULT = "default";
-    public static final String EDITOR = "editor";
-    public static final String ENUM_RANGE = "enumRange";
-    public static final String NAME = "name";
-    public static final String MAX_VALUE = "maxValue";
-    public static final String MIN_VALUE = "minValue";
-    public static final String PLACEHOLDER = "placeholder";
-    public static final String TYPE = "type";
-    public static final String UNIT = "unit";
+    public static final String BOOLEAN_RANGE = "$booleanRange";
+    public static final String DESCRIPTION = "$description";
+    public static final String DECIMAL_PLACES = "$decimalPlaces";
+    public static final String DEFAULT = "$default";
+    public static final String DISPLAY_NAME = "$displayName";
+    public static final String EDITOR = "$editor";
+    public static final String ENUM_RANGE = "$enumRange";
+    public static final String NAME = "$name";
+    public static final String MAX_VALUE = "$maxValue";
+    public static final String MIN_VALUE = "$minValue";
+    public static final String PLACEHOLDER = "$placeholder";
+    public static final String TYPE = "$type";
+    public static final String UNIT = "$unit";
 
     //public static final String EDITOR_DATE = "date";
     //public static final String EDITOR_DATE_RANGE = "daterange";
@@ -96,6 +97,13 @@ public class DSMetadata {
     }
 
     /**
+     * The alternate display name, or null.
+     */
+    public String getDisplayName() {
+        return map.getString(DISPLAY_NAME);
+    }
+
+    /**
      * The editor, or null.
      */
     public String getEditor() {
@@ -114,6 +122,30 @@ public class DSMetadata {
      */
     public DSElement getMaxValue() {
         return map.get(MAX_VALUE);
+    }
+
+    /**
+     * Fully acquires metadata about the info.  If the target of the info implements DSIMetadata,
+     * it is put in the bucket first.  Then if the parent node is allowed is given the the chance
+     * to add/edit the bucket.
+     *
+     * @param info   Who to get metadata for.
+     * @param bucket Where to put the metadata, can be null in which case a new map will be
+     *               instantiated.
+     * @return The bucket arg, or a new map if the arg was null.
+     */
+    public static DSMap getMetadata(DSInfo info, DSMap bucket) {
+        if (bucket == null) {
+            bucket = new DSMap();
+        }
+        DSIObject obj = info.getObject();
+        if (obj instanceof DSIMetadata) {
+            ((DSIMetadata) obj).getMetadata(bucket);
+        }
+        if (info.getParent() != null) {
+            info.getParent().getMetadata(info, bucket);
+        }
+        return bucket;
     }
 
     /**
@@ -215,6 +247,13 @@ public class DSMetadata {
         return this;
     }
 
+    public DSMetadata setDisplayName(String arg) {
+        if (arg != null) {
+            map.put(DISPLAY_NAME, arg);
+        }
+        return this;
+    }
+
     /**
      * See the EDITOR_ constants.
      */
@@ -226,13 +265,20 @@ public class DSMetadata {
     }
 
     /**
-     * See the EDITOR_ constants.
+     * List of string values for an enum or string.
      */
     public DSMetadata setEnumRange(DSList arg) {
         if (arg != null) {
             map.put(ENUM_RANGE, arg);
         }
         return this;
+    }
+
+    /**
+     * List of string values for an enum or string.
+     */
+    public DSMetadata setEnumRange(String... range) {
+        return setEnumRange(DSList.valueOf(range));
     }
 
     /**

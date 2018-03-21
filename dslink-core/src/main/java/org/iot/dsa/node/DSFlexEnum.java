@@ -6,7 +6,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSFlexEnum extends DSValue implements DSIEnum, DSIMetadata {
+public class DSFlexEnum extends DSValue implements DSIEnum, DSIMetadata, DSIStorable {
 
     // Constants
     // ---------

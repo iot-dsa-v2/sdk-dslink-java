@@ -10,10 +10,6 @@ import org.iot.dsa.util.DSUtil;
 class DSInfoProxy extends DSInfo {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +38,12 @@ class DSInfoProxy extends DSInfo {
         ret.flags = flags;
         ret.name = name;
         ret.defaultInfo = defaultInfo;
-        if (value != null) {
+        if (isDefaultOnCopy()) {
+            DSIObject val = getDefaultObject();
+            if (val != null) {
+                ret.setObject(val.copy());
+            }
+        } else if (value != null) {
             ret.setObject(value.copy());
         }
         return ret;
@@ -65,10 +66,7 @@ class DSInfoProxy extends DSInfo {
 
     @Override
     public boolean equalsDefaultState() {
-        if (flags != defaultInfo.flags) {
-            return false;
-        }
-        return true;
+        return flags == defaultInfo.flags;
     }
 
     @Override
@@ -92,12 +90,4 @@ class DSInfoProxy extends DSInfo {
         return true;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
-
-} //class
+}

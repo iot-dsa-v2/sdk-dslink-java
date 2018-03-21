@@ -57,6 +57,10 @@ public abstract class DSGroup extends DSElement {
         return hashCode;
     }
 
+    public boolean hasParent() {
+        return parent != null;
+    }
+
     /**
      * Returns the item at index 0.
      *

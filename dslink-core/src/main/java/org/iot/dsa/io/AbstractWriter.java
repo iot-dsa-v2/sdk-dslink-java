@@ -2,7 +2,6 @@ package org.iot.dsa.io;
 
 import java.io.Closeable;
 import java.io.IOException;
-import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -47,6 +46,11 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
 
     @Override
     public AbstractWriter beginList() {
+        return beginList(-1);
+    }
+
+    @Override
+    public AbstractWriter beginList(int size) {
         try {
             switch (last) {
                 case LAST_MAP:
@@ -61,7 +65,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
                         writeNewLineIndent();
                     }
             }
-            writeListStart();
+            writeListStart(size);
             last = LAST_LIST;
             depth++;
         } catch (IOException x) {
@@ -72,6 +76,11 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
 
     @Override
     public AbstractWriter beginMap() {
+        return beginMap(-1);
+    }
+
+    @Override
+    public AbstractWriter beginMap(int size) {
         try {
             switch (last) {
                 case LAST_MAP:
@@ -86,7 +95,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
                         writeNewLineIndent();
                     }
             }
-            writeMapStart();
+            writeMapStart(size);
             last = LAST_MAP;
             depth++;
         } catch (IOException x) {
@@ -171,6 +180,13 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
         return this;
     }
 
+    /**
+     * Returns 0 by default.
+     */
+    public int length() {
+        return 0;
+    }
+
     @Override
     public AbstractWriter reset() {
         depth = 0;
@@ -194,16 +210,16 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
                 value(arg.toLong());
                 break;
             case LIST:
-                beginList();
                 DSList list = arg.toList();
+                beginList(list.size());
                 for (int i = 0, len = list.size(); i < len; i++) {
                     value(list.get(i));
                 }
                 endList();
                 break;
             case MAP:
-                beginMap();
                 DSMap map = arg.toMap();
+                beginMap(map.size());
                 Entry e;
                 for (int i = 0, len = map.size(); i < len; i++) {
                     e = map.getEntry(i);
@@ -230,8 +246,8 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                case LAST_INIT:
-                    throw new IllegalStateException("Not expecting value: " + arg);
+                    //case LAST_INIT:
+                    //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:
                     writeSeparator();
@@ -258,8 +274,8 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error");
-                case LAST_INIT:
-                    throw new IllegalStateException("Not expecting byte[] value");
+                    //case LAST_INIT:
+                    //throw new IllegalStateException("Not expecting byte[] value");
                 case LAST_VAL:
                 case LAST_END:
                     writeSeparator();
@@ -286,8 +302,8 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                case LAST_INIT:
-                    throw new IllegalStateException("Not expecting value: " + arg);
+                    //case LAST_INIT:
+                    //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:
                     writeSeparator();
@@ -314,8 +330,8 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                case LAST_INIT:
-                    throw new IllegalStateException("Not expecting value: " + arg);
+                    //case LAST_INIT:
+                    //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:
                     writeSeparator();
@@ -342,8 +358,8 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                case LAST_INIT:
-                    throw new IllegalStateException("Not expecting value: " + arg);
+                    //case LAST_INIT:
+                    //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:
                     writeSeparator();
@@ -370,8 +386,8 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             switch (last) {
                 case LAST_DONE:
                     throw new IllegalStateException("Nesting error: " + arg);
-                case LAST_INIT:
-                    throw new IllegalStateException("Not expecting value: " + arg);
+                    //case LAST_INIT:
+                    //throw new IllegalStateException("Not expecting value: " + arg);
                 case LAST_VAL:
                 case LAST_END:
                     writeSeparator();
@@ -434,7 +450,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
     /**
      * Start a new list.
      */
-    protected abstract void writeListStart() throws IOException;
+    protected abstract void writeListStart(int size) throws IOException;
 
     /**
      * End the current map.
@@ -444,7 +460,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
     /**
      * Start a new map.
      */
-    protected abstract void writeMapStart() throws IOException;
+    protected abstract void writeMapStart(int size) throws IOException;
 
     /**
      * Override point for subclasses which perform use pretty printing, such as json. Does nothing

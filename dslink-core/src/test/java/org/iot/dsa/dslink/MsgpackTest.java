@@ -1,5 +1,7 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -7,9 +9,6 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import org.iot.dsa.io.DSIReader;
-import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.msgpack.MsgpackReader;
-import org.iot.dsa.io.msgpack.MsgpackWriter;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSString;
@@ -20,18 +19,6 @@ import org.junit.Test;
  * @author Aaron Hansen
  */
 public class MsgpackTest {
-
-    // Constants
-    // ---------
-
-    // Fields
-    // ------
-
-    // Constructors
-    // ------------
-
-    // Methods
-    // -------
 
     @Test
     public void testStrings() throws Exception {
@@ -64,19 +51,15 @@ public class MsgpackTest {
 
     @Test
     public void theTest() throws Exception {
-        final ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
-        DSIWriter out = new MsgpackWriter() {
-            @Override
-            public DSIWriter flush() {
-                writeTo(baos1);
-                return this;
-            }
+        MsgpackWriter tmp = new MsgpackWriter();
+        tmp.beginList();
+        tmp.value("abc");
+        tmp.endList();
+        DSIReader reader = new MsgpackReader(new ByteArrayInputStream(tmp.toByteArray()));
+        reader.getElement().toList();
 
-            @Override
-            public void close() {
-                flush();
-            }
-        };
+        final ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
+        MsgpackWriter out = new MsgpackWriter();
         out.beginList();
         out.value("abc");
         out.value(10);
@@ -85,8 +68,9 @@ public class MsgpackTest {
         out.value(new DSMap());
         out.value(new DSList());
         out.endList();
-        out.reset();
-        byte[] encoded = baos1.toByteArray();
+        //out.writeTo(baos1);
+        //out.reset();
+        byte[] encoded = out.toByteArray();
         DSIReader parser = new MsgpackReader(new ByteArrayInputStream(encoded));
         DSList list = parser.getElement().toList();
         parser.close();
@@ -96,18 +80,7 @@ public class MsgpackTest {
         Assert.assertTrue(list.get(2).toBoolean());
         Assert.assertEquals(list.get(3).toDouble(), 10.1d, 0);
         final ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
-        out = new MsgpackWriter() {
-            @Override
-            public DSIWriter flush() {
-                writeTo(baos2);
-                return this;
-            }
-
-            @Override
-            public void close() {
-                flush();
-            }
-        };
+        out = new MsgpackWriter();
         out.beginMap();
         out.key("first").value("abc");
         out.key("second").value(10);
@@ -127,6 +100,7 @@ public class MsgpackTest {
         }
         out.key("seventh").value("somebytes".getBytes());
         out.endMap();
+        out.writeTo(baos2);
         out.reset();
         encoded = baos2.toByteArray();
         parser = new MsgpackReader(new ByteArrayInputStream(encoded));

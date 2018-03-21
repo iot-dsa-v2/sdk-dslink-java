@@ -58,7 +58,7 @@ public class DSMap extends DSGroup {
     }
 
     @Override
-    public DSElement copy() {
+    public DSMap copy() {
         DSMap ret = new DSMap();
         for (int i = 0, len = size(); i < len; i++) {
             ret.put(getKey(i), get(i).copy());
@@ -427,7 +427,7 @@ public class DSMap extends DSGroup {
         Entry e;
         for (int i = 0, len = toAdd.size(); i < len; i++) {
             e = toAdd.getEntry(i);
-            put(e.getKey(), e.getValue());
+            put(e.getKey(), e.getValue().copy());
         }
         return this;
     }

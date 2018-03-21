@@ -25,7 +25,7 @@ public class LoggingTest {
         log.exiting("LoggingTest", "aMethod");
     }
 
-    @Test
+    //@Test
     public void test1() throws Exception {
         Logger.getLogger("").info("My first log");
         log.info("My second log");

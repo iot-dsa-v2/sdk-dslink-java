@@ -1,7 +1,5 @@
 package org.iot.dsa.dslink.responder;
 
-import org.iot.dsa.dslink.DSLinkSession;
-
 /**
  * Common to all incoming requests.
  *
@@ -18,11 +16,5 @@ public interface InboundRequest {
      * Unique ID of the request, or 0 for subscriptions.
      */
     public Integer getRequestId();
-
-    /**
-     * The corresponding session.
-     */
-    public DSLinkSession getResponder();
-
 
 }

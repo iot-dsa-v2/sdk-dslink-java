@@ -15,11 +15,15 @@ import org.iot.dsa.time.DSTime;
  *
  * @author Aaron Hansen
  */
-public abstract class AsyncLogHandler extends Handler {
+public abstract class AsyncLogHandler extends Handler implements DSILevels {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
     ///////////////////////////////////////////////////////////////////////////
+
+    static final int STATE_CLOSED = 0;
+    static final int STATE_OPEN = 1;
+    static final int STATE_CLOSE_PENDING = 2;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -29,39 +33,38 @@ public abstract class AsyncLogHandler extends Handler {
     private Calendar calendar = Calendar.getInstance();
     private LogHandlerThread logHandlerThread;
     private int maxQueueSize = DSLogging.DEFAULT_MAX_QUEUE;
-    private boolean open = false;
     private PrintStream out;
+    private int state = STATE_CLOSED;
     private LinkedList<LogRecord> queue = new LinkedList<LogRecord>();
     private int queueThrottle = (int) (DSLogging.DEFAULT_MAX_QUEUE * .90);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * The number of items on the queue.
-     */
-    public int backlog() {
-        synchronized (queue) {
-            return queue.size();
-        }
-    }
-
-    /**
      * Closes the PrintStream, terminates the write thread and performs houseKeeping.
      */
     @Override
     public void close() {
-        open = false;
+        synchronized (this) {
+            if (state != STATE_OPEN) {
+                return;
+            }
+            state = STATE_CLOSE_PENDING;
+        }
         synchronized (queue) {
-            queue.notifyAll();
+            while (queue.size() > 0) {
+                queue.notifyAll();
+                try {
+                    queue.wait();
+                } catch (Exception ignore) {
+                }
+            }
         }
         houseKeeping();
-        out.close();
+        out.flush();
+        state = STATE_CLOSED;
     }
 
     @Override
@@ -75,10 +78,6 @@ public abstract class AsyncLogHandler extends Handler {
      */
     public long getHouseKeepingIntervalMillis() {
         return DSTime.MILLIS_TEN_SECONDS;
-    }
-
-    public int getMaxQueueSize() {
-        return maxQueueSize;
     }
 
     /**
@@ -106,7 +105,7 @@ public abstract class AsyncLogHandler extends Handler {
      */
     @Override
     public void publish(LogRecord record) {
-        if (open) {
+        if (state == STATE_OPEN) {
             if (maxQueueSize > 0) {
                 int size = queue.size();
                 if (size >= queueThrottle) {
@@ -194,10 +193,33 @@ public abstract class AsyncLogHandler extends Handler {
      */
     protected void start() {
         if (logHandlerThread == null) {
-            open = true;
+            state = STATE_OPEN;
             logHandlerThread = new LogHandlerThread();
             logHandlerThread.start();
         }
+    }
+
+    private String toString(Level level) {
+        switch (level.intValue()) {
+            case TRACE: //finest
+                return "Trace";
+            case DEBUG: //finer
+                return "Debug";
+            case FINE: //fine
+            case CONFIG: //config
+                return "Fine ";
+            case WARN: //custom
+                return "Warn ";
+            case INFO: //info
+                return "Info ";
+            case ERROR: //warn
+                return "Error";
+            case ADMIN: //custom
+                return "Admin";
+            case FATAL: //severe
+                return "Fatal";
+        }
+        return level.getLocalizedName();
     }
 
     /**
@@ -209,34 +231,39 @@ public abstract class AsyncLogHandler extends Handler {
             out.println(formatter.format(record));
             return;
         }
+        // severity
+        builder.append('[').append(toString(record.getLevel())).append(' ');
         // timestamp
         calendar.setTimeInMillis(record.getMillis());
         DSTime.encodeForLogs(calendar, builder);
+        builder.append(']');
         // log name
-        builder.append(" [");
-        builder.append(record.getLoggerName());
-        builder.append("] ");
-        // severity
-        builder.append(record.getLevel().getLocalizedName());
+        String name = record.getLoggerName();
+        if ((name != null) && !name.isEmpty()) {
+            builder.append("[");
+            builder.append(record.getLoggerName());
+            builder.append(']');
+        } else {
+            builder.append("[Default]");
+        }
         // class
         if (record.getSourceClassName() != null) {
-            builder.append(" - ");
             builder.append(record.getSourceClassName());
+            builder.append(" - ");
         }
         // method
         if (record.getSourceMethodName() != null) {
-            builder.append(" - ");
             builder.append(record.getSourceMethodName());
+            builder.append(" - ");
         }
         // message
         String msg = record.getMessage();
         if ((msg != null) && (msg.length() > 0)) {
             Object[] params = record.getParameters();
-            if (params != null) {
+            if ((params != null) && (params.length > 0)) {
                 msg = String.format(msg, params);
             }
-            builder.append(" - ");
-            builder.append(msg);
+            builder.append(' ').append(msg);
         }
         out.println(builder.toString());
         builder.setLength(0);
@@ -262,51 +289,56 @@ public abstract class AsyncLogHandler extends Handler {
             long lastHouseKeeping = System.nanoTime();
             long now;
             LogRecord record;
-            boolean emptyQueue;
-            while (open) {
+            boolean emptyQueue = false;
+            while (state != STATE_CLOSED) {
                 record = null;
                 synchronized (queue) {
                     emptyQueue = queue.isEmpty();
                     if (emptyQueue) {
                         try {
-                            queue.wait(DSTime.MILLIS_SECOND);
+                            queue.notifyAll();
                         } catch (Exception ignore) {
                         }
+                        if (state == STATE_OPEN) {
+                            try {
+                                queue.wait(DSTime.MILLIS_SECOND);
+                            } catch (Exception ignore) {
+                            }
+                        }
                         emptyQueue = queue.isEmpty(); //housekeeping opportunity flag
-                    } else {
+                    } else if (!emptyQueue) {
                         record = queue.removeFirst();
                     }
                 }
-                if (open) {
+                if (state != STATE_CLOSED) {
                     if (record != null) {
                         write(record);
-                        Thread.yield();
                     }
-                    if (emptyQueue) {
-                        //housekeeping opportunity
-                        now = System.currentTimeMillis();
-                        long min = getHouseKeepingIntervalMillis() / 2;
-                        if ((now - lastHouseKeeping) > min) {
-                            flush();
-                            houseKeeping();
-                            lastHouseKeeping = System.nanoTime();
-                        }
-                    } else {
-                        now = System.currentTimeMillis();
-                        if ((now - lastHouseKeeping) > getHouseKeepingIntervalMillis()) {
-                            flush();
-                            houseKeeping();
-                            lastHouseKeeping = System.nanoTime();
+                    if (state == STATE_OPEN) {
+                        if (emptyQueue) {
+                            //housekeeping opportunity
+                            now = System.currentTimeMillis();
+                            long min = getHouseKeepingIntervalMillis() / 2;
+                            if ((now - lastHouseKeeping) > min) {
+                                flush();
+                                houseKeeping();
+                                lastHouseKeeping = System.nanoTime();
+                            }
+                        } else {
+                            now = System.currentTimeMillis();
+                            if ((now - lastHouseKeeping) > getHouseKeepingIntervalMillis()) {
+                                flush();
+                                houseKeeping();
+                                lastHouseKeeping = System.nanoTime();
+                            }
                         }
                     }
                 }
             }
+            flush();
             logHandlerThread = null;
         }
-    }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
+    } //LogHandlerThread
 
-} //class
+}

@@ -1,8 +1,8 @@
 package org.iot.dsa.node;
 
 /**
- * This is used for decoding raw json.  Try to use strong typed null instances instead (e.g.
- * DBool.NULL).
+ * Try not to use, it is for decoding raw json.  Try to use strong typed null instances instead
+ * (e.g. DBool.NULL).
  *
  * @author Aaron Hansen
  */

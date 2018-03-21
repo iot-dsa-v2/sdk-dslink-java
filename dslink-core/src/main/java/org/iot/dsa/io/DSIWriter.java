@@ -49,11 +49,27 @@ public interface DSIWriter extends Closeable {
     public DSIWriter beginList();
 
     /**
+     * Start a new list of the given size and return this.
+     *
+     * @param size Less than zero means the size is unknown.
+     * @throws IllegalStateException when improperly called.
+     */
+    public DSIWriter beginList(int size);
+
+    /**
      * Start a new map and return this.
      *
      * @throws IllegalStateException when improperly called.
      */
     public DSIWriter beginMap();
+
+    /**
+     * Start a new map of the given size and return this.
+     *
+     * @param size Less than zero means the size is unknown.
+     * @throws IllegalStateException when improperly called.
+     */
+    public DSIWriter beginMap(int size);
 
     /**
      * Close the stream. IOExceptions will be wrapped in runtime exceptions.
@@ -86,6 +102,11 @@ public interface DSIWriter extends Closeable {
      * @throws IllegalStateException when improperly called.
      */
     public DSIWriter key(CharSequence key);
+
+    /**
+     * If the writer is buffering output, this returns the size of that buffer.
+     */
+    public int length();
 
     /**
      * Clears the state of the writer.

@@ -1,5 +1,7 @@
 package org.iot.dsa;
 
+import org.iot.dsa.time.DSTime;
+
 /**
  * DSA thread pool and timers.
  *
@@ -8,14 +10,11 @@ package org.iot.dsa;
 public class DSRuntime {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static boolean alive = true;
+    private static long nextCycle = -1;
     private static RuntimeThread runtimeThread;
     private static Timer timerHead;
     private static Timer timerTail;
@@ -35,16 +34,17 @@ public class DSRuntime {
     /**
      * Returns the next time execution is needed.
      */
-    private static long executeTimers() {
+    private static void executeTimers() {
+        long now = System.currentTimeMillis();
+        long nextCycleTmp = now + 60000;
         Timer current = null;
         Timer next = null;
         Timer keepHead = null;
         Timer keepTail = null;
         long tmp;
-        long now = System.currentTimeMillis();
-        long nextCycle = now + 60000;
         //Take the task link list.
         synchronized (DSRuntime.class) {
+            nextCycle = nextCycleTmp;
             current = timerHead;
             timerHead = null;
             timerTail = null;
@@ -53,9 +53,10 @@ public class DSRuntime {
         while (alive && (current != null)) {
             tmp = current.run(now);
             next = current.next;
+            current.next = null;
             if (tmp > 0) {
-                if (tmp < nextCycle) {
-                    nextCycle = tmp;
+                if (tmp < nextCycleTmp) {
+                    nextCycleTmp = tmp;
                 }
                 if (keepHead == null) {
                     keepHead = current;
@@ -64,13 +65,15 @@ public class DSRuntime {
                     keepTail.next = current;
                     keepTail = current;
                 }
-                current.next = null;
             }
             current = next;
         }
         //Add the tasks that have future work back to the main linked list.
-        if (keepHead != null) {
-            synchronized (DSRuntime.class) {
+        synchronized (DSRuntime.class) {
+            if (nextCycleTmp < nextCycle) {
+                nextCycle = nextCycleTmp;
+            }
+            if (keepHead != null) {
                 if (timerHead == null) {
                     timerHead = keepHead;
                     timerTail = keepTail;
@@ -80,7 +83,6 @@ public class DSRuntime {
                 }
             }
         }
-        return nextCycle;
     }
 
     /**
@@ -108,7 +110,10 @@ public class DSRuntime {
                 timerTail.next = f;
                 timerTail = f;
             }
-            DSRuntime.class.notify();
+            if (start < nextCycle) {
+                nextCycle = start;
+                DSRuntime.class.notifyAll();
+            }
         }
         return f;
     }
@@ -117,7 +122,7 @@ public class DSRuntime {
      * Run once at the given time.
      *
      * @param arg What to runAt.
-     * @param at  Execution time.  If the time is past, it'll runAt right away.
+     * @param at  Execution time.  If the time is past, it'll run right away.
      * @return For inspecting and cancel execution.
      */
     public static Timer runAt(Runnable arg, long at) {
@@ -130,7 +135,10 @@ public class DSRuntime {
                 timerTail.next = f;
                 timerTail = f;
             }
-            DSRuntime.class.notify();
+            if (at < nextCycle) {
+                nextCycle = at;
+                DSRuntime.class.notifyAll();
+            }
         }
         return f;
     }
@@ -161,7 +169,7 @@ public class DSRuntime {
     /**
      * Can be used to inspect and cancel tasks passed to the run methods in DSRuntime.
      */
-    public static class Timer {
+    public static class Timer implements Runnable {
 
         private long count = 0;
         private long interval = 0;
@@ -170,6 +178,7 @@ public class DSRuntime {
         private long nextRun = 1; //0 == canceled, <0 == done
         private Runnable runnable;
         private boolean running = false;
+        private boolean skipMissed = true;
 
         Timer(Runnable runnable, long start, long interval) {
             this.interval = interval;
@@ -188,6 +197,20 @@ public class DSRuntime {
             if (nextRun > 0) {
                 nextRun = 0;
             }
+        }
+
+        private long computeNextRun(long now) {
+            if (interval <= 0) {
+                return nextRun = -1;
+            }
+            if (skipMissed) {
+                while (nextRun <= now) {
+                    nextRun += interval;
+                }
+            } else {
+                nextRun += interval;
+            }
+            return nextRun;
         }
 
         /**
@@ -216,7 +239,7 @@ public class DSRuntime {
         }
 
         /**
-         * Trun only when the runnable is actually being run.
+         * True when the runnable is being actually being executed.
          */
         public boolean isRunning() {
             return running;
@@ -239,6 +262,17 @@ public class DSRuntime {
         }
 
         /**
+         * Do not call.
+         */
+        public void run() {
+            try {
+                runnable.run();
+            } finally {
+                running = false;
+            }
+        }
+
+        /**
          * Executes the task if it is time.
          *
          * @param now The current time, just an efficiency.
@@ -251,19 +285,17 @@ public class DSRuntime {
             if (now < nextRun) {
                 return nextRun;
             }
-            running = true;
-            DSRuntime.run(runnable);
-            count++;
-            running = false;
-            lastRun = nextRun;
-            if (interval > 0) {
-                while (nextRun <= now) {
-                    nextRun += interval;
+            if (running) {
+                if (skipMissed) {
+                    return computeNextRun(now);
                 }
-            } else {
-                nextRun = -1;
+                return nextRun;
             }
-            return nextRun;
+            running = true;
+            DSRuntime.run(this);
+            count++;
+            lastRun = nextRun;
+            return computeNextRun(now);
         }
 
         /**
@@ -271,6 +303,25 @@ public class DSRuntime {
          */
         public long runCount() {
             return count;
+        }
+
+        /**
+         * The default is true, set this to false if all intervals should be run, even if they run
+         * later than scheduled.
+         *
+         * @param skipMissed False if intervals should be run after they were scheduled to.
+         * @return this
+         */
+        public Timer setSkipMissedIntervals(boolean skipMissed) {
+            this.skipMissed = skipMissed;
+            return this;
+        }
+
+        public String toString() {
+            StringBuilder buf = new StringBuilder();
+            DSTime.encode(nextRun, false, buf);
+            buf.append(" - ").append(runnable.toString());
+            return buf.toString();
         }
 
     } //Timer
@@ -286,23 +337,24 @@ public class DSRuntime {
         }
 
         public void run() {
-            long delta, nextCycle;
+            long delta;
             while (alive) {
-                nextCycle = executeTimers();
-                delta = nextCycle - System.currentTimeMillis();
-                if (delta > 0) {
-                    synchronized (DSRuntime.class) {
+                executeTimers();
+                synchronized (DSRuntime.class) {
+                    delta = nextCycle - System.currentTimeMillis();
+                    if (delta > 0) {
                         try {
                             DSRuntime.class.wait(delta);
                         } catch (Exception ignore) {
                         }
                     }
-                } else {
+                }
+                if (delta <= 0) {
                     Thread.yield();
                 }
             }
         }
-    } //RuntimeThread.
+    } //RuntimeThread
 
     private static class ShutdownThread extends Thread {
 
@@ -323,8 +375,9 @@ public class DSRuntime {
     static {
         Runtime.getRuntime().addShutdownHook(new ShutdownThread());
         threadPool = new DSThreadPool("DSRuntime");
-        int min = Math.max(1, DSThreadPool.getNumProcessors());
-        threadPool.setMinMax(min, DSThreadPool.getNumProcessors() * 25);
+        int min = Math.max(4, DSThreadPool.getNumProcessors());
+        threadPool.setMinMax(min, -1);
+        //threadPool.setMinMax(min, DSThreadPool.getNumProcessors() * 25);
         runtimeThread = new RuntimeThread();
         runtimeThread.start();
     }

@@ -3,6 +3,7 @@ package org.iot.dsa.dslink;
 import java.io.File;
 import java.util.logging.Level;
 import org.iot.dsa.io.json.JsonReader;
+import org.iot.dsa.logging.DSILevels;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSKeys;
 
@@ -13,7 +14,7 @@ import org.iot.dsa.security.DSKeys;
  *
  * @author Aaron Hansen
  */
-public class DSLinkConfig {
+public class DSLinkConfig implements DSILevels {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -21,33 +22,29 @@ public class DSLinkConfig {
 
     public static final String CFG_AUTH_TOKEN = "token";
     public static final String CFG_BROKER_URL = "broker";
-    public static final String CFG_CONNECTION_TYPE = "connectionType";
-    public static final String CFG_IS_REQUESTER = "isRequester";
-    public static final String CFG_IS_RESPONDER = "isResponder";
     public static final String CFG_KEY_FILE = "key";
-    public static final String CFG_LOG_FILE = "logFile";
     public static final String CFG_LOG_LEVEL = "log";
     public static final String CFG_NODE_FILE = "nodes";
+
+    public static final String CFG_CONNECTION_TYPE = "connectionType";
     public static final String CFG_READ_TIMEOUT = "readTimeout";
-    public static final String CFG_ROOT_TYPE = "rootType";
     public static final String CFG_SAVE_INTERVAL = "saveInterval";
     public static final String CFG_STABLE_DELAY = "stableDelay";
-    public static final String CFG_TRANSPORT_FACTORY = "transportFactory";
+    public static final String CFG_WS_TRANSPORT_FACTORY = "wsTransportFactory";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private String brokerUri;
-    private String dsId;
+    private String dsaVersion;
     private DSMap dslinkJson;
     private boolean help = false;
     private DSKeys keys;
     private String linkName;
-    private File logFile;
     private Level logLevel;
     private File nodesFile;
-    private String rootType;
+    private String mainType;
     private String token;
     private File workingDir = new File(".");
 
@@ -69,6 +66,7 @@ public class DSLinkConfig {
      */
     public DSLinkConfig(File workingDir) {
         this.workingDir = workingDir;
+        setDslinkJson(new File(workingDir, "dslink.json"));
     }
 
     /**
@@ -76,6 +74,7 @@ public class DSLinkConfig {
      * character.
      */
     public DSLinkConfig(String args) {
+        setDslinkJson(new File("dslink.json"));
         parse(args.split(" +"));
     }
 
@@ -83,6 +82,7 @@ public class DSLinkConfig {
      * Constructor for the arguments pass to a main method.
      */
     public DSLinkConfig(String[] args) {
+        setDslinkJson(new File("dslink.json"));
         parse(args);
     }
 
@@ -188,6 +188,21 @@ public class DSLinkConfig {
         return tmp;
     }
 
+    public String getDsaVersion() {
+        String brokerUri = getBrokerUri();
+        if (brokerUri != null) {
+            if (brokerUri.startsWith("http")) {
+                if (brokerUri.indexOf("/conn") > 0) {
+                    return "1.0";
+                }
+            }
+        }
+        if (dsaVersion == null) {
+            dsaVersion = getDslinkJson().get("dsa-version", "2.0");
+        }
+        return dsaVersion;
+    }
+
     /**
      * If not set, this will attempt to open dslink.json in the working the process directory.
      */
@@ -209,7 +224,7 @@ public class DSLinkConfig {
            .append(" --token|-t   Authentication token for the connection handshake.\n")
            .append(" --nodes|-n   Path to the configuration node database.\n")
            .append(" --key|-k     Path to the stored keys.\n")
-           .append(" --Log|-l     Log level (finest,finer,fine,config,info,warning,severe).\n")
+           .append(" --log|-l     Log level (finest,finer,fine,config,info,warning,severe).\n")
            .append(" --dslink-json|-d  Location of the dslink.json file.\n")
            .append(" --name       Name of the link implementation, for example ")
            .append("dslink-java-modbus.\n")
@@ -235,13 +250,6 @@ public class DSLinkConfig {
         return linkName;
     }
 
-    public File getLogFile() {
-        if (logFile == null) {
-            setLogFile(new File(getConfig(CFG_LOG_FILE, getLinkName() + ".log")));
-        }
-        return logFile;
-    }
-
     /**
      * If not set, will attempt to use the getConfig in dslink.json but fall back to 'info' if
      * necessary.
@@ -254,12 +262,12 @@ public class DSLinkConfig {
     }
 
     /**
-     * If not set, will attempt to use the getConfig in dslink.json but fall back to 'nodes.json' in
+     * If not set, will attempt to use the getConfig in dslink.json but fall back to 'nodes.zip' in
      * the process directory if necessary.
      */
     public File getNodesFile() {
         if (nodesFile == null) {
-            setNodesFile(new File(getConfig(CFG_NODE_FILE, "nodes.json")));
+            setNodesFile(new File(getConfig(CFG_NODE_FILE, "nodes.zip")));
         }
         return nodesFile;
     }
@@ -267,14 +275,17 @@ public class DSLinkConfig {
     /**
      * The type of the root node.
      */
-    public String getRootType() {
-        if (rootType == null) {
-            rootType = getConfig(CFG_ROOT_TYPE, null);
-            if (rootType == null) {
-                throw new IllegalStateException("Missing rootType config.");
-            }
+    public String getMainType() {
+        if (mainType == null) { //legacy
+            mainType = getConfig("handler_class", null);
         }
-        return rootType;
+        if (mainType == null) { //legacy
+            mainType = getConfig("mainType", null);
+        }
+        if (mainType == null) {
+            throw new IllegalStateException("Missing main node type in config.");
+        }
+        return mainType;
     }
 
     /**
@@ -285,20 +296,6 @@ public class DSLinkConfig {
             setToken(getConfig(CFG_AUTH_TOKEN, null));
         }
         return token;
-    }
-
-    /**
-     * Looks for the isRequester config, false by default.
-     */
-    public boolean isRequester() {
-        return getConfig(CFG_IS_REQUESTER, false);
-    }
-
-    /**
-     * Looks for the isResponder config, true by default.
-     */
-    public boolean isResponder() {
-        return getConfig(CFG_IS_RESPONDER, true);
     }
 
     /**
@@ -341,10 +338,10 @@ public class DSLinkConfig {
                 setDslinkJson(new File(value));
             } else if (key.equals("--help")) {
                 help = true;
+            } else if (key.equals("--log")) {
+                setLogLevel(value);
             } else if (key.equals("--logging")) {
                 setLogLevel(value);
-            } else if (key.equals("--logging-file")) {
-                setLogFile(new File(value));
             } else if (key.equals("--key")) {
                 setKeys(new File(value));
             } else if (key.equals("--name")) {
@@ -365,8 +362,6 @@ public class DSLinkConfig {
                 help = true;
             } else if (key.equals("-l")) {
                 setLogLevel(value);
-            } else if (key.equals("-f")) {
-                setLogFile(new File(value));
             } else if (key.equals("-k")) {
                 setKeys(new File(value));
             } else if (key.equals("-n")) {
@@ -475,29 +470,36 @@ public class DSLinkConfig {
     }
 
     /**
-     * Overrides dslink.json.
-     */
-    public DSLinkConfig setLogFile(File arg) {
-        logFile = arg;
-        return setConfig(CFG_LOG_FILE, arg.getAbsolutePath());
-    }
-
-    /**
      * Should be one of the following (case insensitive): all, finest, finer, fine, config, info,
      * warning, severe, off. <p> Overrides dslink.json.
      */
     public DSLinkConfig setLogLevel(String level) {
         level = level.toUpperCase();
-        if (level.equals("DEBUG")) {
-            level = "FINEST";
+        if (level.equals("TRACE")) {
+            logLevel = trace;
+        } else if (level.equals("DEBUG")) {
+            logLevel = debug;
+        } else if (level.equals("FINE")) {
+            logLevel = fine;
+        } else if (level.equals("CONFIG")) {
+            logLevel = fine;
+        } else if (level.equals("WARN")) {
+            logLevel = warn;
+        } else if (level.equals("INFO")) {
+            logLevel = info;
         } else if (level.equals("ERROR")) {
-            level = "WARNING";
+            logLevel = error;
+        } else if (level.equals("ADMIN")) {
+            logLevel = admin;
         } else if (level.equals("CRITICAL")) {
-            level = "SEVERE";
+            logLevel = fatal;
+        } else if (level.equals("FATAL")) {
+            logLevel = fatal;
         } else if (level.equals("NONE")) {
-            level = "OFF";
+            logLevel = off;
+        } else {
+            logLevel = Level.parse(level);
         }
-        logLevel = Level.parse(level);
         return setConfig(CFG_LOG_LEVEL, level);
     }
 
@@ -518,26 +520,10 @@ public class DSLinkConfig {
     }
 
     /**
-     * Overrides dslink.json.
-     */
-    public DSLinkConfig setRequester(boolean isRequester) {
-        setConfig(CFG_IS_REQUESTER, isRequester);
-        return this;
-    }
-
-    /**
-     * Overrides dslink.json.
-     */
-    public DSLinkConfig setResponder(boolean isResponder) {
-        setConfig(CFG_IS_RESPONDER, isResponder);
-        return this;
-    }
-
-    /**
      * The type of the root node.
      */
-    public DSLinkConfig setRootType(Class clazz) {
-        rootType = clazz.getName();
+    public DSLinkConfig setMainType(Class clazz) {
+        mainType = clazz.getName();
         return this;
     }
 

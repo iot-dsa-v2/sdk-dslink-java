@@ -6,6 +6,9 @@ targetCompatibility = 1.6
 group 'org.iot.dsa'
 mainClassName = 'org.iot.dsa.dslink.DSLink'
 
+applicationDefaultJvmArgs = [
+        "-XX:+HeapDumpOnOutOfMemoryError", "-XX:HeapDumpPath=" + name + ".hprof"]
+
 repositories {
     mavenLocal()
     mavenCentral()

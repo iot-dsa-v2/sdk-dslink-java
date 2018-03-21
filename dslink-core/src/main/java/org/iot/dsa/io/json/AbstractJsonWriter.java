@@ -129,7 +129,7 @@ public abstract class AbstractJsonWriter extends AbstractWriter
     }
 
     @Override
-    protected void writeListStart() throws IOException {
+    protected void writeListStart(int size) throws IOException {
         append('[');
     }
 
@@ -139,7 +139,7 @@ public abstract class AbstractJsonWriter extends AbstractWriter
     }
 
     @Override
-    protected void writeMapStart() throws IOException {
+    protected void writeMapStart(int size) throws IOException {
         append('{');
     }
 

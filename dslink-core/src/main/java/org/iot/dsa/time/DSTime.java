@@ -715,6 +715,15 @@ public class DSTime {
             buf.append('0');
         }
         buf.append(tmp);
+        buf.append(tmp).append(':');
+        tmp = calendar.get(Calendar.MILLISECOND);
+        if (tmp < 100) {
+            buf.append('0');
+        }
+        if (tmp < 10) {
+            buf.append('0');
+        }
+        buf.append(tmp);
         return buf;
     }
 
@@ -748,6 +757,14 @@ public class DSTime {
         Calendar cal = getCalendar();
         cal.setTimeInMillis(timestamp);
         return cal;
+    }
+
+    public static long millisToNanos(long millis) {
+        return millis * NANOS_IN_MS;
+    }
+
+    public static long nanosToMillis(long nanos) {
+        return nanos / NANOS_IN_MS;
     }
 
     /**

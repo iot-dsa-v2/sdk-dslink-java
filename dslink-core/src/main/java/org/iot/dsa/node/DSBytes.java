@@ -17,6 +17,7 @@ public class DSBytes extends DSElement {
     // Constants
     // ---------
 
+    private final static char[] HEX = "0123456789ABCDEF".toCharArray();
     public static final DSBytes NULL = new DSBytes(new byte[0]);
     private static final String PREFIX = "\u001Bbytes:";
 
@@ -59,6 +60,19 @@ public class DSBytes extends DSElement {
             return Arrays.equals(value, other.value);
         }
         return false;
+    }
+
+    /**
+     * Converts a hex string into a byte array.
+     */
+    public static byte[] fromHex(CharSequence s) {
+        int len = s.length();
+        byte[] ret = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            ret[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return ret;
     }
 
     /**
@@ -182,6 +196,7 @@ public class DSBytes extends DSElement {
      * @param bigEndian Whether to decode in big or little endian byte ordering.
      */
     public static int readInt(InputStream in, boolean bigEndian) {
+        int ret = 0;
         try {
             if (bigEndian) {
                 return (((in.read() & 0xFF) << 24) |
@@ -189,14 +204,14 @@ public class DSBytes extends DSElement {
                         ((in.read() & 0xFF) << 8) |
                         ((in.read() & 0xFF) << 0));
             }
-            return (((in.read() & 0xFF) << 0) |
+            ret = (((in.read() & 0xFF) << 0) |
                     ((in.read() & 0xFF) << 8) |
                     ((in.read() & 0xFF) << 16) |
                     ((in.read() & 0xFF) << 24));
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
-        return 0; //unreachable
+        return ret;
     }
 
     /**
@@ -234,6 +249,7 @@ public class DSBytes extends DSElement {
      * @param bigEndian Whether to decode in big or little endian byte ordering.
      */
     public static long readLong(InputStream in, boolean bigEndian) {
+        long ret = 0;
         try {
             if (bigEndian) {
                 return (((long) (in.read() & 0xFF) << 56) |
@@ -245,7 +261,7 @@ public class DSBytes extends DSElement {
                         ((in.read() & 0xFF) << 8) |
                         ((in.read() & 0xFF) << 0));
             }
-            return (((in.read() & 0xFF) << 0) |
+            ret = (((in.read() & 0xFF) << 0) |
                     ((in.read() & 0xFF) << 8) |
                     ((in.read() & 0xFF) << 16) |
                     ((long) (in.read() & 0xFF) << 24) |
@@ -256,7 +272,7 @@ public class DSBytes extends DSElement {
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
-        return 0; //unreachable
+        return ret;
     }
 
     /**
@@ -280,30 +296,56 @@ public class DSBytes extends DSElement {
      * @param bigEndian Whether to decode in big or little endian byte ordering.
      */
     public static short readShort(InputStream in, boolean bigEndian) {
+        short ret = 0;
         try {
             if (bigEndian) {
                 return (short) (((in.read() & 0xFF) << 8) | ((in.read() & 0xFF) << 0));
             }
-            return (short) (((in.read() & 0xFF) << 0) | ((in.read() & 0xFF) << 8));
+            ret = (short) (((in.read() & 0xFF) << 0) | ((in.read() & 0xFF) << 8));
         } catch (IOException x) {
             DSException.throwRuntime(x);
         }
-        return 0;//unreachable
+        return ret;
     }
-
-    /*
-    @Override
-    public DSString toElement() {
-        if (isNull()) {
-            return DSString.NULL;
-        }
-        return DSString.valueOf(toString());
-    }
-    */
 
     @Override
     public byte[] toBytes() {
         return value;
+    }
+
+    /**
+     * Converts the bytes into a hex string.
+     *
+     * @param val What to convert.
+     * @param buf Where to put the results, can be null.
+     * @return The buf parameter, or a new StringBuilder if the param was null.
+     */
+    public static StringBuilder toHex(byte val, StringBuilder buf) {
+        if (buf == null) {
+            buf = new StringBuilder();
+        }
+        buf.append(HEX[(val >>> 4) & 0x0F]);
+        buf.append(HEX[val & 0x0F]);
+        return buf;
+    }
+
+    /**
+     * Converts the bytes into a hex string.
+     *
+     * @param bytes What to convert.
+     * @param buf   Where to put the results, can be null.
+     * @return The buf parameter, or a new StringBuilder if the param was null.
+     */
+    public static StringBuilder toHex(byte[] bytes, StringBuilder buf) {
+        if (buf == null) {
+            buf = new StringBuilder();
+        }
+        for (int i = 0, len = bytes.length; i < len; i++) {
+            int val = bytes[i] & 0xFF;
+            buf.append(HEX[val >>> 4] & 0x0F);
+            buf.append(HEX[val & 0x0F]);
+        }
+        return buf;
     }
 
     @Override
@@ -325,6 +367,9 @@ public class DSBytes extends DSElement {
     public DSBytes valueOf(DSElement arg) {
         if ((arg == null) || arg.isNull()) {
             return NULL;
+        }
+        if (arg instanceof DSBytes) {
+            return (DSBytes) arg;
         }
         if (arg instanceof DSString) {
             return valueOf(arg.toString());

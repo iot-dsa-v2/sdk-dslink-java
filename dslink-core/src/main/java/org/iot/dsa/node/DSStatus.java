@@ -62,7 +62,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Aaron Hansen
  */
-public class DSStatus extends DSValue implements DSIStatus {
+public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
