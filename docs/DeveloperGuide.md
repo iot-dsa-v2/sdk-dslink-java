@@ -35,32 +35,38 @@ Key objectives of this SDK:
 These are the major steps you'll take when creating a link:
 
 1. Copy example link.
-2. Create nodes.
+2. Create application nodes.
 
 ## Copy Example Link
 
 Copy the 
 [dslink-java-v2-example](https://github.com/iot-dsa-v2/dslink-java-v2-example)
 project to create a new repository.  It's README provides
-further instructions for customization.
+detailed instructions for customization.
 
 The example link is a very simple but fully functioning link with a single root node.  It is 
 recommended you get that running within a broker before continuing with this documentation.
 
-## Create Nodes
+## Create Application Nodes
 
 Nodes are where application specific logic is bound to the link architecture.  Node developers
 will use various lifecycle callbacks to trigger their logic.
 
+<<<<<<< HEAD
 First you must create a root node.  It is the hook for the rest of your functionality.  The 
 convention is to name it MainNode, but make sure it is in a unique package so that multiple links
+=======
+First you must create a root application node.  It is the hook for the rest of your functionality.  
+The convention is to name it MainNode, but make sure it is in a unique package so that multiple links
+>>>>>>> 22064982f1faddb35f2da7c8a183dbbc8602cbe9
 can be run in the same process. 
 
 Then you will probably create additional nodes that will be descendants in the tree rooted by your 
-root node.
+main node.
 
 ### Main Node
 
+<<<<<<< HEAD
 All links require a single root node and it must subclass 
 [org.iot.dsa.dslink.DSMainNode](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/dslink/DSMainNode.html). 
 The convention is to name the class MainNode but the package must be unique from any other 
@@ -69,6 +75,16 @@ MainNodes so that multiple links can be run in the same process.
 When a link launches the first time, the type of the root node is looked up **dslink.json**.
 The config _mainType_ must store the fully qualified class name of the root node.  After the first 
 launch, the configuration database is serialized and the _mainType_ config will longer have an 
+=======
+All links require a single root data node and it must subclass 
+[org.iot.dsa.dslink.DSMainNode](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/dslink/DSMainNode.html). 
+The convention is to name the class MainNode but the package must be unique from any other 
+MainNodes (other links) so that multiple links can be run in the same process.
+
+When a link launches the first time, the type of the main node is looked up **dslink.json**.
+The config _handler_class_ must store the fully qualified class name of the root node.  After the first 
+launch, the configuration database is serialized and the _handler_class_ config will longer have an 
+>>>>>>> 22064982f1faddb35f2da7c8a183dbbc8602cbe9
 impact.
 
 ### Additional Nodes
@@ -89,8 +105,11 @@ instantiated when deserializing the configuration database.
 
 ### Defaults
 
-Every subtype of DSNode has a private default instance, all other instances are copies of the 
-default instance.  This is why you should never perform application logic unless 
+Every subclass of DSNode has a private default instance, all other instances are copies of the 
+default instance.  It is an instanced based inheritance scheme that will allow subtypes to remove or
+reorder 'fields' declared in super classes. 
+
+Since there is a default instance in memory, You should never perform application logic unless 
 triggered by a callback and your node is running (started or stable).
 
 If a DSNode subtype needs to have specific child nodes or values (most will), it should override
@@ -138,7 +157,7 @@ When a link is stopped, an attempt to stop the tree will be made, but it cannot 
 
 **Started**
 
-After the node tree is fully deserialized it will be started.  A nodes onStart method will be 
+After the node tree is fully deserialized it will be started.  A node's onStart method will be 
 called after all of its child nodes have been started.  The only guarantee is that all child
 nodes have been started.
 
@@ -147,15 +166,15 @@ Nodes will also started when they are added to an already running parent node.
 **Stable**
 
 Stable is called after the entire tree has been started.  The first time the node tree is loaded, 
-there is a stable delay of 5 seconds.  This is configurable as **stableDelay** in _dslink.json_.
+there is a stable delay of 5 seconds.
 
 Nodes added to an already stable parent will have onStart and onStable called immediately.
 
 When in doubt of whether to use onStarted or onStable, use onStable.
 
-**Other Callbacks**
+**Callbacks**
 
-When a node is stable, there are several other callbacks for various state changes.  All callbacks
+When a node is stable, there are several callbacks for various state changes.  All callbacks
 begin with **on** such as _onChildAdded()_.  See the 
 [DSNode Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/DSNode.html) 
 for a complete list.
@@ -178,10 +197,11 @@ there are multiple subscribers, this is only called when the last one unsubscrib
 Values mostly represent leaf members of the node tree.  There are two types of values:
 
 1. [org.io.dsa.node.DSElement](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/DSElement.html) - 
-These map to the JSON type system and represent leaf members of the node tree.
+These are the primitives that mostly map to the JSON type system and will be leaf members of the tree.
 2. [org.io.dsa.node.DSIValue](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/DSIValue.html) - 
-These don't have to map to the JSON type system, and it is possible for nodes to implement this 
-interface.  This allows for values with children.
+These have to be able to convert to DSElements, but they carry additional meaning such as timestamp.
+Nodes can implement this to have both a value and children.  DSValueNode is a convenience abstract
+class for this purpose.
 
 The node model encourages values to be immutable and singletons.  This is for efficiency, the same 
 value instance (e.g. DSBoolean.TRUE) can be stored in many nodes.
@@ -192,7 +212,7 @@ a value.
   
 ### Actions
 
-Actions allow allow responders to expose functionality that can't be modeled as values.
+Actions allow allow responders to expose functionality in DSA that can't be modeled as values.
 
 Add actions to your node using 
 [org.iot.dsa.node.action.DSAction](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/node/action/DSAction.html).  
@@ -221,6 +241,9 @@ Override DSNode.onInvoke to handle invocations.
         return super.onInvoke(actionInfo, invocation);
     }
 ```
+
+DSAction can be subclassed. Actions should also be singleton instances for efficiency.  For 
+parameter-less actions that have no return value, use the DSAction.DEFAULT instance.
 
 ### DSInfo
 
@@ -287,18 +310,22 @@ To simplify configuring metadata, use the utility class
 
 Use [org.iot.dsa.DSRuntime](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/DSRuntime.html).
 
-Create your own threads for long lived activities and make them daemon as well.
+Please avoid using Java executors if possible.  In the future we will probably monitor DSRuntime 
+to help determine when a system is becoming overloaded.
+
+Creating your own threads for long lived activities is perfectly acceptable but not necessary.
 
 ## Logging
 
 Use Java Util Logging (JUL).  A high performance async logger is automatically installed as the
-root logger and it also manages backups.  
+root logger.
 
 Most types subclass 
 [org.iot.dsa.logging.DSLogger](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/index.html?org/iot/dsa/logging/DSLogger.html) 
 as a convenience.
 
-Without DSLogger:
+The most efficient logging will not submit a log message if the level isn't enabled.  This is
+how it is normally achieved with JUL:
 
 ```java
     if (myLogger.isLoggable(Level.FINE)) {
@@ -307,20 +334,26 @@ Without DSLogger:
 ```
 
 
-With DSLogger
+DSLogger enables the same but with more concise syntax:
 
 ```java
   fine(fine() ? someMessage() : null);
 ```
 
 
+DSA has it's own log levels (there can be links in many different languages).  All standard
+Java log level are mapped into it, but try to use the DSA levels:
+
 <b>Level Guidelines</b>
 
-- finest = verbose or trace
-- finer  = debug
-- fine   = minor and/or frequent event
-- config = configuration info
-- info   = major and infrequent event
-- warn   = unusual and infrequent, not critical
-- severe = critical / fatal error or event
+DSA Level = Java Level
+
+- trace = Level.FINEST;
+- debug = Level.FINER;
+- fine = Level.FINE;
+- warn = custom
+- info = Level.INFO;
+- error = Level.WARNING;
+- admin = custom
+- fatal = Level.SEVERE;
 
