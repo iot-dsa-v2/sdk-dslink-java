@@ -3,61 +3,36 @@ package org.iot.dsa.node;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Represent the health, quality or condition of an object.
- *
+ * Represents the health, quality or condition of an object.  A DSStatus instance is a
+ * can represent multiple conditions.
  * <p>
- *
- * There are two categories of status, good and bad.  Bad status means values can not be trusted and
- * should not be used in decision making / calculations.  When performing aggregations / intervals,
- * bad values should be ignored if good values are present.
- *
- *
+ * There are three categories of status: good, bad and uncertain.  Bad status means values
+ * can not be trusted and should not be used in decision making / calculations.
+ * Uncertain means the value might be good, but is the result of an operational or
+ * configuration error such as out of range.  When performing aggregations and rollups,
+ * bad and uncertain values should be ignored if any good values are present.
  * <p>
- *
- * Remote status means the status is being reported by a foreign system (outside of DSA).  This
- * should greatly help with troubleshooting.
- *
- *
+ * Remote status means the status is being reported by a foreign system (outside of DSA).
+ * This should help with troubleshooting.
  * <p>
- *
- * Only the highest priority status should be assigned to an object.
- *
- * The status values in order from lowest to highest priority:
- *
+ * The status values:
+ * <p>
  * <ul>
- *
- * <li>ok                = Good, no other status applies. Implied when not present.
- *
+ * <li>ok                = Good, no other status applies. Always implied when not present.
  * <li>override          = Good, the value is overridden within DSA.
- *
- * <li>remoteOverride    = Good, the remote system is reporting the value is overridden.
- *
- * <li>stale             = Bad, the value hasn't updated in a reasonable amount of time (user
- * configurable on a per point basis) within DSA.
- *
- * <li>down              = Bad, communications are down in DSA.
- *
- * <li>fault             = Bad, an operational error (exception) has occurred within DSA.
- *
- * <li>configFault       = Bad, a configuration error has been identified within DSA.
- *
- * <li>disabled          = Bad, the object has been disabled within DSA.
- *
- * <li>unknown           = Bad, the status is unknown within DSA, typically the initial state at
- * boot.
- *
- * <li>remoteStale       = Bad, a stale value is being reported by the remote system.
- *
- * <li>remoteDown        = Bad, down communications are being reported by the remote system.
- *
- * <li>remoteFault       = Bad, an operational error is being reported by the remote system.
- *
- * <li>remoteConfigFault = Bad, a configuration error is being reported by the remote system.
- *
- * <li>remoteDisabled    = Bad, the remote system is reporting the object is disabled.
- *
+ * <li>remoteOverride    = Good, the remote system is reporting the value an override.
+ * <li>stale             = Uncertain, the value hasn't updated in a reasonable amount of
+ *                         time (usually configurable) within DSA.
+ * <li>remoteStale       = Uncertain, the remote system is reporting stale.
+ * <li>fault             = Uncertain, an operational or configuration error
+ * has occurred within DSA.
+ * <li>remoteFault       = Uncertain, the remote system is report fault.
+ * <li>down              = Bad, a communication failure has occurred in DSA.
+ * <li>remoteDown        = Bad, the remote system is reporting a communications failure.
+ * <li>disabled          = Bad, an object has been disabled within DSA.
+ * <li>remoteDisabled    = Bad, the remote system is reporting disabled.
+ * <li>unknown           = Bad, the status is unknown within DSA.
  * <li>remoteUnknown     = Bad, the remote system is reporting the status is unknown.
- *
  * </ul>
  *
  * @author Aaron Hansen
@@ -73,116 +48,105 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     private static ConcurrentHashMap<String, Integer> stringCache =
             new ConcurrentHashMap<String, Integer>();
 
-    public static final DSStatus NULL = new DSStatus(0xFFFF);
+    private static final int GOOD_MASK = 0x000000FF;
+    private static final int UNCERTAIN_MASK = 0x0000FF00;
+    private static final int BAD_MASK = 0x00FF0000;
 
     /**
-     * Good, no other status applies.
+     * Good, no other status applies. Always implied when not present.
      */
     public static final int OK = 0; //"ok"
 
     /**
      * Good, the value is overridden within DSA.
      */
-    public static final int OK_OVERRIDE = 0x00000001; //"override"
+    public static final int OVERRIDE = 0x00000001; //"override"
 
     /**
-     * Good, the value is overridden outside of DSA.
+     * Good, the remote system is reporting the value is overridden.
      */
-    public static final int OK_REMOTE_OVERRIDE = 0x00000002; //"remoteOverride"
+    public static final int REMOTE_OVERRIDE = 0x00000002; //"remoteOverride"
 
     /**
-     * Bad, the value hasn't updated in a reasonable amount of time (user configurable on a per
-     * point basis) within DSA.
+     * Uncertain, the value hasn't updated in a reasonable amount of time (usually
+     * configurable) within DSA.
      */
     public static final int STALE = 0x00000100; //"stale"
 
     /**
-     * Bad, communications are down within DSA.
+     * Uncertain, the remote system is reporting the value is stale.
      */
-    public static final int DOWN = 0x00000200; //"down"
+    public static final int REMOTE_STALE = 0x00000200; //"remoteStale"
 
     /**
-     * Bad, an operational error (exception) has occurred within DSA.
+     * Uncertain, an operational or configuration error has occurred within DSA.
      */
     public static final int FAULT = 0x00000400; //"fault"
 
     /**
-     * Bad, a configuration error has been indentified within DSA.
+     * Uncertain, the remote system is reporting a fault.
      */
-    public static final int CONFIG_FAULT = 0x00000800; //"configFault"
+    public static final int REMOTE_FAULT = 0x00000800; //"remoteFault"
 
     /**
-     * Bad, the object has been disabled within DSA.
+     * Bad, a communication failure has occurred in DSA.
      */
-    public static final int DISABLED = 0x00001000; //"disabled"
+    public static final int DOWN = 0x00010000; //"down"
 
     /**
-     * Bad, the status is unknown within DSA, typically the initial state at boot.
-     */
-    public static final int UNKNOWN = 0x00002000; //"unknown"
-
-    /**
-     * Bad, a stale value is being reported by the foreign system.
-     */
-    public static final int REMOTE_STALE = 0x00010000; //"remoteStale"
-
-    /**
-     * Bad, down communications are being reported by the foreign system.
+     * Bad, the remote system is reporting down.
      */
     public static final int REMOTE_DOWN = 0x00020000; //"remoteDown"
 
     /**
-     * Bad, an operational error is being reported by the foreign system.
+     * Bad, the object has been disabled within DSA.
      */
-    public static final int REMOTE_FAULT = 0x00040000; //"remoteFault"
+    public static final int DISABLED = 0x00040000; //"disabled"
 
     /**
-     * Bad, a configuration error is being reported by the foreign system.
+     * Bad, the remote system is reporting disabled.
      */
-    public static final int REMOTE_CONFIG_FAULT = 0x00080000; //"remoteConfigFault"
+    public static final int REMOTE_DISABLED = 0x00080000; //"remoteDisabled"
 
     /**
-     * Bad, the foreign system is reporting the object is disabled.
+     * Bad, the status is unknown within DSA.  This will typically be reported for
+     * invalid paths.
      */
-    public static final int REMOTE_DISABLED = 0x00100000; //"remoteDisabled"
+    public static final int UNKNOWN = 0x00100000; //"unknown"
 
     /**
-     * Bad, the foreign system is reporting the status is unknown.
+     * Bad, the remote system is reporting unknown.
      */
     public static final int REMOTE_UNKNOWN = 0x00200000; //"remoteUnknown"
 
     //The string for each unique status.
     public static final String OK_STR = "ok";
-    public static final String OK_OVERRIDE_STR = "override";
-    public static final String OK_REMOTE_OVERRIDE_STR = "remoteOverride";
+    public static final String OVERRIDE_STR = "override";
     public static final String STALE_STR = "stale";
     public static final String DOWN_STR = "down";
-    public static final String CONFIG_FAULT_STR = "configFault";
     public static final String FAULT_STR = "fault";
     public static final String DISABLED_STR = "disabled";
     public static final String UNKNOWN_STR = "unknown";
+    public static final String REMOTE_OVERRIDE_STR = "remoteOverride";
     public static final String REMOTE_STALE_STR = "remoteStale";
-    public static final String REMOTE_DOWN_STR = "remoteDown";
     public static final String REMOTE_FAULT_STR = "remoteFault";
-    public static final String REMOTE_CONFIG_FAULT_STR = "remoteConfigFault";
+    public static final String REMOTE_DOWN_STR = "remoteDown";
     public static final String REMOTE_DISABLED_STR = "remoteDisabled";
     public static final String REMOTE_UNKNOWN_STR = "remoteUnknown";
 
     //The instance for each unique status.
     public static final DSStatus ok = new DSStatus(0);
-    public static final DSStatus okOverride = valueOf(OK_OVERRIDE);
-    public static final DSStatus okRemoteOverride = valueOf(OK_REMOTE_OVERRIDE);
+    public static final DSStatus override = valueOf(OVERRIDE);
+    public static final DSStatus remoteOverride = valueOf(REMOTE_OVERRIDE);
     public static final DSStatus stale = valueOf(STALE);
-    public static final DSStatus down = valueOf(DOWN);
-    public static final DSStatus fault = valueOf(FAULT);
-    public static final DSStatus configFault = valueOf(CONFIG_FAULT);
-    public static final DSStatus disabled = valueOf(DISABLED);
-    public static final DSStatus unknown = valueOf(UNKNOWN);
     public static final DSStatus remoteStale = valueOf(REMOTE_STALE);
-    public static final DSStatus remoteDown = valueOf(REMOTE_DOWN);
+    public static final DSStatus fault = valueOf(FAULT);
     public static final DSStatus remoteFault = valueOf(REMOTE_FAULT);
-    public static final DSStatus remoteConfigFault = valueOf(REMOTE_CONFIG_FAULT);
+    public static final DSStatus down = valueOf(DOWN);
+    public static final DSStatus remoteDown = valueOf(REMOTE_DOWN);
+    public static final DSStatus disabled = valueOf(DISABLED);
     public static final DSStatus remoteDisabled = valueOf(REMOTE_DISABLED);
+    public static final DSStatus unknown = valueOf(UNKNOWN);
     public static final DSStatus remoteUnknown = valueOf(REMOTE_UNKNOWN);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -220,7 +184,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      *
      * @throws IllegalArgumentException If the string is unknown.
      */
-    static Integer getBit(String s) {
+    private static Integer getBit(String s) {
         String orig = s;
         s = s.trim();
         Integer i = stringCache.get(s);
@@ -237,7 +201,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     /**
      * The bitset representing the all the set qualities.
      */
-    int getBits() {
+    public int getBits() {
         return bits;
     }
 
@@ -258,14 +222,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * If any of the bad flags are set, or is null.
      */
     public boolean isBad() {
-        return (bits & 0x11111100) != 0;
-    }
-
-    /**
-     * True if the associate bit is set.
-     */
-    public boolean isConfigFault() {
-        return (CONFIG_FAULT & bits) != 0;
+        return (bits & BAD_MASK) != 0;
     }
 
     /**
@@ -301,12 +258,15 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * If true, any associate object / value can be trusted.
      */
     public boolean isGood() {
-        return !isBad();
+        if (bits == 0) {
+            return true;
+        }
+        return (bits & GOOD_MASK) != 0;
     }
 
     @Override
     public boolean isNull() {
-        return this == NULL;
+        return false;
     }
 
     public boolean isOk() {
@@ -317,11 +277,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * True if the associate bit is set.
      */
     public boolean isOverride() {
-        return (OK_OVERRIDE & bits) != 0;
-    }
-
-    public boolean isRemoteConfigFault() {
-        return (REMOTE_CONFIG_FAULT & bits) != 0;
+        return (OVERRIDE & bits) != 0;
     }
 
     public boolean isRemoteDisabled() {
@@ -337,7 +293,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     public boolean isRemoteOverride() {
-        return (OK_REMOTE_OVERRIDE & bits) != 0;
+        return (REMOTE_OVERRIDE & bits) != 0;
     }
 
     public boolean isRemoteStale() {
@@ -350,6 +306,13 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
 
     public boolean isStale() {
         return (STALE & bits) != 0;
+    }
+
+    /**
+     * If true, any associate object / value might be bad.
+     */
+    public boolean isUncertain() {
+        return (bits & UNCERTAIN_MASK) != 0;
     }
 
     public boolean isUnknown() {
@@ -381,10 +344,10 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         }
         StringBuilder buf = new StringBuilder();
         if (isOverride()) {
-            append(buf, OK_OVERRIDE_STR);
+            append(buf, OVERRIDE_STR);
         }
         if (isRemoteOverride()) {
-            append(buf, OK_REMOTE_OVERRIDE_STR);
+            append(buf, REMOTE_OVERRIDE_STR);
         }
         if (isStale()) {
             append(buf, STALE_STR);
@@ -394,9 +357,6 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         }
         if (isFault()) {
             append(buf, FAULT_STR);
-        }
-        if (isConfigFault()) {
-            append(buf, CONFIG_FAULT_STR);
         }
         if (isDisabled()) {
             append(buf, DISABLED_STR);
@@ -412,9 +372,6 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         }
         if (isRemoteFault()) {
             append(buf, REMOTE_FAULT_STR);
-        }
-        if (isRemoteConfigFault()) {
-            append(buf, REMOTE_CONFIG_FAULT_STR);
         }
         if (isRemoteDisabled()) {
             append(buf, REMOTE_DISABLED_STR);
@@ -433,15 +390,26 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     @Override
     public DSStatus valueOf(DSElement element) {
         if ((element == null) || element.isNull()) {
-            return NULL;
+            return ok;
         }
         return valueOf(element.toString());
     }
 
-    static DSStatus valueOf(int bits) {
-        if (bits == NULL.bits) {
-            return NULL;
+    /**
+     * Returns a status representing all of the given bits.
+     */
+    public static DSStatus valueOf(int... bits) {
+        int all = 0;
+        for (int bit : bits) {
+            all |= bit;
         }
+        return valueOf(bits);
+    }
+
+    /**
+     * Returns a status representing the given bitset.
+     */
+    public static DSStatus valueOf(int bits) {
         if (bits == 0) {
             return ok;
         }
@@ -454,6 +422,11 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         return ret;
     }
 
+    /**
+     * Returns a status representing all of the status strings (comma separated).
+     *
+     * @param string CSV of status names.
+     */
     public static DSStatus valueOf(String string) {
         return valueOf(string.split(","));
     }
@@ -479,23 +452,20 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     ///////////////////////////////////////////////////////////////////////////
 
     static {
-        DSRegistry.registerDecoder(DSStatus.class, NULL);
-        stringCache.put("null", NULL.bits);
+        DSRegistry.registerDecoder(DSStatus.class, ok);
         stringCache.put("disconnected", DOWN); //DSAv1
         stringCache.put(OK_STR, OK);
-        stringCache.put(OK_OVERRIDE_STR, OK_OVERRIDE);
-        stringCache.put(OK_REMOTE_OVERRIDE_STR, OK_REMOTE_OVERRIDE);
+        stringCache.put(OVERRIDE_STR, OVERRIDE);
+        stringCache.put(REMOTE_OVERRIDE_STR, REMOTE_OVERRIDE);
         stringCache.put(STALE_STR, STALE);
-        stringCache.put(DOWN_STR, DOWN);
-        stringCache.put(FAULT_STR, FAULT);
-        stringCache.put(CONFIG_FAULT_STR, CONFIG_FAULT);
-        stringCache.put(DISABLED_STR, DISABLED);
-        stringCache.put(UNKNOWN_STR, UNKNOWN);
         stringCache.put(REMOTE_STALE_STR, REMOTE_STALE);
-        stringCache.put(REMOTE_DOWN_STR, REMOTE_DOWN);
+        stringCache.put(FAULT_STR, FAULT);
         stringCache.put(REMOTE_FAULT_STR, REMOTE_FAULT);
-        stringCache.put(REMOTE_CONFIG_FAULT_STR, REMOTE_CONFIG_FAULT);
+        stringCache.put(DOWN_STR, DOWN);
+        stringCache.put(REMOTE_DOWN_STR, REMOTE_DOWN);
+        stringCache.put(DISABLED_STR, DISABLED);
         stringCache.put(REMOTE_DISABLED_STR, REMOTE_DISABLED);
+        stringCache.put(UNKNOWN_STR, UNKNOWN);
         stringCache.put(REMOTE_UNKNOWN_STR, REMOTE_UNKNOWN);
     }
 

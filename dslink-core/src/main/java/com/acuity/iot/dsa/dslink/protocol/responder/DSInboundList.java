@@ -215,14 +215,15 @@ public class DSInboundList extends DSInboundRequest
             map.put("$is", "node");
         }
         if (child.isAction()) {
-            ActionSpec action = child.getAction();
             e = cacheMap.remove("$invokable");
             if (e != null) {
                 map.put("$invokable", e);
             } else {
                 if (child.isAdmin()) {
                     map.put("$invokable", DSPermission.CONFIG.toString());
-                } else if (!child.isReadOnly()) {
+                } else if (child.isReadOnly()) {
+                    map.put("$invokable", DSPermission.READ.toString());
+                } else {
                     map.put("$invokable", DSPermission.WRITE.toString());
                 }
             }
@@ -308,13 +309,15 @@ public class DSInboundList extends DSInboundRequest
         if (e == null) {
             if (object.isAdmin()) {
                 encode("$invokable", DSPermission.CONFIG.toString(), writer);
-            } else if (!object.isReadOnly()) {
+            } else if (object.isReadOnly()) {
+                encode("$invokable", DSPermission.READ.toString(), writer);
+            } else {
                 encode("$invokable", DSPermission.WRITE.toString(), writer);
             }
         } else {
             encode("$invokable", e, writer);
         }
-        e = cacheMap.remove("params");
+        e = cacheMap.remove("$params");
         if (e == null) {
             DSList list = new DSList();
             Iterator<DSMap> params = action.getParameters();
