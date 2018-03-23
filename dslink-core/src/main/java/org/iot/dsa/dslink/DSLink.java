@@ -1,11 +1,6 @@
 package org.iot.dsa.dslink;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -24,18 +19,14 @@ import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
 
 /**
- * Represents an upstream connection, a node tree, and manages the lifecycle of both.
+ * The root node of a DSLink node tree with two children: main and sys.  Main is the root
+ * data or application node.  Sys contains various services such as the upstream
+ * connection to the broker.
  * <p>
+ * This node can and should be used as the main class for launching a link process.
  * <p>
- * <p>
- * Links are created with DSLinkConfig object. The main method of the process is responsible for
- * creating the config.  After instantiation, the link should call DSLink.run()
- * <p>
- * <p>
- * <p>
- * Lifecycle:
- * <p>
- * TODO
+ * This node can be subclassed for specialized purposes.  Testing uses a version that
+ * creates a special transport for sending and receiving messages to itself.
  *
  * @author Aaron Hansen
  */
@@ -199,8 +190,8 @@ public class DSLink extends DSNode implements Runnable {
     }
 
     /**
-     * This is a convenience for DSLink.load(new DSLinkConfig(args)).run() and can be used as the
-     * the main class for any link.  Use DSLink.shutdown() to stop running.
+     * This is a convenience for DSLink.load(new DSLinkConfig(args)).run() and should be
+     * used as the the main class for any link.  Use DSLink.shutdown() to stop running.
      */
     public static void main(String[] args) {
         try {
@@ -213,8 +204,8 @@ public class DSLink extends DSNode implements Runnable {
     }
 
     /**
-     * Calls starts, waits the stableDelay, then calls stable.  Does not return until this node is
-     * stopped.
+     * Calls starts, waits the stableDelay, then calls stable.  Does not return until
+     * this node is stopped.
      */
     public void run() {
         synchronized (this) {

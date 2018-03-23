@@ -1,7 +1,7 @@
 {
   "name": "dslink-java-v2-test",
   "version": "1.0.0",
-  "dsa-version": "2.0",
+  "dsa-version": "1.0",
   "description": "Testing Link",
   "main": "bin/dslink-java-v2-test",
   "configs": {
@@ -12,7 +12,7 @@
     "log": {
       "desc": "all, trace, debug, fine, warn, info, error, admin, fatal, none",
       "type": "enum",
-      "value": "debug"
+      "value": "info"
     },
     "token": {
       "desc": "Authentication token for the broker.",

@@ -118,7 +118,9 @@ public class DS1Session extends DSSession {
         DSIReader reader = getReader();
         switch (reader.next()) {
             case BEGIN_MAP:
+                getTransport().beginRecvMessage();
                 processEnvelope(reader);
+                getTransport().endRecvMessage();
                 break;
             case END_MAP:
             case END_LIST:
