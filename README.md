@@ -2,7 +2,7 @@
 
 * Version: 0.0.0
 * JDK 1.6 Compatibility is required.
-* [Developer Guide](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/DeveloperGuide)
+* [Developer Guide](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/)
 * [Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/)
 * [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -22,7 +22,7 @@ the DSA architecture, please visit
     
 ## Link Development
 
-Please read the [developer guide](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/DeveloperGuide).
+Please read the [developer guide](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/).
 
 ## Acknowledgements
 

@@ -11,19 +11,19 @@ public class DSMetadata {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    public static final String BOOLEAN_RANGE = "$booleanRange";
-    public static final String DESCRIPTION = "$description";
-    public static final String DECIMAL_PLACES = "$decimalPlaces";
-    public static final String DEFAULT = "$default";
-    public static final String DISPLAY_NAME = "$displayName";
-    public static final String EDITOR = "$editor";
-    public static final String ENUM_RANGE = "$enumRange";
-    public static final String NAME = "$name";
-    public static final String MAX_VALUE = "$maxValue";
-    public static final String MIN_VALUE = "$minValue";
-    public static final String PLACEHOLDER = "$placeholder";
-    public static final String TYPE = "$type";
-    public static final String UNIT = "$unit";
+    public static final String BOOLEAN_RANGE = "booleanRange";
+    public static final String DESCRIPTION = "description";
+    public static final String DECIMAL_PLACES = "decimalPlaces";
+    public static final String DEFAULT = "default";
+    public static final String DISPLAY_NAME = "displayName";
+    public static final String EDITOR = "editor";
+    public static final String ENUM_RANGE = "enumRange";
+    public static final String NAME = "name";
+    public static final String MAX_VALUE = "maxValue";
+    public static final String MIN_VALUE = "minValue";
+    public static final String PLACEHOLDER = "placeholder";
+    public static final String TYPE = "type";
+    public static final String UNIT = "unit";
 
     //public static final String EDITOR_DATE = "date";
     //public static final String EDITOR_DATE_RANGE = "daterange";
