@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *                         time (usually configurable) within DSA.
  * <li>remoteStale       = Uncertain, the remote system is reporting stale.
  * <li>fault             = Uncertain, an operational or configuration error
- * has occurred within DSA.
+ *                         has occurred within DSA.
  * <li>remoteFault       = Uncertain, the remote system is report fault.
  * <li>down              = Bad, a communication failure has occurred in DSA.
  * <li>remoteDown        = Bad, the remote system is reporting a communications failure.
