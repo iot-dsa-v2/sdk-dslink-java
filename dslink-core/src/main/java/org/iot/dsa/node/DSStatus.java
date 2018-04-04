@@ -16,17 +16,19 @@ import java.util.concurrent.ConcurrentHashMap;
  * This should help with troubleshooting.
  * <p>
  * The status values:
- * <p>
+ *
  * <ul>
  * <li>ok                = Good, no other status applies. Always implied when not present.
  * <li>override          = Good, the value is overridden within DSA.
  * <li>remoteOverride    = Good, the remote system is reporting the value an override.
  * <li>stale             = Uncertain, the value hasn't updated in a reasonable amount of
- *                         time (usually configurable) within DSA.
+ * time (usually configurable) within DSA.
  * <li>remoteStale       = Uncertain, the remote system is reporting stale.
- * <li>fault             = Uncertain, an operational or configuration error
- *                         has occurred within DSA.
- * <li>remoteFault       = Uncertain, the remote system is report fault.
+ * <li>offnormal         = Uncertain, the value is outside the bounds of normal operation.
+ * <li>remoteOffnormal   = Uncertain, the remote system is report offnormal.
+ * <li>fault             = Bad, an operational or configuration error
+ * has occurred within DSA.
+ * <li>remoteFault       = Bad, the remote system is report fault.
  * <li>down              = Bad, a communication failure has occurred in DSA.
  * <li>remoteDown        = Bad, the remote system is reporting a communications failure.
  * <li>disabled          = Bad, an object has been disabled within DSA.
@@ -48,9 +50,10 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     private static ConcurrentHashMap<String, Integer> stringCache =
             new ConcurrentHashMap<String, Integer>();
 
-    private static final int GOOD_MASK = 0x000000FF;
     private static final int UNCERTAIN_MASK = 0x0000FF00;
     private static final int BAD_MASK = 0x00FF0000;
+    private static final int HIS_MASK = 0xFF000000;
+    private static final int NOT_GOOD_MASK = 0x00FFFF00;
 
     /**
      * Good, no other status applies. Always implied when not present.
@@ -79,14 +82,24 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     public static final int REMOTE_STALE = 0x00000200; //"remoteStale"
 
     /**
-     * Uncertain, an operational or configuration error has occurred within DSA.
+     * Uncertain, the value is outside the bounds of normal operation.
      */
-    public static final int FAULT = 0x00000400; //"fault"
+    public static final int OFFNORMAL = 0x00000400; //"offnormal"
 
     /**
-     * Uncertain, the remote system is reporting a fault.
+     * Uncertain, the remote system is remote reporting the value is offnormal.
      */
-    public static final int REMOTE_FAULT = 0x00000800; //"remoteFault"
+    public static final int REMOTE_OFFNORMAL = 0x00000800; //"remoteOffnormal"
+
+    /**
+     * Bad, an operational or configuration error has occurred within DSA.
+     */
+    public static final int FAULT = 0x00001000; //"fault"
+
+    /**
+     * Bad, the remote system is reporting a fault.
+     */
+    public static final int REMOTE_FAULT = 0x00002000; //"remoteFault"
 
     /**
      * Bad, a communication failure has occurred in DSA.
@@ -122,16 +135,18 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     //The string for each unique status.
     public static final String OK_STR = "ok";
     public static final String OVERRIDE_STR = "override";
-    public static final String STALE_STR = "stale";
-    public static final String DOWN_STR = "down";
-    public static final String FAULT_STR = "fault";
-    public static final String DISABLED_STR = "disabled";
-    public static final String UNKNOWN_STR = "unknown";
     public static final String REMOTE_OVERRIDE_STR = "remoteOverride";
+    public static final String STALE_STR = "stale";
     public static final String REMOTE_STALE_STR = "remoteStale";
+    public static final String OFFNORMAL_STR = "offnormal";
+    public static final String REMOTE_OFFNORMAL_STR = "remoteOffnormal";
+    public static final String FAULT_STR = "fault";
     public static final String REMOTE_FAULT_STR = "remoteFault";
+    public static final String DOWN_STR = "down";
     public static final String REMOTE_DOWN_STR = "remoteDown";
+    public static final String DISABLED_STR = "disabled";
     public static final String REMOTE_DISABLED_STR = "remoteDisabled";
+    public static final String UNKNOWN_STR = "unknown";
     public static final String REMOTE_UNKNOWN_STR = "remoteUnknown";
 
     //The instance for each unique status.
@@ -140,6 +155,8 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     public static final DSStatus remoteOverride = valueOf(REMOTE_OVERRIDE);
     public static final DSStatus stale = valueOf(STALE);
     public static final DSStatus remoteStale = valueOf(REMOTE_STALE);
+    public static final DSStatus offnormal = valueOf(OFFNORMAL);
+    public static final DSStatus remoteOffnormal = valueOf(REMOTE_OFFNORMAL);
     public static final DSStatus fault = valueOf(FAULT);
     public static final DSStatus remoteFault = valueOf(REMOTE_FAULT);
     public static final DSStatus down = valueOf(DOWN);
@@ -219,22 +236,65 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     /**
-     * If any of the bad flags are set, or is null.
+     * True if either the local or remote status is true.
+     */
+    public boolean isAnyDisabled() {
+        return isDisabled() || isRemoteDisabled();
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public boolean isAnyDown() {
+        return isDown() || isRemoteDown();
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public boolean isAnyFault() {
+        return isFault() || isRemoteFault();
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public boolean isAnyOffnormal() {
+        return isOffnormal() || isRemoteOffnormal();
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public boolean isAnyOverride() {
+        return isOverride() || isRemoteOverride();
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public boolean isAnyStale() {
+        return isStale() || isRemoteStale();
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public boolean isAnyUnknown() {
+        return isUnknown() || isRemoteUnknown();
+    }
+
+    /**
+     * If any of the bad flags are set.
      */
     public boolean isBad() {
         return (bits & BAD_MASK) != 0;
     }
 
-    /**
-     * True if the associate bit is set.
-     */
     public boolean isDisabled() {
         return (DISABLED & bits) != 0;
     }
 
-    /**
-     * True if the associate bit is set.
-     */
     public boolean isDown() {
         return (DOWN & bits) != 0;
     }
@@ -247,9 +307,6 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         return false;
     }
 
-    /**
-     * True if the associate bit is set.
-     */
     public boolean isFault() {
         return (FAULT & bits) != 0;
     }
@@ -258,24 +315,25 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * If true, any associate object / value can be trusted.
      */
     public boolean isGood() {
-        if (bits == 0) {
-            return true;
-        }
-        return (bits & GOOD_MASK) != 0;
+        return !isBad() && !isUncertain();
     }
 
+    /**
+     * False, there is no null instance, use ok instead.
+     */
     @Override
     public boolean isNull() {
         return false;
+    }
+
+    public boolean isOffnormal() {
+        return (OFFNORMAL & bits) != 0;
     }
 
     public boolean isOk() {
         return bits == 0;
     }
 
-    /**
-     * True if the associate bit is set.
-     */
     public boolean isOverride() {
         return (OVERRIDE & bits) != 0;
     }
@@ -290,6 +348,10 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
 
     public boolean isRemoteFault() {
         return (REMOTE_FAULT & bits) != 0;
+    }
+
+    public boolean isRemoteOffnormal() {
+        return (REMOTE_OFFNORMAL & bits) != 0;
     }
 
     public boolean isRemoteOverride() {
@@ -352,29 +414,35 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         if (isStale()) {
             append(buf, STALE_STR);
         }
-        if (isDown()) {
-            append(buf, DOWN_STR);
+        if (isRemoteStale()) {
+            append(buf, REMOTE_STALE_STR);
+        }
+        if (isOffnormal()) {
+            append(buf, OFFNORMAL_STR);
+        }
+        if (isRemoteOffnormal()) {
+            append(buf, REMOTE_OFFNORMAL_STR);
         }
         if (isFault()) {
             append(buf, FAULT_STR);
         }
-        if (isDisabled()) {
-            append(buf, DISABLED_STR);
+        if (isRemoteFault()) {
+            append(buf, REMOTE_FAULT_STR);
         }
-        if (isUnknown()) {
-            append(buf, UNKNOWN_STR);
-        }
-        if (isRemoteStale()) {
-            append(buf, REMOTE_STALE_STR);
+        if (isDown()) {
+            append(buf, DOWN_STR);
         }
         if (isRemoteDown()) {
             append(buf, REMOTE_DOWN_STR);
         }
-        if (isRemoteFault()) {
-            append(buf, REMOTE_FAULT_STR);
+        if (isDisabled()) {
+            append(buf, DISABLED_STR);
         }
         if (isRemoteDisabled()) {
             append(buf, REMOTE_DISABLED_STR);
+        }
+        if (isUnknown()) {
+            append(buf, UNKNOWN_STR);
         }
         if (isRemoteUnknown()) {
             append(buf, REMOTE_UNKNOWN_STR);
@@ -444,10 +512,6 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Initialization
     ///////////////////////////////////////////////////////////////////////////
 
@@ -459,6 +523,8 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         stringCache.put(REMOTE_OVERRIDE_STR, REMOTE_OVERRIDE);
         stringCache.put(STALE_STR, STALE);
         stringCache.put(REMOTE_STALE_STR, REMOTE_STALE);
+        stringCache.put(OFFNORMAL_STR, OFFNORMAL);
+        stringCache.put(REMOTE_OFFNORMAL_STR, REMOTE_OFFNORMAL);
         stringCache.put(FAULT_STR, FAULT);
         stringCache.put(REMOTE_FAULT_STR, REMOTE_FAULT);
         stringCache.put(DOWN_STR, DOWN);

@@ -144,6 +144,8 @@ public class WsTextTransport extends DSTextTransport {
             if (client == null) {
                 client = ClientManager.createClient();
             }
+            client.setDefaultMaxBinaryMessageBufferSize(64 * 1024);
+            client.setDefaultMaxTextMessageBufferSize(64 * 1024);
             client.connectToServer(this, new URI(getConnectionUrl()));
             buffer.open();
             open = true;
