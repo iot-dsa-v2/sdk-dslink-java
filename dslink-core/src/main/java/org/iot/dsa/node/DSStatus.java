@@ -52,7 +52,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
 
     private static final int UNCERTAIN_MASK = 0x0000FF00;
     private static final int BAD_MASK = 0x00FF0000;
-    private static final int HIS_MASK = 0xFF000000;
+    private static final int HIS_MASK = 0xFF000000; //for history flags
     private static final int NOT_GOOD_MASK = 0x00FFFF00;
 
     /**
@@ -315,7 +315,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * If true, any associate object / value can be trusted.
      */
     public boolean isGood() {
-        return !isBad() && !isUncertain();
+        return (bits & NOT_GOOD_MASK) == 0;
     }
 
     /**
@@ -464,17 +464,6 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     /**
-     * Returns a status representing all of the given bits.
-     */
-    public static DSStatus valueOf(int... bits) {
-        int all = 0;
-        for (int bit : bits) {
-            all |= bit;
-        }
-        return valueOf(bits);
-    }
-
-    /**
      * Returns a status representing the given bitset.
      */
     public static DSStatus valueOf(int bits) {
@@ -488,6 +477,17 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         ret = new DSStatus(bits);
         intCache.put(bits, ret);
         return ret;
+    }
+
+    /**
+     * Returns a status representing all of the given bits.
+     */
+    public static DSStatus valueOf(int... bits) {
+        int all = 0;
+        for (int bit : bits) {
+            all |= bit;
+        }
+        return valueOf(bits);
     }
 
     /**
