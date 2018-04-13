@@ -103,6 +103,8 @@ public class WsBinaryTransport extends BufferedBinaryTransport {
             if (client == null) {
                 client = ClientManager.createClient();
             }
+            client.setDefaultMaxBinaryMessageBufferSize(64 * 1024);
+            client.setDefaultMaxTextMessageBufferSize(64 * 1024);
             client.connectToServer(this, new URI(getConnectionUrl()));
             fine(fine() ? "Transport open" : null);
         } catch (Exception x) {

@@ -98,6 +98,7 @@ public class DS1ConnectionInit extends DSNode {
             if (in != null) {
                 in.close();
             }
+
         }
     }
 

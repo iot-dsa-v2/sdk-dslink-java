@@ -2,22 +2,8 @@ package org.iot.dsa.dslink.test;
 
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSMainNode;
-import org.iot.dsa.node.DSBool;
-import org.iot.dsa.node.DSDouble;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSFlexEnum;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSInt;
-import org.iot.dsa.node.DSJavaEnum;
-import org.iot.dsa.node.DSList;
-import org.iot.dsa.node.DSLong;
-import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.node.action.DSActionValues;
+import org.iot.dsa.node.*;
+import org.iot.dsa.node.action.*;
 
 /**
  * Link main class and node.
@@ -63,6 +49,7 @@ public class MainNode extends DSMainNode implements Runnable {
         declareDefault("Reset", action);
         declareDefault("Test", DSAction.DEFAULT);
         action = new DSAction();
+        action.setResultType(ActionSpec.ResultType.VALUES);
         action.addValueResult("bool", DSBool.TRUE);
         action.addValueResult("long", DSLong.valueOf(0));
         declareDefault("Values Action", action);
@@ -74,6 +61,10 @@ public class MainNode extends DSMainNode implements Runnable {
                             DSString.valueOf(""),
                             "My action description");
         declareDefault("Foo", action);
+        action = new DSAction();
+        action.setResultType(ActionSpec.ResultType.VALUES);
+        action.addValueResult("Big-String", DSValueType.STRING);
+        declareDefault("Get-Big-String", action);
     }
 
     @Override
@@ -100,6 +91,10 @@ public class MainNode extends DSMainNode implements Runnable {
             return new DSActionValues(this.valuesAction.getAction())
                     .addResult(DSBool.TRUE)
                     .addResult(DSLong.valueOf(1234));
+        } else if (actionInfo.getName().equals("Get-Big-String")) {
+            DSActionValues ret = new DSActionValues(actionInfo.getAction());
+            ret.addResult(BIG_STRING);
+            return ret;
         }
         return super.onInvoke(actionInfo, invocation);
     }
@@ -269,4 +264,57 @@ public class MainNode extends DSMainNode implements Runnable {
         Auto
     }
 
+    public static final DSString BIG_STRING = DSString.valueOf(
+            "Aaron Lorem ipsum dolor sit amet, consectetur " +
+            "adipiscing elit. Sed porta rhoncus ornare. Vestibulum tristique " +
+            "sollicitudin tortor et porta. Fusce suscipit sagittis scelerisque. Cras " +
+            "dapibus mollis facilisis. Donec ultrices velit pharetra tellus lobortis, " +
+            "euismod accumsan eros aliquet. Nullam metus ipsum, mollis et leo aliquam, " +
+            " cursus feugiat ipsum. Nullam vitae leo eget ante facilisis ultricies. " +
+            "Curabitur magna nibh, sagittis sed porttitor pellentesque, porttitor eu " +
+            "libero. Fusce placerat odio sed finibus suscipit. Maecenas viverra ut " +
+            "ligula eget finibus. Mauris eget sem est. Duis iaculis sem id mauris " +
+            "dapibus pharetra. Quisque sed facilisis metus. Aliquam maximus urna at " +
+            "risus facilisis congue. Morbi euismod massa et placerat rutrum. " +
+            "Suspendisse rutrum nibh ut leo tincidunt viverra. Duis neque leo, " +
+            "vestibulum ac turpis ut, sagittis posuere felis. Vestibulum et pharetra " +
+            "ligula. Vestibulum tellus elit, pulvinar dapibus lorem et, laoreet " +
+            "hendrerit nisi. Curabitur lacinia lectus posuere, sodales est quis, " +
+            "egestas augue. Praesent quis vestibulum est. Ut sed ante pulvinar mi " +
+            "vulputate fermentum. Quisque ut ex blandit, tincidunt tortor in, consequat" +
+            " est. Pellentesque sodales dolor vitae molestie laoreet. Nunc eleifend " +
+            "faucibus turpis, vel facilisis velit dignissim sit amet. Duis nibh elit, " +
+            "semper vel porta a, faucibus quis purus. Suspendisse accumsan hendrerit " +
+            "nisl eu ornare. Vestibulum sed ornare purus, quis volutpat diam. Quisque " +
+            "vitae erat at massa mattis pellentesque. Quisque vestibulum erat id " +
+            "porttitor lacinia. Suspendisse semper orci in tempor efficitur. Nunc " +
+            "vehicula pharetra neque sit amet eleifend. Ut lacinia, quam quis volutpat " +
+            "porta, neque tellus pretium risus, sed lacinia tortor neque non est. " +
+            "Vivamus sodales vitae turpis eu varius. Donec vulputate laoreet dolor " +
+            "posuere ullamcorper. Suspendisse potenti. Praesent sed mauris suscipit " +
+            "sapien cursus facilisis quis in dolor. Vestibulum consequat nulla vel " +
+            "libero placerat, eu elementum odio pretium. Proin vitae ipsum ac ante " +
+            "pharetra tempus. Praesent id facilisis metus. Curabitur condimentum eu " +
+            "massa non hendrerit. Nunc eu turpis at est consequat pharetra eu quis " +
+            "lectus. Mauris at viverra erat. Morbi tempor, ex finibus ullamcorper " +
+            "accumsan, risus erat semper nisi, eget semper mauris mauris vitae justo. " +
+            "Proin auctor erat ut neque vulputate porttitor. Vestibulum ante ipsum " +
+            "primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi " +
+            "eget ultricies magna. Vivamus non porttitor nibh. Nunc vulputate ultrices " +
+            "semper. Phasellus sagittis pulvinar massa in luctus. Quisque convallis " +
+            "sagittis dolor a varius. In accumsan, sem pretium mattis sodales, massa " +
+            "erat dapibus mauris, at porta mi odio et magna. Maecenas sollicitudin " +
+            "quam felis, in semper lectus feugiat vel. Quisque laoreet velit et tellus" +
+            " fermentum volutpat. Pellentesque habitant morbi tristique senectus et " +
+            "netus et malesuada fames ac turpis egestas. Orci varius natoque penatibus " +
+            "et magnis dis parturient montes, nascetur ridiculus mus. Curabitur eu " +
+            "commodo risus. Suspendisse eget nibh vehicula, rhoncus justo vitae, " +
+            "accumsan odio. Curabitur tortor felis, feugiat vel neque eget, faucibus " +
+            "suscipit nisi. Fusce dignissim nulla vitae erat tempor maximus. Nam " +
+            "gravida eros at nunc iaculis condimentum. Nunc varius, neque at hendrerit " +
+            "rhoncus, ante felis pretium metus, at sollicitudin sem magna eget augue. " +
+            "Sed ante odio, gravida aliquam euismod ut, hendrerit eleifend orci. Donec" +
+            " et euismod tortor, in ornare nisl. Integer leo augue, ornare elementum " +
+            "enim ut, pellentesque blandit justo. Phasellus a suscipit eros, eu " +
+            "sollicitudin quam. END.");
 }
