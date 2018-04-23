@@ -99,7 +99,7 @@ public class ThreadNode extends MXBeanNode {
 			l.add(id);
 		}
 		putProp("AllThreadIds", l);
-		ThreadInfo[] infos = mxbean.getThreadInfo(ids);
+		ThreadInfo[] infos = mxbean.getThreadInfo(ids, false, false);
 		for (ThreadInfo info: infos) {
 			long id = info.getThreadId();
 			ThreadInfoNode infoNode = infoNodes.get(id);
