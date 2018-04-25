@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.profiler.ProfilerNode;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import org.iot.dsa.node.DSInfo;
@@ -7,7 +8,6 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.profiler.ProfilerNode;
 import org.iot.dsa.util.DSException;
 
 /**
