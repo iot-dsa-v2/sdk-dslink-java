@@ -308,6 +308,88 @@ public class DSBytes extends DSElement {
         return ret;
     }
 
+    /**
+     * Reads the primitive from a byte array.
+     *
+     * @param buf       Must be at least off + 2 in length.
+     * @param off       The offset into the buffer to start reading.
+     * @param bigEndian Whether to decode in big or little endian byte ordering.
+     */
+    public static int readU16(byte[] buf, int off, boolean bigEndian) {
+        if (bigEndian) {
+            return (((buf[off] & 0xFF) << 8) |
+                    ((buf[++off] & 0xFF) << 0));
+        }
+        return (((buf[off] & 0xFF) << 0) |
+                ((buf[++off] & 0xFF) << 8));
+    }
+
+    /**
+     * Reads the primitive from a stream.
+     *
+     * @param in        Must have at least 2 bytes to read.
+     * @param bigEndian Whether to decode in big or little endian byte ordering.
+     */
+    public static int readU16(InputStream in, boolean bigEndian) {
+        int ret = 0;
+        try {
+            if (bigEndian) {
+                return (((in.read() & 0xFF) << 8) |
+                        ((in.read() & 0xFF) << 0));
+            }
+            ret = (((in.read() & 0xFF) << 0) |
+                    ((in.read() & 0xFF) << 8));
+        } catch (IOException x) {
+            DSException.throwRuntime(x);
+        }
+        return ret;
+    }
+
+    /**
+     * Reads the primitive from a byte array.
+     *
+     * @param buf       Must be at least off + 4 in length.
+     * @param off       The offset into the buffer to start reading.
+     * @param bigEndian Whether to decode in big or little endian byte ordering.
+     */
+    public static long readU32(byte[] buf, int off, boolean bigEndian) {
+        if (bigEndian) {
+            return (((long) (buf[++off] & 0xFF) << 24) |
+                    ((buf[++off] & 0xFF) << 16) |
+                    ((buf[++off] & 0xFF) << 8) |
+                    ((buf[++off] & 0xFF) << 0));
+        }
+        return (((buf[off] & 0xFF) << 0) |
+                ((buf[++off] & 0xFF) << 8) |
+                ((buf[++off] & 0xFF) << 16) |
+                ((long) (buf[++off] & 0xFF) << 24));
+    }
+
+    /**
+     * Reads the primitive from a stream.
+     *
+     * @param in        Must have 8 bytes to read.
+     * @param bigEndian Whether to decode in big or little endian byte ordering.
+     */
+    public static long readU32(InputStream in, boolean bigEndian) {
+        long ret = 0;
+        try {
+            if (bigEndian) {
+                return (((long) (in.read() & 0xFF) << 24) |
+                        ((in.read() & 0xFF) << 16) |
+                        ((in.read() & 0xFF) << 8) |
+                        ((in.read() & 0xFF) << 0));
+            }
+            ret = (((in.read() & 0xFF) << 0) |
+                    ((in.read() & 0xFF) << 8) |
+                    ((in.read() & 0xFF) << 16) |
+                    ((long) (in.read() & 0xFF) << 24));
+        } catch (IOException x) {
+            DSException.throwRuntime(x);
+        }
+        return ret;
+    }
+
     @Override
     public byte[] toBytes() {
         return value;
