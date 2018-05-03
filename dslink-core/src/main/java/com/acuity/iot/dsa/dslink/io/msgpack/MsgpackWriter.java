@@ -199,14 +199,14 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
                     byteBuffer.put((byte) arg);
                 } else {
                     byteBuffer.put(UINT16);
-                    byteBuffer.putShort((short) arg);
+                    byteBuffer.putU16((int) arg, true);
                 }
             } else {
                 if (arg < (1L << 32)) {
                     byteBuffer.put(UINT32);
-                    byteBuffer.putInt((int) arg);
+                    byteBuffer.putU32((int) arg, true);
                 } else {
-                    byteBuffer.put(UINT64);
+                    byteBuffer.put(INT64);
                     byteBuffer.putLong(arg);
                 }
             }

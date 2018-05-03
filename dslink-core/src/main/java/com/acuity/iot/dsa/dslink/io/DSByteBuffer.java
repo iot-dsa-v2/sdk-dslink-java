@@ -393,6 +393,39 @@ public class DSByteBuffer extends InputStream {
     }
 
     /**
+     * Encodes the primitive into buffer.
+     *
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public DSByteBuffer putU16(int v, boolean bigEndian) {
+        if (bigEndian) {
+            return put((byte) ((v >>> 8) & 0xFF),
+                       (byte) ((v >>> 0) & 0xFF));
+        }
+        return put((byte) ((v >>> 0) & 0xFF),
+                   (byte) ((v >>> 8) & 0xFF));
+    }
+
+    /**
+     * Encodes the primitive into the buffer.
+     *
+     * @param v         The value to encode.
+     * @param bigEndian Whether to encode in big or little endian byte ordering.
+     */
+    public DSByteBuffer putU32(long v, boolean bigEndian) {
+        if (bigEndian) {
+            return put((byte) (v >>> 24),
+                       (byte) (v >>> 16),
+                       (byte) (v >>> 8),
+                       (byte) (v >>> 0));
+        }
+        return put((byte) (v >>> 0),
+                   (byte) (v >>> 8),
+                   (byte) (v >>> 16),
+                   (byte) (v >>> 24));
+    }
+    /**
      * Returns the next byte in the buffer, or -1 when nothing is available.
      */
     public int read() {
