@@ -168,24 +168,23 @@ public class DSLinkConfig implements DSILevels {
             map = new DSMap();
             setDslinkJson(map);
         }
-        map = map.getMap("configs");
-        if (map == null) {
+        DSMap configs = map.getMap("configs");
+        if (configs == null) {
             if (!create) {
                 return null;
             }
-            DSMap tmp = new DSMap();
-            map.put("configs", tmp);
-            map = tmp;
+            configs = new DSMap();
+            map.put("configs", configs);
         }
-        DSMap tmp = map.getMap(name);
-        if (tmp == null) {
+        DSMap config = configs.getMap(name);
+        if (config == null) {
             if (!create) {
                 return null;
             }
-            tmp = new DSMap();
-            map.put(name, tmp);
+            config = new DSMap();
+            configs.put(name, config);
         }
-        return tmp;
+        return config;
     }
 
     public String getDsaVersion() {
@@ -531,6 +530,7 @@ public class DSLinkConfig implements DSILevels {
      * Overrides dslink.json.
      */
     public DSLinkConfig setToken(String arg) {
+        token = arg;
         return setConfig(CFG_AUTH_TOKEN, arg);
     }
 

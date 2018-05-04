@@ -82,7 +82,7 @@ public class DS2MessageReader extends DS2Message {
      * reuse the same char buffer.
      */
     private CharBuffer getCharBuffer(int size) {
-        if ((charBuffer == null) || (charBuffer.length() < size)) {
+        if ((charBuffer == null) || (charBuffer.capacity() < size)) {
             int tmp = 1024;
             while (tmp < size) {
                 tmp += 1024;

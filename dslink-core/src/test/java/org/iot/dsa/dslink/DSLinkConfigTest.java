@@ -43,7 +43,10 @@ public class DSLinkConfigTest {
         args = new DSLinkConfig("--broker=http://test -h");
         Assert.assertTrue(args.getBrokerUri().equals("http://test"));
         Assert.assertTrue(args.wasHelpRequested());
-        System.out.println(args.getHelpText());
+        args = new DSLinkConfig("--log info --token abc");
+        Assert.assertTrue(args.getToken().equals("abc"));
+        args = new DSLinkConfig("--log=info --token=abc");
+        Assert.assertTrue(args.getToken().equals("abc"));
         if (created) {
             file.delete();
         }

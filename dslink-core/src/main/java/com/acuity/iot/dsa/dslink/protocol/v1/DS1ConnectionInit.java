@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.security.MessageDigest;
 import org.iot.dsa.dslink.DSLink;
@@ -98,6 +99,7 @@ public class DS1ConnectionInit extends DSNode {
             if (in != null) {
                 in.close();
             }
+
         }
     }
 
@@ -135,7 +137,11 @@ public class DS1ConnectionInit extends DSNode {
         StringBuilder buf = new StringBuilder();
         try {
             URL url = new URL(brokerUri);
-            buf.append("ws://");
+            if (brokerUri.toLowerCase().startsWith("https:")) {
+                buf.append("wss://");
+            } else {
+                buf.append("ws://");
+            }
             buf.append(url.getHost());
             if (url.getPort() >= 0) {
                 buf.append(':').append(url.getPort());

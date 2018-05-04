@@ -286,11 +286,13 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
             case UINT8:
                 return setNextValue((short) in.read() & 0xFF);
             case INT16:
-            case UINT16:
                 return setNextValue(DSBytes.readShort(in, true));
+            case UINT16:
+                return setNextValue(DSBytes.readU16(in, true));
             case INT32:
-            case UINT32:
                 return setNextValue(DSBytes.readInt(in, true));
+            case UINT32:
+                return setNextValue(DSBytes.readU32(in, true));
             default: //INT64
                 return setNextValue(DSBytes.readLong(in, true));
         }

@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.profiler.ProfilerNode;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import org.iot.dsa.node.DSInfo;
@@ -19,6 +20,7 @@ public class DSSysNode extends DSNode {
     static final String CONNECTION = "connection";
     static final String SAVE = "save";
     static final String STOP = "stop";
+    static final String PROFILER = "profiler";
 
     private DSInfo connection = getInfo(CONNECTION);
     private DSInfo save = getInfo(SAVE);
@@ -29,6 +31,7 @@ public class DSSysNode extends DSNode {
         declareDefault(CONNECTION, new DSNode()).setTransient(true);
         declareDefault(SAVE, DSAction.DEFAULT);
         declareDefault(STOP, DSAction.DEFAULT);
+        declareDefault(PROFILER, new ProfilerNode()).setTransient(true);
     }
 
     public DSLinkConnection getConnection() {
