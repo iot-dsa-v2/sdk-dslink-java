@@ -4,6 +4,7 @@ import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.concurrent.ConcurrentHashMap;
 import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSPath;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -92,13 +93,28 @@ public abstract class DSLinkConnection extends DSNode {
         return getClass().getSimpleName();
     }
 
-    public DSSysNode getSys() {
-        return (DSSysNode) getParent();
+    /**
+     * The path representing the link node in the broker.
+     */
+    public abstract String getPathInBroker();
+
+    /**
+     * Concatenates the path in broker with the path of the node.
+     */
+    public String getPathInBroker(DSNode node) {
+        StringBuilder buf = new StringBuilder();
+        String localPath = DSPath.encodePath(node, buf).toString();
+        buf.setLength(0);
+        return DSPath.concat(getPathInBroker(), localPath, buf).toString();
     }
 
     public abstract DSIRequester getRequester();
 
     public abstract DSSession getSession();
+
+    public DSSysNode getSys() {
+        return (DSSysNode) getParent();
+    }
 
     public abstract DSTransport getTransport();
 
@@ -150,6 +166,7 @@ public abstract class DSLinkConnection extends DSNode {
             listeners.remove(listener);
         }
     }
+
 
     // Inner Classes
     // -------------

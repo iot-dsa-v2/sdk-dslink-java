@@ -33,6 +33,16 @@ class DSInfoProxy extends DSInfo {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
+    void copy(DSInfo info) {
+        if (info instanceof DSInfoProxy) {
+            defaultInfo = ((DSInfoProxy)info).defaultInfo;
+        } else {
+            defaultInfo = info;
+        }
+        super.copy(info);
+    }
+
+    @Override
     public DSInfo copy() {
         DSInfoProxy ret = new DSInfoProxy(defaultInfo);
         ret.flags = flags;

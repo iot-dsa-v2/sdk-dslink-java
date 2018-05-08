@@ -599,6 +599,9 @@ public class DSInboundList extends DSInboundRequest
                 response = responder.onList(this);
             } else {
                 info = path.getInfo();
+                if (info == null) {
+                    info = new RootInfo((DSNode)path.getTarget());
+                }
                 if (info.isNode()) {
                     node = info.getNode();
                     node.subscribe(DSNode.INFO_TOPIC, null, this);
@@ -725,6 +728,12 @@ public class DSInboundList extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
+
+    private static class RootInfo extends DSInfo {
+        RootInfo(DSNode node) {
+            super(null,node);
+        }
+    }
 
     protected static class Update {
 

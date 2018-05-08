@@ -5,6 +5,8 @@ import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSNull;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
@@ -17,10 +19,10 @@ import org.iot.dsa.util.DSException;
  */
 public class DSSysNode extends DSNode {
 
-    static final String CONNECTION = "connection";
-    static final String SAVE = "save";
-    static final String STOP = "stop";
-    static final String PROFILER = "profiler";
+    static final String CONNECTION = "Connection";
+    static final String SAVE = "Save";
+    static final String STOP = "Stop";
+    static final String PROFILER = "Profiler";
 
     private DSInfo connection = getInfo(CONNECTION);
     private DSInfo save = getInfo(SAVE);
@@ -28,7 +30,7 @@ public class DSSysNode extends DSNode {
 
     @Override
     protected void declareDefaults() {
-        declareDefault(CONNECTION, new DSNode()).setTransient(true);
+        declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
         declareDefault(SAVE, DSAction.DEFAULT);
         declareDefault(STOP, DSAction.DEFAULT);
         declareDefault(PROFILER, new ProfilerNode()).setTransient(true);
@@ -62,6 +64,8 @@ public class DSSysNode extends DSNode {
             }
             fine(fine() ? "Connection type: " + conn.getClass().getName() : null);
             put(connection, conn);
+            DSInfo info = getInfo(CONNECTION);
+            System.out.println(info == connection);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }

@@ -233,7 +233,7 @@ public class DSInboundInvoke extends DSInboundRequest
                 setPath(path.getPath());
                 result = responder.onInvoke(this);
             }
-            DSInfo info = path.getInfo();
+            DSInfo info = path.getInfo(); //action must be child of a node
             if (!info.isAction()) {
                 throw new DSRequestException("Not an action " + path.getPath());
             }

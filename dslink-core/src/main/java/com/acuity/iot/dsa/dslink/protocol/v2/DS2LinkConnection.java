@@ -99,6 +99,11 @@ public class DS2LinkConnection extends DSLinkConnection {
         }
     }
 
+    @Override
+    public String getPathInBroker() {
+        return brokerPath.getValue().toString();
+    }
+
     private byte[] getLinkSalt() {
         if (linkSalt.getObject().isNull()) {
             byte[] tmp = new byte[32];

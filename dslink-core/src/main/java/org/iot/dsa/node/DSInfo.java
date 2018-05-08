@@ -8,33 +8,19 @@ import org.iot.dsa.util.DSUtil;
 
 /**
  * All node children have corresponding DSInfo instances. This type serves two purposes:
- *
- * <p>
- *
  * <ul>
- *
- * <li>It carries some meta-data about the relationship between the parent node and the child.
- *
+ * <li>It carries some meta-data about the relationship between the parent node and the
+ * child.
  * <li>It tracks whether or not the child matches a declared default.
- *
  * </ul>
- *
  * <p>
- *
  * Important things for developers to know about DSInfo are:
- *
- * <p>
- *
  * <ul>
- *
  * <li>You can configure state such as transient, readonly and hidden.
- *
- * <li>You can declare fields in the your Java class for default infos to avoid looking up the child
- * every time it is needed.  This is can be used to create fast getters and setters.
- *
+ * <li>You can declare fields in the your Java class for default infos to avoid looking up
+ * the child every time it is needed.  This is can be used to create fast getters and
+ * setters.
  * </ul>
- *
- * <p>
  *
  * @author Aaron Hansen
  */
@@ -69,7 +55,7 @@ public class DSInfo implements ApiObject {
     DSInfo() {
     }
 
-    DSInfo(String name, DSIObject value) {
+    protected DSInfo(String name, DSIObject value) {
         this.name = name;
         setObject(value);
     }
@@ -77,6 +63,21 @@ public class DSInfo implements ApiObject {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * This is only called by DSNode.copy.  Therefore, this will already
+     * be populated with the default value.
+     */
+    void copy(DSInfo info) {
+        flags = info.flags;
+        name = info.name;
+        if (isDefaultOnCopy()) {
+            return;
+        }
+        if (info.value != null) {
+            setObject(info.value.copy());
+        }
+    }
 
     public DSInfo copy() {
         DSInfo ret = new DSInfo();

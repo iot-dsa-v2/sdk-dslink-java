@@ -6,11 +6,7 @@ import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.node.DSIStatus;
-import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSStatus;
+import org.iot.dsa.node.*;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSTopic;
@@ -97,13 +93,14 @@ public class DSInboundSubscription extends DSInboundRequest
             setPath(path.getPath());
             closeHandler = responder.onSubscribe(this);
         } else {
-            DSInfo info = path.getInfo();
-            if (info.isNode()) {
-                node = info.getNode();
+            DSIObject obj = path.getTarget();
+            if (obj instanceof DSNode) {
+                node = (DSNode) obj;
                 node.subscribe(DSNode.VALUE_TOPIC, null, this);
-                onEvent(DSNode.VALUE_TOPIC, Event.NODE_CHANGED, info.getNode(), null,
+                onEvent(DSNode.VALUE_TOPIC, Event.NODE_CHANGED, node, null,
                         (Object[]) null);
             } else {
+                DSInfo info = path.getInfo();
                 node = path.getParent();
                 child = info;
                 node.subscribe(DSNode.VALUE_TOPIC, info, this);

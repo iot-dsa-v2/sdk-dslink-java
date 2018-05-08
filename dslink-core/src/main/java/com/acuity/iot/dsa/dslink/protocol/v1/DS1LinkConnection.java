@@ -37,6 +37,7 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     private DS1ConnectionInit connectionInit;
     private DSLink link;
+    private String pathInBroker;
     private DSIReader reader;
     private DSTransport transport;
     private DS1Session session;
@@ -54,6 +55,11 @@ public class DS1LinkConnection extends DSLinkConnection {
         if (session != null) {
             session.disconnect();
         }
+    }
+
+    @Override
+    public String getPathInBroker() {
+        return pathInBroker;
     }
 
     public DSIReader getReader() {
@@ -84,6 +90,7 @@ public class DS1LinkConnection extends DSLinkConnection {
         put(CONNECTION_INIT, init).setTransient(true);
         try {
             init.initializeConnection();
+            pathInBroker = init.getResponse().getString("path");
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
