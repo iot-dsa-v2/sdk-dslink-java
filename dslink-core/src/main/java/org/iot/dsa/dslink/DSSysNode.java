@@ -1,12 +1,12 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.profiler.ProfilerNode;
+import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
+import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSNull;
-import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
@@ -19,6 +19,7 @@ import org.iot.dsa.util.DSException;
  */
 public class DSSysNode extends DSNode {
 
+    static final String CERTIFICATES = "Certificates";
     static final String CONNECTION = "Connection";
     static final String SAVE = "Save";
     static final String STOP = "Stop";
@@ -30,10 +31,11 @@ public class DSSysNode extends DSNode {
 
     @Override
     protected void declareDefaults() {
-        declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
         declareDefault(SAVE, DSAction.DEFAULT);
         declareDefault(STOP, DSAction.DEFAULT);
-        declareDefault(PROFILER, new ProfilerNode()).setTransient(true);
+        declareDefault(CERTIFICATES, new SysCertManager());
+        declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
+        declareDefault(PROFILER, new SysProfiler()).setTransient(true);
     }
 
     public DSLinkConnection getConnection() {
@@ -64,8 +66,6 @@ public class DSSysNode extends DSNode {
             }
             fine(fine() ? "Connection type: " + conn.getClass().getName() : null);
             put(connection, conn);
-            DSInfo info = getInfo(CONNECTION);
-            System.out.println(info == connection);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
