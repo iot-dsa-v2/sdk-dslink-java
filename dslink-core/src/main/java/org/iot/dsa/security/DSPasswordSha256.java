@@ -4,12 +4,7 @@ import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.io.DSBase64;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIStorable;
-import org.iot.dsa.node.DSRegistry;
-import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.DSValue;
-import org.iot.dsa.node.DSValueType;
+import org.iot.dsa.node.*;
 
 /**
  * Stores and verifies passwords using a SHA-256 hash of the text.

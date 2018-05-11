@@ -16,7 +16,7 @@ the DSA architecture, please visit
 ## Sub Projects
 
   - **/dslink-core** - The APIs used to build new links.
-  - **/dslink-java-v2-test** - For proof of concept and testing.
+  - **/dslink-java-v2-poc** - For proof of concept and testing.
   - **/dslink-websocket-standalone** - Used by links that run in their own process, rather
     than in an environment which provides another websocket implementation.
     

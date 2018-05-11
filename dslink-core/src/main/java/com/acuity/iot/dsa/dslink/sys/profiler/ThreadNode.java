@@ -52,7 +52,7 @@ public class ThreadNode extends MXBeanNode {
     }
 
     private ActionResult returnDeadlocked(DSInfo actionInfo, long[] deadlockedIds) {
-        final DSAction action = actionInfo.getAction();
+        final DSAbstractAction action = actionInfo.getAction();
         DSList l = new DSList();
         for (long id : deadlockedIds) {
             l.add(id);

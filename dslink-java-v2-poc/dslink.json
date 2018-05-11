@@ -1,9 +1,9 @@
 {
-  "name": "dslink-java-v2-test",
+  "name": "dslink-java-v2-poc",
   "version": "1.0.0",
   "dsa-version": "1.0",
   "description": "Testing Link",
-  "main": "bin/dslink-java-v2-test",
+  "main": "bin/dslink-java-v2-poc",
   "configs": {
     "handler_class": {
       "type": "string",

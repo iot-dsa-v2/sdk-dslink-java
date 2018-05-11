@@ -5,11 +5,11 @@ import org.iot.dsa.node.DSElement;
 
 /**
  * An encoder that can be used to encode large graphs with or without object instances.
- *
  * <p>
- *
+ * <p>
+ * <p>
  * To simply encode a DSMap or DSList, use the value(DSElement) method.
- *
+ * <p>
  * For example:
  *
  * <ul>
@@ -17,9 +17,9 @@ import org.iot.dsa.node.DSElement;
  * <li>new JsonWriter(out).value(myMap).close();
  *
  * </ul>
- *
  * <p>
- *
+ * <p>
+ * <p>
  * Otherwise, you can stream data struct without using any DSIObject instances:
  *
  * <ul>
@@ -27,9 +27,9 @@ import org.iot.dsa.node.DSElement;
  * <li>out.newMap().key("a").value(1).key("b").value(2).key("c").value(3).endMap();
  *
  * </ul>
- *
  * <p>
- *
+ * <p>
+ * <p>
  * Be aware that if the underlying encoding (such as JSON) doesn't provide a mechanism to
  * differentiate between data types (such as numbers), values might not get as the same type they
  * were encoded.

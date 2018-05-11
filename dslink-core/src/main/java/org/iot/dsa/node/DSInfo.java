@@ -2,6 +2,7 @@ package org.iot.dsa.node;
 
 import java.util.Iterator;
 import org.iot.dsa.dslink.responder.ApiObject;
+import org.iot.dsa.node.action.DSAbstractAction;
 import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.util.DSUtil;
@@ -156,8 +157,8 @@ public class DSInfo implements ApiObject {
     }
 
     @Override
-    public DSAction getAction() {
-        return (DSAction) value;
+    public DSAbstractAction getAction() {
+        return (DSAbstractAction) value;
     }
 
     @Override
@@ -244,7 +245,7 @@ public class DSInfo implements ApiObject {
 
     @Override
     public boolean isAction() {
-        return value instanceof DSAction;
+        return value instanceof DSAbstractAction;
     }
 
     @Override

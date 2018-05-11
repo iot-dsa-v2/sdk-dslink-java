@@ -1,11 +1,6 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.node.DSBool;
-import org.iot.dsa.node.DSDouble;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSInt;
-import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.*;
 import org.iot.dsa.node.action.DSAction;
 
 /**

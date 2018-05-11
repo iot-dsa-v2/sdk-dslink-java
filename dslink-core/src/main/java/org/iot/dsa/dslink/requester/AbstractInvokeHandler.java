@@ -44,9 +44,9 @@ public abstract class AbstractInvokeHandler implements OutboundInvokeHandler {
 
     /**
      * Sets the fields so they can be access via the corresponding getters.
-     *
      * <p>
-     *
+     * <p>
+     * <p>
      * {@inheritDoc}
      */
     @Override

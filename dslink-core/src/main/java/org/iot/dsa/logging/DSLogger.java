@@ -12,11 +12,11 @@ import java.util.logging.Logger;
  * <li>So JUL can be replaced with other logging frameworks if desired.
  *
  * </ul>
- *
- * This has methods that enables conditional logging (most efficient) using ternary statements.
- *
  * <p>
- *
+ * This has methods that enables conditional logging (most efficient) using ternary statements.
+ * <p>
+ * <p>
+ * <p>
  * Without this class:
  *
  * <pre>
@@ -27,7 +27,7 @@ import java.util.logging.Logger;
  * }
  *
  * </pre>
- *
+ * <p>
  * With this class:
  *
  * <pre>
@@ -37,9 +37,9 @@ import java.util.logging.Logger;
  * }
  *
  * </pre>
- *
  * <p>
- *
+ * <p>
+ * <p>
  * DSA defines levels differently than JUL, however, all JUL levels will be mapped / formatted
  * for DSA.  Level guidelines:
  *
@@ -199,15 +199,15 @@ public class DSLogger implements DSILevels {
      * True if the level is loggable.
      */
     public boolean error() {
-        return getLogger().isLoggable(warn);
+        return getLogger().isLoggable(error);
     }
 
     public void error(Object msg) {
-        getLogger().log(warn, string(msg));
+        getLogger().log(error, string(msg));
     }
 
     public void error(Object msg, Throwable x) {
-        getLogger().log(warn, string(msg), x);
+        getLogger().log(error, string(msg), x);
     }
 
     /**

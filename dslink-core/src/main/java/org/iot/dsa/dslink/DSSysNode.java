@@ -1,9 +1,9 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
-import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
+import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
+import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSNull;

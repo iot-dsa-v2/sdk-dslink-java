@@ -51,7 +51,7 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
                 }
                 DSIObject obj = path.getTarget();
                 if (obj instanceof DSNode) {
-                    ((DSNode)obj).onSet(value);
+                    ((DSNode) obj).onSet(value);
                 } else {
                     //since not a node, there must be a parent
                     DSIValue current = info.getValue();

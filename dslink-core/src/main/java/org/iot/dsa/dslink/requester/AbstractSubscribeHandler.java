@@ -42,9 +42,9 @@ public abstract class AbstractSubscribeHandler implements OutboundSubscribeHandl
 
     /**
      * Sets the fields so they can be accessed via the corresponding getters.
-     *
      * <p>
-     *
+     * <p>
+     * <p>
      * {@inheritDoc}
      */
     @Override

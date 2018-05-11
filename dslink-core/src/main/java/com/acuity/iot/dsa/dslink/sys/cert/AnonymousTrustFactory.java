@@ -10,7 +10,8 @@ import java.util.List;
 import javax.net.ssl.*;
 
 /**
- * Supports anonymous SSL.
+ * Adds support for self signed SSL.  If anonymous is not allowed
+ * falls back to the default Java trust manager.
  *
  * @author Aaron Hansen
  */
@@ -42,7 +43,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     }
 
     /**
-     * Installs this trust factory.
+     * Captures the default trust factory and installs this one.
      */
     static void init(SysCertManager mgr) {
         certManager = mgr;
@@ -52,7 +53,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
             fac.init((KeyStore) null);
             trustManagers = fac.getTrustManagers();
             if (trustManagers == null) {
-                trustManagers = new TrustManager[] {new MyTrustManager()};
+                trustManagers = new TrustManager[]{new MyTrustManager()};
                 return;
             }
             TrustManager tm;
@@ -72,11 +73,15 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
         } catch (Exception x) {
             certManager.error(certManager.getPath(), x);
         }
-        Thread.currentThread().setContextClassLoader(
-                AnonymousTrustFactory.class.getClassLoader());
-        System.setProperty("jsse.enableSNIExtension", "false");
-        Security.setProperty("ssl.TrustManagerFactory.algorithm", "DSA_X509");
-        Security.addProvider(new MyProvider());
+        try {
+            Thread.currentThread().setContextClassLoader(
+                    AnonymousTrustFactory.class.getClassLoader());
+            System.setProperty("jsse.enableSNIExtension", "false");
+            Security.setProperty("ssl.TrustManagerFactory.algorithm", "DSA_X509");
+            Security.addProvider(new MyProvider());
+        } catch (Exception x) {
+            certManager.error(certManager.getPath(), x);
+        }
     }
 
 
