@@ -16,14 +16,14 @@ public class DSActionValues implements ActionValues {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSAction action;
+    private DSAbstractAction action;
     private ArrayList<DSIValue> values = new ArrayList<DSIValue>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSActionValues(DSAction action) {
+    public DSActionValues(DSAbstractAction action) {
         this.action = action;
     }
 
@@ -39,7 +39,7 @@ public class DSActionValues implements ActionValues {
         return this;
     }
 
-    public DSAction getAction() {
+    public DSAbstractAction getAction() {
         return action;
     }
 

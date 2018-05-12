@@ -5,14 +5,14 @@ import java.util.Iterator;
 
 /**
  * Indexed collection of elements.
- *
  * <p>
- *
+ * <p>
+ * <p>
  * This can be mounted in the node tree.  However, the parent node will not know when it has been
  * modified, so the modifier is responsible for calling DSNode.childChanged(DSInfo).
- *
  * <p>
- *
+ * <p>
+ * <p>
  * This is not thread safe.
  *
  * @author Aaron Hansen

@@ -9,9 +9,9 @@ import org.iot.dsa.time.DSDateTime;
 /**
  * Manages the lifecycle of a single subscription and is also the outbound stream passed to the
  * requester.
- *
  * <p>
- *
+ * <p>
+ * <p>
  * There can be multiple subscriptions to a single path.  They are all contained in a
  * DSOutboundSubscribeStubs object.
  *

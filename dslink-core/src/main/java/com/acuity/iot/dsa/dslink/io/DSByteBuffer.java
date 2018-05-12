@@ -425,6 +425,7 @@ public class DSByteBuffer extends InputStream {
                    (byte) (v >>> 16),
                    (byte) (v >>> 24));
     }
+
     /**
      * Returns the next byte in the buffer, or -1 when nothing is available.
      */

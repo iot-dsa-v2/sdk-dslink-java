@@ -16,7 +16,7 @@ import org.iot.dsa.node.DSElement;
  * <li>onRemove and onUpdate will be called for subsequent changed to the target.
  *
  * </ul>
- *
+ * <p>
  * Configs, or node metadata names, start with $.  Attributes start with @.  Anything else
  * represents a child.  Child maps will only contain configs/node metadata.
  *

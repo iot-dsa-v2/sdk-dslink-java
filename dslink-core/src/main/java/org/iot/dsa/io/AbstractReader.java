@@ -216,9 +216,9 @@ public abstract class AbstractReader implements DSIReader {
     /**
      * Subclasses must override this, read the next item from the stream, then call one of the
      * setXxx methods.
-     *
      * <p>
-     *
+     * <p>
+     * <p>
      * {@inheritDoc}
      */
     @Override

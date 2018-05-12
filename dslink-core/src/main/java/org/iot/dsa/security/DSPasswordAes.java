@@ -6,12 +6,7 @@ import java.util.logging.Logger;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import org.iot.dsa.io.DSBase64;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIStorable;
-import org.iot.dsa.node.DSRegistry;
-import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.DSValue;
-import org.iot.dsa.node.DSValueType;
+import org.iot.dsa.node.*;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -31,7 +26,7 @@ public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
     // Fields
     // ------
 
-    private DSString value;
+    private DSString value; //base64 encoded
 
     // Constructors
     // ------------
@@ -168,6 +163,9 @@ public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
         return value;
     }
 
+    /**
+     * The encrypted password, base64 encoded.
+     */
     @Override
     public String toString() {
         return value.toString();

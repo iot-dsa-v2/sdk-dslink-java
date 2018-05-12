@@ -6,12 +6,7 @@ import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
-import org.iot.dsa.node.DSFlexEnum;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSList;
-import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSMetadata;
-import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.*;
 import org.junit.Assert;
 import org.junit.Test;
 
