@@ -2,12 +2,12 @@ package org.iot.dsa.node;
 
 /**
  * How data values are represented in the node tree.
- *
  * <p>
- *
+ * <p>
+ * <p>
  * Beyond the interface methods, custom implementations should:
  *
- * <p>
+ *
  *
  * <ul>
  *

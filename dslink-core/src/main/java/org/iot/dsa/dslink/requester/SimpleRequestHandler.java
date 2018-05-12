@@ -14,9 +14,9 @@ public class SimpleRequestHandler implements OutboundRequestHandler {
 
     /**
      * Does nothing by default.
-     *
      * <p>
-     *
+     * <p>
+     * <p>
      * {@inheritDoc}
      */
     @Override
@@ -25,9 +25,9 @@ public class SimpleRequestHandler implements OutboundRequestHandler {
 
     /**
      * Does nothing by default.
-     *
      * <p>
-     *
+     * <p>
+     * <p>
      * {@inheritDoc}
      */
     @Override

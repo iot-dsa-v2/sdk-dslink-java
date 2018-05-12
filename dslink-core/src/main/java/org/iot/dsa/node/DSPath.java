@@ -133,60 +133,6 @@ public class DSPath {
     }
 
     /**
-     * Creates a properly encoded path from the given names.
-     *
-     * @param leadingSlash Whether or not to prepend a slash to the path.
-     * @param names        The names to encode in the given order.
-     * @return A properly encoded path name.
-     */
-    public static String encodePath(boolean leadingSlash, String... names) {
-        return encodePath(leadingSlash, names, names.length);
-    }
-
-    /**
-     * Creates a properly encoded path from the given names.
-     *
-     * @param leadingSlash Whether or not to prepend a slash to the path.
-     * @param names        The names to encode in the given order.
-     * @param len          The number of elements from the names array to use start at index 0.
-     * @return A properly encoded path name.
-     */
-    public static String encodePath(boolean leadingSlash, String[] names, int len) {
-        StringBuilder builder = new StringBuilder();
-        if (leadingSlash) {
-            builder.append('/');
-        }
-        for (int i = 0; i < len; i++) {
-            if (i > 0) {
-                builder.append('/');
-            }
-            encodeName(names[i], builder);
-        }
-        return builder.toString();
-    }
-
-    /**
-     * Ascends the tree and encodes all the node names into a path.
-     */
-    public static String encodePath(DSNode node) {
-        ArrayList<DSNode> nodes = new ArrayList<DSNode>();
-        while (node != null) {
-            if (node.getName() != null) {
-                nodes.add(node);
-                node = node.getParent();
-            } else {
-                break;
-            }
-        }
-        StringBuilder builder = new StringBuilder();
-        for (int i = nodes.size(); --i >= 0; ) {
-            builder.append('/');
-            encodeName(nodes.get(i).getName(), builder);
-        }
-        return builder.toString();
-    }
-
-    /**
      * Encodes a name for being in a path.
      */
     public static String encodeName(String name) {
@@ -280,6 +226,72 @@ public class DSPath {
             }
         }
         return modified;
+    }
+
+    /**
+     * Creates a properly encoded path from the given names.
+     *
+     * @param leadingSlash Whether or not to prepend a slash to the path.
+     * @param names        The names to encode in the given order.
+     * @return A properly encoded path name.
+     */
+    public static String encodePath(boolean leadingSlash, String... names) {
+        return encodePath(leadingSlash, names, names.length);
+    }
+
+    /**
+     * Creates a properly encoded path from the given names.
+     *
+     * @param leadingSlash Whether or not to prepend a slash to the path.
+     * @param names        The names to encode in the given order.
+     * @param len          The number of elements from the names array to use start at index 0.
+     * @return A properly encoded path name.
+     */
+    public static String encodePath(boolean leadingSlash, String[] names, int len) {
+        StringBuilder builder = new StringBuilder();
+        if (leadingSlash) {
+            builder.append('/');
+        }
+        for (int i = 0; i < len; i++) {
+            if (i > 0) {
+                builder.append('/');
+            }
+            encodeName(names[i], builder);
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Ascends the tree and encodes all the node names into a path.
+     */
+    public static String encodePath(DSNode node) {
+        return encodePath(node, null).toString();
+    }
+
+    /**
+     * Ascends the tree and encodes all the node names into a path.
+     *
+     * @param buf Optional.
+     * @return The given argument, or a new builder if the arg was null.
+     */
+    public static StringBuilder encodePath(DSNode node, StringBuilder buf) {
+        if (buf == null) {
+            buf = new StringBuilder();
+        }
+        ArrayList<DSNode> nodes = new ArrayList<DSNode>();
+        while (node != null) {
+            if (node.getName() != null) {
+                nodes.add(node);
+                node = node.getParent();
+            } else {
+                break;
+            }
+        }
+        for (int i = nodes.size(); --i >= 0; ) {
+            buf.append('/');
+            encodeName(nodes.get(i).getName(), buf);
+        }
+        return buf;
     }
 
     public String getLastPathElement() {

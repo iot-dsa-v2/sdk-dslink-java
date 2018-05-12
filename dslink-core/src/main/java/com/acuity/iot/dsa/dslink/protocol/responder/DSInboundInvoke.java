@@ -15,11 +15,7 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionSpec;
-import org.iot.dsa.node.action.ActionTable;
-import org.iot.dsa.node.action.ActionValues;
-import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.*;
 import org.iot.dsa.security.DSPermission;
 
 /**
@@ -233,7 +229,7 @@ public class DSInboundInvoke extends DSInboundRequest
                 setPath(path.getPath());
                 result = responder.onInvoke(this);
             }
-            DSInfo info = path.getInfo();
+            DSInfo info = path.getInfo(); //action must be child of a node
             if (!info.isAction()) {
                 throw new DSRequestException("Not an action " + path.getPath());
             }
@@ -250,7 +246,7 @@ public class DSInboundInvoke extends DSInboundRequest
                     throw new DSPermissionException("Read permission required");
                 }
             }
-            DSAction action = info.getAction();
+            DSAbstractAction action = info.getAction();
             result = action.invoke(info, this);
         } catch (Exception x) {
             error(getPath(), x);

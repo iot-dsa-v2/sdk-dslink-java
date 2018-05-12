@@ -1,10 +1,6 @@
 package org.iot.dsa.time;
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SimpleTimeZone;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * Misc time utility functions.

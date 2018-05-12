@@ -1,5 +1,5 @@
 rootProject.name = 'sdk-dslink-java-v2'
 
 include 'dslink-core'
-include 'dslink-java-v2-test'
+include 'dslink-java-v2-poc'
 include 'dslink-websocket-standalone'

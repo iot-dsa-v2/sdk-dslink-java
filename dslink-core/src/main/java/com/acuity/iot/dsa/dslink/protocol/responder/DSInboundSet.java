@@ -5,10 +5,7 @@ import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.*;
 import org.iot.dsa.security.DSPermission;
 
 public class DSInboundSet extends DSInboundRequest implements InboundSetRequest, Runnable {
@@ -42,19 +39,21 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
             } else {
                 DSNode parent = path.getParent();
                 DSInfo info = path.getInfo();
-                if (info.isReadOnly()) {
+                if ((info != null) && info.isReadOnly()) {
                     throw new DSRequestException("Not writable: " + getPath());
                 }
                 if (!permission.isConfig()) {
-                    if (info.isAdmin()) {
+                    if ((info != null) && info.isAdmin()) {
                         throw new DSPermissionException("Config permission required");
                     } else if (DSPermission.WRITE.isGreaterThan(permission)) {
                         throw new DSPermissionException("Write permission required");
                     }
                 }
-                if (info.isNode()) {
-                    info.getNode().onSet(value);
+                DSIObject obj = path.getTarget();
+                if (obj instanceof DSNode) {
+                    ((DSNode) obj).onSet(value);
                 } else {
+                    //since not a node, there must be a parent
                     DSIValue current = info.getValue();
                     if (current == null) {
                         if (info.getDefaultObject() instanceof DSIValue) {

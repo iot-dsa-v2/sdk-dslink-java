@@ -2,20 +2,14 @@ package org.iot.dsa.io;
 
 import java.util.HashMap;
 import org.iot.dsa.io.json.AbstractJsonWriter;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIObject;
-import org.iot.dsa.node.DSIStorable;
-import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.*;
 
 /**
  * Encodes a node tree using a compact JSON schema.  Defaults are omitted and class names are
  * tokenized to minimize size. Use NodeDecoder for deserialization.
- *
  * <p>
- *
+ * <p>
+ * <p>
  * This is for saving a configuration database, not for DSA interop.
  *
  * @author Aaron Hansen

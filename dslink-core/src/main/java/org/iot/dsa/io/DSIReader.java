@@ -9,9 +9,9 @@ import org.iot.dsa.node.DSMap;
  * A decoder that can be used to get an entire graph in pieces, or one large group, or somewhere in
  * between. To get an entire graph, call getElement(), getMap() or getList(). Otherwise, use the
  * next() method to iterate the elements of the input.
- *
  * <p>
- *
+ * <p>
+ * <p>
  * When next() returns:
  *
  * <ul>
@@ -33,9 +33,9 @@ import org.iot.dsa.node.DSMap;
  * <li>BOOLEAN,DOUBLE,LONG,NULL,STRING - Call getElement() or the corresponding getter.
  *
  * </ul>
- *
  * <p>
- *
+ * <p>
+ * <p>
  * Be aware that if the underlying encoding (such as JSON) doesn't provide a mechanism to
  * differentiate between data types (such as numbers), values might not get as the same type they
  * were encoded.

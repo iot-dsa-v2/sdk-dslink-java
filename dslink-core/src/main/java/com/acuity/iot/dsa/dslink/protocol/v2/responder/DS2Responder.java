@@ -1,11 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
-import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
-import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
-import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscription;
-import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
-import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
+import com.acuity.iot.dsa.dslink.protocol.responder.*;
 import com.acuity.iot.dsa.dslink.protocol.v2.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2Session;

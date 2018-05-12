@@ -22,6 +22,7 @@
 **/.DS_Store
 
 # Runtime files
+**/dslink.jks
 **/.key
 **/db
 **/nodes.json

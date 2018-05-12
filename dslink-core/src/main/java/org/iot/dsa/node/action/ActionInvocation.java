@@ -7,7 +7,7 @@ import org.iot.dsa.security.DSPermission;
 /**
  * Encapsulates the details of an action invocation and provides the mechanism for updating and open
  * stream.
- *
+ * <p>
  * The action
  *
  * @author Aaron Hansen

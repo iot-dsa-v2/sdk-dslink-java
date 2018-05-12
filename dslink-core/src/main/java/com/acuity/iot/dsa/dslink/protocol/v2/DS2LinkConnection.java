@@ -1,10 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol.v2;
 
-import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.HDR_STATUS;
-import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INITIALIZING;
-import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INVALID_AUTH;
-import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_OK;
-
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
@@ -12,19 +7,12 @@ import com.acuity.iot.dsa.dslink.transport.SocketTransport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
-import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkConfig;
-import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.dslink.DSPermissionException;
-import org.iot.dsa.node.DSBool;
-import org.iot.dsa.node.DSBytes;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSStatus;
-import org.iot.dsa.node.DSString;
+import org.iot.dsa.dslink.*;
+import org.iot.dsa.node.*;
 import org.iot.dsa.security.DSKeys;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
+import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.*;
 
 /**
  * The DSA V2 connection implementation. Performs connection initialization with the broker,
@@ -97,6 +85,11 @@ public class DS2LinkConnection extends DSLinkConnection {
         if (session != null) {
             session.disconnect();
         }
+    }
+
+    @Override
+    public String getPathInBroker() {
+        return brokerPath.getValue().toString();
     }
 
     private byte[] getLinkSalt() {

@@ -52,6 +52,9 @@ public class RequestPath {
         if (target == null) {
             getTarget();
         }
+        if ((info == null) && (root == target)) {
+            info = new RootInfo(root);
+        }
         return info;
     }
 
@@ -73,10 +76,10 @@ public class RequestPath {
         return path;
     }
 
-    public DSIObject getTarget() {
-        if (parent == null) {
-            parent = root.getParent();
+    public synchronized DSIObject getTarget() {
+        if (target == null) {
             target = root;
+            parent = root.getParent();
             info = root.getInfo();
             int len = names.length;
             if (len == 0) {
@@ -114,6 +117,12 @@ public class RequestPath {
 
     public boolean isResponder() {
         return target instanceof DSIResponder;
+    }
+
+    private static class RootInfo extends DSInfo {
+        RootInfo(DSNode root) {
+            super(null, root);
+        }
     }
 
 }

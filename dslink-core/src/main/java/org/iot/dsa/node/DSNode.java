@@ -8,11 +8,7 @@ import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.event.DSIEvent;
-import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSInfoTopic;
-import org.iot.dsa.node.event.DSTopic;
-import org.iot.dsa.node.event.DSValueTopic;
+import org.iot.dsa.node.event.*;
 import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
@@ -21,7 +17,7 @@ import org.iot.dsa.util.DSUtil;
  * subclassing DSNode and utilizing the lifecycle callbacks.
  * <p>
  * To create a node subclass,  you should understand the following concepts:
- * <p>
+ *
  * <ul>
  * <li>Constructors
  * <li>Defaults
@@ -31,12 +27,12 @@ import org.iot.dsa.util.DSUtil;
  * <li>Actions
  * <li>DSInfo
  * </ul>
- * <p>
+ *
  * <h3>Constructors</h3>
  * <p>
  * DSNode sub-classes must support the public no-arg constructor.  This is how they will be
  * instantiated when deserializing the configuration database.
- * <p>
+ *
  * <h3>Defaults</h3>
  * <p>
  * Every subtype of DSNode has a private default instance, all other instances of any particular
@@ -45,7 +41,7 @@ import org.iot.dsa.util.DSUtil;
  * <p>
  * If a DSNode subtype needs to have specific child nodes or values (most will), it should override
  * the declareDefaults method.  The method should:
- * <p>
+ *
  * <ul>
  * <li> Call super.declareDefaults();
  * <li> Call DSNode.declareDefault(String name, DSIObject child) for each non-removable child.  Do
@@ -55,18 +51,18 @@ import org.iot.dsa.util.DSUtil;
  * <p>
  * During node serialization (configuration database, not DSA interop), children that match their
  * declared default are omitted.  This has two benefits:
- * <p>
+ *
  * <ul>
  * <li> Smaller node database means faster serialization / deserialization.
  * <li> Default values can be modified and all existing database will be automatically upgraded the
  * next time the updated class loaded.
  * </ul>
- * <p>
+ *
  * <h3>Lifecycle</h3>
  * <p>
  * It is important to know the node lifecycle.  Your nodes should not execute any application logic
  * unless they are running (started or stable).
- * <p>
+ *
  * <b>Stopped</b>
  * <p>
  * A node is instantiated in the stopped state.  If a node tree has been persisted, will be be fully
@@ -77,7 +73,7 @@ import org.iot.dsa.util.DSUtil;
  * be called after all child nodes have been stopped.
  * <p>
  * When a link is stopped, an attempt to stop the tree will be made, but it cannot be guaranteed.
- * <p>
+ *
  * <b>Started</b>
  * <p>
  * After the node tree is fully deserialized it will be started.  A node's onStart method will be
@@ -85,7 +81,7 @@ import org.iot.dsa.util.DSUtil;
  * nodes have been started.
  * <p>
  * Nodes will also started when they are added to an already running parent node.
- * <p>
+ *
  * <b>Stable</b>
  * <p>
  * Stable is called after the entire tree has been started.  The first time the node tree is loaded,
@@ -95,19 +91,19 @@ import org.iot.dsa.util.DSUtil;
  * Nodes added to an already stable parent will have onStart and onStable called immediately.
  * <p>
  * When in doubt of whether to use onStarted or onStable, use onStable.
- * <p>
+ *
  * <b>Other Callbacks</b>
  * <p>
  * When a node is stable, there are several other callbacks for various state changes.  All
  * callbacks begin with **on** such as onChildAdded().
- * <p>
+ *
  * <h3>Subscriptions</h3>
  * <p>
  * Nodes should suspend, or minimize activity when nothing is interested in them.  For example, if
  * nothing is interested in a point, it is best to not poll the point on the foreign system.
  * <p>
  * To do this you use the following APIs:
- * <p>
+ *
  * <ul>
  * <li>DSNode.onSubscribed - Called when the node transitions from unsubscribed to subscribed.  This
  * is not called for subsequent subscribers once in the subscribed state.
@@ -115,11 +111,11 @@ import org.iot.dsa.util.DSUtil;
  * there are multiple subscribers, this is only called when the last one unsubscribes.
  * <li>DSNode.isSubscribed - Tells the caller whether or not the node is subscribed.
  * </ul>
- * <p>
+ *
  * <h3>Values</h3>
  * <p>
  * Values mostly represent leaf members of the node tree.  There are two types of values:
- * <p>
+ *
  * <ul>
  * <li>DSElement - These map to the JSON type system and represent leaf members of the node tree.
  * <li>DSIValue - These don't map to the JSON type system, and it is possible for nodes to implement
@@ -132,7 +128,7 @@ import org.iot.dsa.util.DSUtil;
  * Whenever possible, values should also have NULL instance.  Rather than storing a generic null,
  * this helps the system decode the proper type such as when a requester is attempting to set a
  * value.
- * <p>
+ *
  * <h3>Actions</h3>
  * <p>
  * Add actions to your node to allow requester invocation using org.iot.dsa.node.action.DSAction.
@@ -140,18 +136,18 @@ import org.iot.dsa.util.DSUtil;
  * Override DSNode.onInvoke to handle invocations.  The reason for this is complicated but it is
  * possible to subclass DSAction, just carefully read the javadoc if you do.  Be sure to call
  * super.onInvoke() when overriding that method.
- * <p>
+ *
  * <h3>DSInfo</h3>
  * <p>
  * All node children have corresponding DSInfo instances.  This type serves two purposes:
- * <p>
+ *
  * <ul>
  * <li>It carries some meta-data about the relationship between the parent node and the child.
  * <li>It tracks whether or not the child matches a declared default.
  * </ul>
  * <p>
  * Important things for developers to know about DSInfo are:
- * <p>
+ *
  * <ul>
  * <li>You can configure state such as transient, readonly and hidden.
  * <li>You can declare fields in the your Java class for default info instances to avoid looking up
@@ -319,11 +315,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
-        DSInfo info = firstChild;
-        while (info != null) {
-            ret.add(info.copy());
-            info = info.next();
+        ret.dsInit();
+        DSInfo myInfo = firstChild;
+        DSInfo hisInfo;
+        while (myInfo != null) {
+            hisInfo = ret.getInfo(myInfo.getName());
+            if (hisInfo == null) {
+                ret.add(myInfo.copy());
+            } else {
+                hisInfo.copy(myInfo);
+            }
+            myInfo = myInfo.next();
         }
+        //TODO match order
         return ret;
     }
 
@@ -737,6 +741,23 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 return true;
             }
             sub = sub.next;
+        }
+        return false;
+    }
+
+    /**
+     * True if this node or any nodes in the subtree have any subscriptions.
+     *
+     * @see #isSubscribed()
+     */
+    public boolean isTreeSubscribed() {
+        if (isSubscribed()) {
+            return true;
+        }
+        for (DSInfo info = getFirstNodeInfo(); info != null; info = info.nextNode()) {
+            if (info.getNode().isTreeSubscribed()) {
+                return true;
+            }
         }
         return false;
     }

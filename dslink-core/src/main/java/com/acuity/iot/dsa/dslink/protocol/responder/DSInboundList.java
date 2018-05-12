@@ -10,19 +10,10 @@ import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIEnum;
-import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSList;
-import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.*;
 import org.iot.dsa.node.DSMap.Entry;
-import org.iot.dsa.node.DSMetadata;
-import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSPath;
-import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionSpec;
-import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSAbstractAction;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSInfoTopic;
@@ -301,9 +292,9 @@ public class DSInboundList extends DSInboundRequest
             info = (DSInfo) object;
         }
         ActionSpec action = object.getAction();
-        DSAction dsAction = null;
-        if (action instanceof DSAction) {
-            dsAction = (DSAction) action;
+        DSAbstractAction dsAction = null;
+        if (action instanceof DSAbstractAction) {
+            dsAction = (DSAbstractAction) action;
         }
         DSElement e = cacheMap.remove("$invokable");
         if (e == null) {
@@ -599,6 +590,9 @@ public class DSInboundList extends DSInboundRequest
                 response = responder.onList(this);
             } else {
                 info = path.getInfo();
+                if (info == null) {
+                    info = new RootInfo((DSNode) path.getTarget());
+                }
                 if (info.isNode()) {
                     node = info.getNode();
                     node.subscribe(DSNode.INFO_TOPIC, null, this);
@@ -725,6 +719,12 @@ public class DSInboundList extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
+
+    private static class RootInfo extends DSInfo {
+        RootInfo(DSNode node) {
+            super(null, node);
+        }
+    }
 
     protected static class Update {
 

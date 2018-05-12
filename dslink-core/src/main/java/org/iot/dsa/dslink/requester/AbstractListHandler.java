@@ -2,14 +2,14 @@ package org.iot.dsa.dslink.requester;
 
 /**
  * Convenience implementation of the handler passed to the invoke method in the requester.
- *
  * <p>
- *
+ * <p>
+ * <p>
  * onUpdate will be called until the initial state is fully loaded.  After which onInitialized will
  * be called.  After that, onUpdate and onRemove will be called for state changes.
- *
  * <p>
- *
+ * <p>
+ * <p>
  * Configs, or node metadata names start with $.  Attributes start with @.  Anything else represents
  * a child.  Child maps will only contain configs/node metadata.
  *
@@ -44,9 +44,9 @@ public abstract class AbstractListHandler implements OutboundListHandler {
 
     /**
      * Sets the fields so they can be accessed with the corresponding getters.
-     *
      * <p>
-     *
+     * <p>
+     * <p>
      * {@inheritDoc}
      */
     @Override

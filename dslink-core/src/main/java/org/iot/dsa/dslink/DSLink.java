@@ -184,8 +184,6 @@ public class DSLink extends DSNode implements Runnable {
             }
             ret.save();
         }
-        DSNode tmp = new DSNode();
-        tmp.add(ret.getLinkName(), ret);
         return ret;
     }
 
