@@ -356,15 +356,16 @@ public class DSLink extends DSNode implements Runnable {
      */
     public void shutdown() {
         stop();
-        if (runThread == null) {
+        Thread thread = runThread;
+        if (thread == null) {
             return;
         }
-        synchronized (runThread) {
-            try {
-                runThread.join();
-            } catch (Exception x) {
-                fine(x);
+        try {
+            synchronized (thread) {
+                thread.join();
             }
+        } catch (Exception x) {
+            fine(x);
         }
     }
 
