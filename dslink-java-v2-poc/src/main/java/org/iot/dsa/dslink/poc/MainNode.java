@@ -1,4 +1,4 @@
-package org.iot.dsa.dslink.test;
+package org.iot.dsa.dslink.poc;
 
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSMainNode;
