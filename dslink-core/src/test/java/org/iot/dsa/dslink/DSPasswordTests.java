@@ -2,7 +2,7 @@ package org.iot.dsa.dslink;
 
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.security.DSPasswordAes;
+import org.iot.dsa.security.DSPasswordAes256;
 import org.iot.dsa.security.DSPasswordSha256;
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,15 +25,15 @@ public class DSPasswordTests {
     // -------
 
     @Test
-    public void testAes() throws Exception {
-        DSPasswordAes pass = DSPasswordAes.valueOf("myPass");
+    public void testAes256() throws Exception {
+        DSPasswordAes256 pass = DSPasswordAes256.valueOf("myPass");
         String encrypted = pass.toString();
         Assert.assertFalse(pass.toString().equals("myPass"));
         Assert.assertTrue(pass.decode().equals("myPass"));
         Assert.assertTrue(pass.isValid(DSString.valueOf("myPass")));
         Assert.assertFalse(pass.isValid(DSString.valueOf("asdf")));
         DSElement e = pass.store();
-        pass = DSPasswordAes.NULL.restore(e);
+        pass = DSPasswordAes256.NULL.restore(e);
         Assert.assertFalse(pass.toString().equals("myPass"));
         Assert.assertTrue(pass.decode().equals("myPass"));
         Assert.assertTrue(pass.toString().equals(encrypted));
