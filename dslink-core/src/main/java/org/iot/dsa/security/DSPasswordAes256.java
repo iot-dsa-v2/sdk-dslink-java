@@ -14,14 +14,14 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
+public class DSPasswordAes256 extends DSValue implements DSIPassword, DSIStorable {
 
     // Constants
     // ---------
 
     private static Cipher cipher;
     private static Key key;
-    public static final DSPasswordAes NULL = new DSPasswordAes(DSString.NULL);
+    public static final DSPasswordAes256 NULL = new DSPasswordAes256(DSString.NULL);
 
     // Fields
     // ------
@@ -31,11 +31,11 @@ public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
     // Constructors
     // ------------
 
-    private DSPasswordAes(DSString encrypted) {
+    private DSPasswordAes256(DSString encrypted) {
         this.value = encrypted;
     }
 
-    private DSPasswordAes(String encrypted) {
+    private DSPasswordAes256(String encrypted) {
         this(DSString.valueOf(encrypted));
     }
 
@@ -86,7 +86,7 @@ public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof DSPasswordAes) {
+        if (obj instanceof DSPasswordAes256) {
             return value.equals(obj.toString());
         }
         return false;
@@ -148,11 +148,11 @@ public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
     }
 
     @Override
-    public DSPasswordAes restore(DSElement element) {
+    public DSPasswordAes256 restore(DSElement element) {
         if (element.isNull()) {
             return NULL;
         }
-        return new DSPasswordAes(element.toString());
+        return new DSPasswordAes256(element.toString());
     }
 
     /**
@@ -178,7 +178,7 @@ public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
      * @return Returns the NULL instance if the arg is null, isNull() or the empty string.
      */
     @Override
-    public DSPasswordAes valueOf(DSElement arg) {
+    public DSPasswordAes256 valueOf(DSElement arg) {
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
@@ -195,13 +195,13 @@ public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
      * @param arg The text to hash.
      * @return Returns the NULL instance if the arg is null or the empty string.
      */
-    public static DSPasswordAes valueOf(String arg) {
+    public static DSPasswordAes256 valueOf(String arg) {
         if (arg == null) {
             return NULL;
         } else if (arg.isEmpty()) {
             return NULL;
         }
-        return new DSPasswordAes(encode(arg));
+        return new DSPasswordAes256(encode(arg));
     }
 
     // Initialization
@@ -210,14 +210,14 @@ public class DSPasswordAes extends DSValue implements DSIPassword, DSIStorable {
     static {
         try {
             cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            byte[] nameBytes = DSPasswordAes.class.getName().getBytes(DSString.UTF8);
-            byte[] keyBytes = new byte[16];
-            System.arraycopy(nameBytes, 0, keyBytes, 0, 16);
+            byte[] nameBytes = DSPasswordAes256.class.getName().getBytes(DSString.UTF8);
+            byte[] keyBytes = new byte[32];
+            System.arraycopy(nameBytes, 0, keyBytes, 0, 32);
             key = new SecretKeySpec(keyBytes, "AES");
         } catch (Exception x) {
             Logger.getLogger("security").log(Level.SEVERE, "AES problem", x);
         }
-        DSRegistry.registerDecoder(DSPasswordAes.class, NULL);
+        DSRegistry.registerDecoder(DSPasswordAes256.class, NULL);
     }
 
 }

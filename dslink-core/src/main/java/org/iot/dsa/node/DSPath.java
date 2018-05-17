@@ -16,7 +16,7 @@ public class DSPath {
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int caseDiff = ('a' - 'A');
-    private static final Charset utf8 = Charset.forName("UTF-8");
+    private static final Charset utf8 = DSString.UTF8;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields

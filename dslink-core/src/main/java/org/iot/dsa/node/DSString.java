@@ -1,8 +1,6 @@
 package org.iot.dsa.node;
 
 import java.nio.charset.Charset;
-import java.util.logging.Level;
-import org.iot.dsa.logging.DSLogging;
 
 /**
  * String wrapper.
@@ -24,7 +22,7 @@ public class DSString extends DSElement {
     /**
      * The standard UTF8 charset, can be used with string.getBytes(Charset).
      */
-    public static final Charset UTF8 = utf8();
+    public static final Charset UTF8 = Charset.forName("UTF-8");
 
     // Fields
     // ------
@@ -84,16 +82,12 @@ public class DSString extends DSElement {
     public boolean toBoolean() {
         if (value.equalsIgnoreCase("true")) {
             return true;
-        } else if (value.equalsIgnoreCase("false")) {
-            return true;
         } else if (value.equals("0")) {
             return false;
         } else if (value.equals("1")) {
             return true;
         } else if (value.equalsIgnoreCase("on")) {
             return true;
-        } else if (value.equalsIgnoreCase("off")) {
-            return false;
         }
         return false;
     }
@@ -104,15 +98,6 @@ public class DSString extends DSElement {
             return "null";
         }
         return value;
-    }
-
-    private static Charset utf8() {
-        try {
-            return Charset.forName("UTF-8");
-        } catch (Exception x) {
-            DSLogging.getDefaultLogger().log(Level.SEVERE, "UTF-8 unknown", x);
-        }
-        return Charset.defaultCharset();
     }
 
     @Override

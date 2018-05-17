@@ -5,7 +5,7 @@ import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.security.DSPasswordAes;
+import org.iot.dsa.security.DSPasswordAes256;
 
 /**
  * Certificate management for the whole process.  This is basically a stub for future
@@ -57,11 +57,11 @@ public class SysCertManager extends DSNode {
         declareDefault(ALLOW_SERVERS, DSBool.TRUE);
         declareDefault(CERTFILE, DSString.valueOf("dslink.jks"));
         declareDefault(CERTFILE_TYPE, DSString.valueOf("JKS"));
-        declareDefault(CERTFILE_PASS, DSPasswordAes.valueOf("dsarocks"));
+        declareDefault(CERTFILE_PASS, DSPasswordAes256.valueOf("dsarocks"));
     }
 
     private String getCertFilePass() {
-        DSPasswordAes pass = (DSPasswordAes) keystorePass.getObject();
+        DSPasswordAes256 pass = (DSPasswordAes256) keystorePass.getObject();
         return pass.decode();
     }
 
