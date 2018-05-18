@@ -1,11 +1,30 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.adaptc.gradle:nexus-workflow:0.6'
+    }
+}
+
+apply plugin: 'nexus-workflow'
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'signing'
 
-group 'org.iot.dsa'
+group 'org.iot-dsa'
 version '0.26.0'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
+
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            artifactId 'dslink-v2'
+        }
+    }
+}
 
 repositories {
     mavenLocal()
@@ -16,7 +35,7 @@ repositories {
 }
 
 dependencies {
-    testCompile 'junit:junit:+'
+    testCompile 'junit:junit:[4.12,)'
 }
 
 task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
@@ -24,6 +43,12 @@ task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
     from sourceSets.main.allJava
 }
 
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
 artifacts {
     archives sourcesJar
+    archives javadocJar
 }
