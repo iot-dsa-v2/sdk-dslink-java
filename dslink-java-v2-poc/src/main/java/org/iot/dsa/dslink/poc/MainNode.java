@@ -96,7 +96,8 @@ public class MainNode extends DSMainNode implements Runnable {
 
         @Override
         public void onUpdate(String name, DSElement value) {
-            System.out.println("list update " + name);
+            System.out.print(name);
+            System.out.print(": ");
             System.out.println(String.valueOf(value));
         }
 
