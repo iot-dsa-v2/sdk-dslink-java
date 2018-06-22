@@ -20,8 +20,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-//@ClientEndpoint
-@ClientEndpoint(configurator = WsTextTransport.MyConfigurator.class)
+@ClientEndpoint
 public class WsTextTransport extends DSTextTransport {
 
     ///////////////////////////////////////////////////////////////////////////
@@ -181,22 +180,6 @@ public class WsTextTransport extends DSTextTransport {
     /////////////////////////////////////////////////////////////////
     // Inner Classes
     /////////////////////////////////////////////////////////////////
-
-    public static class MyConfigurator extends ClientEndpointConfig.Configurator {
-
-        @Override
-        public void beforeRequest(Map<String, List<String>> headers) {
-            System.out.println("Aaron Debug"); //TODO
-            for (String s : headers.keySet()) {
-                System.out.println(s);
-            }
-        }
-
-        @Override
-        public void afterResponse(HandshakeResponse handshakeResponse) {
-        }
-
-    }
 
     private class MyReader extends Reader {
 
