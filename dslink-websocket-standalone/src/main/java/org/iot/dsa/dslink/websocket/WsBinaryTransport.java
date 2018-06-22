@@ -17,8 +17,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-//@ClientEndpoint
-@ClientEndpoint(configurator = WsBinaryTransport.MyConfigurator.class)
+@ClientEndpoint
 public class WsBinaryTransport extends BufferedBinaryTransport {
 
     ///////////////////////////////////////////////////////////////////////////
@@ -108,25 +107,5 @@ public class WsBinaryTransport extends BufferedBinaryTransport {
         return this;
     }
 
-
-    /////////////////////////////////////////////////////////////////
-    // Inner Classes
-    /////////////////////////////////////////////////////////////////
-
-    public static class MyConfigurator extends ClientEndpointConfig.Configurator {
-
-        @Override
-        public void beforeRequest(Map<String, List<String>> headers) {
-            System.out.println("Aaron Debug"); //TODO
-            for (String s : headers.keySet()) {
-                System.out.println(s);
-            }
-        }
-
-        @Override
-        public void afterResponse(HandshakeResponse handshakeResponse) {
-        }
-
-    }
 
 }
