@@ -55,7 +55,7 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword, DSIStorabl
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof DSPasswordAes) {
+        if (obj instanceof DSPasswordAes256) {
             return value.equals(obj.toString());
         }
         return false;

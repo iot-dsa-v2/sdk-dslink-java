@@ -8,15 +8,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
-import javax.websocket.ClientEndpoint;
-import javax.websocket.CloseReason;
-import javax.websocket.EndpointConfig;
-import javax.websocket.OnClose;
-import javax.websocket.OnError;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.RemoteEndpoint;
-import javax.websocket.Session;
+import java.util.List;
+import java.util.Map;
+import javax.websocket.*;
 import org.glassfish.tyrus.client.ClientManager;
 import org.iot.dsa.util.DSException;
 

@@ -287,11 +287,9 @@ public class DS1Session extends DSSession {
                     getConnection().setRequesterAllowed();
                 }
             } else if (key.equals("salt")) {
-                if (reader.next() != Token.STRING) {
-                    throw new IllegalStateException("Salt not a string");
-                }
-                fine(fine() ? "Next salt: " + reader.getString() : null);
-                getConnection().updateSalt(reader.getString());
+                String s = reader.getElement().toString();
+                fine(fine() ? "Next salt: " + s : null);
+                getConnection().updateSalt(s);
             }
             next = reader.next();
         } while (next != END_MAP);

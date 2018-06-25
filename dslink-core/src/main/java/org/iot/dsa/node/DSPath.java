@@ -16,7 +16,7 @@ public class DSPath {
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int caseDiff = ('a' - 'A');
-    private static final Charset utf8 = Charset.forName("UTF-8");
+    private static final Charset utf8 = DSString.UTF8;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -56,15 +56,14 @@ public class DSPath {
         }
         if (leading.charAt(leading.length() - 1) == '/') {
             if (trailing.charAt(0) == '/') {
-                bucket.append(trailing.substring(1));
+                return bucket.append(trailing.substring(1));
             }
         } else {
             if (trailing.charAt(0) != '/') {
                 bucket.append('/');
-                bucket.append(trailing);
             }
         }
-        return bucket;
+        return bucket.append(trailing);
     }
 
     /**
