@@ -13,7 +13,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 group 'org.iot-dsa'
-version '0.26.0'
+version '0.27.0'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
