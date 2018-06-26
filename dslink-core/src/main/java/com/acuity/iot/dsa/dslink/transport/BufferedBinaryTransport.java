@@ -40,7 +40,6 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
             if (traceIn == null) {
                 traceIn = new StringBuilder();
             }
-            traceInSize = 0;
             traceIn.append("Recv:\n");
         }
     }
@@ -51,7 +50,6 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
             if (traceOut == null) {
                 traceOut = new StringBuilder();
             }
-            traceOutSize = 0;
             traceOut.append("Send:\n");
         }
     }
@@ -86,6 +84,7 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
                     trace(traceIn.toString());
                 }
                 traceIn.setLength(0);
+                traceInSize = 0;
             }
         } else if (traceIn != null) {
             traceIn = null;
@@ -100,6 +99,7 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
                     trace(traceOut.toString());
                 }
                 traceOut.setLength(0);
+                traceOutSize = 0;
             }
         } else if (traceOut != null) {
             traceOut = null;

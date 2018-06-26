@@ -111,9 +111,9 @@ public class DS1Session extends DSSession {
     @Override
     protected void doRecvMessage() throws IOException {
         DSIReader reader = getReader();
+        getTransport().beginRecvMessage();
         switch (reader.next()) {
             case BEGIN_MAP:
-                getTransport().beginRecvMessage();
                 processEnvelope(reader);
                 getTransport().endRecvMessage();
                 break;
@@ -287,6 +287,7 @@ public class DS1Session extends DSSession {
                     getConnection().setRequesterAllowed();
                 }
             } else if (key.equals("salt")) {
+                reader.next();
                 String s = reader.getElement().toString();
                 fine(fine() ? "Next salt: " + s : null);
                 getConnection().updateSalt(s);
