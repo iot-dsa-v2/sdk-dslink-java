@@ -24,8 +24,8 @@ uploadArchives {
             }
 
             pom.project {
-                name = 'DSLink SDK V2 Websocket Implementation'
-                artifactId = 'dslink-websocket-standalone-v2'
+                name = 'DSLink Java V2 Websocket Implementation'
+                artifactId = 'dslink-websocket-standalone'
                 description = 'V2 Implementation of Websockets for IoT DSA protocol'
 
                 packaging = 'jar'
@@ -44,13 +44,6 @@ uploadArchives {
                     }
                 }
 
-                developers {
-                    developer {
-                        id = 'samrg472'
-                        name = 'Samuel Grenier'
-                        email = 'samrg472@gmail.com'
-                    }
-                }
             }
         }
     }

@@ -23,8 +23,8 @@ uploadArchives {
             }
 
             pom.project {
-                name = 'DSLink SDK V2'
-                artifactId = 'dslink-core-v2'
+                name = 'DSLink Java V2 SDK'
+                artifactId = 'dslink-core'
                 description = 'V2 Java SDK for the IoT DSA protocol'
 
                 packaging = 'jar'
@@ -43,13 +43,6 @@ uploadArchives {
                     }
                 }
 
-                developers {
-                    developer {
-                        id = 'samrg472'
-                        name = 'Samuel Grenier'
-                        email = 'samrg472@gmail.com'
-                    }
-                }
             }
         }
     }

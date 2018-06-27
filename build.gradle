@@ -12,19 +12,21 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-group 'org.iot-dsa'
+group 'org.iot-dsa-v2'
 version '0.27.0'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
+/*
 install {
     repositories.mavenInstaller {
         pom.project {
-            artifactId 'dslink-v2'
+            artifactId 'dslink-java-v2'
         }
     }
 }
+*/
 
 repositories {
     mavenLocal()
