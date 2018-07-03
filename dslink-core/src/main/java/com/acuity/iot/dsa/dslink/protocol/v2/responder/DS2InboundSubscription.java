@@ -39,8 +39,8 @@ public class DS2InboundSubscription extends DSInboundSubscription implements Mes
         buf.setLength(0);
         DSTime.encode(update.timestamp, true, buf);
         dsiWriter.key("timestamp").value(buf.toString());
-        if (!update.quality.isOk()) {
-            dsiWriter.key("status").value(update.quality.toElement());
+        if (!update.status.isOk()) {
+            dsiWriter.key("status").value(update.status.toElement());
         }
         dsiWriter.endMap();
         int end = byteBuffer.length();

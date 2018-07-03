@@ -8,7 +8,11 @@ import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.event.*;
+import org.iot.dsa.node.event.DSIEvent;
+import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSInfoTopic;
+import org.iot.dsa.node.event.DSTopic;
+import org.iot.dsa.node.event.DSValueTopic;
 import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
@@ -324,6 +328,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 ret.add(myInfo.copy());
             } else {
                 hisInfo.copy(myInfo);
+                if (hisInfo.isNode()) {
+                    hisInfo.getNode().infoInParent = hisInfo;
+                }
             }
             myInfo = myInfo.next();
         }
@@ -439,6 +446,23 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             return info.getObject();
         }
         return null;
+    }
+
+    /**
+     * Ascends the tree looking for a ancestral node that is an instance of the parameter.
+     *
+     * @param clazz Can be a class, interface or super class.
+     * @return Possibly null.
+     * @see java.lang.Class#isAssignableFrom(Class)
+     */
+    public DSNode getAncestor(Class<?> clazz) {
+        DSNode node = getParent();
+        while (node != null) {
+            if (clazz.isAssignableFrom(node.getClass())) {
+                return node;
+            }
+        }
+        return node;
     }
 
     /**

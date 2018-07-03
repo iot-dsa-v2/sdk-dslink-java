@@ -25,20 +25,20 @@ public class DS2Session extends DSSession implements MessageConstants {
     ///////////////////////////////////////////////////////////////////////////
 
     static final int END_MSG_THRESHOLD = 48 * 1024;
-    static final String LAST_ACK_RECV = "Last Ack Recv";
+    static final String LAST_ACK_RCVD = "Last Ack Rcvd";
     static final int MAX_MSG_IVL = 45000;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo lastAckRecv = getInfo(LAST_ACK_RECV);
+    private DSInfo lastAckRcvd = getInfo(LAST_ACK_RCVD);
     private long lastMessageSent;
     private DS2MessageReader messageReader;
     private DS2MessageWriter messageWriter;
     private Map<Integer, MultipartReader> multiparts = new HashMap<Integer, MultipartReader>();
-    private boolean requestsNext = false;
     private DS2Requester requester = new DS2Requester(this);
+    private boolean requestsNext = false;
     private DS2Responder responder = new DS2Responder(this);
 
     /////////////////////////////////////////////////////////////////
@@ -53,79 +53,17 @@ public class DS2Session extends DSSession implements MessageConstants {
     }
 
     /////////////////////////////////////////////////////////////////
-    // Methods
+    // Public Methods
     /////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void declareDefaults() {
-        declareDefault(LAST_ACK_RECV, DSInt.NULL).setReadOnly(true);
-    }
-
-    @Override
-    protected void doRecvMessage() {
-        DSBinaryTransport transport = getTransport();
-        DS2MessageReader reader = getMessageReader();
-        transport.beginRecvMessage();
-        reader.init(transport.getInput());
-        int ack = reader.getAckId();
-        if (ack > 0) {
-            put(lastAckRecv, DSInt.valueOf(ack));
-        }
-        if (reader.isMultipart()) {
-            MultipartReader multi = multiparts.get(reader.getRequestId());
-            if (multi == null) {
-                multi = new MultipartReader(reader);
-                multiparts.put(reader.getRequestId(), multi);
-                return;
-            } else if (multi.update(reader)) {
-                return;
-            }
-            multiparts.remove(reader.getRequestId());
-            reader = multi.makeReader();
-        }
-        if (reader.isRequest()) {
-            responder.handleRequest(reader);
-            setNextAck(reader.getRequestId());
-        } else if (reader.isAck()) {
-            put(lastAckRecv, DSInt.valueOf(DSBytes.readInt(reader.getBody(), false)));
-        } else if (reader.isPing()) {
-            ;
-        } else if (reader.isResponse()) {
-            requester.handleResponse(reader);
-            setNextAck(reader.getRequestId());
-        } else {
-            error("Unknown method: " + reader.getMethod());
-        }
-        transport.endRecvMessage();
-    }
-
-    @Override
-    protected void doSendMessage() {
-        DSTransport transport = getTransport();
-        if (this.hasSomethingToSend()) {
-            transport.beginSendMessage();
-            send(requestsNext = !requestsNext);  //alternate reqs and resps
-            transport.endSendMessage();
-        }
-    }
 
     @Override
     public DS2LinkConnection getConnection() {
         return (DS2LinkConnection) super.getConnection();
     }
 
-    private DS2MessageReader getMessageReader() {
-        if (messageReader == null) {
-            messageReader = new DS2MessageReader();
-        }
-        return messageReader;
-    }
-
-    private DS2MessageWriter getMessageWriter() {
-        if (messageWriter == null) {
-            messageWriter = new DS2MessageWriter();
-        }
-        return messageWriter;
+    @Override
+    public long getLastAckRcvd() {
+        return lastAckRcvd.getElement().toLong();
     }
 
     @Override
@@ -136,28 +74,6 @@ public class DS2Session extends DSSession implements MessageConstants {
     public DSBinaryTransport getTransport() {
         return (DSBinaryTransport) super.getTransport();
     }
-
-    private boolean hasPingToSend() {
-        return (System.currentTimeMillis() - lastMessageSent) > MAX_MSG_IVL;
-    }
-
-    /**
-     * Override point, returns true if there are any pending acks or outbound messages queued up.
-     */
-    protected boolean hasSomethingToSend() {
-        if (hasPingToSend()) {
-            return true;
-        }
-        return super.hasSomethingToSend();
-    }
-
-    /*
-    @Override
-    protected void onStable() {
-        put("Requester Session", requesterSession);
-        put("Responder Session", responderSession);
-    }
-    */
 
     @Override
     public void onConnect() {
@@ -186,6 +102,113 @@ public class DS2Session extends DSSession implements MessageConstants {
         multiparts.clear();
         requester.onDisconnect();
         responder.onDisconnect();
+    }
+
+    /**
+     * Returns true if the current message size has crossed a message size threshold.
+     */
+    public boolean shouldEndMessage() {
+        if (getMessageWriter().getBodyLength() > END_MSG_THRESHOLD) {
+            return true;
+        }
+        return (System.currentTimeMillis() - lastMessageSent) > 1000;
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Protected Methods
+    /////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void declareDefaults() {
+        declareDefault(LAST_ACK_RCVD, DSInt.NULL).setReadOnly(true);
+    }
+
+    @Override
+    protected void doRecvMessage() {
+        DSBinaryTransport transport = getTransport();
+        DS2MessageReader reader = getMessageReader();
+        transport.beginRecvMessage();
+        reader.init(transport.getInput());
+        int ack = reader.getAckId();
+        if (ack > 0) {
+            put(lastAckRcvd, DSInt.valueOf(ack));
+        }
+        if (reader.isMultipart()) {
+            MultipartReader multi = multiparts.get(reader.getRequestId());
+            if (multi == null) {
+                multi = new MultipartReader(reader);
+                multiparts.put(reader.getRequestId(), multi);
+                return;
+            } else if (multi.update(reader)) {
+                return;
+            }
+            multiparts.remove(reader.getRequestId());
+            reader = multi.makeReader();
+        }
+        if (reader.isRequest()) {
+            responder.handleRequest(reader);
+            setNextAck(reader.getRequestId());
+        } else if (reader.isAck()) {
+            put(lastAckRcvd, DSInt.valueOf(DSBytes.readInt(reader.getBody(), false)));
+        } else if (reader.isPing()) {
+            ;
+        } else if (reader.isResponse()) {
+            requester.handleResponse(reader);
+            setNextAck(reader.getRequestId());
+        } else {
+            error("Unknown method: " + reader.getMethod());
+        }
+        transport.endRecvMessage();
+    }
+
+    @Override
+    protected void doSendMessage() {
+        DSTransport transport = getTransport();
+        if (this.hasSomethingToSend()) {
+            transport.beginSendMessage();
+            send(requestsNext = !requestsNext);  //alternate reqs and resps
+            transport.endSendMessage();
+        }
+    }
+
+    /*
+    @Override
+    protected void onStable() {
+        put("Requester Session", requesterSession);
+        put("Responder Session", responderSession);
+    }
+    */
+
+    /**
+     * Override point, returns true if there are any pending acks or outbound messages queued up.
+     */
+    protected boolean hasSomethingToSend() {
+        if (hasPingToSend()) {
+            return true;
+        }
+        return super.hasSomethingToSend();
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    /////////////////////////////////////////////////////////////////
+
+    private DS2MessageReader getMessageReader() {
+        if (messageReader == null) {
+            messageReader = new DS2MessageReader();
+        }
+        return messageReader;
+    }
+
+    private DS2MessageWriter getMessageWriter() {
+        if (messageWriter == null) {
+            messageWriter = new DS2MessageWriter();
+        }
+        return messageWriter;
+    }
+
+    private boolean hasPingToSend() {
+        return (System.currentTimeMillis() - lastMessageSent) > MAX_MSG_IVL;
     }
 
     /**
@@ -218,16 +241,6 @@ public class DS2Session extends DSSession implements MessageConstants {
             DS2MessageWriter out = getMessageWriter();
             msg.write(out);
         }
-    }
-
-    /**
-     * Returns true if the current message size has crossed a message size threshold.
-     */
-    public boolean shouldEndMessage() {
-        if (getMessageWriter().getBodyLength() > END_MSG_THRESHOLD) {
-            return true;
-        }
-        return (System.currentTimeMillis() - lastMessageSent) > 1000;
     }
 
 }

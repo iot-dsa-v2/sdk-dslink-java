@@ -3,7 +3,6 @@ package org.iot.dsa.node;
 import java.util.Iterator;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.node.action.DSAbstractAction;
-import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.util.DSUtil;
 
@@ -216,6 +215,16 @@ public class DSInfo implements ApiObject {
     }
 
     /**
+     * Concatenates and encodes the path of the parent node and the name of this info.
+     *
+     * @param buf Can be null in which case a new one will be created.
+     * @return The given buf, or the newly created one.
+     */
+    public StringBuilder getPath(StringBuilder buf) {
+        return DSPath.append(DSPath.encodePath(parent, buf), name);
+    }
+
+    /**
      * A convenience that casts getObject().
      */
     @Override
@@ -398,6 +407,10 @@ public class DSInfo implements ApiObject {
         return cur;
     }
 
+    /**
+     * False by default, set to true if you don't want the child to require admin level
+     * permissions.
+     */
     public DSInfo setAdmin(boolean admin) {
         setFlag(ADMIN, admin);
         return this;
@@ -409,6 +422,9 @@ public class DSInfo implements ApiObject {
         return this;
     }
 
+    /**
+     * False by default, set to true if you don't want the child to be sent to clients.
+     */
     public DSInfo setHidden(boolean hidden) {
         setFlag(HIDDEN, hidden);
         return this;
@@ -434,11 +450,17 @@ public class DSInfo implements ApiObject {
         return this;
     }
 
+    /**
+     * False by default, set to true if you don't want the child to be written by clients.
+     */
     public DSInfo setReadOnly(boolean readOnly) {
         setFlag(READONLY, readOnly);
         return this;
     }
 
+    /**
+     * False by default, set to true if you don't want the child persisted.
+     */
     public DSInfo setTransient(boolean trans) {
         setFlag(TRANSIENT, trans);
         return this;

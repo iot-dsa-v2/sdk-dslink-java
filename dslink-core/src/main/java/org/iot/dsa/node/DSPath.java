@@ -38,6 +38,32 @@ public class DSPath {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
+     * Concatenates the two paths into the leading bucket.  Insures a single forward slash
+     * character separates them. The bucket will not be cleared, the path will be appended to it.
+     *
+     * @param leading Can be null, in which case a new buffer will be created.
+     * @return The given bucket, or a new one if that was null, with the complete path appended.
+     */
+    public static StringBuilder append(StringBuilder leading, String trailing) {
+        if (leading == null) {
+            leading = new StringBuilder();
+        }
+        if ((trailing == null) || trailing.isEmpty()) {
+            return leading;
+        }
+        if ((leading.length() > 0) && leading.charAt(leading.length() - 1) == '/') {
+            if (trailing.charAt(0) == '/') {
+                return leading.append(trailing.substring(1));
+            }
+        } else {
+            if (trailing.charAt(0) != '/') {
+                leading.append('/');
+            }
+        }
+        return leading.append(trailing);
+    }
+
+    /**
      * Concatenates the two paths into the given bucket.  Insures a single forward slash character
      * separates them. The bucket will not be cleared, the path will be appended to it.
      *
@@ -54,7 +80,7 @@ public class DSPath {
         if ((trailing == null) || trailing.isEmpty()) {
             return bucket;
         }
-        if (leading.charAt(leading.length() - 1) == '/') {
+        if (!leading.isEmpty() && leading.charAt(leading.length() - 1) == '/') {
             if (trailing.charAt(0) == '/') {
                 return bucket.append(trailing.substring(1));
             }

@@ -6,25 +6,29 @@ import java.util.logging.Logger;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import org.iot.dsa.io.DSBase64;
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIStorable;
+import org.iot.dsa.node.DSRegistry;
+import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.DSValue;
+import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.util.DSException;
 
 /**
- * Do not casually use this, it requires the JCE unlimited strength jurisdiction policy files
- * wherever instances of this class are used.
- * <p>
- * This stores an encrypted password which can then be decrypted.
+ * This stores an encrypted password which can then be decrypted.  This does not require the JCE
+ * unlimited strength jurisdiction policy files to be installed.  128 bit AES is uncompromised and
+ * safe to used.
  *
  * @author Aaron Hansen
  */
-public class DSPasswordAes256 extends DSValue implements DSIPassword, DSIStorable {
+public class DSPasswordAes128 extends DSValue implements DSIPassword, DSIStorable {
 
     // Constants
     // ---------
 
     private static Cipher cipher;
     private static Key key;
-    public static final DSPasswordAes256 NULL = new DSPasswordAes256(DSString.NULL);
+    public static final DSPasswordAes128 NULL = new DSPasswordAes128(DSString.NULL);
 
     // Fields
     // ------
@@ -34,11 +38,11 @@ public class DSPasswordAes256 extends DSValue implements DSIPassword, DSIStorabl
     // Constructors
     // ------------
 
-    private DSPasswordAes256(DSString encrypted) {
+    private DSPasswordAes128(DSString encrypted) {
         this.value = encrypted;
     }
 
-    private DSPasswordAes256(String encrypted) {
+    private DSPasswordAes128(String encrypted) {
         this(DSString.valueOf(encrypted));
     }
 
@@ -89,7 +93,7 @@ public class DSPasswordAes256 extends DSValue implements DSIPassword, DSIStorabl
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof DSPasswordAes256) {
+        if (obj instanceof DSPasswordAes128) {
             return value.equals(obj.toString());
         }
         return false;
@@ -151,11 +155,11 @@ public class DSPasswordAes256 extends DSValue implements DSIPassword, DSIStorabl
     }
 
     @Override
-    public DSPasswordAes256 restore(DSElement element) {
+    public DSPasswordAes128 restore(DSElement element) {
         if (element.isNull()) {
             return NULL;
         }
-        return new DSPasswordAes256(element.toString());
+        return new DSPasswordAes128(element.toString());
     }
 
     /**
@@ -181,7 +185,7 @@ public class DSPasswordAes256 extends DSValue implements DSIPassword, DSIStorabl
      * @return Returns the NULL instance if the arg is null, isNull() or the empty string.
      */
     @Override
-    public DSPasswordAes256 valueOf(DSElement arg) {
+    public DSPasswordAes128 valueOf(DSElement arg) {
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
@@ -198,13 +202,13 @@ public class DSPasswordAes256 extends DSValue implements DSIPassword, DSIStorabl
      * @param arg The text to hash.
      * @return Returns the NULL instance if the arg is null or the empty string.
      */
-    public static DSPasswordAes256 valueOf(String arg) {
+    public static DSPasswordAes128 valueOf(String arg) {
         if (arg == null) {
             return NULL;
         } else if (arg.isEmpty()) {
             return NULL;
         }
-        return new DSPasswordAes256(encode(arg));
+        return new DSPasswordAes128(encode(arg));
     }
 
     // Initialization
@@ -213,14 +217,14 @@ public class DSPasswordAes256 extends DSValue implements DSIPassword, DSIStorabl
     static {
         try {
             cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            byte[] nameBytes = DSPasswordAes256.class.getName().getBytes(DSString.UTF8);
-            byte[] keyBytes = new byte[32];
-            System.arraycopy(nameBytes, 0, keyBytes, 0, 32);
+            byte[] nameBytes = DSPasswordAes128.class.getName().getBytes(DSString.UTF8);
+            byte[] keyBytes = new byte[16];
+            System.arraycopy(nameBytes, 0, keyBytes, 0, 16);
             key = new SecretKeySpec(keyBytes, "AES");
         } catch (Exception x) {
             Logger.getLogger("security").log(Level.SEVERE, "AES problem", x);
         }
-        DSRegistry.registerDecoder(DSPasswordAes256.class, NULL);
+        DSRegistry.registerDecoder(DSPasswordAes128.class, NULL);
     }
 
 }

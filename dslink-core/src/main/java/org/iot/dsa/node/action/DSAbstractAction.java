@@ -221,16 +221,18 @@ public abstract class DSAbstractAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * Use info.getParent(), not the outer 'this' to access the node on which the
-     * action is being invoked.  This is because actions instances can be status / reused
-     * on multiple nodes.
+     * Use info.getParent(), not the outer 'this' to access the node on which the action is being
+     * invoked.  This is because actions instances can (should) be reused on multiple nodes.
+     * <p>
+     * To report an error, simply throw a runtime exception from this method, or call
+     * ActionInvocation.close(Exception).
      *
      * @param info       The info about the action in the node being being invoked.
      *                   Do not use the outer 'this'.
      * @param invocation Details about the incoming invoke as well as the mechanism to
      *                   send updates over an open stream.
      * @return Can be null if the result type is void.
-     * @throws IllegalStateException If the target node has not overridden onInvoke.
+     * @throws RuntimeException Throw a runtime exception to report an error.
      */
     public abstract ActionResult invoke(DSInfo info, ActionInvocation invocation);
 

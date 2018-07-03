@@ -4,26 +4,26 @@ import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.io.DSBase64;
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIStorable;
+import org.iot.dsa.node.DSRegistry;
+import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.DSValue;
+import org.iot.dsa.node.DSValueType;
 
 /**
- * Requires the JCE unlimited strength jurisdiction policy files wherever instances
- * of this class are used.
- * <p>
- * Stores and verifies passwords using a SHA-256 hash of the text (the clear text is not
- * accessible).
- * <p>
- * DSPasswordSha1 (SHA-1) is not considered secure against well-funded opponents, but it doesn't
- * require the JCE unlimited strength jurisdiction policy files.
+ * Stores and verifies passwords using a SHA-1 hash of the text (the clear text is not accessible).
+ * SHA-1 is not considered secure against well-funded opponents, but it doesn't require the JCE
+ * unlimited strength jurisdiction policy files.
  *
  * @author Aaron Hansen
  */
-public class DSPasswordSha256 extends DSValue implements DSIPassword, DSIStorable {
+public class DSPasswordSha1 extends DSValue implements DSIPassword, DSIStorable {
 
     // Constants
     // ---------
 
-    public static final DSPasswordSha256 NULL = new DSPasswordSha256(DSString.NULL);
+    public static final DSPasswordSha1 NULL = new DSPasswordSha1(DSString.NULL);
 
     private static MessageDigest digest;
 
@@ -35,11 +35,11 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword, DSIStorabl
     // Constructors
     // ------------
 
-    private DSPasswordSha256(DSString hashBase64) {
+    private DSPasswordSha1(DSString hashBase64) {
         this.value = hashBase64;
     }
 
-    private DSPasswordSha256(String hashBase64) {
+    private DSPasswordSha1(String hashBase64) {
         this(DSString.valueOf(hashBase64));
     }
 
@@ -136,11 +136,11 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword, DSIStorabl
     }
 
     @Override
-    public DSPasswordSha256 restore(DSElement element) {
+    public DSPasswordSha1 restore(DSElement element) {
         if (element.isNull()) {
             return NULL;
         }
-        return new DSPasswordSha256(element.toString());
+        return new DSPasswordSha1(element.toString());
     }
 
     /**
@@ -163,7 +163,7 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword, DSIStorabl
      * @return Returns the NULL instance if the arg is null, isNull() or the empty string.
      */
     @Override
-    public DSPasswordSha256 valueOf(DSElement arg) {
+    public DSPasswordSha1 valueOf(DSElement arg) {
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
@@ -180,13 +180,13 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword, DSIStorabl
      * @param arg The text to hash.
      * @return Returns the NULL instance if the arg is null or the empty string.
      */
-    public static DSPasswordSha256 valueOf(String arg) {
+    public static DSPasswordSha1 valueOf(String arg) {
         if (arg == null) {
             return NULL;
         } else if (arg.isEmpty()) {
             return NULL;
         }
-        return new DSPasswordSha256(encode(arg));
+        return new DSPasswordSha1(encode(arg));
     }
 
     // Initialization
@@ -194,11 +194,11 @@ public class DSPasswordSha256 extends DSValue implements DSIPassword, DSIStorabl
 
     static {
         try {
-            digest = MessageDigest.getInstance("SHA-256");
+            digest = MessageDigest.getInstance("SHA-1");
         } catch (Exception x) {
-            Logger.getLogger("security").log(Level.SEVERE, "SHA-256 unknown", x);
+            Logger.getLogger("security").log(Level.SEVERE, "SHA-1 unknown", x);
         }
-        DSRegistry.registerDecoder(DSPasswordSha256.class, NULL);
+        DSRegistry.registerDecoder(DSPasswordSha1.class, NULL);
     }
 
 }

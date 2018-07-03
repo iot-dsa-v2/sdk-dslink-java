@@ -18,22 +18,22 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSSession extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int MAX_MSG_ID = 2147483647;
     private static final long MSG_TIMEOUT = 60000;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private boolean connected = false;
+    private DSLinkConnection connection;
     private long lastRecv;
     private long lastSend;
     private int nextAck = -1;
     private int nextMessage = 1;
-    private boolean connected = false;
-    private DSLinkConnection connection;
     private Object outgoingMutex = new Object();
     private List<OutboundMessage> outgoingRequests = new LinkedList<OutboundMessage>();
     private List<OutboundMessage> outgoingResponses = new LinkedList<OutboundMessage>();
@@ -70,42 +70,6 @@ public abstract class DSSession extends DSNode {
     }
 
     /**
-     * The subclass should read and process a single message.  Throw an exception to indicate
-     * an error.
-     */
-    protected abstract void doRecvMessage() throws Exception;
-
-    /**
-     * The subclass should send a single message.  Throw an exception to indicate
-     * an error.
-     */
-    protected abstract void doSendMessage() throws Exception;
-
-    /**
-     * Can return null.
-     */
-    protected OutboundMessage dequeueOutgoingResponse() {
-        synchronized (outgoingMutex) {
-            if (!outgoingResponses.isEmpty()) {
-                return outgoingResponses.remove(0);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Can return null.
-     */
-    protected OutboundMessage dequeueOutgoingRequest() {
-        synchronized (outgoingMutex) {
-            if (!outgoingRequests.isEmpty()) {
-                return outgoingRequests.remove(0);
-            }
-        }
-        return null;
-    }
-
-    /**
      * Add a message to the outgoing request queue.
      */
     public void enqueueOutgoingRequest(OutboundMessage arg) {
@@ -136,10 +100,10 @@ public abstract class DSSession extends DSNode {
         return connection;
     }
 
-    @Override
-    protected String getLogName() {
-        return "Session";
-    }
+    /**
+     * Last ack received from the broker.
+     */
+    public abstract long getLastAckRcvd();
 
     /**
      * The next ack id, or -1.
@@ -165,6 +129,113 @@ public abstract class DSSession extends DSNode {
 
     public DSTransport getTransport() {
         return getConnection().getTransport();
+    }
+
+    /**
+     * Override point, called when the previous connection can be resumed. The the transport will
+     * have already been set.
+     */
+    public void onConnect() {
+        connected = true;
+    }
+
+    /**
+     * Override point, when a connection attempt failed.
+     */
+    public void onConnectFail() {
+        connected = false;
+    }
+
+    /**
+     * Override point, called after the connection is closed.
+     */
+    public void onDisconnect() {
+        synchronized (outgoingMutex) {
+            outgoingRequests.clear();
+            outgoingResponses.clear();
+        }
+    }
+
+    /**
+     * Called by the connection, this manages the running state and calls doRun for the specific
+     * implementation.  A separate thread is spun off to manage writing.
+     */
+    public void run() {
+        lastRecv = lastSend = System.currentTimeMillis();
+        new WriteThread(getConnection().getLink().getLinkName() + " Writer").start();
+        while (connected) {
+            try {
+                verifyLastSend();
+                doRecvMessage();
+                lastRecv = System.currentTimeMillis();
+            } catch (Exception x) {
+                getTransport().close();
+                if (connected) {
+                    connected = false;
+                    error(getPath(), x);
+                }
+            }
+        }
+    }
+
+    /**
+     * Call for each incoming message id that needs to be acked.
+     */
+    public synchronized void setNextAck(int nextAck) {
+        if (nextAck > 0) {
+            this.nextAck = nextAck;
+            notifyOutgoing();
+        }
+    }
+
+    /**
+     * Called when the broker signifies that requests are allowed.
+     */
+    public void setRequesterAllowed() {
+        requesterAllowed = true;
+    }
+
+    public abstract boolean shouldEndMessage();
+
+    /**
+     * Can return null.
+     */
+    protected OutboundMessage dequeueOutgoingRequest() {
+        synchronized (outgoingMutex) {
+            if (!outgoingRequests.isEmpty()) {
+                return outgoingRequests.remove(0);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Can return null.
+     */
+    protected OutboundMessage dequeueOutgoingResponse() {
+        synchronized (outgoingMutex) {
+            if (!outgoingResponses.isEmpty()) {
+                return outgoingResponses.remove(0);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The subclass should read and process a single message.  Throw an exception to indicate
+     * an error.
+     */
+    protected abstract void doRecvMessage() throws Exception;
+
+    /**
+     * The subclass should send a single message.  Throw an exception to indicate
+     * an error.
+     */
+    protected abstract void doSendMessage() throws Exception;
+
+    @Override
+    protected String getLogName() {
+        return "Session";
     }
 
     protected boolean hasAckToSend() {
@@ -205,72 +276,6 @@ public abstract class DSSession extends DSNode {
     protected void notifyOutgoing() {
         synchronized (outgoingMutex) {
             outgoingMutex.notify();
-        }
-    }
-
-    /**
-     * Override point, called when the previous connection can be resumed. The the transport will
-     * have already been set.
-     */
-    public void onConnect() {
-        connected = true;
-    }
-
-    /**
-     * Override point, when a connection attempt failed.
-     */
-    public void onConnectFail() {
-        connected = false;
-    }
-
-    /**
-     * Override point, called after the connection is closed.
-     */
-    public void onDisconnect() {
-        synchronized (outgoingMutex) {
-            outgoingRequests.clear();
-            outgoingResponses.clear();
-        }
-    }
-
-    /**
-     * Call for each incoming message id that needs to be acked.
-     */
-    public synchronized void setNextAck(int nextAck) {
-        if (nextAck > 0) {
-            this.nextAck = nextAck;
-            notifyOutgoing();
-        }
-    }
-
-    /**
-     * Called when the broker signifies that requests are allowed.
-     */
-    public void setRequesterAllowed() {
-        requesterAllowed = true;
-    }
-
-    public abstract boolean shouldEndMessage();
-
-    /**
-     * Called by the connection, this manages the running state and calls doRun for the specific
-     * implementation.  A separate thread is spun off to manage writing.
-     */
-    public void run() {
-        lastRecv = lastSend = System.currentTimeMillis();
-        new WriteThread(getConnection().getLink().getLinkName() + " Writer").start();
-        while (connected) {
-            try {
-                verifyLastSend();
-                doRecvMessage();
-                lastRecv = System.currentTimeMillis();
-            } catch (Exception x) {
-                getTransport().close();
-                if (connected) {
-                    connected = false;
-                    error(getPath(), x);
-                }
-            }
         }
     }
 

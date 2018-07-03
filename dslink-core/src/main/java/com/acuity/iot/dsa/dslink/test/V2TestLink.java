@@ -26,13 +26,17 @@ public class V2TestLink extends DSLink {
         DSLinkConfig cfg = new DSLinkConfig();
         cfg.setDslinkJson(new DSMap().put("configs", new DSMap()));
         cfg.setLinkName("dslink-java-testing");
-        cfg.setLogLevel(Level.FINEST);
+        //cfg.setLogLevel(Level.FINEST);
         cfg.setConfig(DSLinkConfig.CFG_CONNECTION_TYPE, TestConnection.class.getName());
         cfg.setConfig(DSLinkConfig.CFG_STABLE_DELAY, 1);
         init(cfg);
     }
 
     public static class TestConnection extends DS2LinkConnection {
+
+        public String getPathInBroker() {
+            return "";
+        }
 
         @Override
         protected DSBinaryTransport makeTransport() {

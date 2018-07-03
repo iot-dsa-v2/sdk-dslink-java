@@ -7,7 +7,7 @@ import org.iot.dsa.dslink.DSMainNode;
  *
  * @author Aaron Hansen
  */
-public class TestLink extends V2TestLink {
+public class TestLink extends V1TestLink {
 
     public TestLink() {
     }

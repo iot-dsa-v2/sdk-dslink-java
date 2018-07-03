@@ -25,7 +25,7 @@ import org.iot.dsa.util.DSException;
 public class DS1ConnectionInit extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static final String DSA_VERSION = "1.1.2";
@@ -36,7 +36,7 @@ public class DS1ConnectionInit extends DSNode {
     private String BROKER_RES = "Broker Response";
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private String authToken;
@@ -46,11 +46,19 @@ public class DS1ConnectionInit extends DSNode {
     private DSMap response;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constructors
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public void onStable() {
+        this.connection = (DS1LinkConnection) getParent();
+        this.link = connection.getLink();
+        this.authToken = link.getConfig().getToken();
+        this.brokerUri = link.getConfig().getBrokerUri();
+    }
+
     ///////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
 
     DSLink getLink() {
@@ -175,14 +183,6 @@ public class DS1ConnectionInit extends DSNode {
             DSException.throwRuntime(x);
         }
         return buf.toString();
-    }
-
-    @Override
-    public void onStable() {
-        this.connection = (DS1LinkConnection) getParent();
-        this.link = connection.getLink();
-        this.authToken = link.getConfig().getToken();
-        this.brokerUri = link.getConfig().getBrokerUri();
     }
 
     /**
