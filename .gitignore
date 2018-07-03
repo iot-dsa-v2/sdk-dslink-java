@@ -9,14 +9,14 @@
 # Build artifacts
 **.class
 **.iml
-**.gradle
 **build
 **classes
 **libJar
 **out
 **target
-/javadoc
-/repository
+**/.gradle
+**javadoc
+**repository
 
 # Misc
 **.bak
