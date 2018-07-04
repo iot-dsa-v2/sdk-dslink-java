@@ -1,6 +1,6 @@
 apply from: '../build.gradle'
 
 dependencies {
-    compile project(':dslink-core')
+    compile project(':dslink-v2')
     compile 'org.glassfish.tyrus.bundles:tyrus-standalone-client:+'
 }

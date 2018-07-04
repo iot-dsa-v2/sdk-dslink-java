@@ -12,16 +12,11 @@ applicationDefaultJvmArgs = [
 repositories {
     mavenLocal()
     mavenCentral()
-    /*
-    maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots/'
-    }
-    */
 }
 
 dependencies {
-    compile project(':dslink-core')
-    compile project(':dslink-websocket-standalone')
+    compile project(':dslink-v2')
+    compile project(':dslink-v2-websocket')
 }
 
 applicationDistribution.from(new File(project.projectDir, "/dslink.json"))
