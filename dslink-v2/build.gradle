@@ -1,0 +1,58 @@
+apply plugin: 'nexus-workflow'
+apply plugin: 'signing'
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+dependencies {
+    testCompile 'junit:junit:[4.12,)'
+}
+
+javadoc {
+    exclude("**/com/**")
+}
+
+signing {
+    required { gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name = 'V2 DSLink SDK'
+                artifactId = 'dslink-v2'
+                description = 'V2 DSLink SDK for IoT DSA'
+
+                packaging = 'jar'
+                url = 'http://iot-dsa.org'
+
+                scm {
+                    connection = 'scm:git:https://github.com/iot-dsa-v2/sdk-dslink-java-v2.git'
+                    developerConnection = 'scm:git:git@github.com:iot-dsa-v2/sdk-dslink-java-v2.git'
+                    url = 'https://github.com/iot-dsa-v2/sdk-dslink-java-v2'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+            }
+        }
+    }
+}

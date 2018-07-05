@@ -1,31 +1,34 @@
 # Tooling
-**/.classpath
-**/.idea
-**/.metadata
-**/.project
-**/.settings
-**/eclipseBin
+**.classpath
+**.idea
+**.metadata
+**.project
+**.settings
+**eclipseBin
 
 # Build artifacts
 **.class
 **.iml
+**build
+**classes
+**libJar
+**out
+**target
 **/.gradle
-**/build
-**/out
-**/libJar
-**/target
+**javadoc
+**repository
 
 # Misc
 **.bak
 **.old
 **.log
-**/.DS_Store
+**.DS_Store
 
 # Runtime files
-**/dslink.jks
-**/.key
-**/db
-**/nodes.json
-**/nodes*.zip
-**/test.json
+**.jks
+**.key
+**db
+**nodes.json
+**nodes*.zip
+**test.json
 **/*.log.*.zip
