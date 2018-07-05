@@ -1,32 +1,39 @@
-apply plugin: 'java'
-apply plugin: 'maven'
-
-group 'org.iot-dsa'
-version '0.28.0'
-
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
-
-repositories {
-    mavenLocal()
-    mavenCentral()
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.adaptc.gradle:nexus-workflow:0.6'
+    }
 }
 
-dependencies {
-    testCompile 'junit:junit:+'
-}
+subprojects {
 
-task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allJava
-}
+    apply plugin: 'java'
+    apply plugin: 'maven'
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
+    group 'org.iot-dsa'
+    version '0.28.0'
 
-artifacts {
-    archives sourcesJar
-    archives javadocJar
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+    }
+
+    task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allJava
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
 }
