@@ -7,48 +7,33 @@ buildscript {
     }
 }
 
-apply plugin: 'nexus-workflow'
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
+subprojects {
 
-group 'org.iot-dsa'
-version '0.27.0'
+    apply plugin: 'java'
+    apply plugin: 'maven'
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+    group 'org.iot-dsa'
+    version '0.28.0'
 
-install {
-    repositories.mavenInstaller {
-        pom.project {
-            artifactId 'dslink-v2'
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
         }
     }
-}
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots/'
+    task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allJava
     }
-}
 
-dependencies {
-    testCompile 'junit:junit:[4.12,)'
-}
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
 
-task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allJava
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
 }
