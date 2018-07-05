@@ -1,0 +1,28 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+group 'org.iot-dsa'
+mainClassName = 'org.iot.dsa.dslink.DSLink'
+
+applicationDefaultJvmArgs = [
+        "-XX:+HeapDumpOnOutOfMemoryError", "-XX:HeapDumpPath=" + name + ".hprof"]
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile project(':dslink-v2')
+    compile project(':dslink-v2-websocket')
+}
+
+applicationDistribution.from(new File(project.projectDir, "/dslink.json"))
+
+run {
+    args System.getProperty("exec.args", "").split()
+    workingDir project.buildDir
+}
+
