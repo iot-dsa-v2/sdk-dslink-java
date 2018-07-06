@@ -6,7 +6,6 @@ import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.security.DSPasswordAes128;
-import org.iot.dsa.security.DSPasswordAes256;
 
 /**
  * Certificate management for the whole process.  This is basically a stub for future
@@ -62,7 +61,7 @@ public class SysCertManager extends DSNode {
     }
 
     private String getCertFilePass() {
-        DSPasswordAes256 pass = (DSPasswordAes256) keystorePass.getObject();
+        DSPasswordAes128 pass = (DSPasswordAes128) keystorePass.getObject();
         return pass.decode();
     }
 
