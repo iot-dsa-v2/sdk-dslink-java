@@ -1,19 +1,10 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.adaptc.gradle:nexus-workflow:0.6'
-    }
-}
-
 subprojects {
 
     apply plugin: 'java'
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.28.0'
+    version '0.29.0'
 
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
@@ -21,9 +12,6 @@ subprojects {
     repositories {
         mavenLocal()
         mavenCentral()
-        maven {
-            url 'https://oss.sonatype.org/content/repositories/snapshots/'
-        }
     }
 
     task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
@@ -35,5 +23,8 @@ subprojects {
         classifier = 'javadoc'
         from javadoc.destinationDir
     }
+}
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.8.1'
 }

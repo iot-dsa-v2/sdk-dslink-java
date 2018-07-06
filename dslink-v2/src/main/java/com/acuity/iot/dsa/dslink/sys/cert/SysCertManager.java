@@ -5,6 +5,7 @@ import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
+import org.iot.dsa.security.DSPasswordAes128;
 import org.iot.dsa.security.DSPasswordAes256;
 
 /**
@@ -57,7 +58,7 @@ public class SysCertManager extends DSNode {
         declareDefault(ALLOW_SERVERS, DSBool.TRUE);
         declareDefault(CERTFILE, DSString.valueOf("dslink.jks"));
         declareDefault(CERTFILE_TYPE, DSString.valueOf("JKS"));
-        declareDefault(CERTFILE_PASS, DSPasswordAes256.valueOf("dsarocks"));
+        declareDefault(CERTFILE_PASS, DSPasswordAes128.valueOf("dsarocks"));
     }
 
     private String getCertFilePass() {
