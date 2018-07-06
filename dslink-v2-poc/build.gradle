@@ -15,8 +15,8 @@ repositories {
 }
 
 dependencies {
-    compile project(':dslink-v2')
-    compile project(':dslink-v2-websocket')
+    implementation project(':dslink-v2')
+    implementation project(':dslink-v2-websocket')
 }
 
 applicationDistribution.from(new File(project.projectDir, "/dslink.json"))
