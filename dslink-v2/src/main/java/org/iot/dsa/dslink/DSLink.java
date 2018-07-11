@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.logging.DSLogHandler;
+import org.iot.dsa.logging.DSLogHandler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

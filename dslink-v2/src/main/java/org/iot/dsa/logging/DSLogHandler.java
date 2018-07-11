@@ -1,4 +1,4 @@
-package com.acuity.iot.dsa.dslink.logging;
+package org.iot.dsa.logging;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -10,7 +10,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.iot.dsa.logging.DSILevels;
 import org.iot.dsa.time.DSTime;
 
 /**
