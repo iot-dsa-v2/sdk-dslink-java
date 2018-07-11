@@ -2,6 +2,9 @@ package org.iot.dsa.logging;
 
 import java.util.logging.Level;
 
+/**
+ * The DSA logging levels.
+ */
 public interface DSILevels {
 
     int TRACE = 300; //finest
