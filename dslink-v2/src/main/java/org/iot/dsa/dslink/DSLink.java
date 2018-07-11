@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.logging.AsyncLogHandler;
+import com.acuity.iot.dsa.dslink.logging.DSLogHandler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -143,7 +143,7 @@ public class DSLink extends DSNode implements Runnable {
      */
     protected DSLink init(DSLinkConfig config) {
         this.config = config;
-        AsyncLogHandler.setRootLevel(config.getLogLevel());
+        DSLogHandler.setRootLevel(config.getLogLevel());
         name = config.getLinkName();
         keys = config.getKeys();
         getSys().init();

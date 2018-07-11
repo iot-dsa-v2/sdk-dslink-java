@@ -18,7 +18,7 @@ import org.iot.dsa.time.DSTime;
  *
  * @author Aaron Hansen
  */
-public class AsyncLogHandler extends Handler implements DSILevels {
+public class DSLogHandler extends Handler implements DSILevels {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -28,25 +28,23 @@ public class AsyncLogHandler extends Handler implements DSILevels {
     static final int STATE_OPEN = 1;
     static final int STATE_CLOSE_PENDING = 2;
     static final String lineSeparator;
-
-    private static Level rootLevel;
-    private static int maxQueueSize = 10000;
-    private static StringBuilder builder = new StringBuilder();
-    private static int queueThrottle = (int) (maxQueueSize * .90);
+    protected StringBuilder builder = new StringBuilder();
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
-
     private LogHandlerThread logHandlerThread;
+    private int maxQueueSize = 2500;
     private LinkedList<LogRecord> queue = new LinkedList<LogRecord>();
+    private int queueThrottle = (int) (maxQueueSize * .90);
+    private static Level rootLevel;
     private int state = STATE_CLOSED;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public AsyncLogHandler() {
+    public DSLogHandler() {
         start();
     }
 
@@ -65,8 +63,13 @@ public class AsyncLogHandler extends Handler implements DSILevels {
             }
             state = STATE_CLOSE_PENDING;
         }
+        long start = System.currentTimeMillis();
         synchronized (queue) {
             while (!queue.isEmpty()) {
+                //give up after 15sec
+                if ((System.currentTimeMillis() - start) > 15000) {
+                    break;
+                }
                 queue.notifyAll();
                 try {
                     queue.wait(1000);
@@ -75,7 +78,11 @@ public class AsyncLogHandler extends Handler implements DSILevels {
             }
         }
         flush();
-        state = STATE_CLOSED;
+    }
+
+    @Override
+    public void flush() {
+        System.out.flush();
     }
 
     /**
@@ -83,11 +90,6 @@ public class AsyncLogHandler extends Handler implements DSILevels {
      */
     public static Level getRootLevel() {
         return Logger.getLogger("").getLevel();
-    }
-
-    @Override
-    public void flush() {
-        System.out.flush();
     }
 
     /**
@@ -179,7 +181,7 @@ public class AsyncLogHandler extends Handler implements DSILevels {
      */
     public static String toString(Handler handler, LogRecord record) {
         StringBuilder buf = new StringBuilder();
-        AsyncLogHandler.write(handler, record, buf);
+        DSLogHandler.write(handler, record, buf);
         return buf.toString();
     }
 
@@ -200,11 +202,12 @@ public class AsyncLogHandler extends Handler implements DSILevels {
     }
 
     /**
-     * Formats and writes the logging record the underlying stream.
+     * Formats and writes the logging record the underlying stream.  Easily overridable if you
+     * wish to do something else.
      */
     protected void write(LogRecord record) {
         write(this, record, builder);
-        synchronized (AsyncLogHandler.class) {
+        synchronized (DSLogHandler.class) {
             System.out.println(builder.toString());
         }
         builder.setLength(0);
@@ -287,12 +290,12 @@ public class AsyncLogHandler extends Handler implements DSILevels {
         }
         Throwable thrown = record.getThrown();
         if (thrown != null) {
-            builder.append(lineSeparator);
+            buf.append(lineSeparator);
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             thrown.printStackTrace(pw);
             pw.close();
-            builder.append(sw.toString());
+            buf.append(sw.toString());
         }
     }
 
@@ -303,7 +306,7 @@ public class AsyncLogHandler extends Handler implements DSILevels {
     private class LogHandlerThread extends Thread {
 
         public LogHandlerThread() {
-            super("AsyncLogHandler");
+            super("DSLogHandler");
             setDaemon(true);
         }
 
@@ -321,16 +324,17 @@ public class AsyncLogHandler extends Handler implements DSILevels {
                                 queue.wait(DSTime.MILLIS_SECOND);
                             } catch (Exception ignore) {
                             }
+                        } else {
+                            state = STATE_CLOSED;
                         }
                     } else {
                         record = queue.removeFirst();
                     }
                 }
-                if (state != STATE_CLOSED) {
-                    if (record != null) {
-                        write(record);
-                        record = null;
-                    }
+                if (record != null) {
+                    write(record);
+                    record = null;
+                    Thread.yield();
                 }
             }
             flush();
@@ -349,7 +353,7 @@ public class AsyncLogHandler extends Handler implements DSILevels {
         for (Handler handler : rootLogger.getHandlers()) {
             rootLogger.removeHandler(handler);
         }
-        AsyncLogHandler async = new AsyncLogHandler();
+        DSLogHandler async = new DSLogHandler();
         async.setLevel(rootLevel);
         rootLogger.addHandler(async);
         StringWriter sw = new StringWriter();
