@@ -1,6 +1,7 @@
-package org.iot.dsa.logging;
+package com.acuity.iot.dsa.dslink.logging;
 
-import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
@@ -8,42 +9,53 @@ import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import org.iot.dsa.logging.DSILevels;
 import org.iot.dsa.time.DSTime;
 
 /**
- * Enqueues logging records which are then processed by separate thread.
+ * All instances of this handler asynchronously print log records to System.out.
  *
  * @author Aaron Hansen
  */
-public abstract class AsyncLogHandler extends Handler implements DSILevels {
+public class AsyncLogHandler extends Handler implements DSILevels {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     static final int STATE_CLOSED = 0;
     static final int STATE_OPEN = 1;
     static final int STATE_CLOSE_PENDING = 2;
+    static final String lineSeparator;
+
+    private static Level rootLevel;
+    private static int maxQueueSize = 10000;
+    private static StringBuilder builder = new StringBuilder();
+    private static int queueThrottle = (int) (maxQueueSize * .90);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private StringBuilder builder = new StringBuilder();
-    private Calendar calendar = Calendar.getInstance();
     private LogHandlerThread logHandlerThread;
-    private int maxQueueSize = DSLogging.DEFAULT_MAX_QUEUE;
-    private PrintStream out;
-    private int state = STATE_CLOSED;
     private LinkedList<LogRecord> queue = new LinkedList<LogRecord>();
-    private int queueThrottle = (int) (DSLogging.DEFAULT_MAX_QUEUE * .90);
+    private int state = STATE_CLOSED;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Constructors
+    ///////////////////////////////////////////////////////////////////////////
+
+    public AsyncLogHandler() {
+        start();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Closes the PrintStream, terminates the write thread and performs houseKeeping.
+     * Waits for the async handler to empty it's queue but won't allow new messages on the queue.
      */
     @Override
     public void close() {
@@ -54,50 +66,28 @@ public abstract class AsyncLogHandler extends Handler implements DSILevels {
             state = STATE_CLOSE_PENDING;
         }
         synchronized (queue) {
-            while (queue.size() > 0) {
+            while (!queue.isEmpty()) {
                 queue.notifyAll();
                 try {
-                    queue.wait();
+                    queue.wait(1000);
                 } catch (Exception ignore) {
                 }
             }
         }
-        houseKeeping();
-        out.flush();
+        flush();
         state = STATE_CLOSED;
+    }
+
+    /**
+     * A convenience for Logger.getLogger("").getLevel().
+     */
+    public static Level getRootLevel() {
+        return Logger.getLogger("").getLevel();
     }
 
     @Override
     public void flush() {
-        out.flush();
-    }
-
-    /**
-     * Ten seconds by default, this is a guideline more than anything else.  Housekeeping can be
-     * called sooner during low activity periods.
-     */
-    public long getHouseKeepingIntervalMillis() {
-        return DSTime.MILLIS_TEN_SECONDS;
-    }
-
-    /**
-     * The sink for formatted messages.
-     */
-    protected PrintStream getOut() {
-        return out;
-    }
-
-    /**
-     * Used to name the thread that processes logging records.
-     */
-    protected abstract String getThreadName();
-
-    /**
-     * Subclass hook for activities such as rolling files and cleaning up old garbage. Called during
-     * periods of inactivity or after the houseKeepingInterval is exceeded. Does nothing by default
-     * and flush will be called just prior to this.
-     */
-    protected void houseKeeping() {
+        System.out.flush();
     }
 
     /**
@@ -173,19 +163,29 @@ public abstract class AsyncLogHandler extends Handler implements DSILevels {
         }
     }
 
-    public AsyncLogHandler setMaxQueueSize(int maxQueueSize) {
-        this.maxQueueSize = maxQueueSize;
-        this.queueThrottle = (int) (maxQueueSize * .75);
-        return this;
+    /**
+     * Applies the level to the root logger and it's handlers.
+     */
+    public static void setRootLevel(Level level) {
+        Logger root = Logger.getLogger("");
+        root.setLevel(level);
+        for (Handler h : root.getHandlers()) {
+            h.setLevel(level);
+        }
     }
 
     /**
-     * Sets the sink for formatted messages.
+     * Stringify the log record in the DSA format.
      */
-    protected AsyncLogHandler setOut(PrintStream out) {
-        this.out = out;
-        return this;
+    public static String toString(Handler handler, LogRecord record) {
+        StringBuilder buf = new StringBuilder();
+        AsyncLogHandler.write(handler, record, buf);
+        return buf.toString();
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * This must be called for the handler to actually do anything. Starts the write thread if there
@@ -199,7 +199,25 @@ public abstract class AsyncLogHandler extends Handler implements DSILevels {
         }
     }
 
-    private String toString(Level level) {
+    /**
+     * Formats and writes the logging record the underlying stream.
+     */
+    protected void write(LogRecord record) {
+        write(this, record, builder);
+        synchronized (AsyncLogHandler.class) {
+            System.out.println(builder.toString());
+        }
+        builder.setLength(0);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * The DSA name mapping.
+     */
+    static String toString(Level level) {
         switch (level.intValue()) {
             case TRACE: //finest
                 return "Trace";
@@ -225,36 +243,38 @@ public abstract class AsyncLogHandler extends Handler implements DSILevels {
     /**
      * Formats and writes the logging record the underlying stream.
      */
-    protected void write(LogRecord record) {
-        Formatter formatter = getFormatter();
+    static void write(Handler handler, LogRecord record, StringBuilder buf) {
+        Formatter formatter = handler.getFormatter();
         if (formatter != null) {
-            out.println(formatter.format(record));
+            buf.append(formatter.format(record));
             return;
         }
         // severity
-        builder.append('[').append(toString(record.getLevel())).append(' ');
+        buf.append('[').append(toString(record.getLevel())).append(' ');
         // timestamp
+        Calendar calendar = DSTime.getCalendar(record.getMillis());
         calendar.setTimeInMillis(record.getMillis());
-        DSTime.encodeForLogs(calendar, builder);
-        builder.append(']');
+        DSTime.encodeForLogs(calendar, buf);
+        DSTime.recycle(calendar);
+        buf.append(']');
         // log name
         String name = record.getLoggerName();
         if ((name != null) && !name.isEmpty()) {
-            builder.append("[");
-            builder.append(record.getLoggerName());
-            builder.append(']');
+            buf.append("[");
+            buf.append(record.getLoggerName());
+            buf.append(']');
         } else {
-            builder.append("[Default]");
+            buf.append("[Root]");
         }
         // class
         if (record.getSourceClassName() != null) {
-            builder.append(record.getSourceClassName());
-            builder.append(" - ");
+            buf.append(record.getSourceClassName());
+            buf.append(" - ");
         }
         // method
         if (record.getSourceMethodName() != null) {
-            builder.append(record.getSourceMethodName());
-            builder.append(" - ");
+            buf.append(record.getSourceMethodName());
+            buf.append(" - ");
         }
         // message
         String msg = record.getMessage();
@@ -263,14 +283,16 @@ public abstract class AsyncLogHandler extends Handler implements DSILevels {
             if ((params != null) && (params.length > 0)) {
                 msg = String.format(msg, params);
             }
-            builder.append(' ').append(msg);
+            buf.append(' ').append(msg);
         }
-        out.println(builder.toString());
-        builder.setLength(0);
-        // exception
         Throwable thrown = record.getThrown();
         if (thrown != null) {
-            thrown.printStackTrace(out);
+            builder.append(lineSeparator);
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            thrown.printStackTrace(pw);
+            pw.close();
+            builder.append(sw.toString());
         }
     }
 
@@ -281,20 +303,15 @@ public abstract class AsyncLogHandler extends Handler implements DSILevels {
     private class LogHandlerThread extends Thread {
 
         public LogHandlerThread() {
-            super(AsyncLogHandler.this.getThreadName());
+            super("AsyncLogHandler");
             setDaemon(true);
         }
 
         public void run() {
-            long lastHouseKeeping = System.nanoTime();
-            long now;
-            LogRecord record;
-            boolean emptyQueue = false;
+            LogRecord record = null;
             while (state != STATE_CLOSED) {
-                record = null;
                 synchronized (queue) {
-                    emptyQueue = queue.isEmpty();
-                    if (emptyQueue) {
+                    if (queue.isEmpty()) {
                         try {
                             queue.notifyAll();
                         } catch (Exception ignore) {
@@ -305,33 +322,14 @@ public abstract class AsyncLogHandler extends Handler implements DSILevels {
                             } catch (Exception ignore) {
                             }
                         }
-                        emptyQueue = queue.isEmpty(); //housekeeping opportunity flag
-                    } else if (!emptyQueue) {
+                    } else {
                         record = queue.removeFirst();
                     }
                 }
                 if (state != STATE_CLOSED) {
                     if (record != null) {
                         write(record);
-                    }
-                    if (state == STATE_OPEN) {
-                        if (emptyQueue) {
-                            //housekeeping opportunity
-                            now = System.currentTimeMillis();
-                            long min = getHouseKeepingIntervalMillis() / 2;
-                            if ((now - lastHouseKeeping) > min) {
-                                flush();
-                                houseKeeping();
-                                lastHouseKeeping = System.nanoTime();
-                            }
-                        } else {
-                            now = System.currentTimeMillis();
-                            if ((now - lastHouseKeeping) > getHouseKeepingIntervalMillis()) {
-                                flush();
-                                houseKeeping();
-                                lastHouseKeeping = System.nanoTime();
-                            }
-                        }
+                        record = null;
                     }
                 }
             }
@@ -339,6 +337,26 @@ public abstract class AsyncLogHandler extends Handler implements DSILevels {
             logHandlerThread = null;
         }
 
-    } //LogHandlerThread
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Initialization Classes
+    ///////////////////////////////////////////////////////////////////////////
+
+    static {
+        Logger rootLogger = Logger.getLogger("");
+        rootLevel = rootLogger.getLevel();
+        for (Handler handler : rootLogger.getHandlers()) {
+            rootLogger.removeHandler(handler);
+        }
+        AsyncLogHandler async = new AsyncLogHandler();
+        async.setLevel(rootLevel);
+        rootLogger.addHandler(async);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        pw.println();
+        pw.flush();
+        lineSeparator = sw.toString();
+    }
 
 }

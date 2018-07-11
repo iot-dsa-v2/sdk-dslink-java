@@ -70,45 +70,22 @@ public class DSLogger implements DSILevels {
     private Logger logger;
 
     /**
-     * Override point, returns the console logger by default.
+     * True if the level is loggable.
      */
-    private Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(getLogName());
-        }
-        return logger;
+    public boolean admin() {
+        return getLogger().isLoggable(admin);
     }
 
-    /**
-     * Override point, returns the simple class name by default.
-     */
-    protected String getLogName() {
-        return getClass().getSimpleName();
+    public void admin(Object msg) {
+        getLogger().log(admin, string(msg));
     }
 
     /////////////////////////////////////////////////////////////////
     // Logging methods, ordered from lowest severity to highest
     /////////////////////////////////////////////////////////////////
 
-    /**
-     * True if the level is loggable.
-     */
-    public boolean trace() {
-        return getLogger().isLoggable(trace);
-    }
-
-    /**
-     * Log a trace or verbose event.
-     */
-    public void trace(Object msg) {
-        getLogger().log(trace, string(msg));
-    }
-
-    /**
-     * Log a trace or verbose event.
-     */
-    public void trace(Object msg, Throwable x) {
-        getLogger().log(trace, string(msg), x);
+    public void admin(Object msg, Throwable x) {
+        getLogger().log(admin, string(msg), x);
     }
 
     /**
@@ -135,6 +112,36 @@ public class DSLogger implements DSILevels {
     /**
      * True if the level is loggable.
      */
+    public boolean error() {
+        return getLogger().isLoggable(error);
+    }
+
+    public void error(Object msg) {
+        getLogger().log(error, string(msg));
+    }
+
+    public void error(Object msg, Throwable x) {
+        getLogger().log(error, string(msg), x);
+    }
+
+    /**
+     * True if the level is loggable.
+     */
+    public boolean fatal() {
+        return getLogger().isLoggable(fatal);
+    }
+
+    public void fatal(Object msg) {
+        getLogger().log(fatal, string(msg));
+    }
+
+    public void fatal(Object msg, Throwable x) {
+        getLogger().log(fatal, string(msg), x);
+    }
+
+    /**
+     * True if the level is loggable.
+     */
     public boolean fine() {
         return getLogger().isLoggable(fine);
     }
@@ -151,27 +158,6 @@ public class DSLogger implements DSILevels {
      */
     public void fine(Object msg, Throwable x) {
         getLogger().log(fine, string(msg), x);
-    }
-
-    /**
-     * True if the level is loggable.
-     */
-    public boolean warn() {
-        return getLogger().isLoggable(warn);
-    }
-
-    /**
-     * Log an unusual but not critical event.
-     */
-    public void warn(Object msg) {
-        getLogger().log(warn, string(msg));
-    }
-
-    /**
-     * Log an unusual but not critical event.
-     */
-    public void warn(Object msg, Throwable x) {
-        getLogger().log(warn, string(msg), x);
     }
 
     /**
@@ -198,46 +184,60 @@ public class DSLogger implements DSILevels {
     /**
      * True if the level is loggable.
      */
-    public boolean error() {
-        return getLogger().isLoggable(error);
+    public boolean trace() {
+        return getLogger().isLoggable(trace);
     }
 
-    public void error(Object msg) {
-        getLogger().log(error, string(msg));
+    /**
+     * Log a trace or verbose event.
+     */
+    public void trace(Object msg) {
+        getLogger().log(trace, string(msg));
     }
 
-    public void error(Object msg, Throwable x) {
-        getLogger().log(error, string(msg), x);
+    /**
+     * Log a trace or verbose event.
+     */
+    public void trace(Object msg, Throwable x) {
+        getLogger().log(trace, string(msg), x);
     }
 
     /**
      * True if the level is loggable.
      */
-    public boolean admin() {
-        return getLogger().isLoggable(admin);
-    }
-
-    public void admin(Object msg) {
-        getLogger().log(admin, string(msg));
-    }
-
-    public void admin(Object msg, Throwable x) {
-        getLogger().log(admin, string(msg), x);
+    public boolean warn() {
+        return getLogger().isLoggable(warn);
     }
 
     /**
-     * True if the level is loggable.
+     * Log an unusual but not critical event.
      */
-    public boolean fatal() {
-        return getLogger().isLoggable(fatal);
+    public void warn(Object msg) {
+        getLogger().log(warn, string(msg));
     }
 
-    public void fatal(Object msg) {
-        getLogger().log(fatal, string(msg));
+    /**
+     * Log an unusual but not critical event.
+     */
+    public void warn(Object msg, Throwable x) {
+        getLogger().log(warn, string(msg), x);
     }
 
-    public void fatal(Object msg, Throwable x) {
-        getLogger().log(fatal, string(msg), x);
+    /**
+     * Override point, returns the simple class name by default.
+     */
+    protected String getLogName() {
+        return getClass().getSimpleName();
+    }
+
+    /**
+     * Override point, returns the console logger by default.
+     */
+    private Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger(getLogName());
+        }
+        return logger;
     }
 
     private String string(Object obj) {

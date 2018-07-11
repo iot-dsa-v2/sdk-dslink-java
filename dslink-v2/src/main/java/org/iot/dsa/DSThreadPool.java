@@ -2,7 +2,7 @@ package org.iot.dsa;
 
 import java.util.LinkedList;
 import java.util.logging.Level;
-import org.iot.dsa.logging.DSLogging;
+import java.util.logging.Logger;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -213,7 +213,7 @@ class DSThreadPool {
                         try {
                             r.run();
                         } catch (Exception x) {
-                            DSLogging.getDefaultLogger().log(Level.FINER, r.toString(), x);
+                            Logger.getLogger("").log(Level.FINER, r.toString(), x);
                         }
                         r = null;
                     }

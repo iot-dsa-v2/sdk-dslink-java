@@ -1,9 +1,17 @@
 package org.iot.dsa.dslink;
 
-import java.io.*;
+import com.acuity.iot.dsa.dslink.logging.AsyncLogHandler;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.logging.Handler;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -11,7 +19,6 @@ import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
-import org.iot.dsa.logging.DSLogging;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.security.DSKeys;
@@ -136,7 +143,7 @@ public class DSLink extends DSNode implements Runnable {
      */
     protected DSLink init(DSLinkConfig config) {
         this.config = config;
-        DSLogging.setDefaultLevel(config.getLogLevel());
+        AsyncLogHandler.setRootLevel(config.getLogLevel());
         name = config.getLinkName();
         keys = config.getKeys();
         getSys().init();
@@ -149,7 +156,7 @@ public class DSLink extends DSNode implements Runnable {
      * @param config Configuration options
      */
     public static DSLink load(DSLinkConfig config) {
-        Logger logger = DSLogging.getDefaultLogger();
+        Logger logger = Logger.getLogger("");
         DSLink ret = null;
         File nodes = config.getNodesFile();
         if (nodes.exists()) {
@@ -259,7 +266,11 @@ public class DSLink extends DSNode implements Runnable {
                 DSException.throwRuntime(x);
             }
             save();
-            DSLogging.close();
+            LogManager.getLogManager().reset();
+            Logger logger = Logger.getLogger("");
+            for (Handler h : logger.getLogger("").getHandlers()) {
+                h.close();
+            }
         } finally {
             runThread = null;
         }
