@@ -316,13 +316,13 @@ public class DSInboundList extends DSInboundRequest
                 DSMap param;
                 while (params.hasNext()) {
                     param = params.next();
-                    fixRangeTypes(param);
                     if (dsAction != null) {
                         dsAction.prepareParameter(info, param);
                     }
                     if (param.hasParent()) {
                         param = param.copy();
                     }
+                    fixRangeTypes(param);
                     list.add(param);
                 }
             }
@@ -339,13 +339,13 @@ public class DSInboundList extends DSInboundRequest
                     DSMap param;
                     while (cols.hasNext()) {
                         param = cols.next();
-                        fixRangeTypes(param);
                         if (dsAction != null) {
                             dsAction.prepareParameter(info, param);
                         }
                         if (param.hasParent()) {
                             param = param.copy();
                         }
+                        fixRangeTypes(param);
                         list.add(param);
                     }
                 }
