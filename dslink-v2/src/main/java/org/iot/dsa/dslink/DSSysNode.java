@@ -3,6 +3,7 @@ package org.iot.dsa.dslink;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
+import com.acuity.iot.dsa.dslink.sys.logging.SysLogService;
 import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
@@ -24,6 +25,7 @@ public class DSSysNode extends DSNode {
     static final String SAVE = "Save";
     static final String STOP = "Stop";
     static final String PROFILER = "Profiler";
+    static final String LOGGING = "Logging";
 
     private DSInfo connection = getInfo(CONNECTION);
     private DSInfo save = getInfo(SAVE);
@@ -36,6 +38,7 @@ public class DSSysNode extends DSNode {
         declareDefault(CERTIFICATES, new SysCertManager());
         declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
         declareDefault(PROFILER, new SysProfiler()).setTransient(true);
+        declareDefault(LOGGING, new SysLogService());
     }
 
     public DSLinkConnection getConnection() {
