@@ -10,6 +10,7 @@ import com.acuity.iot.dsa.dslink.protocol.DSProtocolException;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v1.requester.DS1Requester;
 import com.acuity.iot.dsa.dslink.protocol.v1.responder.DS1Responder;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
@@ -30,7 +31,7 @@ import org.iot.dsa.node.DSMap;
 public class DS1Session extends DSSession {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     static final int END_MSG_THRESHOLD = 48000;
@@ -40,7 +41,7 @@ public class DS1Session extends DSSession {
     static final int MAX_MSG_IVL = 45000;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private DSInfo lastAckRcvd = getInfo(LAST_ACK_RCVD);
@@ -71,11 +72,6 @@ public class DS1Session extends DSSession {
         return (DS1LinkConnection) super.getConnection();
     }
 
-    @Override
-    public long getLastAckRcvd() {
-        return lastAckRcvd.getElement().toLong();
-    }
-
     public DSIReader getReader() {
         return getConnection().getReader();
     }
@@ -83,6 +79,11 @@ public class DS1Session extends DSSession {
     @Override
     public DSIRequester getRequester() {
         return requester;
+    }
+
+    @Override
+    public DSResponder getResponder() {
+        return responder;
     }
 
     @Override
@@ -151,7 +152,7 @@ public class DS1Session extends DSSession {
         DSIWriter out = getWriter();
         out.beginMap();
         out.key("msg").value(getNextMessageId());
-        int nextAck = getNextAck();
+        int nextAck = getAckToSend();
         if (nextAck > 0) {
             out.key("ack").value(nextAck);
             put(lastAckSent, DSInt.valueOf(nextAck));
@@ -215,7 +216,7 @@ public class DS1Session extends DSSession {
         requestsNext = !requestsNext;
         transport.beginSendMessage();
         beginMessage();
-        if (this.hasSomethingToSend()) {
+        if (this.getMissingAcks() < 8) {
             send(requestsNext, endTime);
             if ((System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
                 send(!requestsNext, endTime);
@@ -305,7 +306,9 @@ public class DS1Session extends DSSession {
                 msg = (int) reader.getLong();
             } else if (key.equals("ack")) {
                 reader.next();
-                put(lastAckRcvd, DSInt.valueOf((int) reader.getLong()));
+                int ack = (int) reader.getLong();
+                setAckRcvd(ack);
+                put(lastAckRcvd, DSInt.valueOf(ack));
             } else if (key.equals("allowed")) {
                 if (reader.next() != Token.BOOLEAN) {
                     throw new IllegalStateException("Allowed not a boolean");
@@ -323,7 +326,7 @@ public class DS1Session extends DSSession {
             next = reader.next();
         } while (next != END_MAP);
         if (sendAck && (msg >= 0)) {
-            setNextAck(msg);
+            setAckToSend(msg);
         }
     }
 

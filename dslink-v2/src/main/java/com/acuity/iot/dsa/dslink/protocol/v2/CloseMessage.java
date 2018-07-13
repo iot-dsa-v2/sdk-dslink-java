@@ -30,7 +30,7 @@ public class CloseMessage implements MessageConstants, OutboundMessage {
     @Override
     public void write(MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(rid, session.getNextAck());
+        out.init(rid, session.getAckToSend());
         out.setMethod(method);
         out.write((DSBinaryTransport) session.getTransport());
     }

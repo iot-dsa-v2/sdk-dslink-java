@@ -17,7 +17,7 @@ class PingMessage implements MessageConstants, OutboundMessage {
     @Override
     public void write(MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(-1, session.getNextAck());
+        out.init(-1, session.getAckToSend());
         out.setMethod(MSG_PING);
         out.write(session.getTransport());
     }

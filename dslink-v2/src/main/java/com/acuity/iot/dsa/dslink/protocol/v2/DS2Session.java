@@ -2,6 +2,7 @@ package com.acuity.iot.dsa.dslink.protocol.v2;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v2.requester.DS2Requester;
 import com.acuity.iot.dsa.dslink.protocol.v2.responder.DS2Responder;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
@@ -21,7 +22,7 @@ import org.iot.dsa.node.DSInt;
 public class DS2Session extends DSSession implements MessageConstants {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     static final int END_MSG_THRESHOLD = 48 * 1024;
@@ -29,7 +30,7 @@ public class DS2Session extends DSSession implements MessageConstants {
     static final int MAX_MSG_IVL = 45000;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private DSInfo lastAckRcvd = getInfo(LAST_ACK_RCVD);
@@ -62,13 +63,13 @@ public class DS2Session extends DSSession implements MessageConstants {
     }
 
     @Override
-    public long getLastAckRcvd() {
-        return lastAckRcvd.getElement().toLong();
+    public DSIRequester getRequester() {
+        return requester;
     }
 
     @Override
-    public DSIRequester getRequester() {
-        return requester;
+    public DSResponder getResponder() {
+        return responder;
     }
 
     public DSBinaryTransport getTransport() {
@@ -131,6 +132,7 @@ public class DS2Session extends DSSession implements MessageConstants {
         reader.init(transport.getInput());
         int ack = reader.getAckId();
         if (ack > 0) {
+            setAckRcvd(ack);
             put(lastAckRcvd, DSInt.valueOf(ack));
         }
         if (reader.isMultipart()) {
@@ -147,14 +149,14 @@ public class DS2Session extends DSSession implements MessageConstants {
         }
         if (reader.isRequest()) {
             responder.handleRequest(reader);
-            setNextAck(reader.getRequestId());
+            setAckToSend(reader.getRequestId());
         } else if (reader.isAck()) {
             put(lastAckRcvd, DSInt.valueOf(DSBytes.readInt(reader.getBody(), false)));
         } else if (reader.isPing()) {
             ;
         } else if (reader.isResponse()) {
             requester.handleResponse(reader);
-            setNextAck(reader.getRequestId());
+            setAckToSend(reader.getRequestId());
         } else {
             error("Unknown method: " + reader.getMethod());
         }
@@ -164,11 +166,9 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     protected void doSendMessage() {
         DSTransport transport = getTransport();
-        if (this.hasSomethingToSend()) {
-            transport.beginSendMessage();
-            send(requestsNext = !requestsNext);  //alternate reqs and resps
-            transport.endSendMessage();
-        }
+        transport.beginSendMessage();
+        send(requestsNext = !requestsNext);  //alternate reqs and resps
+        transport.endSendMessage();
     }
 
     /*
@@ -225,7 +225,7 @@ public class DS2Session extends DSSession implements MessageConstants {
             hasSomething = hasOutgoingResponses();
         }
         OutboundMessage msg = null;
-        if (hasSomething) {
+        if (hasSomething && (getMissingAcks() < 8)) {
             if (requests) {
                 msg = dequeueOutgoingRequest();
             } else {

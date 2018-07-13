@@ -34,12 +34,12 @@ public class DS2OutboundInvokeStub extends DSOutboundInvokeStub
     public void write(MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         if (multipart != null) {
-            if (multipart.update(out, getSession().getNextAck())) {
+            if (multipart.update(out, getSession().getAckToSend())) {
                 getRequester().sendRequest(this);
             }
             return;
         }
-        int ack = getSession().getNextAck();
+        int ack = getSession().getAckToSend();
         out.init(getRequestId(), ack);
         out.setMethod(MSG_INVOKE_REQ);
         out.addStringHeader(HDR_TARGET_PATH, getPath());

@@ -29,7 +29,7 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
     @Override
     public void write(MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(req.getRequestId(), req.getSession().getNextAck());
+        out.init(req.getRequestId(), req.getSession().getAckToSend());
         if (req instanceof DS2InboundInvoke) {
             out.setMethod(MSG_INVOKE_RES);
         } else if (req instanceof DS2InboundList) {

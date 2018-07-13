@@ -27,12 +27,12 @@ class DS2InboundInvoke extends DSInboundInvoke implements MessageConstants {
     public void write(MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         if (multipart != null) {
-            if (multipart.update(out, getSession().getNextAck())) {
+            if (multipart.update(out, getSession().getAckToSend())) {
                 getResponder().sendResponse(this);
             }
             return;
         }
-        int ack = getSession().getNextAck();
+        int ack = getSession().getAckToSend();
         out.init(getRequestId(), ack);
         out.setMethod(MSG_INVOKE_RES);
         out.addIntHeader(HDR_SEQ_ID, seqId);
