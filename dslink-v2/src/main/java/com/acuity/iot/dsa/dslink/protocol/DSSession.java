@@ -286,6 +286,26 @@ public abstract class DSSession extends DSNode {
         }
     }
 
+    protected int numOutgoingRequests() {
+        return outgoingRequests.size();
+    }
+
+    protected int numOutgoingResponses() {
+        return outgoingResponses.size();
+    }
+
+    protected void requeueOutgoingRequest(OutboundMessage arg) {
+        synchronized (outgoingMutex) {
+            outgoingRequests.add(arg);
+        }
+    }
+
+    protected void requeueOutgoingResponse(OutboundMessage arg) {
+        synchronized (outgoingMutex) {
+            outgoingResponses.add(arg);
+        }
+    }
+
     /**
      * Call for each incoming message id that needs to be acked.
      */

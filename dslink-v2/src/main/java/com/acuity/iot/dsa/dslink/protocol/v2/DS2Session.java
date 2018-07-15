@@ -215,20 +215,31 @@ public class DS2Session extends DSSession implements MessageConstants {
      *                 responses.
      */
     private void send(boolean requests) {
-        boolean hasSomething = false;
+        int count = 0;
         if (!waitingForAcks()) {
             if (requests) {
-                hasSomething = hasOutgoingRequests();
+                count = numOutgoingRequests();
             } else {
-                hasSomething = hasOutgoingResponses();
+                count = numOutgoingResponses();
             }
         }
         OutboundMessage msg = null;
-        if (hasSomething) {
-            if (requests) {
-                msg = dequeueOutgoingRequest();
-            } else {
-                msg = dequeueOutgoingResponse();
+        if (count > 0) {
+            while ((msg == null) && (count > 0)) {
+                if (requests) {
+                    msg = dequeueOutgoingRequest();
+                } else {
+                    msg = dequeueOutgoingResponse();
+                }
+                count--;
+                if (!msg.canWrite(this)) {
+                    if (requests) {
+                        requeueOutgoingRequest(msg);
+                    } else {
+                        requeueOutgoingResponse(msg);
+                    }
+                    msg = null;
+                }
             }
         } else if (hasPingToSend()) {
             msg = new PingMessage(this);

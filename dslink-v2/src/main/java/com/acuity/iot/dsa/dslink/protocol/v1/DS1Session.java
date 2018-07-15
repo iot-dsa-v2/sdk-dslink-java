@@ -36,7 +36,6 @@ public class DS1Session extends DSSession {
     static final int END_MSG_THRESHOLD = 48000;
     static final String LAST_ACK_RCVD = "Last Ack Rcvd";
     static final String LAST_ACK_SENT = "Last Ack Sent";
-
     static final int MAX_MSG_IVL = 45000;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -221,13 +220,12 @@ public class DS1Session extends DSSession {
     @Override
     protected void doSendMessage() {
         try {
-            long endTime = System.currentTimeMillis() + 2000;
             requestsNext = !requestsNext;
             beginMessage();
             if (!waitingForAcks()) {
-                send(requestsNext, endTime);
-                if ((System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
-                    send(!requestsNext, endTime);
+                send(requestsNext);
+                if (!shouldEndMessage()) {
+                    send(!requestsNext);
                 }
             }
             endMessage();
@@ -400,24 +398,32 @@ public class DS1Session extends DSSession {
      *
      * @param requests Determines which queue to use; True for outgoing requests, false for
      *                 responses.
-     * @param endTime  Stop after this time.
      */
-    private void send(boolean requests, long endTime) {
+    private void send(boolean requests) {
+        int count = 0;
         if (requests) {
-            if (!hasOutgoingRequests()) {
-                return;
-            }
+            count = numOutgoingRequests();
         } else {
-            if (!hasOutgoingResponses()) {
-                return;
-            }
+            count = numOutgoingResponses();
+        }
+        if (count == 0) {
+            return;
         }
         OutboundMessage msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
-        while ((msg != null) && (System.currentTimeMillis() < endTime)) {
-            if (requests) {
-                writeRequest(msg);
+        while ((msg != null) && (count > 0)) {
+            count--;
+            if (!msg.canWrite(this)) {
+                if (requests) {
+                    requeueOutgoingRequest(msg);
+                } else {
+                    requeueOutgoingResponse(msg);
+                }
             } else {
-                writeResponse(msg);
+                if (requests) {
+                    writeRequest(msg);
+                } else {
+                    writeResponse(msg);
+                }
             }
             if (!shouldEndMessage()) {
                 msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
