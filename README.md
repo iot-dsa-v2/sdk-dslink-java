@@ -1,10 +1,9 @@
-# sdk-dslink-java-v2 (PRE-ALPHA)
+# sdk-dslink-java-v2
+[![](https://jitpack.io/v/iot-dsa-v2/sdk-dslink-java-v2.svg)](https://jitpack.io/#iot-dsa-v2/sdk-dslink-java-v2)
 
-* Version: 0.0.0
-* JDK 1.6 Compatibility is required.
+* JDK 1.6+
 * [Developer Guide](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/)
 * [Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/)
-* [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 
 ## Overview
@@ -38,8 +37,3 @@ _Silk Icons_
 This software uses icons from Silk Icons 1.3 created by 
 [Mark James](http://www.famfamfam.com/lab/icons/silk/) and licensed 
 under a [Creative Commons Attribute 2.5 License](http://creativecommons.org/licenses/by/2.5/).
-
-## History
-
-* 1.0.0
-  - Hello World.
