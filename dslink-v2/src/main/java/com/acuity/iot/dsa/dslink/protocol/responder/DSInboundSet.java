@@ -5,13 +5,17 @@ import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSNode;
 import org.iot.dsa.security.DSPermission;
 
 public class DSInboundSet extends DSInboundRequest implements InboundSetRequest, Runnable {
 
-    private DSElement value;
     private DSPermission permission;
+    private DSElement value;
 
     public DSInboundSet(DSElement value, DSPermission permission) {
         this.permission = permission;

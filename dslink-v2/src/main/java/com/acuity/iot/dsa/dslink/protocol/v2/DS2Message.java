@@ -13,6 +13,17 @@ abstract class DS2Message extends DSLogger implements MessageConstants {
 
     private StringBuilder logBuffer;
 
+    protected void debugHeaders(Map<Integer, Object> headers, StringBuilder buf) {
+        for (Map.Entry<Integer, Object> e : headers.entrySet()) {
+            buf.append(", ");
+            debugHeader(e.getKey(), buf);
+            if (e.getValue() != NO_HEADER_VAL) {
+                buf.append("=");
+                buf.append(e.getValue());
+            }
+        }
+    }
+
     protected StringBuilder debugMethod(int arg, StringBuilder buf) {
         if (buf == null) {
             buf = new StringBuilder();
@@ -71,6 +82,15 @@ abstract class DS2Message extends DSLogger implements MessageConstants {
                 DSBytes.toHex((byte) arg, buf);
         }
         return buf;
+    }
+
+    protected abstract void getDebug(StringBuilder buf);
+
+    protected void printDebug() {
+        StringBuilder buf = getLogBuffer();
+        getDebug(buf);
+        debug(buf.toString());
+        buf.setLength(0);
     }
 
     private StringBuilder debugHeader(int arg, StringBuilder buf) {
@@ -142,31 +162,11 @@ abstract class DS2Message extends DSLogger implements MessageConstants {
         return buf;
     }
 
-    protected void debugHeaders(Map<Integer, Object> headers, StringBuilder buf) {
-        for (Map.Entry<Integer, Object> e : headers.entrySet()) {
-            buf.append(", ");
-            debugHeader(e.getKey(), buf);
-            if (e.getValue() != NO_HEADER_VAL) {
-                buf.append("=");
-                buf.append(e.getValue());
-            }
-        }
-    }
-
-    protected abstract void getDebug(StringBuilder buf);
-
     private StringBuilder getLogBuffer() {
         if (logBuffer == null) {
             logBuffer = new StringBuilder();
         }
         return logBuffer;
-    }
-
-    protected void printDebug() {
-        StringBuilder buf = getLogBuffer();
-        getDebug(buf);
-        debug(buf.toString());
-        buf.setLength(0);
     }
 
 }

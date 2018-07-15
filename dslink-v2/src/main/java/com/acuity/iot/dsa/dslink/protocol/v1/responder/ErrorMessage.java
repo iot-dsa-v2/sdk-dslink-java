@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.v1.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import java.io.PrintWriter;
@@ -17,10 +18,8 @@ import org.iot.dsa.io.DSIWriter;
 class ErrorMessage implements OutboundMessage {
 
     private static String SERVER_ERROR;
-
-    private Integer rid;
     private String message;
-
+    private Integer rid;
     private String type = SERVER_ERROR;
 
     public ErrorMessage(Integer requestId, String message) {
@@ -44,9 +43,27 @@ class ErrorMessage implements OutboundMessage {
         }
     }
 
+    @Override
+    public boolean canWrite(DSSession session) {
+        return true;
+    }
+
     public ErrorMessage setType(String type) {
         this.type = type;
         return this;
+    }
+
+    @Override
+    public void write(DSSession session, MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
+        out.beginMap()
+           .key("rid").value(rid)
+           .key("stream").value("closed");
+        out.key("error").beginMap()
+           .key("type").value(type)
+           .key("msg").value(message)
+           .endMap();
+        out.endMap();
     }
 
     private String toString(Throwable arg) {
@@ -59,19 +76,6 @@ class ErrorMessage implements OutboundMessage {
         arg.printStackTrace(pw);
         pw.close();
         return sw.toString();
-    }
-
-    @Override
-    public void write(MessageWriter writer) {
-        DSIWriter out = writer.getWriter();
-        out.beginMap()
-           .key("rid").value(rid)
-           .key("stream").value("closed");
-        out.key("error").beginMap()
-           .key("type").value(type)
-           .key("msg").value(message)
-           .endMap();
-        out.endMap();
     }
 
 }

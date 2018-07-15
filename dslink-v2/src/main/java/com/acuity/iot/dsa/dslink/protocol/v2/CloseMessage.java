@@ -13,22 +13,24 @@ import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 public class CloseMessage implements MessageConstants, OutboundMessage {
 
     private byte method = MSG_CLOSE;
-    private DSSession session;
     private int rid;
 
-    public CloseMessage(DSSession session, int requestId) {
-        this.session = session;
+    public CloseMessage(int requestId) {
         this.rid = requestId;
     }
 
-    public CloseMessage(DSSession session, int requestId, byte method) {
-        this.method = method;
-        this.session = session;
+    public CloseMessage(int requestId, byte method) {
         this.rid = requestId;
+        this.method = method;
     }
 
     @Override
-    public void write(MessageWriter writer) {
+    public boolean canWrite(DSSession session) {
+        return true;
+    }
+
+    @Override
+    public void write(DSSession session, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(rid, session.getAckToSend());
         out.setMethod(method);

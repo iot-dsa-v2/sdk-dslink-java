@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.v2;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 
@@ -15,7 +16,12 @@ class PingMessage implements MessageConstants, OutboundMessage {
     }
 
     @Override
-    public void write(MessageWriter writer) {
+    public boolean canWrite(DSSession session) {
+        return true;
+    }
+
+    @Override
+    public void write(DSSession sess, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(-1, session.getAckToSend());
         out.setMethod(MSG_PING);

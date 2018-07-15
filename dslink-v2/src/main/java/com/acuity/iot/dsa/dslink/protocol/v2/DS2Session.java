@@ -165,10 +165,7 @@ public class DS2Session extends DSSession implements MessageConstants {
 
     @Override
     protected void doSendMessage() {
-        DSTransport transport = getTransport();
-        transport.beginSendMessage();
         send(requestsNext = !requestsNext);  //alternate reqs and resps
-        transport.endSendMessage();
     }
 
     /*
@@ -219,13 +216,15 @@ public class DS2Session extends DSSession implements MessageConstants {
      */
     private void send(boolean requests) {
         boolean hasSomething = false;
-        if (requests) {
-            hasSomething = hasOutgoingRequests();
-        } else {
-            hasSomething = hasOutgoingResponses();
+        if (!waitingForAcks()) {
+            if (requests) {
+                hasSomething = hasOutgoingRequests();
+            } else {
+                hasSomething = hasOutgoingResponses();
+            }
         }
         OutboundMessage msg = null;
-        if (hasSomething && (getMissingAcks() < 8)) {
+        if (hasSomething) {
             if (requests) {
                 msg = dequeueOutgoingRequest();
             } else {
@@ -237,9 +236,11 @@ public class DS2Session extends DSSession implements MessageConstants {
             msg = new AckMessage(this);
         }
         if (msg != null) {
+            DSTransport transport = getTransport();
+            transport.beginSendMessage();
+            msg.write(this, getMessageWriter());
+            transport.endSendMessage();
             lastMessageSent = System.currentTimeMillis();
-            DS2MessageWriter out = getMessageWriter();
-            msg.write(out);
         }
     }
 

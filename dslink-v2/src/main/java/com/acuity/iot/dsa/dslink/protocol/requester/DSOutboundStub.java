@@ -15,18 +15,10 @@ import org.iot.dsa.node.DSMap;
  */
 public abstract class DSOutboundStub implements OutboundMessage, OutboundStream {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
-
-    private String path;
     private boolean open = true;
-    private DSRequester requester;
+    private String path;
     private Integer requestId;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
+    private DSRequester requester;
 
     DSOutboundStub(DSRequester requester, Integer requestId, String path) {
         this.requester = requester;
@@ -34,9 +26,10 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
         this.path = path;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////
+    @Override
+    public boolean canWrite(DSSession session) {
+        return true;
+    }
 
     @Override
     public void closeStream() {
@@ -53,12 +46,12 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
         return path;
     }
 
-    public DSRequester getRequester() {
-        return requester;
-    }
-
     public Integer getRequestId() {
         return requestId;
+    }
+
+    public DSRequester getRequester() {
+        return requester;
     }
 
     public DSSession getSession() {

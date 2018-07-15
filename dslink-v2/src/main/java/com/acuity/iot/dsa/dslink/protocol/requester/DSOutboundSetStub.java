@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.io.DSIWriter;
@@ -13,16 +14,8 @@ import org.iot.dsa.node.DSMap;
  */
 public class DSOutboundSetStub extends DSOutboundStub {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
-
     private OutboundRequestHandler request;
     private DSIValue value;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     protected DSOutboundSetStub(DSRequester requester,
                                 Integer requestId,
@@ -34,16 +27,8 @@ public class DSOutboundSetStub extends DSOutboundStub {
         this.request = request;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////
-
     public OutboundRequestHandler getHandler() {
         return request;
-    }
-
-    protected DSIValue getValue() {
-        return value;
     }
 
     /**
@@ -57,7 +42,7 @@ public class DSOutboundSetStub extends DSOutboundStub {
      * Writes the v1 request.
      */
     @Override
-    public void write(MessageWriter writer) {
+    public void write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(getRequestId());
@@ -66,6 +51,10 @@ public class DSOutboundSetStub extends DSOutboundStub {
         out.key("path").value(getPath());
         out.key("value").value(value.toElement());
         out.endMap();
+    }
+
+    protected DSIValue getValue() {
+        return value;
     }
 
 }

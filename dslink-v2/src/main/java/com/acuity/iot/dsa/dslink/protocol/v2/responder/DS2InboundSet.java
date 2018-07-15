@@ -14,8 +14,7 @@ public class DS2InboundSet extends DSInboundSet implements MessageConstants {
 
     @Override
     protected void sendClose() {
-        getResponder().sendResponse(
-                new CloseMessage(getSession(), getRequestId(), (byte) MSG_SET_RES));
+        getResponder().sendResponse(new CloseMessage(getRequestId(), (byte) MSG_SET_RES));
     }
 
 }

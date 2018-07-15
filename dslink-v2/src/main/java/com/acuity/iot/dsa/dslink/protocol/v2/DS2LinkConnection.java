@@ -1,5 +1,10 @@
 package com.acuity.iot.dsa.dslink.protocol.v2;
 
+import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.HDR_STATUS;
+import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INITIALIZING;
+import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INVALID_AUTH;
+import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_OK;
+
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
@@ -7,12 +12,19 @@ import com.acuity.iot.dsa.dslink.transport.SocketTransport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
-import org.iot.dsa.dslink.*;
-import org.iot.dsa.node.*;
+import org.iot.dsa.dslink.DSIRequester;
+import org.iot.dsa.dslink.DSLink;
+import org.iot.dsa.dslink.DSLinkConfig;
+import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.dslink.DSPermissionException;
+import org.iot.dsa.node.DSBool;
+import org.iot.dsa.node.DSBytes;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSStatus;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.security.DSKeys;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
-import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.*;
 
 /**
  * The DSA V2 connection implementation. Performs connection initialization with the broker,
@@ -23,7 +35,7 @@ import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.*;
 public class DS2LinkConnection extends DSLinkConnection {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static final String BROKER_AUTH = "Broker Auth";
@@ -42,7 +54,7 @@ public class DS2LinkConnection extends DSLinkConnection {
     private static final String TRANSPORT = "Transport";
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private DSInfo brokerAuth = getInfo(BROKER_AUTH);
@@ -57,7 +69,7 @@ public class DS2LinkConnection extends DSLinkConnection {
     private DSBinaryTransport transport;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -92,16 +104,6 @@ public class DS2LinkConnection extends DSLinkConnection {
         return brokerPath.getValue().toString();
     }
 
-    private byte[] getLinkSalt() {
-        if (linkSalt.getObject().isNull()) {
-            byte[] tmp = new byte[32];
-            SecureRandom random = new SecureRandom();
-            random.nextBytes(tmp);
-            put(linkSalt, DSBytes.valueOf(tmp));
-        }
-        return linkSalt.getElement().toBytes();
-    }
-
     @Override
     public DSIRequester getRequester() {
         return session.getRequester();
@@ -116,6 +118,10 @@ public class DS2LinkConnection extends DSLinkConnection {
     public DSBinaryTransport getTransport() {
         return transport;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Looks at the connection initialization response to determine the type of transport then
@@ -199,6 +205,20 @@ public class DS2LinkConnection extends DSLinkConnection {
             put(FAIL_CAUSE, DSString.valueOf(DSException.makeMessage(io)));
             DSException.throwRuntime(io);
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    private byte[] getLinkSalt() {
+        if (linkSalt.getObject().isNull()) {
+            byte[] tmp = new byte[32];
+            SecureRandom random = new SecureRandom();
+            random.nextBytes(tmp);
+            put(linkSalt, DSBytes.valueOf(tmp));
+        }
+        return linkSalt.getElement().toBytes();
     }
 
     private void recvF1() throws IOException {

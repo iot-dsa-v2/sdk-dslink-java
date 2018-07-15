@@ -1,7 +1,13 @@
 package com.acuity.iot.dsa.dslink.protocol.v2.requester;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
-import com.acuity.iot.dsa.dslink.protocol.requester.*;
+import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundInvokeStub;
+import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundListStub;
+import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundRemoveStub;
+import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSetStub;
+import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundStub;
+import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSubscriptions;
+import com.acuity.iot.dsa.dslink.protocol.requester.DSRequester;
 import com.acuity.iot.dsa.dslink.protocol.v2.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
@@ -18,14 +24,14 @@ import org.iot.dsa.node.DSMap;
 import org.iot.dsa.util.DSException;
 
 /**
- * DSA V1 requester implementation.
+ * DSA V2 requester implementation.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
 public class DS2Requester extends DSRequester implements MessageConstants {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private byte[] buf;
@@ -39,7 +45,72 @@ public class DS2Requester extends DSRequester implements MessageConstants {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    public void handleResponse(DS2MessageReader reader) {
+        if (handleSubscription(reader)) {
+            return;
+        }
+        Integer rid = reader.getRequestId();
+        DSOutboundStub stub = getRequest(rid);
+        if (stub == null) {
+            warn(warn() ? "Response for unknown rid: " + rid : null);
+            drain(reader);
+            sendClose(rid);
+            return;
+        }
+        Byte status = (Byte) reader.getHeader(HDR_STATUS);
+        if (handleError(reader, status, stub)) {
+            stub.handleClose();
+            removeRequest(rid);
+            return;
+        }
+        ((DS2OutboundStub) stub).handleResponse(reader);
+        if (isStreamClosed(status)) {
+            stub.handleClose();
+            removeRequest(rid);
+        }
+    }
+
+    @Override
+    public void sendClose(Integer rid) {
+        removeRequest(rid);
+        sendRequest(new CloseMessage(rid));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected DSOutboundInvokeStub makeInvoke(String path, DSMap params,
+                                              OutboundInvokeHandler req) {
+        return new DS2OutboundInvokeStub(this, getNextRid(), path, params, req);
+    }
+
+    @Override
+    protected DSOutboundListStub makeList(String path, OutboundListHandler req) {
+        return new DS2OutboundListStub(this, getNextRid(), path, req);
+    }
+
+    @Override
+    protected DSOutboundRemoveStub makeRemove(String path, OutboundRequestHandler req) {
+        return new DS2OutboundRemoveStub(this, getNextRid(), path, req);
+    }
+
+    @Override
+    protected DSOutboundSetStub makeSet(String path, DSIValue value, OutboundRequestHandler req) {
+        return new DS2OutboundSetStub(this, getNextRid(), path, value, req);
+    }
+
+    @Override
+    protected DSOutboundSubscriptions makeSubscriptions() {
+        return new DS2OutboundSubscriptions(this);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -117,32 +188,6 @@ public class DS2Requester extends DSRequester implements MessageConstants {
         return true;
     }
 
-
-    public void handleResponse(DS2MessageReader reader) {
-        if (handleSubscription(reader)) {
-            return;
-        }
-        Integer rid = reader.getRequestId();
-        DSOutboundStub stub = getRequest(rid);
-        if (stub == null) {
-            warn(warn() ? "Response for unknown rid: " + rid : null);
-            drain(reader);
-            sendClose(rid);
-            return;
-        }
-        Byte status = (Byte) reader.getHeader(HDR_STATUS);
-        if (handleError(reader, status, stub)) {
-            stub.handleClose();
-            removeRequest(rid);
-            return;
-        }
-        ((DS2OutboundStub) stub).handleResponse(reader);
-        if (isStreamClosed(status)) {
-            stub.handleClose();
-            removeRequest(rid);
-        }
-    }
-
     private boolean handleSubscription(DS2MessageReader reader) {
         if (reader.getMethod() != MSG_SUBSCRIBE_RES) {
             return false;
@@ -174,38 +219,6 @@ public class DS2Requester extends DSRequester implements MessageConstants {
                 return true;
         }
         return false;
-    }
-
-    @Override
-    protected DSOutboundListStub makeList(String path, OutboundListHandler req) {
-        return new DS2OutboundListStub(this, getNextRid(), path, req);
-    }
-
-    @Override
-    protected DSOutboundInvokeStub makeInvoke(String path, DSMap params,
-                                              OutboundInvokeHandler req) {
-        return new DS2OutboundInvokeStub(this, getNextRid(), path, params, req);
-    }
-
-    @Override
-    protected DSOutboundRemoveStub makeRemove(String path, OutboundRequestHandler req) {
-        return new DS2OutboundRemoveStub(this, getNextRid(), path, req);
-    }
-
-    @Override
-    protected DSOutboundSetStub makeSet(String path, DSIValue value, OutboundRequestHandler req) {
-        return new DS2OutboundSetStub(this, getNextRid(), path, value, req);
-    }
-
-    @Override
-    protected DSOutboundSubscriptions makeSubscriptions() {
-        return new DS2OutboundSubscriptions(this);
-    }
-
-    @Override
-    public void sendClose(Integer rid) {
-        removeRequest(rid);
-        sendRequest(new CloseMessage(getSession(), rid));
     }
 
 }

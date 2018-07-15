@@ -19,10 +19,6 @@ import org.iot.dsa.time.DSDateTime;
  */
 class DSOutboundSubscribeStub implements OutboundStream {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
-
     private DSOutboundSubscribeStub next; //linked list in stubs object
     private boolean open = true;
     private String path;
@@ -30,19 +26,11 @@ class DSOutboundSubscribeStub implements OutboundStream {
     private OutboundSubscribeHandler request;
     private DSOutboundSubscribeStubs stubs;
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
-
     public DSOutboundSubscribeStub(String path, int qos, OutboundSubscribeHandler request) {
         this.path = path;
         this.qos = qos;
         this.request = request;
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////
 
     @Override
     public void closeStream() {

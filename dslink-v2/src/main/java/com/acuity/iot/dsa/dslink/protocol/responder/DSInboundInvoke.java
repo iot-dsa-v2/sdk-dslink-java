@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
@@ -15,7 +16,11 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.action.*;
+import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.ActionSpec;
+import org.iot.dsa.node.action.ActionTable;
+import org.iot.dsa.node.action.ActionValues;
+import org.iot.dsa.node.action.DSAbstractAction;
 import org.iot.dsa.security.DSPermission;
 
 /**
@@ -27,7 +32,7 @@ public class DSInboundInvoke extends DSInboundRequest
         implements DSStream, InboundInvokeRequest, OutboundMessage, Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int STATE_INIT = 0;
@@ -37,7 +42,7 @@ public class DSInboundInvoke extends DSInboundRequest
     private static final int STATE_CLOSED = 4;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private Exception closeReason;
@@ -46,8 +51,8 @@ public class DSInboundInvoke extends DSInboundRequest
     private DSPermission permission;
     private ActionResult result;
     private Iterator<DSList> rows;
-    private boolean stream = true;
     private int state = STATE_INIT;
+    private boolean stream = true;
     private Update updateHead;
     private Update updateTail;
 
@@ -61,8 +66,13 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods in alphabetical order
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public boolean canWrite(DSSession session) {
+        return true;
+    }
 
     @Override
     public void clearAllRows() {
@@ -90,74 +100,6 @@ public class DSInboundInvoke extends DSInboundRequest
         fine(fine() ? getPath() + " invoke closed locally" : null);
     }
 
-    private synchronized Update dequeueUpdate() {
-        if (updateHead == null) {
-            return null;
-        }
-        Update ret = updateHead;
-        if (updateHead == updateTail) {
-            updateHead = null;
-            updateTail = null;
-        } else {
-            updateHead = updateHead.next;
-        }
-        ret.next = null;
-        return ret;
-    }
-
-    /**
-     * Handles the transition to close.
-     */
-    private void doClose() {
-        state = STATE_CLOSED;
-        getResponder().removeRequest(getRequestId());
-        if (result == null) {
-            return;
-        }
-        DSRuntime.run(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    result.onClose();
-                } catch (Exception x) {
-                    error(getPath(), x);
-                }
-            }
-        });
-    }
-
-    private void enqueueUpdate(Update update) {
-        if (!isOpen()) {
-            return;
-        }
-        synchronized (this) {
-            if (updateHead == null) {
-                updateHead = update;
-                updateTail = update;
-            } else {
-                updateTail.next = update;
-                updateTail = update;
-            }
-            if (enqueued) {
-                return;
-            }
-        }
-        getResponder().sendResponse(this);
-    }
-
-    /**
-     * Enqueues in the session.
-     */
-    private void enqueueResponse() {
-        synchronized (this) {
-            if (enqueued) {
-                return;
-            }
-            enqueued = true;
-        }
-        getResponder().sendResponse(this);
-    }
-
     /**
      * Any parameters supplied by the requester for the invocation, or null.
      */
@@ -171,13 +113,6 @@ public class DSInboundInvoke extends DSInboundRequest
         return permission;
     }
 
-    /**
-     * Returns "updates" for v1.
-     */
-    private String getRowsName() {
-        return "updates";
-    }
-
     @Override
     public void insert(int index, DSList[] rows) {
         enqueueUpdate(new Update(rows, index, -1, UpdateType.INSERT));
@@ -185,10 +120,6 @@ public class DSInboundInvoke extends DSInboundRequest
 
     public boolean isClosed() {
         return state == STATE_CLOSED;
-    }
-
-    private boolean isClosePending() {
-        return state == STATE_CLOSE_PENDING;
     }
 
     @Override
@@ -208,7 +139,6 @@ public class DSInboundInvoke extends DSInboundRequest
         }
         doClose();
     }
-
 
     @Override
     public void replace(int index, int len, DSList... rows) {
@@ -274,7 +204,7 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     @Override
-    public void write(MessageWriter writer) {
+    public void write(DSSession session, MessageWriter writer) {
         enqueued = false;
         if (isClosed()) {
             return;
@@ -309,6 +239,10 @@ public class DSInboundInvoke extends DSInboundRequest
         writeEnd(writer);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * Override point for v2, handles v1.
      */
@@ -328,6 +262,96 @@ public class DSInboundInvoke extends DSInboundRequest
      */
     protected void writeEnd(MessageWriter writer) {
         writer.getWriter().endMap();
+    }
+
+    /**
+     * Override point for v2, handles v1.
+     */
+    protected void writeOpen(MessageWriter writer) {
+        writer.getWriter().key("stream").value("open");
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    private synchronized Update dequeueUpdate() {
+        if (updateHead == null) {
+            return null;
+        }
+        Update ret = updateHead;
+        if (updateHead == updateTail) {
+            updateHead = null;
+            updateTail = null;
+        } else {
+            updateHead = updateHead.next;
+        }
+        ret.next = null;
+        return ret;
+    }
+
+    /**
+     * Handles the transition to close.
+     */
+    private void doClose() {
+        state = STATE_CLOSED;
+        getResponder().removeRequest(getRequestId());
+        if (result == null) {
+            return;
+        }
+        DSRuntime.run(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    result.onClose();
+                } catch (Exception x) {
+                    error(getPath(), x);
+                }
+            }
+        });
+    }
+
+    /**
+     * Enqueues in the session.
+     */
+    private void enqueueResponse() {
+        synchronized (this) {
+            if (enqueued) {
+                return;
+            }
+            enqueued = true;
+        }
+        getResponder().sendResponse(this);
+    }
+
+    private void enqueueUpdate(Update update) {
+        if (!isOpen()) {
+            return;
+        }
+        synchronized (this) {
+            if (updateHead == null) {
+                updateHead = update;
+                updateTail = update;
+            } else {
+                updateTail.next = update;
+                updateTail = update;
+            }
+            if (enqueued) {
+                return;
+            }
+        }
+        getResponder().sendResponse(this);
+    }
+
+    /**
+     * Returns "updates" for v1.
+     */
+    private String getRowsName() {
+        return "updates";
+    }
+
+    private boolean isClosePending() {
+        return state == STATE_CLOSE_PENDING;
     }
 
     private void writeColumns(MessageWriter writer) {
@@ -400,13 +424,6 @@ public class DSInboundInvoke extends DSInboundRequest
         }
     }
 
-    /**
-     * Override point for v2, handles v1.
-     */
-    protected void writeOpen(MessageWriter writer) {
-        writer.getWriter().key("stream").value("open");
-    }
-
     private void writeUpdates(MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         Update update = updateHead; //peak ahead
@@ -472,10 +489,10 @@ public class DSInboundInvoke extends DSInboundRequest
 
         int beginIndex = -1;
         int endIndex = -1;
-        UpdateType type;
         Update next;
         DSList row;
         DSList[] rows;
+        UpdateType type;
 
         Update(DSList row) {
             this.row = row;

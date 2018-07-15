@@ -34,6 +34,7 @@ public abstract class DSSession extends DSNode {
     private DSLinkConnection connection;
     private long lastTimeRecv;
     private long lastTimeSend;
+    private int messageId = 0;
     private int nextMessage = 1;
     private Object outgoingMutex = new Object();
     private List<OutboundMessage> outgoingRequests = new LinkedList<OutboundMessage>();
@@ -98,13 +99,6 @@ public abstract class DSSession extends DSNode {
     }
 
     /**
-     * Last ack received from the broker, or 0 if no ack received.
-     */
-    public int getAckRcvd() {
-        return ackRcvd;
-    }
-
-    /**
      * The next ack id to send, or -1.
      */
     public synchronized int getAckToSend() {
@@ -117,8 +111,11 @@ public abstract class DSSession extends DSNode {
         return connection;
     }
 
-    public int getMissingAcks() {
-        return nextMessage - ackRcvd - 1;
+    /**
+     * The current (last) message ID generated.
+     */
+    public int getMessageId() {
+        return messageId;
     }
 
     public abstract DSIRequester getRequester();
@@ -177,24 +174,6 @@ public abstract class DSSession extends DSNode {
     }
 
     /**
-     * Call for each incoming message id that needs to be acked.
-     */
-    public synchronized void setAckRcvd(int ackRcvd) {
-        this.ackRcvd = ackRcvd;
-        notifyOutgoing();
-    }
-
-    /**
-     * Call for each incoming message id that needs to be acked.
-     */
-    public synchronized void setAckToSend(int ackToSend) {
-        if (ackToSend > 0) {
-            this.ackToSend = ackToSend;
-            notifyOutgoing();
-        }
-    }
-
-    /**
      * Called when the broker signifies that requests are allowed.
      */
     public void setRequesterAllowed() {
@@ -248,6 +227,21 @@ public abstract class DSSession extends DSNode {
         return "Session";
     }
 
+    protected int getMissingAcks() {
+        return nextMessage - ackRcvd - 1;
+    }
+
+    /**
+     * Returns the next new message id.
+     */
+    protected synchronized int getNextMessageId() {
+        messageId = nextMessage;
+        if (++nextMessage > MAX_MSG_ID) {
+            messageId = 1;
+        }
+        return messageId;
+    }
+
     protected boolean hasAckToSend() {
         return ackToSend > 0;
     }
@@ -267,7 +261,7 @@ public abstract class DSSession extends DSNode {
         if (ackToSend > 0) {
             return true;
         }
-        if (getMissingAcks() > 7) {
+        if (waitingForAcks()) {
             return false;
         }
         if (!outgoingResponses.isEmpty()) {
@@ -284,23 +278,34 @@ public abstract class DSSession extends DSNode {
     }
 
     /**
-     * Returns the next new message id.
-     */
-    protected synchronized int getNextMessageId() {
-        int ret = nextMessage;
-        if (++nextMessage > MAX_MSG_ID) {
-            nextMessage = 1;
-        }
-        return ret;
-    }
-
-    /**
      * Can be used to waking up a sleeping writer.
      */
     protected void notifyOutgoing() {
         synchronized (outgoingMutex) {
             outgoingMutex.notify();
         }
+    }
+
+    /**
+     * Call for each incoming message id that needs to be acked.
+     */
+    protected void setAckRcvd(int ackRcvd) {
+        this.ackRcvd = ackRcvd;
+        notifyOutgoing();
+    }
+
+    /**
+     * Call for each incoming message id that needs to be acked.
+     */
+    protected void setAckToSend(int ackToSend) {
+        if (ackToSend > 0) {
+            this.ackToSend = ackToSend;
+            notifyOutgoing();
+        }
+    }
+
+    protected boolean waitingForAcks() {
+        return getMissingAcks() > 8;
     }
 
     ///////////////////////////////////////////////////////////////////////////

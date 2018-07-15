@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import java.util.Map;
@@ -16,13 +17,13 @@ import org.iot.dsa.node.DSNode;
 public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static final Integer ZERO = Integer.valueOf(0);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private boolean enqueued = false;
@@ -44,40 +45,16 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods in alphabetical order
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Add to the outbound queue if not already enqueued.
-     */
-    protected void enqueue(DSInboundSubscription subscription) {
-        synchronized (this) {
-            outbound.add(subscription);
-            if (enqueued) {
-                return;
-            }
-            enqueued = true;
-        }
-        responder.sendResponse(this);
-    }
-
-    DSLink getLink() {
-        return responder.getConnection().getLink();
+    @Override
+    public boolean canWrite(DSSession session) {
+        return true;
     }
 
     public DSResponder getResponder() {
         return responder;
-    }
-
-    /**
-     * Returns a DSInboundSubscription for v1.
-     *
-     * @param sid  Subscription ID.
-     * @param path Path being subscribed to.
-     * @param qos  Quality of service.
-     */
-    protected DSInboundSubscription makeSubscription(Integer sid, String path, int qos) {
-        return new DSInboundSubscription(this, sid, path, qos);
     }
 
     public void onConnect() {
@@ -132,7 +109,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     }
 
     @Override
-    public void write(MessageWriter writer) {
+    public void write(DSSession session, MessageWriter writer) {
         writeBegin(writer);
         DSInboundSubscription sub;
         while (!responder.shouldEndMessage()) {
@@ -155,6 +132,35 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         responder.sendResponse(this);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Add to the outbound queue if not already enqueued.
+     */
+    protected void enqueue(DSInboundSubscription subscription) {
+        synchronized (this) {
+            outbound.add(subscription);
+            if (enqueued) {
+                return;
+            }
+            enqueued = true;
+        }
+        responder.sendResponse(this);
+    }
+
+    /**
+     * Returns a DSInboundSubscription for v1.
+     *
+     * @param sid  Subscription ID.
+     * @param path Path being subscribed to.
+     * @param qos  Quality of service.
+     */
+    protected DSInboundSubscription makeSubscription(Integer sid, String path, int qos) {
+        return new DSInboundSubscription(this, sid, path, qos);
+    }
+
     /**
      * Override point for v2.
      */
@@ -172,6 +178,14 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         writer.getWriter()
               .endList()
               .endMap();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    DSLink getLink() {
+        return responder.getConnection().getLink();
     }
 
 }

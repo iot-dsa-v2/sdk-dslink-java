@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
@@ -27,7 +28,12 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
     }
 
     @Override
-    public void write(MessageWriter writer) {
+    public boolean canWrite(DSSession session) {
+        return true;
+    }
+
+    @Override
+    public void write(DSSession session, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(req.getRequestId(), req.getSession().getAckToSend());
         if (req instanceof DS2InboundInvoke) {

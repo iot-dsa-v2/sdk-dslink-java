@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
@@ -69,6 +70,11 @@ public class DSInboundList extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public boolean canWrite(DSSession session) {
+        return true;
+    }
 
     @Override
     public void childAdded(ApiObject child) {
@@ -199,7 +205,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void write(MessageWriter writer) {
+    public void write(DSSession session, MessageWriter writer) {
         enqueued = false;
         if (isClosed()) {
             return;
@@ -249,7 +255,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Public Methods
+    // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
 
     /**

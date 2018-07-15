@@ -12,7 +12,7 @@ import org.iot.dsa.time.DSDateTime;
 class DSOutboundSubscribeStubs {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private DSOutboundSubscribeStub first;
@@ -39,7 +39,48 @@ class DSOutboundSubscribeStubs {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    public String getPath() {
+        return path;
+    }
+
+    public int getQos() {
+        return qos;
+    }
+
+    public Integer getSid() {
+        return sid;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public DSOutboundSubscriptions getSubscriptions() {
+        return subscriptions;
+    }
+
+    public boolean hasSid() {
+        return sid != null;
+    }
+
+    public void onDisconnect() {
+        DSOutboundSubscribeStub cur = first;
+        while (cur != null) {
+            cur.closeStream();
+            cur = cur.getNext();
+        }
+    }
+
+    public DSOutboundSubscribeStubs setSid(Integer sid) {
+        this.sid = sid;
+        return this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -77,38 +118,6 @@ class DSOutboundSubscribeStubs {
             return true;
         }
         return predecessor(stub) != last;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public int getQos() {
-        return qos;
-    }
-
-    public Integer getSid() {
-        return sid;
-    }
-
-    public State getState() {
-        return state;
-    }
-
-    public DSOutboundSubscriptions getSubscriptions() {
-        return subscriptions;
-    }
-
-    public boolean hasSid() {
-        return sid != null;
-    }
-
-    public void onDisconnect() {
-        DSOutboundSubscribeStub cur = first;
-        while (cur != null) {
-            cur.closeStream();
-            cur = cur.getNext();
-        }
     }
 
     /**
@@ -165,11 +174,6 @@ class DSOutboundSubscribeStubs {
         if (--size == 0) {
             subscriptions.unsubscribe(this);
         }
-    }
-
-    public DSOutboundSubscribeStubs setSid(Integer sid) {
-        this.sid = sid;
-        return this;
     }
 
     void setState(State state) {

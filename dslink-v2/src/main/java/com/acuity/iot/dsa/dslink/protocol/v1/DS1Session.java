@@ -13,7 +13,6 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v1.requester.DS1Requester;
 import com.acuity.iot.dsa.dslink.protocol.v1.responder.DS1Responder;
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.io.DSIReader;
@@ -49,8 +48,10 @@ public class DS1Session extends DSSession {
     private long lastMessageSent;
     private MessageWriter messageWriter;
     private DS1Requester requester = new DS1Requester(this);
+    private boolean requestsBegun = false;
     private boolean requestsNext = false;
     private DS1Responder responder = new DS1Responder(this);
+    private boolean responsesBegun = false;
 
     /////////////////////////////////////////////////////////////////
     // Constructors
@@ -122,7 +123,10 @@ public class DS1Session extends DSSession {
      * @see #endRequests()
      */
     public void writeRequest(OutboundMessage message) {
-        message.write(getMessageWriter());
+        if (!requestsBegun) {
+            beginRequests();
+        }
+        message.write(this, getMessageWriter());
     }
 
     /**
@@ -133,7 +137,10 @@ public class DS1Session extends DSSession {
      * @see #endResponses()
      */
     public void writeResponse(OutboundMessage message) {
-        message.write(getMessageWriter());
+        if (!responsesBegun) {
+            beginResponses();
+        }
+        message.write(this, getMessageWriter());
     }
 
     /////////////////////////////////////////////////////////////////
@@ -149,6 +156,8 @@ public class DS1Session extends DSSession {
      * @see #endMessage()
      */
     protected void beginMessage() {
+        getWriter().reset();
+        getTransport().beginSendMessage();
         DSIWriter out = getWriter();
         out.beginMap();
         out.key("msg").value(getNextMessageId());
@@ -167,6 +176,7 @@ public class DS1Session extends DSSession {
      * @see #endResponses()
      */
     protected void beginRequests() {
+        requestsBegun = true;
         getWriter().key("requests").beginList();
     }
 
@@ -178,6 +188,7 @@ public class DS1Session extends DSSession {
      * @see #endResponses()
      */
     protected void beginResponses() {
+        responsesBegun = true;
         getWriter().key("responses").beginList();
     }
 
@@ -209,22 +220,22 @@ public class DS1Session extends DSSession {
 
     @Override
     protected void doSendMessage() {
-        DSTransport transport = getTransport();
-        long endTime = System.currentTimeMillis() + 2000;
-        DSIWriter writer = getWriter();
-        writer.reset();
-        requestsNext = !requestsNext;
-        transport.beginSendMessage();
-        beginMessage();
-        if (this.getMissingAcks() < 8) {
-            send(requestsNext, endTime);
-            if ((System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
-                send(!requestsNext, endTime);
+        try {
+            long endTime = System.currentTimeMillis() + 2000;
+            requestsNext = !requestsNext;
+            beginMessage();
+            if (!waitingForAcks()) {
+                send(requestsNext, endTime);
+                if ((System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
+                    send(!requestsNext, endTime);
+                }
             }
+            endMessage();
+            lastMessageSent = System.currentTimeMillis();
+        } finally {
+            requestsBegun = false;
+            responsesBegun = false;
         }
-        endMessage();
-        transport.endSendMessage();
-        lastMessageSent = System.currentTimeMillis();
     }
 
     /**
@@ -232,6 +243,7 @@ public class DS1Session extends DSSession {
      */
     protected void endMessage() {
         getWriter().endMap().flush();
+        getTransport().endSendMessage();
     }
 
     /*
@@ -395,12 +407,10 @@ public class DS1Session extends DSSession {
             if (!hasOutgoingRequests()) {
                 return;
             }
-            beginRequests();
         } else {
             if (!hasOutgoingResponses()) {
                 return;
             }
-            beginResponses();
         }
         OutboundMessage msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
         while ((msg != null) && (System.currentTimeMillis() < endTime)) {
@@ -416,9 +426,13 @@ public class DS1Session extends DSSession {
             }
         }
         if (requests) {
-            endRequests();
+            if (requestsBegun) {
+                endRequests();
+            }
         } else {
-            endResponses();
+            if (responsesBegun) {
+                endResponses();
+            }
         }
     }
 

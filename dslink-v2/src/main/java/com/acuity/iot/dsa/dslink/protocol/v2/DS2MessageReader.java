@@ -22,8 +22,9 @@ import org.iot.dsa.util.DSException;
  */
 public class DS2MessageReader extends DS2Message {
 
-    // Fields
-    // ------
+    ///////////////////////////////////////////////////////////////////////////
+    // Instance Fields
+    ///////////////////////////////////////////////////////////////////////////
 
     private int ackId;
     private int bodyLength;
@@ -36,27 +37,10 @@ public class DS2MessageReader extends DS2Message {
     private ByteBuffer strBuffer;
     private CharsetDecoder utf8decoder = DSString.UTF8.newDecoder();
 
-    // Constructors
-    // ------------
+    ///////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////
 
-    public DS2MessageReader() {
-    }
-
-    // Methods
-    // -------
-
-    @Override
-    protected void getDebug(StringBuilder buf) {
-        buf.append("RECV ");
-        debugMethod(getMethod(), buf);
-        if (requestId > 0) {
-            buf.append(", ").append("Rid ").append(requestId);
-        }
-        if (ackId > 0) {
-            buf.append(", ").append("Ack ").append(ackId);
-        }
-        debugHeaders(headers, buf);
-    }
 
     public int getAckId() {
         return ackId;
@@ -66,32 +50,15 @@ public class DS2MessageReader extends DS2Message {
         return input;
     }
 
+    public int getBodyLength() {
+        return bodyLength;
+    }
+
     public MsgpackReader getBodyReader() {
         if (reader == null) {
             reader = new MsgpackReader(input);
         }
         return reader;
-    }
-
-    public int getBodyLength() {
-        return bodyLength;
-    }
-
-    /**
-     * Returns a char buffer with the given capacity, ready for writing (putting).  Attempts to
-     * reuse the same char buffer.
-     */
-    private CharBuffer getCharBuffer(int size) {
-        if ((charBuffer == null) || (charBuffer.capacity() < size)) {
-            int tmp = 1024;
-            while (tmp < size) {
-                tmp += 1024;
-            }
-            charBuffer = CharBuffer.allocate(tmp);
-        } else {
-            charBuffer.clear();
-        }
-        return charBuffer;
     }
 
     public Object getHeader(Integer key) {
@@ -116,41 +83,6 @@ public class DS2MessageReader extends DS2Message {
 
     public int getRequestId() {
         return requestId;
-    }
-
-    /**
-     * Called by readString(), returns a bytebuffer for the given capacity ready for writing
-     * (putting).  Attempts to reuse the same buffer as much as possible.
-     */
-    private ByteBuffer getStringBuffer(int len) {
-        if (strBuffer == null) {
-            int tmp = 1024;
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
-        } else if (strBuffer.capacity() < len) {
-            int tmp = strBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
-        } else {
-            strBuffer.clear();
-        }
-        return strBuffer;
-    }
-
-    void init(int requestId,
-              int method,
-              DSByteBuffer body,
-              Map<Integer, Object> headers) {
-        this.requestId = requestId;
-        this.method = method;
-        input = body;
-        bodyLength = body.length();
-        this.headers.clear();
-        this.headers.putAll(headers);
     }
 
     public void init(InputStream in) {
@@ -188,13 +120,13 @@ public class DS2MessageReader extends DS2Message {
         return method == MSG_ACK;
     }
 
-    public boolean isPing() {
-        return method == MSG_PING;
-    }
-
     public boolean isMultipart() {
         Integer page = (Integer) headers.get(HDR_PAGE_ID);
         return page != null;
+    }
+
+    public boolean isPing() {
+        return method == MSG_PING;
     }
 
     public boolean isRequest() {
@@ -212,6 +144,90 @@ public class DS2MessageReader extends DS2Message {
 
     public boolean isResponse() {
         return (method & 0x80) != 0;
+    }
+
+    /**
+     * Decodes a DSA 2.n string.
+     */
+    public String readString(InputStream in) {
+        int len = DSBytes.readShort(in, false);
+        if (len == 0) {
+            return "";
+        }
+        return readString(in, len);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void getDebug(StringBuilder buf) {
+        buf.append("RECV ");
+        debugMethod(getMethod(), buf);
+        if (requestId > 0) {
+            buf.append(", ").append("Rid ").append(requestId);
+        }
+        if (ackId > 0) {
+            buf.append(", ").append("Ack ").append(ackId);
+        }
+        debugHeaders(headers, buf);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Returns a char buffer with the given capacity, ready for writing (putting).  Attempts to
+     * reuse the same char buffer.
+     */
+    private CharBuffer getCharBuffer(int size) {
+        if ((charBuffer == null) || (charBuffer.capacity() < size)) {
+            int tmp = 1024;
+            while (tmp < size) {
+                tmp += 1024;
+            }
+            charBuffer = CharBuffer.allocate(tmp);
+        } else {
+            charBuffer.clear();
+        }
+        return charBuffer;
+    }
+
+    /**
+     * Called by readString(), returns a bytebuffer for the given capacity ready for writing
+     * (putting).  Attempts to reuse the same buffer as much as possible.
+     */
+    private ByteBuffer getStringBuffer(int len) {
+        if (strBuffer == null) {
+            int tmp = 1024;
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            strBuffer = ByteBuffer.allocate(tmp);
+        } else if (strBuffer.capacity() < len) {
+            int tmp = strBuffer.capacity();
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            strBuffer = ByteBuffer.allocate(tmp);
+        } else {
+            strBuffer.clear();
+        }
+        return strBuffer;
+    }
+
+    void init(int requestId,
+              int method,
+              DSByteBuffer body,
+              Map<Integer, Object> headers) {
+        this.requestId = requestId;
+        this.method = method;
+        input = body;
+        bodyLength = body.length();
+        this.headers.clear();
+        this.headers.putAll(headers);
     }
 
     void parseDynamicHeaders(InputStream in, int len, Map<Integer, Object> headers)
@@ -253,17 +269,6 @@ public class DS2MessageReader extends DS2Message {
             }
             headers.put(code, val);
         }
-    }
-
-    /**
-     * Decodes a DSA 2.n string.
-     */
-    public String readString(InputStream in) {
-        int len = DSBytes.readShort(in, false);
-        if (len == 0) {
-            return "";
-        }
-        return readString(in, len);
     }
 
     /**

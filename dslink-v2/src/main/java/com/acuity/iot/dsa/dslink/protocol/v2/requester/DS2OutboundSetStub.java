@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.v2.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSetStub;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSRequester;
@@ -17,11 +18,11 @@ public class DS2OutboundSetStub extends DSOutboundSetStub
 
     private MultipartWriter multipart;
 
-    protected DS2OutboundSetStub(DSRequester requester,
-                                 Integer requestId,
-                                 String path,
-                                 DSIValue value,
-                                 OutboundRequestHandler handler) {
+    DS2OutboundSetStub(DSRequester requester,
+                       Integer requestId,
+                       String path,
+                       DSIValue value,
+                       OutboundRequestHandler handler) {
         super(requester, requestId, path, value, handler);
     }
 
@@ -30,7 +31,7 @@ public class DS2OutboundSetStub extends DSOutboundSetStub
     }
 
     @Override
-    public void write(MessageWriter writer) {
+    public void write(DSSession session, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         if (multipart != null) {
             if (multipart.update(out, getSession().getAckToSend())) {

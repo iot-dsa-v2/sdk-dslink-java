@@ -213,9 +213,12 @@ public class DSInboundSubscription extends DSInboundRequest
     protected void write(MessageWriter writer, StringBuilder buf) {
         DSSession session = getSession();
         Update update = dequeue();
+        int count = 0;
         while (update != null) {
             write(update, writer, buf);
             if ((qos == 0) || session.shouldEndMessage()) {
+                break;
+            } else if (++count > 1024) {
                 break;
             }
             update = dequeue();
