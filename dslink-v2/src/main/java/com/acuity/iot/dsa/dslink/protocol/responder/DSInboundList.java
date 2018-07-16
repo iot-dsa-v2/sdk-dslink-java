@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
@@ -10,8 +11,17 @@ import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIEnum;
+import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMap.Entry;
+import org.iot.dsa.node.DSMetadata;
+import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSPath;
+import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.DSAbstractAction;
 import org.iot.dsa.node.event.DSIEvent;
@@ -30,7 +40,7 @@ public class DSInboundList extends DSInboundRequest
         OutboundListResponse, Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int STATE_INIT = 0;
@@ -40,7 +50,7 @@ public class DSInboundList extends DSInboundRequest
     private static final int STATE_CLOSED = 4;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private StringBuilder cacheBuf = new StringBuilder();
@@ -48,31 +58,22 @@ public class DSInboundList extends DSInboundRequest
     private DSMetadata cacheMeta = new DSMetadata(cacheMap);
     private Iterator<ApiObject> children;
     private Exception closeReason;
+    private boolean enqueued = false;
     private DSInfo info;
     private DSNode node;
     private OutboundListResponse response;
-    private boolean enqueued = false;
     private int state = STATE_INIT;
     private boolean stream = true;
     private Update updateHead;
     private Update updateTail;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods in alphabetical order
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Override point for v2.
-     */
-    protected void beginMessage(MessageWriter writer) {
-        writer.getWriter().beginMap().key("rid").value(getRequestId());
-    }
-
-    /**
-     * Override point for v2.
-     */
-    protected void beginUpdates(MessageWriter writer) {
-        writer.getWriter().key("updates").beginList();
+    @Override
+    public boolean canWrite(DSSession session) {
+        return true;
     }
 
     @Override
@@ -110,40 +111,165 @@ public class DSInboundList extends DSInboundRequest
         fine(fine() ? getPath() + " list closed locally" : null);
     }
 
-    /**
-     * Remove an update from the queue.
-     */
-    private synchronized Update dequeue() {
-        if (updateHead == null) {
-            return null;
-        }
-        Update ret = updateHead;
-        if (updateHead == updateTail) {
-            updateHead = null;
-            updateTail = null;
-        } else {
-            updateHead = updateHead.next;
-        }
-        ret.next = null;
-        return ret;
+    @Override
+    public ApiObject getTarget() {
+        return info;
     }
 
-    private void doClose() {
-        state = STATE_CLOSED;
-        getResponder().removeRequest(getRequestId());
-        if (response == null) {
+    /**
+     * Not closed or closed pending.
+     */
+    @Override
+    public boolean isOpen() {
+        return (state != STATE_CLOSE_PENDING) && (state != STATE_CLOSED);
+    }
+
+    @Override
+    public void onClose() {
+        if (node != null) {
+            node.unsubscribe(DSNode.INFO_TOPIC, null, this);
+        }
+    }
+
+    @Override
+    public void onClose(Integer requestId) {
+        if (isClosed()) {
             return;
         }
-        DSRuntime.run(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    response.onClose();
-                } catch (Exception x) {
-                    error(getPath(), x);
+        state = STATE_CLOSED;
+        fine(debug() ? getPath() + " list closed" : null);
+        synchronized (this) {
+            updateHead = updateTail = null;
+        }
+        doClose();
+    }
+
+    @Override
+    public void onEvent(DSTopic topic, DSIEvent event, DSNode node, DSInfo child,
+                        Object... params) {
+        switch ((DSInfoTopic.Event) event) {
+            case CHILD_ADDED:
+                childAdded(child);
+                break;
+            case CHILD_REMOVED:
+                childRemoved(child);
+                break;
+            case METADATA_CHANGED: //TODO
+                break;
+            default:
+        }
+    }
+
+    @Override
+    public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
+        close();
+    }
+
+    @Override
+    public void run() {
+        try {
+            RequestPath path = new RequestPath(getPath(), getLink());
+            if (path.isResponder()) {
+                DSIResponder responder = (DSIResponder) path.getTarget();
+                setPath(path.getPath());
+                response = responder.onList(this);
+            } else {
+                info = path.getInfo();
+                if (info == null) {
+                    info = new RootInfo((DSNode) path.getTarget());
+                }
+                if (info.isNode()) {
+                    node = info.getNode();
+                    node.subscribe(DSNode.INFO_TOPIC, null, this);
+                }
+                response = this;
+            }
+        } catch (Exception x) {
+            error(getPath(), x);
+            close(x);
+            return;
+        }
+        if (response == null) {
+            close();
+        } else {
+            enqueueResponse();
+        }
+    }
+
+    /**
+     * V2 only, set to false to auto close after sending the initial state.
+     */
+    public DSInboundList setStream(boolean stream) {
+        this.stream = stream;
+        return this;
+    }
+
+    @Override
+    public void write(DSSession session, MessageWriter writer) {
+        enqueued = false;
+        if (isClosed()) {
+            return;
+        }
+        if (isClosePending() && (updateHead == null) && (closeReason != null)) {
+            getResponder().sendError(this, closeReason);
+            doClose();
+            return;
+        }
+        int last = state;
+        beginMessage(writer);
+        switch (state) {
+            case STATE_INIT:
+                beginUpdates(writer);
+                writeInit(writer);
+                break;
+            case STATE_CHILDREN:
+                beginUpdates(writer);
+                writeChildren(writer);
+                break;
+            case STATE_CLOSE_PENDING:
+            case STATE_UPDATES:
+                beginUpdates(writer);
+                writeUpdates(writer);
+                break;
+        }
+        endUpdates(writer);
+        if (state != last) {
+            if (state == STATE_UPDATES) {
+                if (stream) {
+                    endMessage(writer, Boolean.TRUE);
+                } else {
+                    endMessage(writer, Boolean.FALSE);
+                    doClose();
                 }
             }
-        });
+        } else if (isClosePending() && (updateHead == null)) {
+            if (closeReason != null) {
+                getResponder().sendError(this, closeReason);
+            } else {
+                endMessage(writer, Boolean.FALSE);
+            }
+            doClose();
+        } else {
+            endMessage(writer, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Override point for v2.
+     */
+    protected void beginMessage(MessageWriter writer) {
+        writer.getWriter().beginMap().key("rid").value(getRequestId());
+    }
+
+    /**
+     * Override point for v2.
+     */
+    protected void beginUpdates(MessageWriter writer) {
+        writer.getWriter().key("updates").beginList();
     }
 
     /**
@@ -158,34 +284,6 @@ public class DSInboundList extends DSInboundRequest
      */
     protected void encode(String key, String value, MessageWriter writer) {
         writer.getWriter().beginList().value(key).value(value).endList();
-    }
-
-    /**
-     * Override point for v2.
-     */
-    protected void endMessage(MessageWriter writer, Boolean streamOpen) {
-        if (streamOpen != null) {
-            writer.getWriter().key("stream").value(streamOpen ? "open" : "closed");
-        }
-        writer.getWriter().endMap();
-    }
-
-    /**
-     * Override point for v2.
-     */
-    protected void endUpdates(MessageWriter writer) {
-        writer.getWriter().endList();
-    }
-
-    /**
-     * Override point for v2.
-     */
-    protected String encodeName(String name, StringBuilder buf) {
-        buf.setLength(0);
-        if (DSPath.encodeNameV1(name, buf)) {
-            return buf.toString();
-        }
-        return name;
     }
 
     protected void encodeChild(ApiObject child, MessageWriter writer) {
@@ -243,6 +341,88 @@ public class DSInboundList extends DSInboundRequest
         }
         encode(safe, map, writer);
         cacheMap.clear();
+    }
+
+    /**
+     * Override point for v2.
+     */
+    protected String encodeName(String name, StringBuilder buf) {
+        buf.setLength(0);
+        if (DSPath.encodeNameV1(name, buf)) {
+            return buf.toString();
+        }
+        return name;
+    }
+
+    /**
+     * Override point for v2.
+     */
+    protected void encodeUpdate(Update update, MessageWriter writer, StringBuilder buf) {
+        if (update.added) {
+            encodeChild(update.child, writer);
+        } else {
+            writer.getWriter().beginMap()
+                  .key("name").value(encodeName(update.child.getName(), buf))
+                  .key("change").value("remove")
+                  .endMap();
+        }
+    }
+
+    /**
+     * Override point for v2.
+     */
+    protected void endMessage(MessageWriter writer, Boolean streamOpen) {
+        if (streamOpen != null) {
+            writer.getWriter().key("stream").value(streamOpen ? "open" : "closed");
+        }
+        writer.getWriter().endMap();
+    }
+
+    /**
+     * Override point for v2.
+     */
+    protected void endUpdates(MessageWriter writer) {
+        writer.getWriter().endList();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Remove an update from the queue.
+     */
+    private synchronized Update dequeue() {
+        if (updateHead == null) {
+            return null;
+        }
+        Update ret = updateHead;
+        if (updateHead == updateTail) {
+            updateHead = null;
+            updateTail = null;
+        } else {
+            updateHead = updateHead.next;
+        }
+        ret.next = null;
+        return ret;
+    }
+
+    private void doClose() {
+        state = STATE_CLOSED;
+        getResponder().removeRequest(getRequestId());
+        if (response == null) {
+            return;
+        }
+        DSRuntime.run(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    response.onClose();
+                } catch (Exception x) {
+                    error(getPath(), x);
+                }
+            }
+        });
     }
 
     /**
@@ -316,13 +496,13 @@ public class DSInboundList extends DSInboundRequest
                 DSMap param;
                 while (params.hasNext()) {
                     param = params.next();
-                    fixRangeTypes(param);
                     if (dsAction != null) {
                         dsAction.prepareParameter(info, param);
                     }
                     if (param.hasParent()) {
                         param = param.copy();
                     }
+                    fixRangeTypes(param);
                     list.add(param);
                 }
             }
@@ -339,13 +519,13 @@ public class DSInboundList extends DSInboundRequest
                     DSMap param;
                     while (cols.hasNext()) {
                         param = cols.next();
-                        fixRangeTypes(param);
                         if (dsAction != null) {
                             dsAction.prepareParameter(info, param);
                         }
                         if (param.hasParent()) {
                             param = param.copy();
                         }
+                        fixRangeTypes(param);
                         list.add(param);
                     }
                 }
@@ -426,20 +606,6 @@ public class DSInboundList extends DSInboundRequest
         return e;
     }
 
-    /**
-     * Override point for v2.
-     */
-    protected void encodeUpdate(Update update, MessageWriter writer, StringBuilder buf) {
-        if (update.added) {
-            encodeChild(update.child, writer);
-        } else {
-            writer.getWriter().beginMap()
-                  .key("name").value(encodeName(update.child.getName(), buf))
-                  .key("change").value("remove")
-                  .endMap();
-        }
-    }
-
     private void enqueue(Update update) {
         if (!isOpen()) {
             return;
@@ -518,155 +684,12 @@ public class DSInboundList extends DSInboundRequest
         }
     }
 
-    @Override
-    public ApiObject getTarget() {
-        return info;
-    }
-
-    private boolean isClosed() {
-        return state == STATE_CLOSED;
-    }
-
     private boolean isClosePending() {
         return state == STATE_CLOSE_PENDING;
     }
 
-    /**
-     * Not closed or closed pending.
-     */
-    @Override
-    public boolean isOpen() {
-        return (state != STATE_CLOSE_PENDING) && (state != STATE_CLOSED);
-    }
-
-    @Override
-    public void onClose() {
-        if (node != null) {
-            node.unsubscribe(DSNode.INFO_TOPIC, null, this);
-        }
-    }
-
-    @Override
-    public void onEvent(DSTopic topic, DSIEvent event, DSNode node, DSInfo child,
-                        Object... params) {
-        switch ((DSInfoTopic.Event) event) {
-            case CHILD_ADDED:
-                childAdded(child);
-                break;
-            case CHILD_REMOVED:
-                childRemoved(child);
-                break;
-            case METADATA_CHANGED: //TODO
-                break;
-            default:
-        }
-    }
-
-    @Override
-    public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
-        close();
-    }
-
-    @Override
-    public void onClose(Integer requestId) {
-        if (isClosed()) {
-            return;
-        }
-        state = STATE_CLOSED;
-        fine(debug() ? getPath() + " list closed" : null);
-        synchronized (this) {
-            updateHead = updateTail = null;
-        }
-        doClose();
-    }
-
-    @Override
-    public void run() {
-        try {
-            RequestPath path = new RequestPath(getPath(), getLink());
-            if (path.isResponder()) {
-                DSIResponder responder = (DSIResponder) path.getTarget();
-                setPath(path.getPath());
-                response = responder.onList(this);
-            } else {
-                info = path.getInfo();
-                if (info == null) {
-                    info = new RootInfo((DSNode) path.getTarget());
-                }
-                if (info.isNode()) {
-                    node = info.getNode();
-                    node.subscribe(DSNode.INFO_TOPIC, null, this);
-                }
-                response = this;
-            }
-        } catch (Exception x) {
-            error(getPath(), x);
-            close(x);
-            return;
-        }
-        if (response == null) {
-            close();
-        } else {
-            enqueueResponse();
-        }
-    }
-
-    /**
-     * V2 only, set to false to auto close after sending the initial state.
-     */
-    public DSInboundList setStream(boolean stream) {
-        this.stream = stream;
-        return this;
-    }
-
-    @Override
-    public void write(MessageWriter writer) {
-        enqueued = false;
-        if (isClosed()) {
-            return;
-        }
-        if (isClosePending() && (updateHead == null) && (closeReason != null)) {
-            getResponder().sendError(this, closeReason);
-            doClose();
-            return;
-        }
-        int last = state;
-        beginMessage(writer);
-        switch (state) {
-            case STATE_INIT:
-                beginUpdates(writer);
-                writeInit(writer);
-                break;
-            case STATE_CHILDREN:
-                beginUpdates(writer);
-                writeChildren(writer);
-                break;
-            case STATE_CLOSE_PENDING:
-            case STATE_UPDATES:
-                beginUpdates(writer);
-                writeUpdates(writer);
-                break;
-        }
-        endUpdates(writer);
-        if (state != last) {
-            if (state == STATE_UPDATES) {
-                if (stream) {
-                    endMessage(writer, Boolean.TRUE);
-                } else {
-                    endMessage(writer, Boolean.FALSE);
-                    doClose();
-                }
-            }
-        } else if (isClosePending() && (updateHead == null)) {
-            if (closeReason != null) {
-                getResponder().sendError(this, closeReason);
-            } else {
-                endMessage(writer, Boolean.FALSE);
-            }
-            doClose();
-        } else {
-            endMessage(writer, null);
-        }
+    private boolean isClosed() {
+        return state == STATE_CLOSED;
     }
 
     private void writeChildren(MessageWriter writer) {
@@ -721,6 +744,7 @@ public class DSInboundList extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     private static class RootInfo extends DSInfo {
+
         RootInfo(DSNode node) {
             super(null, node);
         }

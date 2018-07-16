@@ -12,8 +12,9 @@ import java.util.Map;
  */
 public class MultipartWriter implements MessageConstants {
 
-    // Fields
-    // ------
+    ///////////////////////////////////////////////////////////////////////////
+    // Instance Fields
+    ///////////////////////////////////////////////////////////////////////////
 
     private DSByteBuffer body;
     private Map<Integer, Object> headers;
@@ -22,8 +23,9 @@ public class MultipartWriter implements MessageConstants {
     private int requestId = -1;
     private Byte status;
 
+    ///////////////////////////////////////////////////////////////////////////
     // Constructors
-    // ------------
+    ///////////////////////////////////////////////////////////////////////////
 
     MultipartWriter(int requestId,
                     int method,
@@ -40,27 +42,9 @@ public class MultipartWriter implements MessageConstants {
         page = -((body.length() / MAX_BODY) + 1);
     }
 
-    // Methods
-    // -------
-
-    private void writeHeaders(DS2MessageWriter writer) {
-        Object val;
-        Map.Entry<Integer, Object> me;
-        Iterator<Map.Entry<Integer, Object>> it = headers.entrySet().iterator();
-        while (it.hasNext()) {
-            me = it.next();
-            val = me.getValue();
-            if (val == NO_HEADER_VAL) {
-                writer.addHeader(me.getKey());
-            } else if (val instanceof Byte) {
-                writer.addByteHeader(me.getKey(), (Byte) val);
-            } else if (val instanceof Integer) {
-                writer.addIntHeader(me.getKey(), (Integer) val);
-            } else if (val instanceof String) {
-                writer.addStringHeader(me.getKey(), (String) val);
-            }
-        }
-    }
+    ///////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Call for each part, will return true when there are more part remain.
@@ -84,6 +68,29 @@ public class MultipartWriter implements MessageConstants {
             page++;
         }
         return body.length() > 0;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    private void writeHeaders(DS2MessageWriter writer) {
+        Object val;
+        Map.Entry<Integer, Object> me;
+        Iterator<Map.Entry<Integer, Object>> it = headers.entrySet().iterator();
+        while (it.hasNext()) {
+            me = it.next();
+            val = me.getValue();
+            if (val == NO_HEADER_VAL) {
+                writer.addHeader(me.getKey());
+            } else if (val instanceof Byte) {
+                writer.addByteHeader(me.getKey(), (Byte) val);
+            } else if (val instanceof Integer) {
+                writer.addIntHeader(me.getKey(), (Integer) val);
+            } else if (val instanceof String) {
+                writer.addStringHeader(me.getKey(), (String) val);
+            }
+        }
     }
 
 }

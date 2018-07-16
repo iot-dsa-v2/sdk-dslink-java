@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
@@ -17,15 +18,7 @@ import org.iot.dsa.node.DSPath;
  */
 public class DSOutboundListStub extends DSOutboundStub {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
-
     private OutboundListHandler request;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     protected DSOutboundListStub(DSRequester requester,
                                  Integer requestId,
@@ -34,10 +27,6 @@ public class DSOutboundListStub extends DSOutboundStub {
         super(requester, requestId, path);
         this.request = request;
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////
 
     @Override
     public OutboundListHandler getHandler() {
@@ -85,7 +74,7 @@ public class DSOutboundListStub extends DSOutboundStub {
      * Writes the v1 request.
      */
     @Override
-    public void write(MessageWriter writer) {
+    public void write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(getRequestId());

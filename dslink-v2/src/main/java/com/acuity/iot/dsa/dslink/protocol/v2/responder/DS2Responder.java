@@ -1,7 +1,11 @@
 package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
-import com.acuity.iot.dsa.dslink.protocol.responder.*;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscription;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v2.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2Session;
@@ -189,7 +193,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
 
     @Override
     public void sendClose(int rid) {
-        sendResponse(new CloseMessage(getSession(), rid));
+        sendResponse(new CloseMessage(rid));
     }
 
     @Override

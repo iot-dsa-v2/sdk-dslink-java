@@ -21,8 +21,10 @@ import org.iot.dsa.node.DSString;
  */
 public class DS2MessageWriter extends DS2Message implements MessageWriter {
 
-    // Fields
-    // ------
+    ///////////////////////////////////////////////////////////////////////////
+    // Instance Fields
+    ///////////////////////////////////////////////////////////////////////////
+
 
     private int ackId = -1;
     private DSByteBuffer body;
@@ -35,8 +37,10 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     private CharsetEncoder utf8encoder;
     private MsgpackWriter writer;
 
+    ///////////////////////////////////////////////////////////////////////////
     // Constructors
-    // ------------
+    ///////////////////////////////////////////////////////////////////////////
+
 
     public DS2MessageWriter() {
         header = new DSByteBuffer();
@@ -46,17 +50,10 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
         init(-1, -1);
     }
 
-    // Methods
-    // -------
+    ///////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Encodes the key into the header buffer.
-     */
-    public DS2MessageWriter addHeader(int key) {
-        headers.put(key, NO_HEADER_VAL);
-        header.put((byte) key);
-        return this;
-    }
 
     /**
      * Encodes the key value pair into the header buffer.
@@ -65,6 +62,15 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
         headers.put(key, value);
         header.put((byte) key);
         header.put(value);
+        return this;
+    }
+
+    /**
+     * Encodes the key into the header buffer.
+     */
+    public DS2MessageWriter addHeader(int key) {
+        headers.put(key, NO_HEADER_VAL);
+        header.put((byte) key);
         return this;
     }
 
@@ -88,83 +94,12 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
         return this;
     }
 
-
-    private void finishHeader() {
-        int hlen = header.length();
-        int blen = body.length();
-        header.replaceInt(0, hlen + blen, false);
-        header.replaceShort(4, (short) hlen, false);
-        header.replace(6, (byte) (method & 0xFF));
-    }
-
     public DSByteBuffer getBody() {
         return body;
     }
 
     public int getBodyLength() {
         return body.length();
-    }
-
-    /**
-     * Attempts to reuse a charbuffer, but will allocate a new one if the size demands
-     * it.
-     */
-    private CharBuffer getCharBuffer(CharSequence arg) {
-        int len = arg.length();
-        if (charBuffer == null) {
-            int tmp = 1024;
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            charBuffer = CharBuffer.allocate(tmp);
-        } else if (charBuffer.capacity() < len) {
-            int tmp = charBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            charBuffer = CharBuffer.allocate(tmp);
-        } else {
-            charBuffer.clear();
-        }
-        charBuffer.append(arg);
-        charBuffer.flip();
-        return charBuffer;
-    }
-
-    @Override
-    protected void getDebug(StringBuilder buf) {
-        buf.append("SEND ");
-        debugMethod(method, buf);
-        if (requestId > 0) {
-            buf.append(", ").append("Rid ").append(requestId);
-        }
-        if (ackId > 0) {
-            buf.append(", ").append("Ack ").append(ackId);
-        }
-        debugHeaders(headers, buf);
-    }
-
-    /**
-     * Called by writeString(), returns a bytebuffer for the given capacity ready for writing
-     * (putting).  Attempts to reuse the same buffer as much as possible.
-     */
-    private ByteBuffer getStringBuffer(int len) {
-        if (strBuffer == null) {
-            int tmp = 1024;
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
-        } else if (strBuffer.capacity() < len) {
-            int tmp = strBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
-        } else {
-            strBuffer.clear();
-        }
-        return strBuffer;
     }
 
     @Override
@@ -261,6 +196,84 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
         utf8encoder.encode(chars, strBuffer, false);
         buf.putShort((short) strBuffer.position(), false);
         buf.put(strBuffer);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void getDebug(StringBuilder buf) {
+        buf.append("SEND ");
+        debugMethod(method, buf);
+        if (requestId > 0) {
+            buf.append(", ").append("Rid ").append(requestId);
+        }
+        if (ackId > 0) {
+            buf.append(", ").append("Ack ").append(ackId);
+        }
+        debugHeaders(headers, buf);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    private void finishHeader() {
+        int hlen = header.length();
+        int blen = body.length();
+        header.replaceInt(0, hlen + blen, false);
+        header.replaceShort(4, (short) hlen, false);
+        header.replace(6, (byte) (method & 0xFF));
+    }
+
+    /**
+     * Attempts to reuse a charbuffer, but will allocate a new one if the size demands
+     * it.
+     */
+    private CharBuffer getCharBuffer(CharSequence arg) {
+        int len = arg.length();
+        if (charBuffer == null) {
+            int tmp = 1024;
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            charBuffer = CharBuffer.allocate(tmp);
+        } else if (charBuffer.capacity() < len) {
+            int tmp = charBuffer.capacity();
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            charBuffer = CharBuffer.allocate(tmp);
+        } else {
+            charBuffer.clear();
+        }
+        charBuffer.append(arg);
+        charBuffer.flip();
+        return charBuffer;
+    }
+
+    /**
+     * Called by writeString(), returns a bytebuffer for the given capacity ready for writing
+     * (putting).  Attempts to reuse the same buffer as much as possible.
+     */
+    private ByteBuffer getStringBuffer(int len) {
+        if (strBuffer == null) {
+            int tmp = 1024;
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            strBuffer = ByteBuffer.allocate(tmp);
+        } else if (strBuffer.capacity() < len) {
+            int tmp = strBuffer.capacity();
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            strBuffer = ByteBuffer.allocate(tmp);
+        } else {
+            strBuffer.clear();
+        }
+        return strBuffer;
     }
 
 }

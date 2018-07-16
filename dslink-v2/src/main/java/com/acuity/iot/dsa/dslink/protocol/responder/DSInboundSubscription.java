@@ -31,6 +31,7 @@ public class DSInboundSubscription extends DSInboundRequest
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private int ackRequired = 0;
     private DSInfo child;
     private boolean closeAfterUpdate = false;
     private SubscriptionCloseHandler closeHandler;
@@ -64,6 +65,22 @@ public class DSInboundSubscription extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    public boolean canWrite(DSSession session) {
+        if (ackRequired > 0) {
+            int last = session.getAckRcvd();
+            if (last > ackRequired) {
+                return true;
+            }
+            //is the last ack is so far away that we have a rollover.
+            boolean b = ((ackRequired - 10000000) > last);
+            //if (!b) { //TODO
+                //System.out.print('.');
+            //}
+            return b;
+        }
+        return true;
+    }
 
     @Override
     public void close() {
@@ -210,12 +227,17 @@ public class DSInboundSubscription extends DSInboundRequest
      * @param writer Where to encode.
      * @param buf    For encoding timestamps.
      */
-    protected void write(MessageWriter writer, StringBuilder buf) {
-        DSSession session = getSession();
+    protected void write(DSSession session, MessageWriter writer, StringBuilder buf) {
+        if (qos > 0) {
+            ackRequired = session.getMessageId();
+        }
         Update update = dequeue();
+        int count = 0;
         while (update != null) {
             write(update, writer, buf);
             if ((qos == 0) || session.shouldEndMessage()) {
+                break;
+            } else if (++count > 1024) {
                 break;
             }
             update = dequeue();

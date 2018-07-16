@@ -2,6 +2,7 @@ package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundList;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
@@ -20,6 +21,30 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
 
     private MultipartWriter multipart;
     private int seqId = 0;
+
+    @Override
+    public void write(DSSession session, MessageWriter writer) {
+        DS2MessageWriter out = (DS2MessageWriter) writer;
+        if (multipart != null) {
+            if (multipart.update(out, getSession().getAckToSend())) {
+                getResponder().sendResponse(this);
+            }
+            return;
+        }
+        int ack = getSession().getAckToSend();
+        out.init(getRequestId(), ack);
+        out.setMethod(MSG_LIST_RES);
+        out.addIntHeader(HDR_SEQ_ID, seqId);
+        seqId++;
+        super.write(session, writer);
+        if (out.requiresMultipart()) {
+            multipart = out.makeMultipart();
+            multipart.update(out, ack);
+            getResponder().sendResponse(this);
+        } else {
+            out.write((DSBinaryTransport) getResponder().getTransport());
+        }
+    }
 
     @Override
     protected void beginMessage(MessageWriter writer) {
@@ -109,30 +134,6 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
 
     @Override
     protected void endUpdates(MessageWriter writer) {
-    }
-
-    @Override
-    public void write(MessageWriter writer) {
-        DS2MessageWriter out = (DS2MessageWriter) writer;
-        if (multipart != null) {
-            if (multipart.update(out, getSession().getNextAck())) {
-                getResponder().sendResponse(this);
-            }
-            return;
-        }
-        int ack = getSession().getNextAck();
-        out.init(getRequestId(), ack);
-        out.setMethod(MSG_LIST_RES);
-        out.addIntHeader(HDR_SEQ_ID, seqId);
-        seqId++;
-        super.write(writer);
-        if (out.requiresMultipart()) {
-            multipart = out.makeMultipart();
-            multipart.update(out, ack);
-            getResponder().sendResponse(this);
-        } else {
-            out.write((DSBinaryTransport) getResponder().getTransport());
-        }
     }
 
 }

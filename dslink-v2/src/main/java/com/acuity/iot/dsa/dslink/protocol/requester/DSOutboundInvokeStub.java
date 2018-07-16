@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler.Mode;
@@ -15,16 +16,8 @@ import org.iot.dsa.node.DSMap;
  */
 public class DSOutboundInvokeStub extends DSOutboundStub {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
-
     private OutboundInvokeHandler handler;
     private DSMap params;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
 
     protected DSOutboundInvokeStub(DSRequester requester,
                                    Integer requestId,
@@ -36,17 +29,9 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
         this.handler = handler;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////
-
     @Override
     public OutboundInvokeHandler getHandler() {
         return handler;
-    }
-
-    protected DSMap getParams() {
-        return params;
     }
 
     /**
@@ -109,7 +94,7 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
      * Writes the v1 version by default.
      */
     @Override
-    public void write(MessageWriter writer) {
+    public void write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(getRequestId());
@@ -120,6 +105,10 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
         }
         out.key("params").value(params);
         out.endMap();
+    }
+
+    protected DSMap getParams() {
+        return params;
     }
 
 }

@@ -27,7 +27,7 @@ public class DS2InboundSubscription extends DSInboundSubscription implements Mes
     @Override
     protected void write(Update update, MessageWriter writer, StringBuilder buf) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
-        out.init(getSubscriptionId(), getSession().getNextAck());
+        out.init(getSubscriptionId(), getSession().getAckToSend());
         out.setMethod(MSG_SUBSCRIBE_RES);
         out.addIntHeader(HDR_SEQ_ID, seqId);
         seqId++;

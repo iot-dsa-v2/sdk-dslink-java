@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import java.util.Map;
@@ -16,13 +17,13 @@ import org.iot.dsa.node.DSNode;
 public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static final Integer ZERO = Integer.valueOf(0);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private boolean enqueued = false;
@@ -33,7 +34,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     private DSResponder responder;
     private Map<Integer, DSInboundSubscription> sidMap =
             new ConcurrentHashMap<Integer, DSInboundSubscription>();
-    private StringBuilder timestampBuffer = new StringBuilder();
+    private StringBuilder timestampBuffer = new StringBuilder();//used by the subs
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -44,40 +45,27 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods in alphabetical order
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Add to the outbound queue if not already enqueued.
-     */
-    protected void enqueue(DSInboundSubscription subscription) {
-        synchronized (this) {
-            outbound.add(subscription);
-            if (enqueued) {
-                return;
-            }
-            enqueued = true;
+    @Override
+    public boolean canWrite(DSSession session) {
+        if (outbound.size() == 1) {
+            return outbound.peek().canWrite(session);
         }
-        responder.sendResponse(this);
-    }
-
-    DSLink getLink() {
-        return responder.getConnection().getLink();
+        if (outbound.isEmpty()) {
+            return false;
+        }
+        for (DSInboundSubscription sub : outbound) {
+            if (sub.canWrite(session)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public DSResponder getResponder() {
         return responder;
-    }
-
-    /**
-     * Returns a DSInboundSubscription for v1.
-     *
-     * @param sid  Subscription ID.
-     * @param path Path being subscribed to.
-     * @param qos  Quality of service.
-     */
-    protected DSInboundSubscription makeSubscription(Integer sid, String path, int qos) {
-        return new DSInboundSubscription(this, sid, path, qos);
     }
 
     public void onConnect() {
@@ -132,7 +120,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     }
 
     @Override
-    public void write(MessageWriter writer) {
+    public void write(DSSession session, MessageWriter writer) {
         writeBegin(writer);
         DSInboundSubscription sub;
         while (!responder.shouldEndMessage()) {
@@ -140,7 +128,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
             if (sub == null) {
                 break;
             }
-            sub.write(writer, timestampBuffer);
+            sub.write(session, writer, timestampBuffer);
             if (sub.isCloseAfterUpdate()) {
                 unsubscribe(sub.getSubscriptionId());
             }
@@ -153,6 +141,35 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
             }
         }
         responder.sendResponse(this);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Add to the outbound queue if not already enqueued.
+     */
+    protected void enqueue(DSInboundSubscription subscription) {
+        synchronized (this) {
+            outbound.add(subscription);
+            if (enqueued) {
+                return;
+            }
+            enqueued = true;
+        }
+        responder.sendResponse(this);
+    }
+
+    /**
+     * Returns a DSInboundSubscription for v1.
+     *
+     * @param sid  Subscription ID.
+     * @param path Path being subscribed to.
+     * @param qos  Quality of service.
+     */
+    protected DSInboundSubscription makeSubscription(Integer sid, String path, int qos) {
+        return new DSInboundSubscription(this, sid, path, qos);
     }
 
     /**
@@ -172,6 +189,14 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         writer.getWriter()
               .endList()
               .endMap();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    DSLink getLink() {
+        return responder.getConnection().getLink();
     }
 
 }

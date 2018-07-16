@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.message;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSMap;
 
@@ -14,8 +15,8 @@ public class AbstractMessage implements OutboundMessage {
     // Fields
     /////////////////////////////////////////////////////////////////
 
-    private String path;
     private String method;
+    private String path;
     private Integer rid;
     private String stream;
 
@@ -31,15 +32,23 @@ public class AbstractMessage implements OutboundMessage {
     }
 
     /////////////////////////////////////////////////////////////////
-    // Methods - In alphabetical order by method name.
+    // Public Methods
     /////////////////////////////////////////////////////////////////
 
-    public String getPath() {
-        return path;
+    /**
+     * Returns true.
+     */
+    @Override
+    public boolean canWrite(DSSession session) {
+        return true;
     }
 
     public String getMethod() {
         return method;
+    }
+
+    public String getPath() {
+        return path;
     }
 
     public Integer getRequestId() {
@@ -63,16 +72,16 @@ public class AbstractMessage implements OutboundMessage {
     /**
      * Optional, null by default.
      */
-    public AbstractMessage setPath(String arg) {
-        path = arg;
+    public AbstractMessage setMethod(String arg) {
+        method = arg;
         return this;
     }
 
     /**
      * Optional, null by default.
      */
-    public AbstractMessage setMethod(String arg) {
-        method = arg;
+    public AbstractMessage setPath(String arg) {
+        path = arg;
         return this;
     }
 
@@ -97,7 +106,8 @@ public class AbstractMessage implements OutboundMessage {
      * write the key value pairs that have been configured on this object, but does not close the
      * response map.
      */
-    public void write(MessageWriter out) {
+    @Override
+    public void write(DSSession session, MessageWriter out) {
         DSIWriter writer = out.getWriter();
         writer.beginMap();
         if (rid >= 0) {
@@ -113,29 +123,5 @@ public class AbstractMessage implements OutboundMessage {
             writer.key("stream").value(stream);
         }
     }
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Protected and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Package and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - Private and in alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Inner Classes - in alphabetical order by class name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Facets - in alphabetical order by field name.
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    // Initialization
-    /////////////////////////////////////////////////////////////////
 
 }

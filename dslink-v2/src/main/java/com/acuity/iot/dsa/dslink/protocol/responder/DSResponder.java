@@ -20,7 +20,7 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSResponder extends DSNode {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private DSLinkConnection connection;
@@ -29,7 +29,7 @@ public abstract class DSResponder extends DSNode {
     private DSSession session;
 
     /////////////////////////////////////////////////////////////////
-    // Methods - Constructors
+    // Constructors
     /////////////////////////////////////////////////////////////////
 
     public DSResponder(DSSession session) {
@@ -37,7 +37,7 @@ public abstract class DSResponder extends DSNode {
     }
 
     /////////////////////////////////////////////////////////////////
-    // Methods - In alphabetical order by method name.
+    // Public Methods
     /////////////////////////////////////////////////////////////////
 
     public DSLinkConnection getConnection() {
@@ -54,11 +54,6 @@ public abstract class DSResponder extends DSNode {
         return link;
     }
 
-    @Override
-    protected String getLogName() {
-        return getClass().getSimpleName();
-    }
-
     public Map<Integer, DSStream> getRequests() {
         return inboundRequests;
     }
@@ -66,8 +61,6 @@ public abstract class DSResponder extends DSNode {
     public DSSession getSession() {
         return session;
     }
-
-    protected abstract DSInboundSubscriptions getSubscriptions();
 
     public DSTransport getTransport() {
         return getConnection().getTransport();
@@ -101,10 +94,6 @@ public abstract class DSResponder extends DSNode {
         getSubscriptions().onDisconnect();
     }
 
-    protected DSStream putRequest(Integer rid, DSStream request) {
-        return inboundRequests.put(rid, request);
-    }
-
     public DSStream removeRequest(Integer rid) {
         return inboundRequests.remove(rid);
     }
@@ -113,12 +102,27 @@ public abstract class DSResponder extends DSNode {
 
     public abstract void sendError(DSInboundRequest req, Throwable reason);
 
+    public void sendResponse(OutboundMessage res) {
+        session.enqueueOutgoingResponse(res);
+    }
+
     public boolean shouldEndMessage() {
         return session.shouldEndMessage();
     }
 
-    public void sendResponse(OutboundMessage res) {
-        session.enqueueOutgoingResponse(res);
+    /////////////////////////////////////////////////////////////////
+    // Protected Methods
+    /////////////////////////////////////////////////////////////////
+
+    @Override
+    protected String getLogName() {
+        return getClass().getSimpleName();
+    }
+
+    protected abstract DSInboundSubscriptions getSubscriptions();
+
+    protected DSStream putRequest(Integer rid, DSStream request) {
+        return inboundRequests.put(rid, request);
     }
 
 }

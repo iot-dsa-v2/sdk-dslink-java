@@ -10,9 +10,9 @@ import com.acuity.iot.dsa.dslink.protocol.DSProtocolException;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v1.requester.DS1Requester;
 import com.acuity.iot.dsa.dslink.protocol.v1.responder.DS1Responder;
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.io.DSIReader;
@@ -30,17 +30,16 @@ import org.iot.dsa.node.DSMap;
 public class DS1Session extends DSSession {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     static final int END_MSG_THRESHOLD = 48000;
     static final String LAST_ACK_RCVD = "Last Ack Rcvd";
     static final String LAST_ACK_SENT = "Last Ack Sent";
-
     static final int MAX_MSG_IVL = 45000;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private DSInfo lastAckRcvd = getInfo(LAST_ACK_RCVD);
@@ -48,8 +47,10 @@ public class DS1Session extends DSSession {
     private long lastMessageSent;
     private MessageWriter messageWriter;
     private DS1Requester requester = new DS1Requester(this);
+    private boolean requestsBegun = false;
     private boolean requestsNext = false;
     private DS1Responder responder = new DS1Responder(this);
+    private boolean responsesBegun = false;
 
     /////////////////////////////////////////////////////////////////
     // Constructors
@@ -71,11 +72,6 @@ public class DS1Session extends DSSession {
         return (DS1LinkConnection) super.getConnection();
     }
 
-    @Override
-    public long getLastAckRcvd() {
-        return lastAckRcvd.getElement().toLong();
-    }
-
     public DSIReader getReader() {
         return getConnection().getReader();
     }
@@ -83,6 +79,11 @@ public class DS1Session extends DSSession {
     @Override
     public DSIRequester getRequester() {
         return requester;
+    }
+
+    @Override
+    public DSResponder getResponder() {
+        return responder;
     }
 
     @Override
@@ -121,7 +122,10 @@ public class DS1Session extends DSSession {
      * @see #endRequests()
      */
     public void writeRequest(OutboundMessage message) {
-        message.write(getMessageWriter());
+        if (!requestsBegun) {
+            beginRequests();
+        }
+        message.write(this, getMessageWriter());
     }
 
     /**
@@ -132,7 +136,10 @@ public class DS1Session extends DSSession {
      * @see #endResponses()
      */
     public void writeResponse(OutboundMessage message) {
-        message.write(getMessageWriter());
+        if (!responsesBegun) {
+            beginResponses();
+        }
+        message.write(this, getMessageWriter());
     }
 
     /////////////////////////////////////////////////////////////////
@@ -148,10 +155,12 @@ public class DS1Session extends DSSession {
      * @see #endMessage()
      */
     protected void beginMessage() {
+        getWriter().reset();
+        getTransport().beginSendMessage();
         DSIWriter out = getWriter();
         out.beginMap();
         out.key("msg").value(getNextMessageId());
-        int nextAck = getNextAck();
+        int nextAck = getAckToSend();
         if (nextAck > 0) {
             out.key("ack").value(nextAck);
             put(lastAckSent, DSInt.valueOf(nextAck));
@@ -166,6 +175,7 @@ public class DS1Session extends DSSession {
      * @see #endResponses()
      */
     protected void beginRequests() {
+        requestsBegun = true;
         getWriter().key("requests").beginList();
     }
 
@@ -177,6 +187,7 @@ public class DS1Session extends DSSession {
      * @see #endResponses()
      */
     protected void beginResponses() {
+        responsesBegun = true;
         getWriter().key("responses").beginList();
     }
 
@@ -208,22 +219,21 @@ public class DS1Session extends DSSession {
 
     @Override
     protected void doSendMessage() {
-        DSTransport transport = getTransport();
-        long endTime = System.currentTimeMillis() + 2000;
-        DSIWriter writer = getWriter();
-        writer.reset();
-        requestsNext = !requestsNext;
-        transport.beginSendMessage();
-        beginMessage();
-        if (this.hasSomethingToSend()) {
-            send(requestsNext, endTime);
-            if ((System.currentTimeMillis() < endTime) && !shouldEndMessage()) {
-                send(!requestsNext, endTime);
+        try {
+            requestsNext = !requestsNext;
+            beginMessage();
+            if (!waitingForAcks()) {
+                send(requestsNext);
+                if (!shouldEndMessage()) {
+                    send(!requestsNext);
+                }
             }
+            endMessage();
+            lastMessageSent = System.currentTimeMillis();
+        } finally {
+            requestsBegun = false;
+            responsesBegun = false;
         }
-        endMessage();
-        transport.endSendMessage();
-        lastMessageSent = System.currentTimeMillis();
     }
 
     /**
@@ -231,6 +241,7 @@ public class DS1Session extends DSSession {
      */
     protected void endMessage() {
         getWriter().endMap().flush();
+        getTransport().endSendMessage();
     }
 
     /*
@@ -305,7 +316,9 @@ public class DS1Session extends DSSession {
                 msg = (int) reader.getLong();
             } else if (key.equals("ack")) {
                 reader.next();
-                put(lastAckRcvd, DSInt.valueOf((int) reader.getLong()));
+                int ack = (int) reader.getLong();
+                setAckRcvd(ack);
+                put(lastAckRcvd, DSInt.valueOf(ack));
             } else if (key.equals("allowed")) {
                 if (reader.next() != Token.BOOLEAN) {
                     throw new IllegalStateException("Allowed not a boolean");
@@ -323,7 +336,7 @@ public class DS1Session extends DSSession {
             next = reader.next();
         } while (next != END_MAP);
         if (sendAck && (msg >= 0)) {
-            setNextAck(msg);
+            setAckToSend(msg);
         }
     }
 
@@ -385,37 +398,48 @@ public class DS1Session extends DSSession {
      *
      * @param requests Determines which queue to use; True for outgoing requests, false for
      *                 responses.
-     * @param endTime  Stop after this time.
      */
-    private void send(boolean requests, long endTime) {
+    private void send(boolean requests) {
+        int count;
         if (requests) {
-            if (!hasOutgoingRequests()) {
-                return;
-            }
-            beginRequests();
+            count = numOutgoingRequests();
         } else {
-            if (!hasOutgoingResponses()) {
-                return;
-            }
-            beginResponses();
+            count = numOutgoingResponses();
+        }
+        if (count == 0) {
+            return;
         }
         OutboundMessage msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
-        while ((msg != null) && (System.currentTimeMillis() < endTime)) {
-            if (requests) {
-                writeRequest(msg);
+        while (msg != null) {
+            if (!msg.canWrite(this)) {
+                if (requests) {
+                    requeueOutgoingRequest(msg);
+                } else {
+                    requeueOutgoingResponse(msg);
+                }
             } else {
-                writeResponse(msg);
+                if (requests) {
+                    writeRequest(msg);
+                } else {
+                    writeResponse(msg);
+                }
             }
-            if (!shouldEndMessage()) {
-                msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
-            } else {
+            if (--count == 0) {
                 msg = null;
+            } else if (shouldEndMessage()) {
+                msg = null;
+            } else {
+                msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
             }
         }
         if (requests) {
-            endRequests();
+            if (requestsBegun) {
+                endRequests();
+            }
         } else {
-            endResponses();
+            if (responsesBegun) {
+                endResponses();
+            }
         }
     }
 

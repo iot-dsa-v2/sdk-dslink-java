@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.v1;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import org.iot.dsa.io.DSIWriter;
@@ -24,7 +25,12 @@ public class CloseMessage implements OutboundMessage {
     }
 
     @Override
-    public void write(MessageWriter writer) {
+    public boolean canWrite(DSSession session) {
+        return true;
+    }
+
+    @Override
+    public void write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap().key("rid").value(rid);
         if (method) {

@@ -13,8 +13,9 @@ import java.util.Map;
  */
 public class MultipartReader implements MessageConstants {
 
-    // Fields
-    // ------
+    ///////////////////////////////////////////////////////////////////////////
+    // Instance Fields
+    ///////////////////////////////////////////////////////////////////////////
 
     private DSByteBuffer body = new DSByteBuffer();
     private int currentPage = 0;
@@ -24,8 +25,9 @@ public class MultipartReader implements MessageConstants {
     private int requestId = -1;
     private Byte status;
 
+    ///////////////////////////////////////////////////////////////////////////
     // Constructors
-    // ------------
+    ///////////////////////////////////////////////////////////////////////////
 
     MultipartReader(DS2MessageReader reader) {
         this.requestId = reader.getRequestId();
@@ -39,8 +41,9 @@ public class MultipartReader implements MessageConstants {
         lastPage = page - 1;
     }
 
-    // Methods
-    // -------
+    ///////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Call this once update returns false.
@@ -49,17 +52,6 @@ public class MultipartReader implements MessageConstants {
         DS2MessageReader reader = new DS2MessageReader();
         reader.init(requestId, method, body, headers);
         return reader;
-    }
-
-    private MultipartReader putBody(InputStream in, int len) {
-        body.put(in, len);
-        return this;
-    }
-
-    private MultipartReader putHeaders(Map<Integer, Object> headers) {
-        this.headers.putAll(headers);
-        status = (Byte) this.headers.get(HDR_STATUS);
-        return this;
     }
 
     /**
@@ -74,6 +66,21 @@ public class MultipartReader implements MessageConstants {
         putHeaders(reader.getHeaders());
         putBody(reader.getBody(), reader.getBodyLength());
         return currentPage < lastPage;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    private MultipartReader putBody(InputStream in, int len) {
+        body.put(in, len);
+        return this;
+    }
+
+    private MultipartReader putHeaders(Map<Integer, Object> headers) {
+        this.headers.putAll(headers);
+        status = (Byte) this.headers.get(HDR_STATUS);
+        return this;
     }
 
 }
