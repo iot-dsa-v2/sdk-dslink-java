@@ -1,9 +1,9 @@
 # sdk-dslink-java-v2
 [![](https://jitpack.io/v/iot-dsa-v2/sdk-dslink-java-v2.svg)](https://jitpack.io/#iot-dsa-v2/sdk-dslink-java-v2)
 
-* JDK 1.6+
 * [Developer Guide](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/)
 * [Javadoc](https://iot-dsa-v2.github.io/sdk-dslink-java-v2/javadoc/)
+* JDK 1.6+
 
 
 ## Overview

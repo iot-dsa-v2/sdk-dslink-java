@@ -400,7 +400,7 @@ public class DS1Session extends DSSession {
      *                 responses.
      */
     private void send(boolean requests) {
-        int count = 0;
+        int count;
         if (requests) {
             count = numOutgoingRequests();
         } else {
@@ -410,8 +410,7 @@ public class DS1Session extends DSSession {
             return;
         }
         OutboundMessage msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
-        while ((msg != null) && (count > 0)) {
-            count--;
+        while (msg != null) {
             if (!msg.canWrite(this)) {
                 if (requests) {
                     requeueOutgoingRequest(msg);
@@ -425,10 +424,12 @@ public class DS1Session extends DSSession {
                     writeResponse(msg);
                 }
             }
-            if (!shouldEndMessage()) {
-                msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
-            } else {
+            if (--count == 0) {
                 msg = null;
+            } else if (shouldEndMessage()) {
+                msg = null;
+            } else {
+                msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
             }
         }
         if (requests) {

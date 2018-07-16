@@ -28,7 +28,8 @@ public abstract class DSSession extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
-    private int ackRcvd = 0;
+
+    private int ackRcvd = -1;
     private int ackToSend = -1;
     private boolean connected = false;
     private DSLinkConnection connection;
@@ -96,6 +97,13 @@ public abstract class DSSession extends DSNode {
                 outgoingMutex.notify();
             }
         }
+    }
+
+    /**
+     * Last ack received from the broker, or -1.
+     */
+    public int getAckRcvd() {
+        return ackRcvd;
     }
 
     /**
@@ -228,7 +236,7 @@ public abstract class DSSession extends DSNode {
     }
 
     protected int getMissingAcks() {
-        return nextMessage - ackRcvd - 1;
+        return messageId - ackRcvd - 1;
     }
 
     /**
@@ -237,7 +245,7 @@ public abstract class DSSession extends DSNode {
     protected synchronized int getNextMessageId() {
         messageId = nextMessage;
         if (++nextMessage > MAX_MSG_ID) {
-            messageId = 1;
+            nextMessage = 1;
         }
         return messageId;
     }
@@ -258,7 +266,7 @@ public abstract class DSSession extends DSNode {
      * Override point, this returns the result of hasMessagesToSend.
      */
     protected boolean hasSomethingToSend() {
-        if (ackToSend > 0) {
+        if (ackToSend >= 0) {
             return true;
         }
         if (waitingForAcks()) {
@@ -310,6 +318,9 @@ public abstract class DSSession extends DSNode {
      * Call for each incoming message id that needs to be acked.
      */
     protected void setAckRcvd(int ackRcvd) {
+        if (ackRcvd < this.ackRcvd) {
+            warn(warn() ? String.format("Ack rcvd %s < last %s", ackRcvd, this.ackRcvd) : null);
+        }
         this.ackRcvd = ackRcvd;
         notifyOutgoing();
     }

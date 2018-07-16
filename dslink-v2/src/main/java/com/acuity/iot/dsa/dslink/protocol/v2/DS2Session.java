@@ -225,13 +225,11 @@ public class DS2Session extends DSSession implements MessageConstants {
         }
         OutboundMessage msg = null;
         if (count > 0) {
-            while ((msg == null) && (count > 0)) {
-                if (requests) {
-                    msg = dequeueOutgoingRequest();
-                } else {
-                    msg = dequeueOutgoingResponse();
+            while (msg == null) {
+                if (--count < 0) {
+                    break;
                 }
-                count--;
+                msg = requests ? dequeueOutgoingRequest() : dequeueOutgoingResponse();
                 if (!msg.canWrite(this)) {
                     if (requests) {
                         requeueOutgoingRequest(msg);

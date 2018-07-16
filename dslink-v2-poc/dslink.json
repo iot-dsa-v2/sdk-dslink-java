@@ -12,7 +12,7 @@
     "log": {
       "desc": "all, trace, debug, fine, warn, info, error, admin, fatal, none",
       "type": "enum",
-      "value": "all"
+      "value": "warn"
     },
     "token": {
       "desc": "Authentication token for the broker.",
