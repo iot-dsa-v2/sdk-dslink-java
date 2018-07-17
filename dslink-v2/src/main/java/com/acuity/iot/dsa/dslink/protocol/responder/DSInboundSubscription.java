@@ -69,15 +69,11 @@ public class DSInboundSubscription extends DSInboundRequest
     public boolean canWrite(DSSession session) {
         if (ackRequired > 0) {
             int last = session.getAckRcvd();
-            if (last > ackRequired) {
+            if (last >= ackRequired) {
                 return true;
             }
             //is the last ack is so far away that we have a rollover.
-            boolean b = ((ackRequired - 10000000) > last);
-            //if (!b) { //TODO
-                //System.out.print('.');
-            //}
-            return b;
+            return ((ackRequired - 10000000) > last);
         }
         return true;
     }
@@ -232,15 +228,17 @@ public class DSInboundSubscription extends DSInboundRequest
             ackRequired = session.getMessageId();
         }
         Update update = dequeue();
-        int count = 0;
+        int count = 500;
         while (update != null) {
             write(update, writer, buf);
             if ((qos == 0) || session.shouldEndMessage()) {
                 break;
-            } else if (++count > 1024) {
-                break;
             }
-            update = dequeue();
+            if (--count >= 0) {
+                update = dequeue();
+            } else {
+                update = null;
+            }
         }
         synchronized (this) {
             if (updateHead == null) {

@@ -336,7 +336,11 @@ public abstract class DSSession extends DSNode {
     }
 
     protected boolean waitingForAcks() {
-        return getMissingAcks() > 8;
+        boolean ret = getMissingAcks() > 8;
+        if (ret) {
+            debug(debug() ? "Waiting for " + getMissingAcks() + " acks" : null);
+        }
+        return ret;
     }
 
     ///////////////////////////////////////////////////////////////////////////
