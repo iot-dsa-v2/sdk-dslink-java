@@ -244,9 +244,6 @@ public class DSLink extends DSNode implements Runnable {
             try {
                 info(info() ? "Stabilizing nodes" : null);
                 stable();
-//                long saveInterval = config.getConfig(DSLinkConfig.CFG_SAVE_INTERVAL, 60);
-//                saveInterval *= 60000;
-//                long nextSave = System.currentTimeMillis() + saveInterval;
                 while (isRunning()) {
                     synchronized (this) {
                         try {
@@ -254,10 +251,6 @@ public class DSLink extends DSNode implements Runnable {
                         } catch (InterruptedException x) {
                             warn(getPath(), x);
                         }
-//                        if (System.currentTimeMillis() > nextSave) {
-//                            save();
-//                            nextSave = System.currentTimeMillis() + saveInterval;
-//                        }
                     }
                 }
             } catch (Exception x) {
@@ -282,85 +275,6 @@ public class DSLink extends DSNode implements Runnable {
             notifyAll();
         }
     }
-
-//    /**
-//     * Serializes the configuration database.
-//     */
-//    public void save() {
-//        if (!saveEnabled) {
-//            return;
-//        }
-//        ZipOutputStream zos = null;
-//        InputStream in = null;
-//        try {
-//            File nodes = config.getNodesFile();
-//            String name = nodes.getName();
-//            if (nodes.exists()) {
-//                info("Backing up the node database...");
-//                StringBuilder buf = new StringBuilder();
-//                Calendar cal = DSTime.getCalendar(System.currentTimeMillis());
-//                if (name.endsWith(".zip")) {
-//                    String tmp = name.substring(0, name.lastIndexOf(".zip"));
-//                    buf.append(tmp).append('.');
-//                    DSTime.encodeForFiles(cal, buf);
-//                    buf.append(".zip");
-//                    File bakFile = new File(nodes.getParent(), buf.toString());
-//                    nodes.renameTo(bakFile);
-//                } else {
-//                    buf.append(name).append('.');
-//                    DSTime.encodeForFiles(cal, buf);
-//                    buf.append(".zip");
-//                    File back = new File(nodes.getParent(), buf.toString());
-//                    FileOutputStream fos = new FileOutputStream(back);
-//                    zos = new ZipOutputStream(fos);
-//                    zos.putNextEntry(new ZipEntry(nodes.getName()));
-//                    byte[] b = new byte[4096];
-//                    in = new FileInputStream(nodes);
-//                    int len = in.read(b);
-//                    while (len > 0) {
-//                        zos.write(b, 0, len);
-//                        len = in.read(b);
-//                    }
-//                    in.close();
-//                    in = null;
-//                    zos.closeEntry();
-//                    zos.close();
-//                    zos = null;
-//                }
-//                DSTime.recycle(cal);
-//            }
-//            long time = System.currentTimeMillis();
-//            info("Saving node database " + nodes.getAbsolutePath());
-//            JsonWriter writer = null;
-//            if (name.endsWith(".zip")) {
-//                String tmp = name.substring(0, name.lastIndexOf(".zip"));
-//                writer = new JsonWriter(nodes, tmp + ".json");
-//            } else {
-//                writer = new JsonWriter(nodes);
-//            }
-//            NodeEncoder.encode(writer, this);
-//            writer.close();
-//            trimBackups();
-//            time = System.currentTimeMillis() - time;
-//            info("Node database saved: " + time + "ms");
-//        } catch (Exception x) {
-//            error("Saving node database", x);
-//        }
-//        try {
-//            if (in != null) {
-//                in.close();
-//            }
-//        } catch (IOException x) {
-//            error("Closing input", x);
-//        }
-//        try {
-//            if (zos != null) {
-//                zos.close();
-//            }
-//        } catch (IOException x) {
-//            error("Closing output", x);
-//        }
-//    }
 
     /**
      * Properly shuts down the link when a thread is executing the run method.

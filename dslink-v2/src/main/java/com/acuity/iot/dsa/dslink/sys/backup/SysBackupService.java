@@ -48,7 +48,6 @@ public class SysBackupService extends DSNode implements Runnable {
     @Override
     protected void onStable() {
         DSRuntime.run(this);
-//        run();
     }
     
     private DSLink getLink() {
