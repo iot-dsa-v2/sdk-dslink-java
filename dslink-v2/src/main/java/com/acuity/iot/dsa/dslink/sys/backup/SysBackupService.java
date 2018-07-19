@@ -13,7 +13,6 @@ import java.util.zip.ZipOutputStream;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.DSRuntime.Timer;
 import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.node.DSIValue;
@@ -42,13 +41,14 @@ public class SysBackupService extends DSNode implements Runnable {
     @Override
     protected void declareDefaults() {
         declareDefault(SAVE, DSAction.DEFAULT);
-        declareDefault(INTERVAL, DSLong.valueOf(((DSLink) getAncestor(DSLink.class)).getConfig().getConfig(DSLinkConfig.CFG_SAVE_INTERVAL, 60)));
+        declareDefault(INTERVAL, DSLong.valueOf(60));
         declareDefault(MAXIMUM, DSLong.valueOf(3));
     }
     
     @Override
     protected void onStable() {
-        run();
+        DSRuntime.run(this);
+//        run();
     }
     
     private DSLink getLink() {

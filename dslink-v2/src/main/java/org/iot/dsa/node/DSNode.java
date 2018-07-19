@@ -461,6 +461,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             if (clazz.isAssignableFrom(node.getClass())) {
                 return node;
             }
+            node = node.getParent();
         }
         return node;
     }

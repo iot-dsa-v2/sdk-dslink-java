@@ -247,19 +247,19 @@ public class DSLink extends DSNode implements Runnable {
 //                long saveInterval = config.getConfig(DSLinkConfig.CFG_SAVE_INTERVAL, 60);
 //                saveInterval *= 60000;
 //                long nextSave = System.currentTimeMillis() + saveInterval;
-//                while (isRunning()) {
-//                    synchronized (this) {
-//                        try {
-//                            wait(10000);
-//                        } catch (InterruptedException x) {
-//                            warn(getPath(), x);
-//                        }
+                while (isRunning()) {
+                    synchronized (this) {
+                        try {
+                            wait(10000);
+                        } catch (InterruptedException x) {
+                            warn(getPath(), x);
+                        }
 //                        if (System.currentTimeMillis() > nextSave) {
 //                            save();
 //                            nextSave = System.currentTimeMillis() + saveInterval;
 //                        }
-//                    }
-//                }
+                    }
+                }
             } catch (Exception x) {
                 error(getLinkName(), x);
                 stop();
