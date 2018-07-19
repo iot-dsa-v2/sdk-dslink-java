@@ -449,7 +449,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Ascends the tree looking for a ancestral node that is an instance of the parameter.
+     * Ascends the tree looking for an ancestral node that is an instance of the parameter.
      *
      * @param clazz Can be a class, interface or super class.
      * @return Possibly null.
@@ -461,6 +461,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             if (clazz.isAssignableFrom(node.getClass())) {
                 return node;
             }
+            node = node.getParent();
         }
         return node;
     }

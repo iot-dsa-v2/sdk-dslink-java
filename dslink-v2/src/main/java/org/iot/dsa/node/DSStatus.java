@@ -184,6 +184,26 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Add the given bits and either return a new status if there is a change, or this status
+     * if no change.
+     */
+    public DSStatus add(int flags) {
+        int newBits = bits | flags;
+        if (newBits == bits) {
+            return this;
+        }
+        return valueOf(newBits);
+    }
+
+    /**
+     * Add the given bits and either return a new status if there is a change, or this status
+     * if no change.
+     */
+    public DSStatus add(DSStatus flags) {
+        return add(flags.getBits());
+    }
+
     private void append(StringBuilder buf, String status) {
         if (buf.length() > 0) {
             buf.append(",");
@@ -487,7 +507,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         for (int bit : bits) {
             all |= bit;
         }
-        return valueOf(bits);
+        return valueOf(all);
     }
 
     /**
@@ -509,6 +529,26 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
             }
         }
         return valueOf(max);
+    }
+
+    /**
+     * Remove the given bits and either return a new status if there is a change, or this status
+     * if no change.
+     */
+    public DSStatus remove(int flags) {
+        int newBits = bits & ~flags;
+        if (newBits == bits) {
+            return this;
+        }
+        return valueOf(newBits);
+    }
+
+    /**
+     * Remove the given bits and either return a new status if there is a change, or this status
+     * if no change.
+     */
+    public DSStatus remove(DSStatus flags) {
+        return remove(flags.getBits());
     }
 
     ///////////////////////////////////////////////////////////////////////////
