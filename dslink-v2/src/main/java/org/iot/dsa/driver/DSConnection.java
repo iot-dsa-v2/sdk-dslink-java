@@ -321,24 +321,24 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     protected abstract void onConnect();
 
     /**
-     * Override point, called by connOkDown().  By default, this notifies all DSIConnected
-     * objects in the subtree.  Overrides should probably call super.onConnected unless they
-     * have a very good reason not to.
+     * Override point, called by connOk() when transitioning to connected.  By default, this
+     * notifies all DSIConnected objects in the subtree.  Overrides should probably call
+     * super.onConnected unless they have a very good reason not to.
      */
     protected void onConnected() {
         notifyDescendents(this);
     }
 
     /**
-     * You must call connDown, it can be async after this method has returned.  You can throw
-     * an exception from this method instead of calling connDown.
+     * You must call connDown(), it can be async and after this method has returned.  Throwing an
+     * exception from this method will result in a call to connDown().
      */
     protected abstract void onDisconnect();
 
     /**
-     * Override point, called by connDown().  By default, this notifies all DSIConnected objects
-     * in the subtree of the state change.  Overrides should probably call super.onDisconnected
-     * untless they have a very good reason not to.
+     * Override point, called by connDown() when transitioning to disconnected.  By default, this
+     * notifies all DSIConnected objects in the subtree of the state change.  Overrides should
+     * probably call super.onDisconnected unless they have a very good reason not to.
      */
     protected void onDisconnected() {
         notifyDescendents(this);
