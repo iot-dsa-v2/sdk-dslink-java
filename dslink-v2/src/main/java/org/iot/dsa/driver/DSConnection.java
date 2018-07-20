@@ -10,24 +10,24 @@ import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
 /**
- * Abstract representation of a connection.  Maintains status, provides callbacks to manage
- * a connection lifecycle and notifies children of state changes.
+ * Abstract representation of a connection.  Maintains state, provides callbacks to manage
+ * a lifecycle and notifies children of state changes.
  * <p>
  *
  * <b>Running</b>
  * The run method manages calling connect, disconnect and ping().  The subclass is responsible
- * having a thread call this method, or to manage that lifecycle another way.
+ * having a thread call this method, or to manage lifecycle another way.
  * <p>
  *
  * <b>Pinging</b>
  * ping() is only called by the run method.  It is only called if the time since the last OK or
  * last ping (whichever is later) exceeds the ping interval.  Implementations should call connOk
- * whenever there are successful communications to avoid unnecessarily calling ping.
+ * whenever there are successful communications to avoid unnecessarily pings.
  * <p>
  *
  * <b>DSIConnected</b>
- * By default, DSConnection will notify instances of DSIConnected when the connection transitions
- * to connected and disconnected.  Subclasses could choose to notify at other times
+ * By default, DSConnection will notify subtree instances of DSIConnected when the connection
+ * transitions to connected and disconnected.  Subclasses could choose to notify at other times.
  *
  * @author Aaron Hansen
  */
@@ -38,10 +38,10 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     ///////////////////////////////////////////////////////////////////////////
 
     static final String ENABLED = "Enabled";
-    static final String FAIL_CAUSE = "Fail Cause";
+    static final String FAILURE = "Failure";
     static final String LAST_OK = "Last OK";
     static final String LAST_FAIL = "Last Fail";
-    static final String STATE = "Connection State";
+    static final String STATE = "State";
     static final String STATUS = "Status";
 
     ///////////////////////////////////////////////////////////////////////////
@@ -49,10 +49,9 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     ///////////////////////////////////////////////////////////////////////////
 
     private DSInfo enabled = getInfo(ENABLED);
-    private DSInfo failCause = getInfo(FAIL_CAUSE);
+    private DSInfo failure = getInfo(FAILURE);
     private DSInfo lastFail = getInfo(LAST_FAIL);
     private DSInfo lastOk = getInfo(LAST_OK);
-    private long lastPing;
     private DSInfo state = getInfo(STATE);
     private DSInfo status = getInfo(STATUS);
 
@@ -152,8 +151,8 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     protected void configFault(String msg) {
         put(lastFail, DSDateTime.currentTime());
         if (msg != null) {
-            if (!failCause.getElement().toString().equals(msg)) {
-                put(failCause, DSString.valueOf(msg));
+            if (!failure.getElement().toString().equals(msg)) {
+                put(failure, DSString.valueOf(msg));
             }
         }
         if (!getStatus().isFault()) {
@@ -179,8 +178,8 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     protected void connDown(String reason) {
         put(lastFail, DSDateTime.currentTime());
         if (reason != null) {
-            if (!failCause.getElement().toString().equals(reason)) {
-                put(failCause, DSString.valueOf(reason));
+            if (!failure.getElement().toString().equals(reason)) {
+                put(failure, DSString.valueOf(reason));
             }
         }
         boolean notify = false;
@@ -244,6 +243,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
                 connDown(DSException.makeMessage(e));
             }
         } catch (Throwable x) {
+            put(state, DSConnectionState.DISCONNECTED);
             error(error() ? getPath() : null, x);
             configFault(DSException.makeMessage(x));
         }
@@ -254,7 +254,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
         declareDefault(ENABLED, DSBool.TRUE);
         declareDefault(STATUS, DSStatus.down).setReadOnly(true).setTransient(true);
         declareDefault(STATE, DSConnectionState.DISCONNECTED).setReadOnly(true).setTransient(true);
-        declareDefault(FAIL_CAUSE, DSString.EMPTY).setReadOnly(true).setTransient(true);
+        declareDefault(FAILURE, DSString.EMPTY).setReadOnly(true).setTransient(true);
         declareDefault(LAST_OK, DSDateTime.NULL).setReadOnly(true);
         declareDefault(LAST_FAIL, DSDateTime.NULL).setReadOnly(true);
     }
@@ -266,7 +266,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
         if (!getConnectionState().isConnected()) {
             return;
         }
-        put(state, DSConnectionState.CONNECTING);
+        put(state, DSConnectionState.DISCONNECTING);
         try {
             onDisconnect();
         } catch (Throwable x) {
