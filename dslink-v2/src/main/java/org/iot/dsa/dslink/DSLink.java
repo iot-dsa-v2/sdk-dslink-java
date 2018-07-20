@@ -189,7 +189,6 @@ public class DSLink extends DSNode implements Runnable {
             } catch (Exception x) {
                 DSException.throwRuntime(x);
             }
-//            ret.save();
         }
         return ret;
     }
@@ -258,7 +257,6 @@ public class DSLink extends DSNode implements Runnable {
                 stop();
                 DSException.throwRuntime(x);
             }
-//            save();
             LogManager.getLogManager().reset();
             Logger logger = Logger.getLogger("");
             for (Handler h : logger.getLogger("").getHandlers()) {

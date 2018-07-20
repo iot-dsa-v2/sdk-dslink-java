@@ -68,16 +68,17 @@ public class SysBackupService extends DSNode implements Runnable {
     }
     
     @Override
-    public void onSet(DSInfo info, DSIValue value) {
-        super.onSet(info, value);
+    public void onChildChanged(DSInfo info) {
+        super.onChildChanged(info);
         if (info == interval) {
+            DSIValue value = info.getValue();
             synchronized (lock) {
                 if (nextSave != null) {
                     long newNextRun = (value.toElement().toLong() * 60000) + System.currentTimeMillis();
                     long scheduledNextRun = nextSave.nextRun();
                     if (newNextRun < scheduledNextRun) {
                         nextSave.cancel();
-                        DSRuntime.runAt(this, newNextRun);
+                        nextSave = DSRuntime.runAt(this, newNextRun);
                     }
                 }
             }
@@ -214,6 +215,15 @@ public class SysBackupService extends DSNode implements Runnable {
             saveInterval *= 60000;
             nextSave = DSRuntime.runDelayed(this, saveInterval);
         }
+    }
+    
+    @Override
+    public void onStopped() {
+        if (nextSave != null) {
+            nextSave.cancel();
+            nextSave = null;
+        }
+        save();
     }
 
 }
