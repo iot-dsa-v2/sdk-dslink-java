@@ -47,7 +47,14 @@ public class SysBackupService extends DSNode implements Runnable {
     
     @Override
     protected void onStable() {
-        DSRuntime.run(this);
+        File nodes = getLink().getConfig().getNodesFile();
+        if (nodes.exists()) {
+            synchronized (lock) {
+                scheduleNextSave();
+            }
+        } else {
+            DSRuntime.run(this);
+        }
     }
     
     private DSLink getLink() {
@@ -140,7 +147,7 @@ public class SysBackupService extends DSNode implements Runnable {
             } else {
                 writer = new JsonWriter(nodes);
             }
-            NodeEncoder.encode(writer, this);
+            NodeEncoder.encode(writer, getLink());
             writer.close();
             trimBackups();
             time = System.currentTimeMillis() - time;
@@ -206,14 +213,18 @@ public class SysBackupService extends DSNode implements Runnable {
             backups[i].delete();
         }
     }
+    
+    private void scheduleNextSave() {
+        long saveInterval = interval.getElement().toLong();
+        saveInterval *= 60000;
+        nextSave = DSRuntime.runDelayed(this, saveInterval);
+    }
 
     @Override
     public void run() {
         synchronized(lock) {
             save();
-            long saveInterval = interval.getElement().toLong();
-            saveInterval *= 60000;
-            nextSave = DSRuntime.runDelayed(this, saveInterval);
+            scheduleNextSave();
         }
     }
     
