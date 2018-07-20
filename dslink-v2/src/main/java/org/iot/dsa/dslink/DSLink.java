@@ -189,7 +189,6 @@ public class DSLink extends DSNode implements Runnable {
             } catch (Exception x) {
                 DSException.throwRuntime(x);
             }
-            ret.save();
         }
         return ret;
     }
@@ -244,19 +243,12 @@ public class DSLink extends DSNode implements Runnable {
             try {
                 info(info() ? "Stabilizing nodes" : null);
                 stable();
-                long saveInterval = config.getConfig(DSLinkConfig.CFG_SAVE_INTERVAL, 60);
-                saveInterval *= 60000;
-                long nextSave = System.currentTimeMillis() + saveInterval;
                 while (isRunning()) {
                     synchronized (this) {
                         try {
                             wait(10000);
                         } catch (InterruptedException x) {
                             warn(getPath(), x);
-                        }
-                        if (System.currentTimeMillis() > nextSave) {
-                            save();
-                            nextSave = System.currentTimeMillis() + saveInterval;
                         }
                     }
                 }
@@ -265,7 +257,6 @@ public class DSLink extends DSNode implements Runnable {
                 stop();
                 DSException.throwRuntime(x);
             }
-            save();
             LogManager.getLogManager().reset();
             Logger logger = Logger.getLogger("");
             for (Handler h : logger.getLogger("").getHandlers()) {
@@ -280,85 +271,6 @@ public class DSLink extends DSNode implements Runnable {
     protected void onStopped() {
         synchronized (this) {
             notifyAll();
-        }
-    }
-
-    /**
-     * Serializes the configuration database.
-     */
-    public void save() {
-        if (!saveEnabled) {
-            return;
-        }
-        ZipOutputStream zos = null;
-        InputStream in = null;
-        try {
-            File nodes = config.getNodesFile();
-            String name = nodes.getName();
-            if (nodes.exists()) {
-                info("Backing up the node database...");
-                StringBuilder buf = new StringBuilder();
-                Calendar cal = DSTime.getCalendar(System.currentTimeMillis());
-                if (name.endsWith(".zip")) {
-                    String tmp = name.substring(0, name.lastIndexOf(".zip"));
-                    buf.append(tmp).append('.');
-                    DSTime.encodeForFiles(cal, buf);
-                    buf.append(".zip");
-                    File bakFile = new File(nodes.getParent(), buf.toString());
-                    nodes.renameTo(bakFile);
-                } else {
-                    buf.append(name).append('.');
-                    DSTime.encodeForFiles(cal, buf);
-                    buf.append(".zip");
-                    File back = new File(nodes.getParent(), buf.toString());
-                    FileOutputStream fos = new FileOutputStream(back);
-                    zos = new ZipOutputStream(fos);
-                    zos.putNextEntry(new ZipEntry(nodes.getName()));
-                    byte[] b = new byte[4096];
-                    in = new FileInputStream(nodes);
-                    int len = in.read(b);
-                    while (len > 0) {
-                        zos.write(b, 0, len);
-                        len = in.read(b);
-                    }
-                    in.close();
-                    in = null;
-                    zos.closeEntry();
-                    zos.close();
-                    zos = null;
-                }
-                DSTime.recycle(cal);
-            }
-            long time = System.currentTimeMillis();
-            info("Saving node database " + nodes.getAbsolutePath());
-            JsonWriter writer = null;
-            if (name.endsWith(".zip")) {
-                String tmp = name.substring(0, name.lastIndexOf(".zip"));
-                writer = new JsonWriter(nodes, tmp + ".json");
-            } else {
-                writer = new JsonWriter(nodes);
-            }
-            NodeEncoder.encode(writer, this);
-            writer.close();
-            trimBackups();
-            time = System.currentTimeMillis() - time;
-            info("Node database saved: " + time + "ms");
-        } catch (Exception x) {
-            error("Saving node database", x);
-        }
-        try {
-            if (in != null) {
-                in.close();
-            }
-        } catch (IOException x) {
-            error("Closing input", x);
-        }
-        try {
-            if (zos != null) {
-                zos.close();
-            }
-        } catch (IOException x) {
-            error("Closing output", x);
         }
     }
 
@@ -393,46 +305,7 @@ public class DSLink extends DSNode implements Runnable {
         return this;
     }
 
-    /**
-     * Called by save, no need to explicitly call.
-     */
-    private void trimBackups() {
-        final File nodes = config.getNodesFile();
-        if (nodes == null) {
-            return;
-        }
-        final String nodesName = nodes.getName();
-        final boolean isZip = nodesName.endsWith(".zip");
-        int idx = nodesName.lastIndexOf('.');
-        final String nameBase = nodesName.substring(0, idx);
-        File dir = nodes.getAbsoluteFile().getParentFile();
-        File[] backups = dir.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                if (name.equals(nodesName)) {
-                    return false;
-                }
-                if (isZip) {
-                    if (name.endsWith(".zip")) {
-                        return name.startsWith(nameBase);
-                    }
-                } else {
-                    if (name.endsWith(".json")) {
-                        return name.startsWith(nameBase);
-                    }
-                }
-                return false;
-            }
-        });
-        if (backups == null) {
-            return;
-        }
-        Arrays.sort(backups);
-        if (backups.length <= 3) {
-            return;
-        }
-        for (int i = 0, len = backups.length - 3; i < len; i++) {
-            backups[i].delete();
-        }
+    public boolean isSaveEnabled() {
+        return saveEnabled;
     }
-
 }
