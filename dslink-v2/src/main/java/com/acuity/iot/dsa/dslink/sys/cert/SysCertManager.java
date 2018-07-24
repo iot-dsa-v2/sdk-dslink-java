@@ -1,6 +1,8 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
 import java.io.File;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
@@ -24,6 +26,8 @@ public class SysCertManager extends DSNode {
     private static final String CERTFILE = "Cert_File";
     private static final String CERTFILE_PASS = "Cert_File_Pass";
     private static final String CERTFILE_TYPE = "Cert_File_Type";
+    private static final String LOCAL_TRUSTSTORE = "Local_Truststore";
+    private static final String QUARANTINE = "Quarantine";
 
     // Fields
     // ------
@@ -33,6 +37,8 @@ public class SysCertManager extends DSNode {
     private DSInfo keystore = getInfo(CERTFILE);
     private DSInfo keystorePass = getInfo(CERTFILE_PASS);
     private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
+    private CertCollection localTruststore = (CertCollection) getInfo(LOCAL_TRUSTSTORE).getObject();
+    private CertCollection quarantine = (CertCollection) getInfo(QUARANTINE).getObject();
 
     // Methods
     // -------
@@ -58,6 +64,8 @@ public class SysCertManager extends DSNode {
         declareDefault(CERTFILE, DSString.valueOf("dslink.jks"));
         declareDefault(CERTFILE_TYPE, DSString.valueOf("JKS"));
         declareDefault(CERTFILE_PASS, DSPasswordAes128.valueOf("dsarocks"));
+        declareDefault(LOCAL_TRUSTSTORE, new CertCollection());
+        declareDefault(QUARANTINE, new CertCollection()).setTransient(true);
     }
 
     private String getCertFilePass() {
@@ -107,5 +115,26 @@ public class SysCertManager extends DSNode {
             error(getParent(), x);
         }
     }
+
+    public boolean isInTrustStore(X509Certificate cert) {
+        return localTruststore.containsCertificate(cert);
+    }
+    
+    public void addToQuarantine(X509Certificate cert) {
+        try {
+            quarantine.addCertificate(cert);
+        } catch (CertificateEncodingException e) {
+            error("", e);
+        }
+    }
+    
+    public void allow(DSInfo certInfo) {
+        String name = certInfo.getName();
+        CertNode certNode = (CertNode) certInfo.getNode();
+        String certStr = certNode.toElement().toString();
+        quarantine.remove(certInfo);
+        localTruststore.addCertificate(name, certStr);
+    }
+    
 
 }

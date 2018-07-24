@@ -113,8 +113,16 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
             if (certManager.allowAnonymousClients()) {
                 return;
             }
+            if (certManager.isInTrustStore(chain[0])) {
+                return;
+            }
             if (defaultX509Mgr != null) {
-                defaultX509Mgr.checkClientTrusted(chain, authType);
+                try {
+                    defaultX509Mgr.checkClientTrusted(chain, authType);
+                } catch (CertificateException e) {
+                    certManager.addToQuarantine(chain[0]);
+                    throw e;
+                }
             }
         }
 
@@ -124,8 +132,16 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
             if (certManager.allowAnonymousServers()) {
                 return;
             }
+            if (certManager.isInTrustStore(chain[0])) {
+                return;
+            }
             if (defaultX509Mgr != null) {
-                defaultX509Mgr.checkServerTrusted(chain, authType);
+                try {
+                    defaultX509Mgr.checkServerTrusted(chain, authType);
+                } catch (CertificateException e) {
+                    certManager.addToQuarantine(chain[0]);
+                    throw e;
+                }
             }
         }
 
