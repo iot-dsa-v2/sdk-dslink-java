@@ -37,9 +37,23 @@ public class SysCertManager extends DSNode {
     private DSInfo keystore = getInfo(CERTFILE);
     private DSInfo keystorePass = getInfo(CERTFILE_PASS);
     private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
-    private CertCollection localTruststore = (CertCollection) getInfo(LOCAL_TRUSTSTORE).getObject();
-    private CertCollection quarantine = (CertCollection) getInfo(QUARANTINE).getObject();
+    private CertCollection localTruststore; 
+    private CertCollection quarantine;
 
+    private CertCollection getLocalTruststore() {
+        if (localTruststore == null) {
+            localTruststore = (CertCollection) getInfo(LOCAL_TRUSTSTORE).getObject();
+        }
+        return localTruststore;
+    }
+    
+    private CertCollection getQuarantine() {
+        if (quarantine == null) {
+            quarantine = (CertCollection) getInfo(QUARANTINE).getObject();
+        }
+        return quarantine;
+    }
+    
     // Methods
     // -------
 
@@ -117,12 +131,12 @@ public class SysCertManager extends DSNode {
     }
 
     public boolean isInTrustStore(X509Certificate cert) {
-        return localTruststore.containsCertificate(cert);
+        return getLocalTruststore().containsCertificate(cert);
     }
     
     public void addToQuarantine(X509Certificate cert) {
         try {
-            quarantine.addCertificate(cert);
+            getQuarantine().addCertificate(cert);
         } catch (CertificateEncodingException e) {
             error("", e);
         }
@@ -132,8 +146,8 @@ public class SysCertManager extends DSNode {
         String name = certInfo.getName();
         CertNode certNode = (CertNode) certInfo.getNode();
         String certStr = certNode.toElement().toString();
-        quarantine.remove(certInfo);
-        localTruststore.addCertificate(name, certStr);
+        getQuarantine().remove(certInfo);
+        getLocalTruststore().addCertificate(name, certStr);
     }
     
 
