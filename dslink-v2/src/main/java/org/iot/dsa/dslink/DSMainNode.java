@@ -17,11 +17,6 @@ public class DSMainNode extends DSNode {
         return (DSLink) getParent();
     }
 
-    @Override
-    protected String getLogName() {
-        return "Main";
-    }
-
     /**
      * Override point, returns true by default.
      */

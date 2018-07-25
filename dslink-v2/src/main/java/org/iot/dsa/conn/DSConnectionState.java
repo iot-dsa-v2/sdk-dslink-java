@@ -1,4 +1,4 @@
-package org.iot.dsa.driver;
+package org.iot.dsa.conn;
 
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIEnum;

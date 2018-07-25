@@ -40,6 +40,9 @@ public class DS2Requester extends DSRequester implements MessageConstants {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
+    public DS2Requester() {
+    }
+
     public DS2Requester(DSSession session) {
         super(session);
     }

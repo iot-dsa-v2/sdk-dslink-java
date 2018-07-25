@@ -164,7 +164,7 @@ import org.iot.dsa.util.DSUtil;
 public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     //Prevents infinite loops when initializing default instances.
@@ -173,13 +173,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     public static final DSTopic INFO_TOPIC = DSInfoTopic.INSTANCE;
     public static final DSTopic VALUE_TOPIC = DSValueTopic.INSTANCE;
-
-    private static int STATE_STOPPED = 0;
-    private static int STATE_STARTED = 1;
     private static int STATE_STABLE = 2;
+    private static int STATE_STARTED = 1;
+    private static int STATE_STOPPED = 0;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private Map<String, DSInfo> childMap;
@@ -189,48 +188,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     private DSInfo lastChild;
     private Object mutex = new Object();
     private String path;
-    private Subscription subscription;
     private int size = 0;
     private int state = 1; //See STATE_*
+    private Subscription subscription;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Adds the info to internal collections, sets parent related fields on child nodes.
-     */
-    void add(final DSInfo info) {
-        dsInit();
-        synchronized (mutex) {
-            if (lastChild != null) {
-                lastChild.next = info;
-                info.prev = lastChild;
-                lastChild = info;
-            } else {
-                firstChild = info;
-                lastChild = info;
-            }
-            if (childMap != null) {
-                childMap.put(info.getName(), info);
-            }
-            size++;
-        }
-        info.setParent(this);
-        DSIObject val = info.getObject();
-        if (val instanceof DSNode) {
-            DSNode node = (DSNode) val;
-            node.infoInParent = info;
-        }
-        if (isRunning()) {
-            try {
-                onChildAdded(info);
-            } catch (Exception x) {
-                error(getPath(), x);
-            }
-            fire(INFO_TOPIC, DSInfoTopic.Event.CHILD_ADDED, info);
-        }
-    }
 
     /**
      * Adds the named child only if the name is not already in use.
@@ -339,103 +303,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Use this in the declareDefaults method to create a non-removable child.  This is only called
-     * on the default instance.  Runtime instances clone the declared defaults found on the default
-     * instance.
-     *
-     * @return Info for the newly created child.
-     * @see #declareDefaults()
-     */
-    protected DSInfo declareDefault(String name, DSIObject value) {
-        if (!isDefaultInstance()) {
-            throw new IllegalStateException("Can only called on default instances");
-        }
-        return add(name, value).setPermanent(true);
-    }
-
-    /**
-     * The is only called once for each class.  It's purpose is to define the default children of
-     * the node subtype.  Use the declareDefault method to add non-removable children that all
-     * runtime instances should have.  Be sure to call super.declareDefaults().
-     *
-     * @see #declareDefault(String, DSIObject) To create non-removable children.
-     */
-    protected void declareDefaults() {
-    }
-
-    /**
-     * Loads the default instance and initialises this state to use the default as much as
-     * possible.
-     */
-    void dsInit() {
-        if (defaultInstance == null) {
-            defaultInstance = DSRegistry.getDefault(getClass());
-            if (defaultInstance == defaultDefaultInstance) {
-                //currently initializing
-                return;
-            }
-            if (defaultInstance == null) {
-                DSRegistry.registerDefault(getClass(), defaultDefaultInstance);
-                try {
-                    defaultInstance = getClass().newInstance();
-                    defaultInstance.defaultInstance = defaultDefaultInstance;
-                    DSRegistry.registerDefault(getClass(), defaultInstance);
-                    defaultInstance.declareDefaults();
-                } catch (Exception x) {
-                    if (DSRegistry.getDefault(getClass()) == defaultDefaultInstance) {
-                        DSRegistry.removeDefault(getClass());
-                    }
-                    DSException.throwRuntime(x);
-                }
-            }
-            DSInfo info = defaultInstance.firstChild;
-            while (info != null) {
-                add(new DSInfoProxy(info));
-                info = info.next();
-            }
-        }
-    }
-
-    /**
-     * Notifies subscribers of the event.
-     *
-     * @param topic Must not be null.
-     * @param event Must not be null.
-     * @param child Can be null.
-     */
-    protected void fire(DSTopic topic, DSIEvent event, DSInfo child) {
-        fire(topic, event, child, (Object[]) null);
-    }
-
-    /**
-     * Notifies subscribers of the event.
-     *
-     * @param topic  Must not be null.
-     * @param event  Must not be null.
-     * @param child  Can be null.
-     * @param params Optional
-     */
-    protected void fire(DSTopic topic, DSIEvent event, DSInfo child, Object... params) {
-        if (topic == null) {
-            throw new NullPointerException("Null topic");
-        }
-        if (event == null) {
-            throw new NullPointerException("Null event");
-        }
-        Subscription sub = subscription;
-        while (sub != null) {
-            if (sub.shouldFire(child, topic)) {
-                try {
-                    sub.subscriber.onEvent(topic, event, this, child, params);
-                } catch (Exception x) {
-                    error(getPath(), x);
-                }
-            }
-            sub = sub.next;
-        }
-    }
-
-    /**
      * Returns the child value with the given name, or null.
      *
      * @return Possibly null.
@@ -471,6 +338,39 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public DSElement getElement(String name) {
         return (DSElement) get(name);
+    }
+
+    /**
+     * The first child, or null.
+     */
+    public DSIObject getFirst() {
+        dsInit();
+        DSInfo info = firstChild;
+        if (info == null) {
+            return null;
+        }
+        return info.getObject();
+    }
+
+    /**
+     * The first child info, or null.
+     */
+    public DSInfo getFirstInfo() {
+        dsInit();
+        return firstChild;
+    }
+
+    /**
+     * The info for the first child node, or null.
+     */
+    public DSInfo getFirstNodeInfo() {
+        if (firstChild == null) {
+            return null;
+        }
+        if (firstChild.isNode()) {
+            return firstChild;
+        }
+        return firstChild.nextNode();
     }
 
     /**
@@ -512,39 +412,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * The first child, or null.
-     */
-    public DSIObject getFirst() {
-        dsInit();
-        DSInfo info = firstChild;
-        if (info == null) {
-            return null;
-        }
-        return info.getObject();
-    }
-
-    /**
-     * The first child info, or null.
-     */
-    public DSInfo getFirstInfo() {
-        dsInit();
-        return firstChild;
-    }
-
-    /**
-     * The info for the first child node, or null.
-     */
-    public DSInfo getFirstNodeInfo() {
-        if (firstChild == null) {
-            return null;
-        }
-        if (firstChild.isNode()) {
-            return firstChild;
-        }
-        return firstChild.nextNode();
-    }
-
-    /**
      * The last child, or null.
      */
     public DSIObject getLast() {
@@ -561,15 +428,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     public DSInfo getLastInfo() {
         dsInit();
         return lastChild;
-    }
-
-    @Override
-    protected String getLogName() {
-        DSNode parent = getParent();
-        if (parent != null) {
-            return parent.getLogName();
-        }
-        return super.getLogName();
     }
 
     /**
@@ -620,13 +478,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public DSIValue getValue(String name) {
         return (DSIValue) get(name);
-    }
-
-    /**
-     * True if this is the default instance for the type.
-     */
-    protected final boolean isDefaultInstance() {
-        return defaultInstance == defaultDefaultInstance;
     }
 
     /**
@@ -685,13 +536,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Convenience for instanceof DSNode.
-     */
-    protected static final boolean isNode(Object obj) {
-        return obj instanceof DSNode;
     }
 
     /**
@@ -809,30 +653,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Called when the given child is added and in the stable state.
-     */
-    protected void onChildAdded(DSInfo info) {
-    }
-
-    /**
-     * Called when the given child is changed and in the stable state.
-     */
-    protected void onChildChanged(DSInfo info) {
-    }
-
-    /**
-     * Called when the given child is removed and in the stable state.
-     */
-    protected void onChildRemoved(DSInfo info) {
-    }
-
-    /**
-     * Called when the given info is modified and in the stable state.
-     */
-    protected void onInfoChanged(DSInfo info) {
-    }
-
-    /**
      * Override point, called by the default implementation of DSAction.invoke.  You should call
      * super.onInvoke if you do not handle an incoming invocation.  However, do not call super if
      * you do.
@@ -875,75 +695,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public void onSet(DSIValue value) {
         throw new IllegalStateException("DSNode.onSet(DSIValue) not overridden");
-    }
-
-    /**
-     * Called for every subscription.
-     *
-     * @param topic      Will not be null.
-     * @param child      Can be null.
-     * @param subscriber Will not be null.
-     */
-    protected void onSubscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
-    }
-
-    /**
-     * Called when this node transitions from having no subscriptions to having a subscription of
-     * any kind.
-     */
-    protected void onSubscribed() {
-    }
-
-    /**
-     * Called when the child and topic pair transitions from having no subscriptions to have a
-     * subscription.
-     *
-     * @param child Can be null, which indicates node subscriptions.
-     */
-    protected void onSubscribed(DSTopic topic, DSInfo child) {
-    }
-
-    /**
-     * Called once this node is stable, but before stable is called on children.
-     */
-    protected void onStable() {
-    }
-
-    /**
-     * Called once this node and its entire subtree is started.
-     */
-    protected void onStarted() {
-    }
-
-    /**
-     * Called once this node and its entire subtree is stopped.
-     */
-    protected void onStopped() {
-    }
-
-    /**
-     * Called for every unsubscribe.
-     *
-     * @param topic      Will not be null.
-     * @param child      Can be null.
-     * @param subscriber Will not be null.
-     */
-    protected void onUnsubscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
-    }
-
-    /**
-     * Called when this node transitions to having no subscriptions of any kind.
-     */
-    protected void onUnsubscribed() {
-    }
-
-    /**
-     * Called when the child and topic pair transitions to having no subscriptions.
-     *
-     * @param topic Can not be null.
-     * @param child Can be null.
-     */
-    protected void onUnsubscribed(DSTopic topic, DSInfo child) {
     }
 
     /**
@@ -1133,34 +884,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         return info;
     }
 
-    /** TODO later
-     * Reorder the child to be first.
-     public void reorderToFirst(DSInfo info) {
-     if (info.getParent() != null) {
-     throw new IllegalStateException("Info is not a child: " + getPath());
-     }
-     synchronized (children) {
-     if (children.remove(info)) {
-     children.add(0,info);
-     }
-     }
-     }
-     */
-
-    /** TODO later
-     * Reorder the child to be last.
-     public void reorderToLast(DSInfo info) {
-     if (info.getParent() != null) {
-     throw new IllegalStateException("Info is not a child: " + getPath());
-     }
-     synchronized (children) {
-     if (children.remove(info)) {
-     children.add(info);
-     }
-     }
-     }
-     */
-
     /**
      * Called after the entire subtree is started.  Will call onStable after the entire subtree is
      * stable.
@@ -1305,13 +1028,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * A convenience that casts the argument to a node.
-     */
-    protected static DSNode toNode(Object obj) {
-        return (DSNode) obj;
-    }
-
-    /**
      * Unsubscribes the tuple.
      *
      * @param topic      Can not be null.
@@ -1365,6 +1081,247 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Use this in the declareDefaults method to create a non-removable child.  This is only called
+     * on the default instance.  Runtime instances clone the declared defaults found on the default
+     * instance.
+     *
+     * @return Info for the newly created child.
+     * @see #declareDefaults()
+     */
+    protected DSInfo declareDefault(String name, DSIObject value) {
+        if (!isDefaultInstance()) {
+            throw new IllegalStateException("Can only called on default instances");
+        }
+        return add(name, value).setPermanent(true);
+    }
+
+    /**
+     * The is only called once for each class.  It's purpose is to define the default children of
+     * the node subtype.  Use the declareDefault method to add non-removable children that all
+     * runtime instances should have.  Be sure to call super.declareDefaults().
+     *
+     * @see #declareDefault(String, DSIObject) To create non-removable children.
+     */
+    protected void declareDefaults() {
+    }
+
+    /**
+     * Notifies subscribers of the event.
+     *
+     * @param topic Must not be null.
+     * @param event Must not be null.
+     * @param child Can be null.
+     */
+    protected void fire(DSTopic topic, DSIEvent event, DSInfo child) {
+        fire(topic, event, child, (Object[]) null);
+    }
+
+    /**
+     * Notifies subscribers of the event.
+     *
+     * @param topic  Must not be null.
+     * @param event  Must not be null.
+     * @param child  Can be null.
+     * @param params Optional
+     */
+    protected void fire(DSTopic topic, DSIEvent event, DSInfo child, Object... params) {
+        if (topic == null) {
+            throw new NullPointerException("Null topic");
+        }
+        if (event == null) {
+            throw new NullPointerException("Null event");
+        }
+        Subscription sub = subscription;
+        while (sub != null) {
+            if (sub.shouldFire(child, topic)) {
+                try {
+                    sub.subscriber.onEvent(topic, event, this, child, params);
+                } catch (Exception x) {
+                    error(getPath(), x);
+                }
+            }
+            sub = sub.next;
+        }
+    }
+
+    /**
+     * Delegates to an ancestral node.
+     */
+    @Override
+    protected String getLogName() {
+        DSNode parent = getParent();
+        if (parent != null) {
+            return parent.getLogName();
+        }
+        return super.getLogName();
+    }
+
+    /**
+     * Convenience that appends the given string to the ancestral log name with an interleaving
+     * period.
+     */
+    protected String getLogName(String name) {
+        String s = null;
+        DSNode parent = getParent();
+        if (parent != null) {
+            name = parent.getLogName();
+        }
+        if (s == null) {
+            return name;
+        }
+        if (name.startsWith(".") || s.endsWith(".")) {
+            return s + name;
+        }
+        return s + '.' + name;
+    }
+
+    /**
+     * True if this is the default instance for the type.
+     */
+    protected final boolean isDefaultInstance() {
+        return defaultInstance == defaultDefaultInstance;
+    }
+
+    /**
+     * Convenience for instanceof DSNode.
+     */
+    protected static final boolean isNode(Object obj) {
+        return obj instanceof DSNode;
+    }
+
+   /**
+     * Called when the given child is added and in the stable state.
+     */
+    protected void onChildAdded(DSInfo info) {
+    }
+
+    /**
+     * Called when the given child is changed and in the stable state.
+     */
+    protected void onChildChanged(DSInfo info) {
+    }
+
+    /**
+     * Called when the given child is removed and in the stable state.
+     */
+    protected void onChildRemoved(DSInfo info) {
+    }
+
+    /**
+     * Called when the given info is modified and in the stable state.
+     */
+    protected void onInfoChanged(DSInfo info) {
+    }
+
+    /**
+     * Called once this node is stable, but before stable is called on children.
+     */
+    protected void onStable() {
+    }
+
+    /**
+     * Called once this node and its entire subtree is started.
+     */
+    protected void onStarted() {
+    }
+
+    /**
+     * Called once this node and its entire subtree is stopped.
+     */
+    protected void onStopped() {
+    }
+
+    /**
+     * Called for every subscription.
+     *
+     * @param topic      Will not be null.
+     * @param child      Can be null.
+     * @param subscriber Will not be null.
+     */
+    protected void onSubscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
+    }
+
+    /**
+     * Called when this node transitions from having no subscriptions to having a subscription of
+     * any kind.
+     */
+    protected void onSubscribed() {
+    }
+
+    /**
+     * Called when the child and topic pair transitions from having no subscriptions to have a
+     * subscription.
+     *
+     * @param child Can be null, which indicates node subscriptions.
+     */
+    protected void onSubscribed(DSTopic topic, DSInfo child) {
+    }
+
+    /** TODO later
+     * Reorder the child to be first.
+     public void reorderToFirst(DSInfo info) {
+     if (info.getParent() != null) {
+     throw new IllegalStateException("Info is not a child: " + getPath());
+     }
+     synchronized (children) {
+     if (children.remove(info)) {
+     children.add(0,info);
+     }
+     }
+     }
+     */
+
+    /** TODO later
+     * Reorder the child to be last.
+     public void reorderToLast(DSInfo info) {
+     if (info.getParent() != null) {
+     throw new IllegalStateException("Info is not a child: " + getPath());
+     }
+     synchronized (children) {
+     if (children.remove(info)) {
+     children.add(info);
+     }
+     }
+     }
+     */
+
+    /**
+     * Called for every unsubscribe.
+     *
+     * @param topic      Will not be null.
+     * @param child      Can be null.
+     * @param subscriber Will not be null.
+     */
+    protected void onUnsubscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
+    }
+
+    /**
+     * Called when this node transitions to having no subscriptions of any kind.
+     */
+    protected void onUnsubscribed() {
+    }
+
+    /**
+     * Called when the child and topic pair transitions to having no subscriptions.
+     *
+     * @param topic Can not be null.
+     * @param child Can be null.
+     */
+    protected void onUnsubscribed(DSTopic topic, DSInfo child) {
+    }
+
+    /**
+     * A convenience that casts the argument to a node.
+     */
+    protected static DSNode toNode(Object obj) {
+        return (DSNode) obj;
+    }
+
     /**
      * Override point, throw a meaningful IllegalArgumentException if the child is not allowed
      */
@@ -1375,6 +1332,78 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Override point, throw a meaningful IllegalArgumentException if the parent is not allowed
      */
     protected void validateParent(DSNode node) {
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Adds the info to internal collections, sets parent related fields on child nodes.
+     */
+    void add(final DSInfo info) {
+        dsInit();
+        synchronized (mutex) {
+            if (lastChild != null) {
+                lastChild.next = info;
+                info.prev = lastChild;
+                lastChild = info;
+            } else {
+                firstChild = info;
+                lastChild = info;
+            }
+            if (childMap != null) {
+                childMap.put(info.getName(), info);
+            }
+            size++;
+        }
+        info.setParent(this);
+        DSIObject val = info.getObject();
+        if (val instanceof DSNode) {
+            DSNode node = (DSNode) val;
+            node.infoInParent = info;
+        }
+        if (isRunning()) {
+            try {
+                onChildAdded(info);
+            } catch (Exception x) {
+                error(getPath(), x);
+            }
+            fire(INFO_TOPIC, DSInfoTopic.Event.CHILD_ADDED, info);
+        }
+    }
+
+    /**
+     * Loads the default instance and initialises this state to use the default as much as
+     * possible.
+     */
+    void dsInit() {
+        if (defaultInstance == null) {
+            defaultInstance = DSRegistry.getDefault(getClass());
+            if (defaultInstance == defaultDefaultInstance) {
+                //currently initializing
+                return;
+            }
+            if (defaultInstance == null) {
+                DSRegistry.registerDefault(getClass(), defaultDefaultInstance);
+                try {
+                    defaultInstance = getClass().newInstance();
+                    defaultInstance.defaultInstance = defaultDefaultInstance;
+                    DSRegistry.registerDefault(getClass(), defaultInstance);
+                    defaultInstance.declareDefaults();
+                } catch (Exception x) {
+                    error(getPath(), x);
+                    if (DSRegistry.getDefault(getClass()) == defaultDefaultInstance) {
+                        DSRegistry.removeDefault(getClass());
+                    }
+                }
+            }
+            DSInfo info = defaultInstance.firstChild;
+            while (info != null) {
+                add(new DSInfoProxy(info));
+                info = info.next();
+            }
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////

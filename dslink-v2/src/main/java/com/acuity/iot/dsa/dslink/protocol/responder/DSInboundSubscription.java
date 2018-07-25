@@ -109,7 +109,7 @@ public class DSInboundSubscription extends DSInboundRequest
         }
         DSStatus status = DSStatus.ok;
         if (value instanceof DSIStatus) {
-            status = ((DSIStatus) value).toStatus();
+            status = ((DSIStatus) value).getStatus();
         }
         update(System.currentTimeMillis(), value, status);
     }

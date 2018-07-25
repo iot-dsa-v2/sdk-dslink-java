@@ -1,4 +1,4 @@
-package org.iot.dsa.driver;
+package org.iot.dsa.conn;
 
 /**
  * Connected objects receive callbacks when their associate connection changes state.

@@ -51,7 +51,7 @@ public class DSSysNode extends DSNode {
 
     @Override
     protected String getLogName() {
-        return "Sys";
+        return getLogName("sys");
     }
 
     void init() {

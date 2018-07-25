@@ -1,4 +1,4 @@
-package org.iot.dsa.driver;
+package org.iot.dsa.conn;
 
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSIStatus;
@@ -16,22 +16,26 @@ import org.iot.dsa.util.DSException;
  *
  * <b>Running</b>
  * The run method manages calling connect, disconnect and ping().  The subclass is responsible
- * having a thread call this method, or to manage lifecycle another way.
+ * having a thread call this method, or to manage the lifecycle another way.
  * <p>
  *
  * <b>Pinging</b>
  * ping() is only called by the run method.  It is only called if the time since the last OK or
  * last ping (whichever is later) exceeds the ping interval.  Implementations should call connOk
- * whenever there are successful communications to avoid unnecessarily pings.
+ * whenever there are successful communications to avoid unnecessary pings.
  * <p>
  *
  * <b>DSIConnected</b>
  * By default, DSConnection will notify subtree instances of DSIConnected when the connection
  * transitions to connected and disconnected.  Subclasses could choose to notify at other times.
  *
+ * Connection Sequence
+ *
+ * Disconnection Sequence
+ *
  * @author Aaron Hansen
  */
-public abstract class DSConnection extends DSNode implements DSIStatus {
+public abstract class DSConnection extends DSNode implements DSIStatus, Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -52,16 +56,106 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     private DSInfo failure = getInfo(FAILURE);
     private DSInfo lastFail = getInfo(LAST_FAIL);
     private DSInfo lastOk = getInfo(LAST_OK);
+    private long lastOkMillis;
     private DSInfo state = getInfo(STATE);
     private DSInfo status = getInfo(STATUS);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constructors
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * If the connection state is connecting or connected, this will call disconnect.  If
+     * disconnect has already been called, this notifies the subtree if the connection actually
+     * transitions to disconnected.
+     *
+     * @param reason Optional
+     */
+    public void connDown(String reason) {
+        put(lastFail, DSDateTime.currentTime());
+        if (reason != null) {
+            if (!failure.getElement().toString().equals(reason)) {
+                put(failure, DSString.valueOf(reason));
+            }
+        }
+        if (getConnectionState().isEngaged()) {
+            disconnect();
+            return;
+        }
+        if (!getStatus().isDown()) {
+            put(status, getStatus().add(DSStatus.DOWN));
+        }
+        if (!getConnectionState().isDisconnected()) {
+            put(state, DSConnectionState.DISCONNECTED);
+            notifyDescendants(this);
+            try {
+                onDisconnected();
+            } catch (Exception x) {
+                error(error() ? getPath() : null, x);
+            }
+        }
+    }
+
+    /**
+     * Update the last ok timestamp, will remove the down status if present and notifies the
+     * subtree if the connection actually transitions to connected.
+     */
+    public void connOk() {
+        long now = System.currentTimeMillis();
+        if ((now - lastOkMillis) > 1000) {
+            put(lastOk, DSDateTime.valueOf(now));
+        }
+        lastOkMillis = now;
+        if (getStatus().isDown()) {
+            put(status, getStatus().remove(DSStatus.DOWN));
+        }
+        if (!getConnectionState().isConnected()) {
+            put(state, DSConnectionState.CONNECTED);
+            notifyDescendants(this);
+            try {
+                onConnected();
+            } catch (Exception x) {
+                error(error() ? getPath() : null, x);
+            }
+        }
+    }
+
+    /**
+     * Verifies configuration and if operational, initiates the connection logic.
+     */
+    public void connect() {
+        put(state, DSConnectionState.CONNECTING);
+        notifyDescendants(this);
+        try {
+            checkConfig();
+            try {
+                if (isOperational()) {
+                    onConnect();
+                }
+            } catch (Throwable e) {
+                error(error() ? getPath() : null, e);
+                connDown(DSException.makeMessage(e));
+            }
+        } catch (Throwable x) {
+            put(state, DSConnectionState.DISCONNECTED);
+            error(error() ? getPath() : null, x);
+            configFault(DSException.makeMessage(x));
+        }
+    }
+
+    /**
+     * Initiates disconnection logic.
+     */
+    public void disconnect() {
+        put(state, DSConnectionState.DISCONNECTING);
+        notifyDescendants(this);
+        try {
+            onDisconnect();
+        } catch (Throwable x) {
+            error(getPath(), x);
+            connDown(DSException.makeMessage(x));
+        }
+    }
 
     public DSConnectionState getConnectionState() {
         return (DSConnectionState) state.getObject();
@@ -70,10 +164,11 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     /**
      * The last time connOk was called.
      */
-    public DSDateTime getLastOk() {
-        return (DSDateTime) lastOk.getObject();
+    public long getLastOk() {
+        return lastOkMillis;
     }
 
+    @Override
     public DSStatus getStatus() {
         return (DSStatus) status.getObject();
     }
@@ -90,7 +185,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
      * Call this to automatically manage the connection lifecycle, it will not return
      * until the node is stopped.
      */
-    public synchronized void run() {
+    public void run() {
         long retryMs = 1000;
         long lastPing = 0;
         while (isRunning()) {
@@ -101,7 +196,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
                 } else {
                     try {
                         long ivl = getPingInterval();
-                        long last = Math.max(getLastOk().timeInMillis(), lastPing);
+                        long last = Math.max(getLastOk(), lastPing);
                         long now = System.currentTimeMillis();
                         long duration = now - last;
                         if (duration >= ivl) {
@@ -113,7 +208,9 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
                                 connDown(DSException.makeMessage(t));
                             }
                         } else {
-                            wait(ivl - duration);
+                            synchronized (this) {
+                                wait(ivl - duration);
+                            }
                         }
                     } catch (Exception x) {
                         debug(debug() ? getPath() : null, x);
@@ -123,10 +220,12 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
                 if (isEnabled() && !getConnectionState().isEngaged()) {
                     connect();
                 } else {
-                    try {
-                        wait(retryMs);
-                    } catch (Exception x) {
-                        debug(debug() ? getPath() : null, x);
+                    synchronized (this) {
+                        try {
+                            wait(retryMs);
+                        } catch (Exception x) {
+                            debug(debug() ? getPath() : null, x);
+                        }
                     }
                     retryMs = Math.max(60000, retryMs + 5000);
                 }
@@ -139,7 +238,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * You should call configOk, configFault, or throw an exception.
+     * Call configOk or configFault before returning, or throw an exception.
      */
     protected abstract void checkConfig();
 
@@ -169,86 +268,6 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
         }
     }
 
-    /**
-     * Puts the connection into the down state, optionally sets the reason and notifies
-     * the subtree if the connection actually transitions to down.
-     *
-     * @param reason Optional
-     */
-    protected void connDown(String reason) {
-        put(lastFail, DSDateTime.currentTime());
-        if (reason != null) {
-            if (!failure.getElement().toString().equals(reason)) {
-                put(failure, DSString.valueOf(reason));
-            }
-        }
-        boolean notify = false;
-        if (!getStatus().isDown()) {
-            notify = true;
-            put(status, getStatus().add(DSStatus.DOWN));
-        }
-        if (!getConnectionState().isDisconnected()) {
-            notify = true;
-            put(state, DSConnectionState.DISCONNECTED);
-        }
-        if (notify) {
-            try {
-                onDisconnected();
-            } catch (Exception x) {
-                error(error() ? getPath() : null, x);
-            }
-        }
-    }
-
-    /**
-     * Update the last ok timestamp, will remove the down status if present and notifies the
-     * subtree if the connection actually transitions to ok.
-     */
-    protected void connOk() {
-        put(lastOk, DSDateTime.currentTime());
-        boolean notify = false;
-        if (getStatus().isDown()) {
-            notify = true;
-            put(status, getStatus().remove(DSStatus.DOWN));
-        }
-        if (!getConnectionState().isConnected()) {
-            notify = true;
-            put(state, DSConnectionState.CONNECTED);
-        }
-        if (notify) {
-            try {
-                onConnected();
-            } catch (Exception x) {
-                error(error() ? getPath() : null, x);
-            }
-        }
-    }
-
-    /**
-     * Will attempt to connect only if the current state is disconnected.
-     */
-    protected void connect() {
-        if (!getConnectionState().isDisconnected()) {
-            return;
-        }
-        put(state, DSConnectionState.CONNECTING);
-        try {
-            checkConfig();
-            try {
-                if (isOperational()) {
-                    onConnect();
-                }
-            } catch (Throwable e) {
-                error(error() ? getPath() : null, e);
-                connDown(DSException.makeMessage(e));
-            }
-        } catch (Throwable x) {
-            put(state, DSConnectionState.DISCONNECTED);
-            error(error() ? getPath() : null, x);
-            configFault(DSException.makeMessage(x));
-        }
-    }
-
     @Override
     protected void declareDefaults() {
         declareDefault(ENABLED, DSBool.TRUE);
@@ -257,21 +276,6 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
         declareDefault(FAILURE, DSString.EMPTY).setReadOnly(true).setTransient(true);
         declareDefault(LAST_OK, DSDateTime.NULL).setReadOnly(true);
         declareDefault(LAST_FAIL, DSDateTime.NULL).setReadOnly(true);
-    }
-
-    /**
-     * Will attempt to disconnected only if the current state is connected.
-     */
-    protected void disconnect() {
-        if (!getConnectionState().isConnected()) {
-            return;
-        }
-        put(state, DSConnectionState.DISCONNECTING);
-        try {
-            onDisconnect();
-        } catch (Throwable x) {
-            warn(warn() ? getPath() : null, x);
-        }
     }
 
     /**
@@ -296,15 +300,6 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
         return isRunning() && isConfigOk() && isEnabled();
     }
 
-    /**
-     * Calls DSIConnected.onChange on all implementations in the subtree.  Stops at
-     * instances of DSConnection, but if they implement DSIConnected, they will receive
-     * the callback.  By default, this is only called by onConnected and onDisconnected.
-     */
-    protected void notifyDescendents() {
-        notifyDescendents(this);
-    }
-
     protected void onChildChanged(DSInfo info) {
         if (info == enabled) {
             synchronized (this) {
@@ -314,34 +309,27 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     }
 
     /**
-     * You must call connOk or connDown, it can be async after this method has returned.
-     * You can throw an exception from this method instead of calling connDown.
-     * This will only be called if configuration is ok.
+     * Subclasses must establish the connection. You must call connOk or connDown, but that can
+     * be async after this method has returned. You can throw an exception from this method instead
+     * of calling connDown. This will only be called if configuration is ok.
      */
     protected abstract void onConnect();
 
     /**
-     * Override point, called by connOk() when transitioning to connected.  By default, this
-     * notifies all DSIConnected objects in the subtree.  Overrides should probably call
-     * super.onConnected unless they have a very good reason not to.
+     * Called by connOk() when transitioning to connected.  By default, this does nothing.
      */
     protected void onConnected() {
-        notifyDescendents(this);
     }
 
     /**
-     * You must call connDown(), it can be async and after this method has returned.  Throwing an
-     * exception from this method will result in a call to connDown().
+     * Close and clean up resources.
      */
     protected abstract void onDisconnect();
 
     /**
-     * Override point, called by connDown() when transitioning to disconnected.  By default, this
-     * notifies all DSIConnected objects in the subtree of the state change.  Overrides should
-     * probably call super.onDisconnected unless they have a very good reason not to.
+     * Called by connDown() when transitioning to disconnected.  By default, this does nothing.
      */
     protected void onDisconnected() {
-        notifyDescendents(this);
     }
 
     /**
@@ -367,12 +355,20 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Calls DSIConnected.onChange on all implementations in the subtree.  Stops at
-     * instances of DSConnection, but if they implement DSIConnected, they will receive
-     * the callback.
+     * Calls DSIConnected.onChange on all implementations in the subtree.  Does not notify
+     * children of DSIConnected objects.  Stops at instances of DSConnection, but if they
+     * implement DSIConnected, they will receive the callback.
      */
-    private void notifyDescendents(DSNode node) {
-        DSInfo info = getFirstInfo();
+    private void notifyDescendants() {
+        notifyDescendants(this);
+    }
+
+    /**
+     * Calls DSIConnected.onChange on implementations in the subtree.  Stops at instances of
+     * DSIConnected and DSConnection.
+     */
+    private void notifyDescendants(DSNode node) {
+        DSInfo info = node.getFirstInfo();
         while (info != null) {
             if (info.is(DSIConnected.class)) {
                 try {
@@ -380,9 +376,8 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
                 } catch (Throwable t) {
                     error(error() ? info.getPath(null) : null, t);
                 }
-            }
-            if (info.isNode() && !info.is(DSConnection.class)) {
-                notifyDescendents(info.getNode());
+            } else if (info.isNode() && !info.is(DSConnection.class)) {
+                notifyDescendants(info.getNode());
             }
             info = info.next();
         }

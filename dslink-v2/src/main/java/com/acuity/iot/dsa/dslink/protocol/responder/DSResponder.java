@@ -32,6 +32,8 @@ public abstract class DSResponder extends DSNode {
     // Constructors
     /////////////////////////////////////////////////////////////////
 
+    public DSResponder() {}
+
     public DSResponder(DSSession session) {
         this.session = session;
     }
@@ -67,19 +69,17 @@ public abstract class DSResponder extends DSNode {
     }
 
     /**
-     * V2 override point, this returns true.
+     * V2 override point, default returns true.
      */
     public boolean isV1() {
         return true;
     }
 
-    public void onConnect() {
+    public void onConnected() {
+        getSubscriptions().onConnected();
     }
 
-    public void onConnectFail() {
-    }
-
-    public void onDisconnect() {
+    public void onDisconnected() {
         Iterator<Entry<Integer, DSStream>> it = inboundRequests.entrySet().iterator();
         Map.Entry<Integer, DSStream> me;
         while (it.hasNext()) {
@@ -91,7 +91,7 @@ public abstract class DSResponder extends DSNode {
             }
             it.remove();
         }
-        getSubscriptions().onDisconnect();
+        getSubscriptions().onDisconnected();
     }
 
     public DSStream removeRequest(Integer rid) {
@@ -116,7 +116,7 @@ public abstract class DSResponder extends DSNode {
 
     @Override
     protected String getLogName() {
-        return getClass().getSimpleName();
+        return getLogName("responder");
     }
 
     protected abstract DSInboundSubscriptions getSubscriptions();

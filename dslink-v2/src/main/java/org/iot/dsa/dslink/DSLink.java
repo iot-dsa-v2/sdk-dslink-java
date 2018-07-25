@@ -125,7 +125,18 @@ public class DSLink extends DSNode implements Runnable {
 
     @Override
     protected String getLogName() {
-        return getClass().getSimpleName();
+        String s = getLinkName();
+        if (s.startsWith("dslink-java")) {
+            if (s.startsWith("dslink-java-v2-")) {
+                s = s.substring("dslink-java-v2-".length());
+            } else if (s.startsWith("dslink-java-")) {
+                s = s.substring("dslink-java-".length());
+            }
+        }
+        if (s.isEmpty()) {
+            return getClass().getSimpleName();
+        }
+        return s;
     }
 
     public DSMainNode getMain() {

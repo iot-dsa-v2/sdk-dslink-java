@@ -471,7 +471,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     @Override
-    public DSStatus toStatus() {
+    public DSStatus getStatus() {
         return this;
     }
 

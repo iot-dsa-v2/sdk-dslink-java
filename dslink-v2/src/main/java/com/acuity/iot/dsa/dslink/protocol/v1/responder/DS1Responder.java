@@ -28,6 +28,8 @@ public class DS1Responder extends DSResponder {
     // Methods - Constructors
     /////////////////////////////////////////////////////////////////
 
+    public DS1Responder() {}
+
     public DS1Responder(DSSession session) {
         super(session);
     }

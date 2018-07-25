@@ -2,13 +2,10 @@ package com.acuity.iot.dsa.dslink.test;
 
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
-import java.util.logging.Level;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSMainNode;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSStatus;
-import org.iot.dsa.time.DSDateTime;
 
 /**
  * Routes requests and responses back to self.
@@ -26,7 +23,6 @@ public class V2TestLink extends DSLink {
         DSLinkConfig cfg = new DSLinkConfig();
         cfg.setDslinkJson(new DSMap().put("configs", new DSMap()));
         cfg.setLinkName("dslink-java-testing");
-        //cfg.setLogLevel(Level.FINEST);
         cfg.setConfig(DSLinkConfig.CFG_CONNECTION_TYPE, TestConnection.class.getName());
         cfg.setConfig(DSLinkConfig.CFG_STABLE_DELAY, 1);
         init(cfg);
@@ -48,15 +44,13 @@ public class V2TestLink extends DSLink {
         }
 
         @Override
-        protected void onConnect() {
-            super.onConnect();
-            getSession().setRequesterAllowed();
+        protected void onConnected() {
+            super.onConnected();
+            getSession().setRequesterAllowed(true);
         }
 
-        @Override
         protected void performHandshake() {
-            put(LAST_CONNECT_OK, DSDateTime.currentTime());
-            put(STATUS, DSStatus.ok);
         }
     }
+
 }

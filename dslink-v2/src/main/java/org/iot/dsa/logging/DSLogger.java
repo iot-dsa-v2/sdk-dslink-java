@@ -67,7 +67,15 @@ import java.util.logging.Logger;
  */
 public class DSLogger implements DSILevels {
 
+    /////////////////////////////////////////////////////////////////
+    // Instance Fields
+    /////////////////////////////////////////////////////////////////
+
     private Logger logger;
+
+    /////////////////////////////////////////////////////////////////
+    // Public Methods
+    /////////////////////////////////////////////////////////////////
 
     /**
      * True if the level is loggable.
@@ -77,12 +85,10 @@ public class DSLogger implements DSILevels {
     }
 
     public void admin(Object msg) {
-        getLogger().log(admin, string(msg));
+        if (msg != null) {
+            getLogger().log(admin, string(msg));
+        }
     }
-
-    /////////////////////////////////////////////////////////////////
-    // Logging methods, ordered from lowest severity to highest
-    /////////////////////////////////////////////////////////////////
 
     public void admin(Object msg, Throwable x) {
         getLogger().log(admin, string(msg), x);
@@ -99,7 +105,9 @@ public class DSLogger implements DSILevels {
      * Log a debug event.
      */
     public void debug(Object msg) {
-        getLogger().log(debug, string(msg));
+        if (msg != null) {
+            getLogger().log(debug, string(msg));
+        }
     }
 
     /**
@@ -117,7 +125,9 @@ public class DSLogger implements DSILevels {
     }
 
     public void error(Object msg) {
-        getLogger().log(error, string(msg));
+        if (msg != null) {
+            getLogger().log(error, string(msg));
+        }
     }
 
     public void error(Object msg, Throwable x) {
@@ -132,7 +142,9 @@ public class DSLogger implements DSILevels {
     }
 
     public void fatal(Object msg) {
-        getLogger().log(fatal, string(msg));
+        if (msg != null) {
+            getLogger().log(fatal, string(msg));
+        }
     }
 
     public void fatal(Object msg, Throwable x) {
@@ -150,7 +162,9 @@ public class DSLogger implements DSILevels {
      * Log a frequent event.
      */
     public void fine(Object msg) {
-        getLogger().log(fine, string(msg));
+        if (msg != null) {
+            getLogger().log(fine, string(msg));
+        }
     }
 
     /**
@@ -171,7 +185,9 @@ public class DSLogger implements DSILevels {
      * Log an infrequent major lifecycle event.
      */
     public void info(Object msg) {
-        getLogger().log(info, string(msg));
+        if (msg != null) {
+            getLogger().log(info, string(msg));
+        }
     }
 
     /**
@@ -192,7 +208,9 @@ public class DSLogger implements DSILevels {
      * Log a trace or verbose event.
      */
     public void trace(Object msg) {
-        getLogger().log(trace, string(msg));
+        if (msg != null) {
+            getLogger().log(trace, string(msg));
+        }
     }
 
     /**
@@ -213,7 +231,9 @@ public class DSLogger implements DSILevels {
      * Log an unusual but not critical event.
      */
     public void warn(Object msg) {
-        getLogger().log(warn, string(msg));
+        if (msg != null) {
+            getLogger().log(warn, string(msg));
+        }
     }
 
     /**
@@ -223,12 +243,20 @@ public class DSLogger implements DSILevels {
         getLogger().log(warn, string(msg), x);
     }
 
+    /////////////////////////////////////////////////////////////////
+    // Protected Methods
+    /////////////////////////////////////////////////////////////////
+
     /**
      * Override point, returns the simple class name by default.
      */
     protected String getLogName() {
         return getClass().getSimpleName();
     }
+
+    /////////////////////////////////////////////////////////////////
+    // Package / Privates Methods
+    /////////////////////////////////////////////////////////////////
 
     /**
      * Override point, returns the console logger by default.

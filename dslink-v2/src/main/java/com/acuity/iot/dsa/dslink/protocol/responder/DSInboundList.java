@@ -556,7 +556,7 @@ public class DSInboundList extends DSInboundRequest
                 case '@':
                     break;
                 default:
-                    cacheBuf.append(encodeName(name, cacheBuf));
+                    encodeName(name, cacheBuf);
                     cacheBuf.insert(0, '$');
                     name = cacheBuf.toString();
 
