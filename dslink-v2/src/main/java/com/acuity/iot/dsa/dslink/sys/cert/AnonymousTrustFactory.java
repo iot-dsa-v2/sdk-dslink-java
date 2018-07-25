@@ -4,9 +4,14 @@ import java.security.KeyStore;
 import java.security.Provider;
 import java.security.Security;
 import java.security.cert.CertificateException;
+import java.security.cert.PKIXCertPathBuilderResult;
+import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.net.ssl.*;
 
 /**
@@ -113,17 +118,14 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
             if (certManager.allowAnonymousClients()) {
                 return;
             }
-            if (certManager.isInTrustStore(chain[0])) {
-                return;
-            }
             if (defaultX509Mgr != null) {
                 try {
                     defaultX509Mgr.checkClientTrusted(chain, authType);
+                    return;
                 } catch (CertificateException e) {
-                    certManager.addToQuarantine(chain[0]);
-                    throw e;
                 }
             }
+            checkLocally(chain, authType);
         }
 
         @Override
@@ -132,16 +134,35 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
             if (certManager.allowAnonymousServers()) {
                 return;
             }
-            if (certManager.isInTrustStore(chain[0])) {
-                return;
-            }
             if (defaultX509Mgr != null) {
                 try {
                     defaultX509Mgr.checkServerTrusted(chain, authType);
+                    return;
                 } catch (CertificateException e) {
-                    certManager.addToQuarantine(chain[0]);
-                    throw e;
                 }
+            }
+            checkLocally(chain, authType);
+        }
+        
+        private void checkLocally(X509Certificate[] chain, String authType) throws CertificateException {
+            Set<X509Certificate> chainAsSet = new HashSet<X509Certificate>();
+            Collections.addAll(chainAsSet, chain);
+            try {
+                PKIXCertPathBuilderResult result = CertificateVerifier.verifyCertificate(chain[0], chainAsSet);
+                TrustAnchor anchor = result.getTrustAnchor();
+                X509Certificate anchorCert = anchor.getTrustedCert();
+                
+                if (anchorCert == null) {
+                    throw new CertificateException();
+                }
+                
+                if (!certManager.isInTrustStore(anchorCert)) {
+                    certManager.addToQuarantine(anchorCert);
+                    throw new CertificateException();
+                }
+                
+            } catch (CertificateVerificationException e1) {
+                throw new CertificateException();
             }
         }
 
