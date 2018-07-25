@@ -77,7 +77,7 @@ public class CertificateVerifier {
              
             // Check whether the certificate is revoked by the CRL
             // given in its CRL distribution point extension
-//            CRLVerifier.verifyCertificateCRLs(cert); //TODO
+            CRLVerifier.verifyCertificateCRLs(cert);
      
             // The chain is built and verified. Return it as a result
             return verifiedCertChain;
