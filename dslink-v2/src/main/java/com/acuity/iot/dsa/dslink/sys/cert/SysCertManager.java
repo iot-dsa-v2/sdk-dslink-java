@@ -3,15 +3,26 @@ package com.acuity.iot.dsa.dslink.sys.cert;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
 import java.security.SecureRandom;
+import java.security.Security;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.time.format.ResolverStyle;
-import java.util.Iterator;
+import java.util.Calendar;
+import java.util.Date;
 import javax.security.auth.x500.X500Principal;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.cert.CertIOException;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -20,7 +31,6 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.iot.dsa.node.DSBool;
-import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
@@ -28,11 +38,8 @@ import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionSpec.ResultType;
-import org.iot.dsa.node.action.ActionValues;
 import org.iot.dsa.node.action.DSAbstractAction;
-import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DSActionValues;
 import org.iot.dsa.security.DSPasswordAes128;
 import org.iot.dsa.util.DSException;
@@ -66,7 +73,6 @@ public class SysCertManager extends DSNode {
     private DSInfo keystore = getInfo(CERTFILE);
     private DSInfo keystorePass = getInfo(CERTFILE_PASS);
     private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
-    private DSInfo generateCSR = getInfo(GENERATE_CSR);
     private CertCollection localTruststore; 
     private CertCollection quarantine;
 
@@ -122,7 +128,8 @@ public class SysCertManager extends DSNode {
             
             @Override
             public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                return ((SysCertManager) info.getParent()).generateCSR(info);
+                String csr = ((SysCertManager) info.getParent()).generateCSR();
+                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(csr));
             }
         };
         act.setResultType(ResultType.VALUES);
@@ -198,7 +205,7 @@ public class SysCertManager extends DSNode {
         getLocalTruststore().addCertificate(name, certStr);
     }
     
-    private ActionResult generateCSR(DSInfo actionInfo) {
+    private static String generateCSR() {
         KeyPairGenerator keyGen;
         try {
             keyGen = KeyPairGenerator.getInstance("RSA");
@@ -209,7 +216,7 @@ public class SysCertManager extends DSNode {
         keyGen.initialize(2048, new SecureRandom());
         KeyPair pair = keyGen.generateKeyPair();
         PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(
-            new X500Principal("CN=dslink-java-v2"), pair.getPublic());
+            new X500Principal("CN=dslink-java-v2, O=DSA, C=US"), pair.getPublic());
         JcaContentSignerBuilder csBuilder = new JcaContentSignerBuilder("SHA256withRSA");
         ContentSigner signer;
         try {
@@ -235,7 +242,56 @@ public class SysCertManager extends DSNode {
                 return null;
             }
         }
-        return new DSActionValues(actionInfo.getAction()).addResult(DSString.valueOf(str));
+        return str.toString();
+    }
+    
+    private static X509Certificate generateSelfSigned() {
+        KeyPairGenerator keyGen;
+        try {
+            keyGen = KeyPairGenerator.getInstance("RSA");
+        } catch (NoSuchAlgorithmException e) {
+            DSException.throwRuntime(e);
+            return null;
+        }
+        keyGen.initialize(2048, new SecureRandom());
+        KeyPair pair = keyGen.generateKeyPair();
+        
+        Provider bcProvider = new BouncyCastleProvider();
+        Security.addProvider(bcProvider);
+
+        long now = System.currentTimeMillis();
+        Date startDate = new Date(now);
+        
+        X500Name dname = new X500Name("CN=dslink-java-v2, O=DSA, C=US");
+        BigInteger certSerialNumber = new BigInteger(Long.toString(now)); // <-- Using the current timestamp as the certificate serial number
+        
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(startDate);
+        calendar.add(Calendar.YEAR, 1); // <-- 1 Yr validity
+        Date endDate = calendar.getTime();
+        
+        String signatureAlgorithm = "SHA256WithRSA"; // <-- Use appropriate signature algorithm based on your keyPair algorithm.
+        
+        try {
+            ContentSigner contentSigner = new JcaContentSignerBuilder(signatureAlgorithm).build(pair.getPrivate());
+            JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(dname, certSerialNumber, startDate, endDate, dname, pair.getPublic());
+            
+            BasicConstraints basicConstraints = new BasicConstraints(true); // <-- true for CA, false for EndEntity
+            certBuilder.addExtension(new ASN1ObjectIdentifier("2.5.29.19"), true, basicConstraints); // Basic Constraints is usually marked as critical.
+            
+            return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
+        } catch (OperatorCreationException e) {
+            DSException.throwRuntime(e);
+            return null;
+        } catch (CertIOException e) {
+            DSException.throwRuntime(e);
+            return null;
+        } catch (CertificateException e) {
+            DSException.throwRuntime(e);
+            return null;
+        }
+        
+        
     }
 
 }
