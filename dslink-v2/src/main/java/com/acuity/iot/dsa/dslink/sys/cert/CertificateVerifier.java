@@ -77,7 +77,7 @@ public class CertificateVerifier {
              
             // Check whether the certificate is revoked by the CRL
             // given in its CRL distribution point extension
-            CRLVerifier.verifyCertificateCRLs(cert);
+//            CRLVerifier.verifyCertificateCRLs(cert);
      
             // The chain is built and verified. Return it as a result
             return verifiedCertChain;
@@ -144,7 +144,7 @@ public class CertificateVerifier {
             new PKIXBuilderParameters(trustAnchors, selector);
          
         // Disable CRL checks (this is done manually as additional step)
-        pkixParams.setRevocationEnabled(false);
+        pkixParams.setRevocationEnabled(true);
      
         // Specify a list of intermediate certificates
         CertStore intermediateCertStore = CertStore.getInstance("Collection",
