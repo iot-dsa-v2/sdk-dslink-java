@@ -6,6 +6,7 @@ import java.util.Base64;
 import java.util.Base64.Encoder;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSNode;
+import org.iot.dsa.time.DSTime;
 
 public class CertCollection extends DSNode {
 
@@ -31,7 +32,7 @@ public class CertCollection extends DSNode {
     }
     
     public static String certToName(X509Certificate cert) {
-        return cert.getIssuerX500Principal().getName() + "-" + Integer.toHexString(cert.hashCode());
+    	return DSTime.encodeForFiles(DSTime.getCalendar(System.currentTimeMillis()), new StringBuilder(cert.getIssuerX500Principal().getName())).toString();
     }
     
     public static String encodeCertificate(X509Certificate cert) throws CertificateEncodingException {
