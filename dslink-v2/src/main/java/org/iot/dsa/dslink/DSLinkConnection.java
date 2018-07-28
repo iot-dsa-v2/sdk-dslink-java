@@ -1,17 +1,17 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
-import com.acuity.iot.dsa.dslink.protocol.v2.DS2Session;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.concurrent.ConcurrentHashMap;
-import org.iot.dsa.DSRuntime;
 import org.iot.dsa.conn.DSConnection;
-import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.action.ActionInvocation;
+import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.util.DSException;
 
 /**
  * Represents an upstream connection to a broker.
@@ -26,6 +26,7 @@ public abstract class DSLinkConnection extends DSConnection {
 
     protected static final String BROKER_URI = "Broker URI";
     protected static final String BROKER_PATH = "Path In Broker";
+    protected static final String RECONNECT = "Reconnect";
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -82,7 +83,6 @@ public abstract class DSLinkConnection extends DSConnection {
                 builder.append(Integer.toHexString(hashCode()));
             }
             connectionId = builder.toString();
-            info(info() ? "Connection ID: " + connectionId : null);
         }
         return connectionId;
     }
@@ -139,11 +139,7 @@ public abstract class DSLinkConnection extends DSConnection {
         super.declareDefaults();
         declareDefault(BROKER_URI, DSString.NULL).setTransient(true).setReadOnly(true);
         declareDefault(BROKER_PATH, DSString.NULL).setTransient(true).setReadOnly(true);
-    }
-
-    @Override
-    protected String getLogName() {
-        return getLogName("connection");
+        declareDefault(RECONNECT, DSAction.DEFAULT);
     }
 
     protected DSSysNode getSys() {
@@ -170,8 +166,10 @@ public abstract class DSLinkConnection extends DSConnection {
             if (getTransport() != null) {
                 getTransport().close();
             }
+            connDown(null);
         } catch (Exception x) {
             debug(getPath(), x);
+            connDown(DSException.makeMessage(x));
         }
     }
 
@@ -189,11 +187,22 @@ public abstract class DSLinkConnection extends DSConnection {
         }
     }
 
+    @Override
+    public ActionResult onInvoke(DSInfo info, ActionInvocation arg) {
+        if (info.getName().equals(RECONNECT)) {
+            disconnect();
+        } else {
+            return super.onInvoke(info, arg);
+        }
+        return null;
+    }
+
     /**
      * Creates and starts a thread for running the connection lifecycle.
      */
     @Override
     protected void onStable() {
+        super.onStable();
         Thread t = new Thread(this, "Connection " + getName() + " Runner");
         t.setDaemon(true);
         t.start();

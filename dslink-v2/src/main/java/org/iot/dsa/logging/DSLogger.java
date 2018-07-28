@@ -1,5 +1,12 @@
 package org.iot.dsa.logging;
 
+import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.admin;
+import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.debug;
+import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.error;
+import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.info;
+import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.trace;
+import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.warn;
+
 import java.util.logging.Logger;
 
 /**
@@ -45,27 +52,23 @@ import java.util.logging.Logger;
  *
  * <ul>
  *
- * <li>trace() = DSA trace  = JUL finest
+ * <li>trace() = JUL finest
  *
- * <li>debug() = DSA debug  = JUL finer
+ * <li>debug() = JUL finer, finer, config, warn
  *
- * <li>fine()  = DSA info   = JUL fine, config
+ * <li>info()  = JUL info
  *
- * <li>warn()  = DSA warn   = Custom level
+ * <li>warn()  = JUL warning
  *
- * <li>info()  = DSA sys    = JUL info
+ * <li>error() = JUL severe
  *
- * <li>error() = DSA error  = JUL warning
- *
- * <li>admin() = DSA admin  = Custom level
- *
- * <li>fatal() = DSA fatal  = JUL severe
+ * <li>admin() = Custom level &gt; severe
  *
  * </ul>
  *
  * @author Aaron Hansen
  */
-public class DSLogger implements DSILevels {
+public class DSLogger {
 
     /////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -137,46 +140,6 @@ public class DSLogger implements DSILevels {
     /**
      * True if the level is loggable.
      */
-    public boolean fatal() {
-        return getLogger().isLoggable(fatal);
-    }
-
-    public void fatal(Object msg) {
-        if (msg != null) {
-            getLogger().log(fatal, string(msg));
-        }
-    }
-
-    public void fatal(Object msg, Throwable x) {
-        getLogger().log(fatal, string(msg), x);
-    }
-
-    /**
-     * True if the level is loggable.
-     */
-    public boolean fine() {
-        return getLogger().isLoggable(fine);
-    }
-
-    /**
-     * Log a frequent event.
-     */
-    public void fine(Object msg) {
-        if (msg != null) {
-            getLogger().log(fine, string(msg));
-        }
-    }
-
-    /**
-     * Log a frequent event.
-     */
-    public void fine(Object msg, Throwable x) {
-        getLogger().log(fine, string(msg), x);
-    }
-
-    /**
-     * True if the level is loggable.
-     */
     public boolean info() {
         return getLogger().isLoggable(info);
     }
@@ -216,8 +179,8 @@ public class DSLogger implements DSILevels {
     /**
      * Log a trace or verbose event.
      */
-    public void trace(Object msg, Throwable x) {
-        getLogger().log(trace, string(msg), x);
+    public void warn(Object msg, Throwable x) {
+        getLogger().log(warn, string(msg), x);
     }
 
     /**
@@ -228,7 +191,7 @@ public class DSLogger implements DSILevels {
     }
 
     /**
-     * Log an unusual but not critical event.
+     * Log a trace or verbose event.
      */
     public void warn(Object msg) {
         if (msg != null) {
@@ -237,10 +200,10 @@ public class DSLogger implements DSILevels {
     }
 
     /**
-     * Log an unusual but not critical event.
+     * Log a trace or verbose event.
      */
-    public void warn(Object msg, Throwable x) {
-        getLogger().log(warn, string(msg), x);
+    public void trace(Object msg, Throwable x) {
+        getLogger().log(trace, string(msg), x);
     }
 
     /////////////////////////////////////////////////////////////////

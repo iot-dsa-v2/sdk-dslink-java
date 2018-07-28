@@ -67,7 +67,7 @@ public class DSSysNode extends DSNode {
             } else { //2
                 conn = new DS2LinkConnection();
             }
-            fine(fine() ? "Connection type: " + conn.getClass().getName() : null);
+            debug(debug() ? "Connection type: " + conn.getClass().getName() : null);
             put(connection, conn);
         } catch (Exception x) {
             DSException.throwRuntime(x);

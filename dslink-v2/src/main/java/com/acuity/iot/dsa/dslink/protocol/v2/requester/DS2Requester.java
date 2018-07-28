@@ -58,7 +58,7 @@ public class DS2Requester extends DSRequester implements MessageConstants {
         Integer rid = reader.getRequestId();
         DSOutboundStub stub = getRequest(rid);
         if (stub == null) {
-            warn(warn() ? "Response for unknown rid: " + rid : null);
+            debug(debug() ? "Response for unknown rid: " + rid : null);
             drain(reader);
             sendClose(rid);
             return;

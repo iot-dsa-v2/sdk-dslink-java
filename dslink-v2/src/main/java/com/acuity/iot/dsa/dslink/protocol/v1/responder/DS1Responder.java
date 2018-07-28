@@ -75,7 +75,7 @@ public class DS1Responder extends DSResponder {
                                 try {
                                     req.onClose(rid);
                                 } catch (Exception x) {
-                                    fine(getPath(), x);
+                                    debug(getPath(), x);
                                 }
                             }
                         });
@@ -207,7 +207,7 @@ public class DS1Responder extends DSResponder {
                 subscriptions.subscribe(sid, path, qos);
             } catch (Exception x) {
                 //invalid paths are very common
-                fine(path, x);
+                debug(path, x);
             }
         }
     }
@@ -224,7 +224,7 @@ public class DS1Responder extends DSResponder {
                     sid = list.getInt(i);
                     subscriptions.unsubscribe(sid);
                 } catch (Exception x) {
-                    error(fine() ? "Unsubscribe: " + sid : null, x);
+                    error(debug() ? "Unsubscribe: " + sid : null, x);
                 }
             }
         }

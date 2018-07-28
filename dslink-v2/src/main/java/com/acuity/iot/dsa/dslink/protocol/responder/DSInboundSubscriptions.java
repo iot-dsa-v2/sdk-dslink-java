@@ -99,7 +99,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
             try {
                 subscription.onClose();
             } catch (Exception x) {
-                warn(warn() ? subscription.toString() : null, x);
+                debug(debug() ? subscription.toString() : null, x);
             }
         }
     }
@@ -144,6 +144,15 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
             enqueued = true;
         }
         responder.sendResponse(this);
+    }
+
+    @Override
+    protected String getLogName() {
+        String pre = "";
+        if (responder != null) {
+            pre = responder.getLogName();
+        }
+        return pre + "." + getClass().getSimpleName();
     }
 
     /**

@@ -118,7 +118,7 @@ public class DS2LinkConnection extends DSLinkConnection {
             transport = new SocketTransport();
         }
         transport.setConnectionUrl(uri);
-        fine(fine() ? "Connection URL = " + uri : null);
+        debug(debug() ? "Connection URL = " + uri : null);
         return transport;
     }
 

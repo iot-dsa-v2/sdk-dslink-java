@@ -46,6 +46,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     static final String LAST_OK = "Last OK";
     static final String LAST_FAIL = "Last Fail";
     static final String STATE = "State";
+    static final String STATE_TIME = "State Timestamp";
     static final String STATUS = "Status";
 
     ///////////////////////////////////////////////////////////////////////////
@@ -58,6 +59,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     private DSInfo lastOk = getInfo(LAST_OK);
     private long lastOkMillis;
     private DSInfo state = getInfo(STATE);
+    private DSInfo stateTime = getInfo(STATE_TIME);
     private DSInfo status = getInfo(STATUS);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -72,21 +74,19 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      * @param reason Optional
      */
     public void connDown(String reason) {
-        put(lastFail, DSDateTime.currentTime());
-        if (reason != null) {
-            if (!failure.getElement().toString().equals(reason)) {
-                put(failure, DSString.valueOf(reason));
-            }
-        }
+        debug(debug() ? "connDown: " + reason : null);
         if (getConnectionState().isEngaged()) {
+            put(lastFail, DSDateTime.currentTime());
+            if (reason != null) {
+                if (!failure.getElement().toString().equals(reason)) {
+                    put(failure, DSString.valueOf(reason));
+                }
+            }
             disconnect();
-            return;
-        }
-        if (!getStatus().isDown()) {
+        } else if (getConnectionState().isDisconnecting()) {
             put(status, getStatus().add(DSStatus.DOWN));
-        }
-        if (!getConnectionState().isDisconnected()) {
             put(state, DSConnectionState.DISCONNECTED);
+            put(stateTime, DSDateTime.currentTime());
             notifyDescendants(this);
             try {
                 onDisconnected();
@@ -96,21 +96,24 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
         }
     }
 
+
     /**
      * Update the last ok timestamp, will remove the down status if present and notifies the
      * subtree if the connection actually transitions to connected.
      */
     public void connOk() {
+        if (getConnectionState().isDisengaged()) {
+            return;
+        }
         long now = System.currentTimeMillis();
-        if ((now - lastOkMillis) > 1000) {
+        if ((now - lastOkMillis) > 1000) { //prevents subscription to last ok time from going crazy
             put(lastOk, DSDateTime.valueOf(now));
         }
         lastOkMillis = now;
-        if (getStatus().isDown()) {
+        if (!isConnected()) {
             put(status, getStatus().remove(DSStatus.DOWN));
-        }
-        if (!getConnectionState().isConnected()) {
             put(state, DSConnectionState.CONNECTED);
+            put(stateTime, DSDateTime.valueOf(now));
             notifyDescendants(this);
             try {
                 onConnected();
@@ -124,7 +127,13 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      * Verifies configuration and if operational, initiates the connection logic.
      */
     public void connect() {
+        if (!getConnectionState().isDisconnected()) {
+            debug(debug() ? "Not disconnected, ignoring connect()" : null);
+            return;
+        }
+        debug(debug() ? "Connect" : null);
         put(state, DSConnectionState.CONNECTING);
+        put(stateTime, DSDateTime.currentTime());
         notifyDescendants(this);
         try {
             checkConfig();
@@ -138,6 +147,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
             }
         } catch (Throwable x) {
             put(state, DSConnectionState.DISCONNECTED);
+            put(stateTime, DSDateTime.currentTime());
             error(error() ? getPath() : null, x);
             configFault(DSException.makeMessage(x));
         }
@@ -147,7 +157,13 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      * Initiates disconnection logic.
      */
     public void disconnect() {
+        if (!getConnectionState().isConnected()) {
+            debug(debug() ? "Not connected, ignoring disconnect()" : null);
+            return;
+        }
+        debug(debug() ? "Disconnect" : null);
         put(state, DSConnectionState.DISCONNECTING);
+        put(stateTime, DSDateTime.currentTime());
         notifyDescendants(this);
         try {
             onDisconnect();
@@ -186,11 +202,12 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      * until the node is stopped.
      */
     public void run() {
-        long retryMs = 1000;
+        long INTERVAL = 5000;
+        long retryMs = 0;
         long lastPing = 0;
         while (isRunning()) {
             if (isConnected()) {
-                retryMs = 1000;
+                retryMs = 5000;
                 if (!isEnabled()) {
                     disconnect();
                 } else {
@@ -204,12 +221,8 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
                             try {
                                 ping();
                             } catch (Throwable t) {
-                                error(error() ? getPath() : null, t);
+                                error(getPath(), t);
                                 connDown(DSException.makeMessage(t));
-                            }
-                        } else {
-                            synchronized (this) {
-                                wait(ivl - duration);
                             }
                         }
                     } catch (Exception x) {
@@ -217,17 +230,18 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
                     }
                 }
             } else {
-                if (isEnabled() && !getConnectionState().isEngaged()) {
-                    connect();
-                } else {
-                    synchronized (this) {
-                        try {
-                            wait(retryMs);
-                        } catch (Exception x) {
-                            debug(debug() ? getPath() : null, x);
-                        }
+                if (isEnabled() && getConnectionState().isDisconnected()) {
+                    if (getTimeInState() >= retryMs) {
+                        retryMs = Math.min(60000, retryMs + INTERVAL);
+                        connect();
                     }
-                    retryMs = Math.max(60000, retryMs + 5000);
+                }
+            }
+            synchronized (this) {
+                try {
+                    wait(INTERVAL);
+                } catch (Exception x) {
+                    debug(debug() ? getPath() : null, x);
                 }
             }
         }
@@ -248,6 +262,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      * @param msg Optional
      */
     protected void configFault(String msg) {
+        debug(debug() ? "Config Fault: " + msg : null);
         put(lastFail, DSDateTime.currentTime());
         if (msg != null) {
             if (!failure.getElement().toString().equals(msg)) {
@@ -263,6 +278,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      * Removes fault state.
      */
     protected void configOk() {
+        debug(debug() ? "Config OK" : null);
         if (getStatus().isFault()) {
             put(status, getStatus().remove(DSStatus.FAULT));
         }
@@ -273,9 +289,15 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
         declareDefault(ENABLED, DSBool.TRUE);
         declareDefault(STATUS, DSStatus.down).setReadOnly(true).setTransient(true);
         declareDefault(STATE, DSConnectionState.DISCONNECTED).setReadOnly(true).setTransient(true);
+        declareDefault(STATE_TIME, DSDateTime.currentTime()).setReadOnly(true).setTransient(true);
         declareDefault(FAILURE, DSString.EMPTY).setReadOnly(true).setTransient(true);
         declareDefault(LAST_OK, DSDateTime.NULL).setReadOnly(true);
         declareDefault(LAST_FAIL, DSDateTime.NULL).setReadOnly(true);
+    }
+
+    @Override
+    protected String getLogName() {
+        return getLogName("connection");
     }
 
     /**
@@ -287,6 +309,11 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      */
     protected long getPingInterval() {
         return 60000;
+    }
+
+    protected long getTimeInState() {
+        DSDateTime time = (DSDateTime) stateTime.getObject();
+        return System.currentTimeMillis() - time.timeInMillis();
     }
 
     protected boolean isConfigOk() {
@@ -333,21 +360,12 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     }
 
     /**
-     * Calls onDisconnected().
-     */
-    @Override
-    protected void onStable() {
-        onDisconnected();
-    }
-
-    /**
      * Override point, called by the run method.  Implementations should call verify the connection
      * is still valid and call connOk or connDown, but those can be async and after this method
-     * returns.  Throwing an exception will be treated as a connDown.  By default, this only calls
-     * connOk().
+     * returns.  Throwing an exception will be treated as a connDown.  By default, this does
+     * nothing.
      */
     protected void ping() {
-        connOk();
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -289,14 +289,15 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         synchronized (outgoingMutex) {
             outgoingRequests.clear();
             outgoingResponses.clear();
+            outgoingMutex.notifyAll();
         }
         try {
-            writeThread.join(); //TODO - timeout?
+            writeThread.join();
         } catch (Exception x) {
             debug(getPath(), x);
         }
         try {
-            readThread.join(); //TODO - timeout?
+            readThread.join();
         } catch (Exception x) {
             debug(getPath(), x);
         }
@@ -332,7 +333,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
      */
     protected void setAckRcvd(int ackRcvd) {
         if (ackRcvd < this.ackRcvd) {
-            warn(warn() ? String.format("Ack rcvd %s < last %s", ackRcvd, this.ackRcvd) : null);
+            debug(debug() ? String.format("Ack rcvd %s < last %s", ackRcvd, this.ackRcvd) : null);
         }
         this.ackRcvd = ackRcvd;
         notifyOutgoing();
@@ -399,8 +400,8 @@ public abstract class DSSession extends DSNode implements DSIConnected {
                 if (connected) {
                     connected = false;
                     error(getPath(), x);
+                    conn.connDown(DSException.makeMessage(x));
                 }
-                conn.connDown(DSException.makeMessage(x));
             }
         }
     }
@@ -438,8 +439,8 @@ public abstract class DSSession extends DSNode implements DSIConnected {
                 if (connected) {
                     connected = false;
                     error(getPath(), x);
+                    conn.connDown(DSException.makeMessage(x));
                 }
-                conn.connDown(DSException.makeMessage(x));
             }
         }
     }

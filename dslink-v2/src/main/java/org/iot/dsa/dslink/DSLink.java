@@ -2,27 +2,15 @@ package org.iot.dsa.dslink;
 
 import org.iot.dsa.logging.DSLogHandler;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 import org.iot.dsa.io.NodeDecoder;
-import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.security.DSKeys;
-import org.iot.dsa.time.DSTime;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -193,7 +181,7 @@ public class DSLink extends DSNode implements Runnable {
             if (type == null) {
                 throw new IllegalStateException("Config missing the main node type");
             }
-            ret.fine("Main type: " + type);
+            ret.debug("Main type: " + type);
             try {
                 DSNode node = (DSNode) Class.forName(type).newInstance();
                 ret.put(MAIN, node);
@@ -235,7 +223,7 @@ public class DSLink extends DSNode implements Runnable {
                 URL src = clazz.getProtectionDomain().getCodeSource().getLocation();
                 info(info() ? src : null);
             } catch (Throwable t) {
-                warn("Reporting source of DSLink.class", t);
+                debug("Reporting source of DSLink.class", t);
             }
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
@@ -249,7 +237,7 @@ public class DSLink extends DSNode implements Runnable {
             try {
                 Thread.sleep(stableDelay);
             } catch (Exception x) {
-                warn("Interrupted stable delay", x);
+                debug("Interrupted stable delay", x);
             }
             try {
                 info(info() ? "Stabilizing nodes" : null);
@@ -259,7 +247,7 @@ public class DSLink extends DSNode implements Runnable {
                         try {
                             wait(10000);
                         } catch (InterruptedException x) {
-                            warn(getPath(), x);
+                            debug(getPath(), x);
                         }
                     }
                 }
@@ -299,7 +287,7 @@ public class DSLink extends DSNode implements Runnable {
                 thread.join();
             }
         } catch (Exception x) {
-            fine(x);
+            debug(x);
         }
     }
 

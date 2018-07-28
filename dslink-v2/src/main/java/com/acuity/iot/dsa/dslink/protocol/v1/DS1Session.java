@@ -146,6 +146,7 @@ public class DS1Session extends DSSession {
         super.onDisconnected();
         requester.onDisconnected();
         responder.onDisconnected();
+        messageWriter = null;
     }
 
     @Override
@@ -283,7 +284,7 @@ public class DS1Session extends DSSession {
             } else if (key.equals("salt")) {
                 reader.next();
                 String s = reader.getElement().toString();
-                fine(fine() ? "Next salt: " + s : null);
+                debug(debug() ? "Next salt: " + s : null);
                 getConnection().updateSalt(s);
             }
             next = reader.next();

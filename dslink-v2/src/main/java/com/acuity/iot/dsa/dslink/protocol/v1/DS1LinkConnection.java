@@ -6,14 +6,12 @@ import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
-import org.iot.dsa.node.DSString;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -123,13 +121,13 @@ public class DS1LinkConnection extends DSLinkConnection {
             DSException.throwRuntime(x);
         }
         String uri = init.makeWsUrl(wsUri);
-        fine(fine() ? "Connection URL = " + uri : null);
+        debug(debug() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
         transport.setReadTimeout(getLink().getConfig().getConfig(
                 DSLinkConfig.CFG_READ_TIMEOUT, 60000));
         setTransport(transport);
-        fine(fine() ? "Transport type: " + transport.getClass().getName() : null);
+        debug(debug() ? "Transport type: " + transport.getClass().getName() : null);
         return transport;
     }
 
@@ -150,6 +148,7 @@ public class DS1LinkConnection extends DSLinkConnection {
             put(TRANSPORT, getTransport()).setTransient(true);
             getTransport().open();
             connectionInit = init;
+            info(getConnectionId() + " connected");
             connOk();
         } catch (Exception x) {
             connDown(DSException.makeMessage(x));
@@ -163,6 +162,7 @@ public class DS1LinkConnection extends DSLinkConnection {
         writer = null;
         transport = null;
         remove(TRANSPORT);
+        info(getConnectionId() + " disconnected");
     }
 
     /**

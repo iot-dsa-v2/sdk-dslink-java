@@ -959,7 +959,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         try {
             onStopped();
         } catch (Exception x) {
-            fine(getPath(), x);
+            debug(getPath(), x);
         }
     }
 
@@ -1169,7 +1169,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         String s = null;
         DSNode parent = getParent();
         if (parent != null) {
-            name = parent.getLogName();
+            s = parent.getLogName();
         }
         if (s == null) {
             return name;

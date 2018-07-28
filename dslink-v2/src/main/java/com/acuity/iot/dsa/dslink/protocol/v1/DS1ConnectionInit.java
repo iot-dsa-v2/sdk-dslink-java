@@ -46,11 +46,11 @@ public class DS1ConnectionInit extends DSNode {
     private DSMap response;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Public Methods
+    // protected Methods
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onStable() {
+    protected void onStarted() {
         this.connection = (DS1LinkConnection) getParent();
         this.link = connection.getLink();
         this.authToken = link.getConfig().getToken();
@@ -80,7 +80,7 @@ public class DS1ConnectionInit extends DSNode {
      */
     void initializeConnection() throws Exception {
         String uri = makeBrokerUrl();
-        fine(fine() ? "Broker URI " + uri : null);
+        debug(debug() ? "Broker URI " + uri : null);
         HttpURLConnection conn = (HttpURLConnection) new URL(uri).openConnection();
         conn.setDoInput(true);
         conn.setDoOutput(true);
@@ -92,7 +92,7 @@ public class DS1ConnectionInit extends DSNode {
         writeConnectionRequest(conn);
         //read response
         int rc = conn.getResponseCode();
-        fine(fine() ? "Connection initialization response code " + rc : null);
+        debug(debug() ? "Connection initialization response code " + rc : null);
         if ((rc < 200) || (rc >= 300)) {
             throwConnectionException(conn, rc);
         }

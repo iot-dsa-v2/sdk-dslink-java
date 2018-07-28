@@ -294,14 +294,14 @@ public class DSInboundSubscription extends DSInboundRequest
                 closeHandler.onClose(getSubscriptionId());
             }
         } catch (Exception x) {
-            manager.warn(manager.getPath(), x);
+            manager.debug(manager.getPath(), x);
         }
         try {
             if (node != null) {
                 node.unsubscribe(DSNode.VALUE_TOPIC, child, this);
             }
         } catch (Exception x) {
-            manager.warn(manager.getPath(), x);
+            manager.debug(manager.getPath(), x);
         }
     }
 

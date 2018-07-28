@@ -47,7 +47,7 @@ public enum DSConnectionState implements DSIEnum, DSIValue {
         for (DSConnectionState e : values()) {
             bucket.add(e.toElement());
         }
-        return null;
+        return bucket;
     }
 
     @Override

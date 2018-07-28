@@ -68,7 +68,7 @@ public abstract class MXBeanNode extends DSNode {
                         putProp(name,
                                 o != null ? ProfilerUtils.objectToDSIValue(o) : DSString.EMPTY);
                     } catch (Exception e) {
-                        warn(e);
+                        debug(e);
                     }
                 }
             }

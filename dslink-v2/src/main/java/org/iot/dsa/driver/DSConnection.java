@@ -270,7 +270,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus {
         try {
             onDisconnect();
         } catch (Throwable x) {
-            warn(warn() ? getPath() : null, x);
+            debug(debug() ? getPath() : null, x);
         }
     }
 
