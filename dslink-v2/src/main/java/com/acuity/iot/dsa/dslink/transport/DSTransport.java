@@ -78,7 +78,7 @@ public abstract class DSTransport extends DSNode {
 
     @Override
     protected String getLogName() {
-        return getClass().getSimpleName();
+        return getLogName("transport");
     }
 
 

@@ -20,6 +20,9 @@ public class DS1Requester extends DSRequester {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
+    public DS1Requester() {
+    }
+
     public DS1Requester(DS1Session session) {
         super(session);
     }
@@ -137,12 +140,6 @@ public class DS1Requester extends DSRequester {
             return;
         }
         getSubscriptions().handleUpdate(sid, ts, sts, value);
-    }
-
-    @Override
-    public void onConnect() {
-        super.onConnect();
-        getSession().setRequesterAllowed();
     }
 
     private void processUpdates(DSMap map) {

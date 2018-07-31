@@ -17,13 +17,10 @@ import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.DSPermissionException;
-import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.security.DSKeys;
-import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -40,17 +37,10 @@ public class DS2LinkConnection extends DSLinkConnection {
 
     private static final String BROKER_AUTH = "Broker Auth";
     private static final String BROKER_ID = "Broker DSID";
-    private static final String BROKER_PATH = "Broker Path";
     private static final String BROKER_PUB_KEY = "Broker Public Key";
     private static final String BROKER_SALT = "Broker Salt";
-    private static final String BROKER_URI = "Broker URI";
-    protected static final String LAST_CONNECT_OK = "Last Connect Ok";
-    private static final String LAST_CONNECT_FAIL = "Last Connect Fail";
     private static final String LINK_SALT = "Link Salt";
-    private static final String FAIL_CAUSE = "Fail Cause";
-    private static final String REQUESTER_ALLOWED = "Requester Allowed";
-    private static final String SESSION = "Status";
-    protected static final String STATUS = "Status";
+    private static final String SESSION = "Session";
     private static final String TRANSPORT = "Transport";
 
     ///////////////////////////////////////////////////////////////////////////
@@ -59,12 +49,9 @@ public class DS2LinkConnection extends DSLinkConnection {
 
     private DSInfo brokerAuth = getInfo(BROKER_AUTH);
     private DSInfo brokerDsId = getInfo(BROKER_ID);
-    private DSInfo brokerPath = getInfo(BROKER_PATH);
     private DSInfo brokerPubKey = getInfo(BROKER_PUB_KEY);
     private DSInfo brokerSalt = getInfo(BROKER_SALT);
-    private DSInfo brokerUri = getInfo(BROKER_URI);
     private DSInfo linkSalt = getInfo(LINK_SALT);
-    private DSInfo requesterAllowed = getInfo(REQUESTER_ALLOWED);
     private DS2Session session;
     private DSBinaryTransport transport;
 
@@ -74,12 +61,7 @@ public class DS2LinkConnection extends DSLinkConnection {
 
     @Override
     public void declareDefaults() {
-        declareDefault(STATUS, DSStatus.down).setTransient(true).setReadOnly(true);
-        declareDefault(LAST_CONNECT_OK, DSDateTime.NULL).setTransient(true).setReadOnly(true);
-        declareDefault(LAST_CONNECT_FAIL, DSDateTime.NULL).setTransient(true).setReadOnly(true);
-        declareDefault(FAIL_CAUSE, DSString.NULL).setTransient(true).setReadOnly(true);
-        declareDefault(BROKER_URI, DSString.NULL).setTransient(true).setReadOnly(true);
-        declareDefault(BROKER_PATH, DSString.NULL).setTransient(true).setReadOnly(true);
+        super.declareDefaults();
         declareDefault(BROKER_ID, DSString.NULL).setTransient(true).setReadOnly(true);
         declareDefault(BROKER_AUTH, DSBytes.NULL)
                 .setTransient(true).setReadOnly(true).setAdmin(true);
@@ -89,19 +71,6 @@ public class DS2LinkConnection extends DSLinkConnection {
                 .setTransient(true).setReadOnly(true).setAdmin(true);
         declareDefault(LINK_SALT, DSBytes.NULL)
                 .setTransient(true).setReadOnly(true).setAdmin(true);
-        declareDefault(REQUESTER_ALLOWED, DSBool.FALSE).setTransient(true).setReadOnly(true);
-    }
-
-    @Override
-    public void disconnect() {
-        if (session != null) {
-            session.disconnect();
-        }
-    }
-
-    @Override
-    public String getPathInBroker() {
-        return brokerPath.getValue().toString();
     }
 
     @Override
@@ -123,6 +92,10 @@ public class DS2LinkConnection extends DSLinkConnection {
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    @Override
+    protected void checkConfig() {
+    }
+
     /**
      * Looks at the connection initialization response to determine the type of transport then
      * instantiates the correct type fom the config.
@@ -130,7 +103,6 @@ public class DS2LinkConnection extends DSLinkConnection {
     protected DSBinaryTransport makeTransport() {
         DSTransport.Factory factory = null;
         String uri = getLink().getConfig().getBrokerUri();
-        put(brokerUri, DSString.valueOf(uri));
         transport = null;
         if (uri.startsWith("ws")) {
             try {
@@ -146,65 +118,41 @@ public class DS2LinkConnection extends DSLinkConnection {
             transport = new SocketTransport();
         }
         transport.setConnectionUrl(uri);
-        fine(fine() ? "Connection URL = " + uri : null);
+        debug(debug() ? "Connection URL = " + uri : null);
         return transport;
     }
 
     @Override
     protected void onConnect() {
-        transport.open();
-        session.onConnect();
         try {
+            if (session == null) {
+                session = new DS2Session(this);
+                put(SESSION, session);
+            }
+            transport = makeTransport();
+            put(TRANSPORT, transport);
+            transport.setConnection(this);
+            transport.open();
             performHandshake();
+            connOk();
         } catch (Exception x) {
-            session.onConnectFail();
-            DSException.throwRuntime(x);
+            error(getPath(), x);
+            connDown(DSException.makeMessage(x));
         }
     }
 
     @Override
-    protected void onDisconnect() {
-        session.onDisconnect();
-        put(STATUS, DSStatus.down);
-        transport.close();
+    protected void onDisconnected() {
+        super.onDisconnected();
         transport = null;
         remove(TRANSPORT);
     }
 
-    @Override
-    protected void onInitialize() {
-        if (session == null) {
-            session = new DS2Session(this);
-            put(SESSION, session);
-        }
-        transport = makeTransport();
-        put(TRANSPORT, transport);
-        transport.setConnection(this);
-    }
-
-    /**
-     * The long term management of the connection (reading and writing).  When this
-     * returns, onDisconnect will be called.
-     */
-    @Override
-    protected void onRun() {
-        session.run();
-    }
-
-    protected void performHandshake() {
-        try {
-            sendF0();
-            recvF1();
-            sendF2();
-            recvF3();
-            put(LAST_CONNECT_OK, DSDateTime.currentTime());
-            put(STATUS, DSStatus.ok);
-        } catch (Exception io) {
-            put(STATUS, DSStatus.fault);
-            put(LAST_CONNECT_FAIL, DSDateTime.currentTime());
-            put(FAIL_CAUSE, DSString.valueOf(DSException.makeMessage(io)));
-            DSException.throwRuntime(io);
-        }
+    protected void performHandshake() throws IOException {
+        sendF0();
+        recvF1();
+        sendF2();
+        recvF3();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -279,12 +227,9 @@ public class DS2LinkConnection extends DSLinkConnection {
             }
         }
         boolean allowed = in.read() == 1;
-        put(requesterAllowed, DSBool.valueOf(allowed));
-        if (allowed) {
-            session.setRequesterAllowed();
-        }
+        session.setRequesterAllowed(allowed);
         String pathOnBroker = reader.readString(in);
-        put(brokerPath, DSString.valueOf(pathOnBroker));
+        setPathInBroker(pathOnBroker);
         byte[] tmp = new byte[32];
         in.read(tmp);
         put(brokerAuth, DSBytes.valueOf(tmp));
@@ -304,7 +249,7 @@ public class DS2LinkConnection extends DSLinkConnection {
         writer.write(transport);
     }
 
-    private void sendF2() throws Exception {
+    private void sendF2() {
         DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod(0xf2);
         DSByteBuffer buffer = writer.getBody();

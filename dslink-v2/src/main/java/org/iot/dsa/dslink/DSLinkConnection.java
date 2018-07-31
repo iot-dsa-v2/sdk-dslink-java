@@ -3,29 +3,43 @@ package org.iot.dsa.dslink;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.concurrent.ConcurrentHashMap;
+import org.iot.dsa.conn.DSConnection;
+import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
-import org.iot.dsa.time.DSTime;
+import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.action.ActionInvocation;
+import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.util.DSException;
 
 /**
- * Represents an upstream connection with a broker.
- * <p>
- * Implementations must have a no-arg public constructor.  It will be dynamically added as
- * a child of the DSLink.
+ * Represents an upstream connection to a broker.
  *
  * @author Aaron Hansen
  */
-public abstract class DSLinkConnection extends DSNode {
+public abstract class DSLinkConnection extends DSConnection {
 
-    // Fields
-    // ------
+    ///////////////////////////////////////////////////////////////////////////
+    // Class Fields
+    ///////////////////////////////////////////////////////////////////////////
 
-    private boolean connected = false;
+    protected static final String BROKER_URI = "Broker URI";
+    protected static final String BROKER_PATH = "Path In Broker";
+    protected static final String RECONNECT = "Reconnect";
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Instance Fields
+    ///////////////////////////////////////////////////////////////////////////
+
+    private DSInfo brokerPath = getInfo(BROKER_PATH);
     private String connectionId;
+    private DSLink link;
     private ConcurrentHashMap<Listener, Listener> listeners;
 
-    // Methods
-    // -------
+    ///////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Adds a listener for connection events.  If already connected, onConnect
@@ -46,12 +60,6 @@ public abstract class DSLinkConnection extends DSNode {
             }
         }
     }
-
-    /**
-     * Forcefully closes an open connection.  Does not prevent reconnection, intended for
-     * dealing with problems.
-     */
-    public abstract void disconnect();
 
     /**
      * A unique descriptive tag such as a combination of the link name and the broker host.
@@ -75,7 +83,6 @@ public abstract class DSLinkConnection extends DSNode {
                 builder.append(Integer.toHexString(hashCode()));
             }
             connectionId = builder.toString();
-            info(info() ? "Connection ID: " + connectionId : null);
         }
         return connectionId;
     }
@@ -85,18 +92,18 @@ public abstract class DSLinkConnection extends DSNode {
      * The link using this connection.
      */
     public DSLink getLink() {
-        return (DSLink) getSys().getParent();
-    }
-
-    @Override
-    protected String getLogName() {
-        return getClass().getSimpleName();
+        if (link == null) {
+            link = (DSLink) getAncestor(DSLink.class);
+        }
+        return link;
     }
 
     /**
      * The path representing the link node in the broker.
      */
-    public abstract String getPathInBroker();
+    public String getPathInBroker() {
+        return brokerPath.getElement().toString();
+    }
 
     /**
      * Concatenates the path in broker with the path of the node.
@@ -112,51 +119,7 @@ public abstract class DSLinkConnection extends DSNode {
 
     public abstract DSSession getSession();
 
-    public DSSysNode getSys() {
-        return (DSSysNode) getParent();
-    }
-
     public abstract DSTransport getTransport();
-
-    /**
-     * True when a connection is established with the remote endpoint.
-     */
-    public boolean isConnected() {
-        return connected;
-    }
-
-    /**
-     * Called after onInitialize and before onRun.  This should open the connection,
-     * maybe do some preamble messaging, but should return relatively quickly.  Use
-     * onRun for the long running of the connection.
-     */
-    protected abstract void onConnect();
-
-    /**
-     * Called when this network connection has been closed.  This will only be called
-     * if the connection is has been established and onRun was called.
-     */
-    protected abstract void onDisconnect();
-
-    /**
-     * Always called before onConnect.  If an exception is thrown onConnect and onDisconnect
-     * will not be called.
-     */
-    protected abstract void onInitialize();
-
-    /**
-     * The long term management of the connection (reading and writing).  When this
-     * returns, onDisconnect will be called.
-     */
-    protected abstract void onRun();
-
-    /**
-     * Starts the connection.
-     */
-    @Override
-    protected void onStable() {
-        new ConnectionRunThread(new ConnectionRunner()).start();
-    }
 
     /**
      * Removes a listener for connection events.
@@ -167,88 +130,91 @@ public abstract class DSLinkConnection extends DSNode {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
 
-    // Inner Classes
-    // -------------
+    @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault(BROKER_URI, DSString.NULL).setTransient(true).setReadOnly(true);
+        declareDefault(BROKER_PATH, DSString.NULL).setTransient(true).setReadOnly(true);
+        declareDefault(RECONNECT, DSAction.DEFAULT);
+    }
 
-    /**
-     * Daemon thread that manages connection and reconnection.
-     */
-    private class ConnectionRunner implements Runnable {
+    protected DSSysNode getSys() {
+        return (DSSysNode) getParent();
+    }
 
-        private long reconnectRate = 1000;
-
-        /**
-         * Runs until stop is called.
-         */
-        public void run() {
-            while (isRunning()) {
-                synchronized (this) {
-                    try {
-                        wait(reconnectRate);
-                    } catch (Exception x) {
-                        warn(warn() ? getConnectionId() : null, x);
-                    }
-                }
-                reconnectRate = Math.min(reconnectRate * 2, DSTime.MILLIS_MINUTE);
+    @Override
+    protected void onConnected() {
+        super.onConnected();
+        if (listeners != null) {
+            for (Listener l : listeners.keySet()) {
                 try {
-                    onInitialize();
+                    l.onConnect(this);
                 } catch (Exception x) {
                     error(getPath(), x);
-                    continue;
-                }
-                try {
-                    onConnect();
-                    connected = true;
-                } catch (Exception x) {
-                    error(getPath(), x);
-                    continue;
-                }
-                if (listeners != null) {
-                    for (Listener listener : listeners.keySet()) {
-                        try {
-                            listener.onConnect(DSLinkConnection.this);
-                        } catch (Exception x) {
-                            error(listener.toString(), x);
-                        }
-                    }
-                }
-                try {
-                    onRun();
-                    reconnectRate = 1000;
-                } catch (Throwable x) {
-                    reconnectRate = Math.min(reconnectRate * 2, DSTime.MILLIS_MINUTE);
-                    error(getConnectionId(), x);
-                }
-                try {
-                    onDisconnect();
-                } catch (Exception x) {
-                    error(getPath(), x);
-                }
-                if (listeners != null) {
-                    for (Listener listener : listeners.keySet()) {
-                        try {
-                            listener.onDisconnect(DSLinkConnection.this);
-                        } catch (Exception x) {
-                            error(listener.toString(), x);
-                        }
-                    }
                 }
             }
         }
-    } //ConnectionRunner
+    }
 
-    /**
-     * Daemon thread that manages connection and reconnection.
-     */
-    private class ConnectionRunThread extends Thread {
-
-        public ConnectionRunThread(ConnectionRunner runner) {
-            super(runner);
-            setName(getConnectionId() + " Runner");
-            setDaemon(true);
+    @Override
+    protected void onDisconnect() {
+        try {
+            if (getTransport() != null) {
+                getTransport().close();
+            }
+            connDown(null);
+        } catch (Exception x) {
+            debug(getPath(), x);
+            connDown(DSException.makeMessage(x));
         }
     }
+
+    @Override
+    protected void onDisconnected() {
+        super.onDisconnected();
+        if (listeners != null) {
+            for (Listener l : listeners.keySet()) {
+                try {
+                    l.onDisconnect(this);
+                } catch (Exception x) {
+                    error(getPath(), x);
+                }
+            }
+        }
+    }
+
+    @Override
+    public ActionResult onInvoke(DSInfo info, ActionInvocation arg) {
+        if (info.getName().equals(RECONNECT)) {
+            disconnect();
+        } else {
+            return super.onInvoke(info, arg);
+        }
+        return null;
+    }
+
+    /**
+     * Creates and starts a thread for running the connection lifecycle.
+     */
+    @Override
+    protected void onStable() {
+        super.onStable();
+        Thread t = new Thread(this, "Connection " + getName() + " Runner");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    protected void setPathInBroker(String path) {
+        put(brokerPath, DSString.valueOf(path));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Inner Classes
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Intended for requester functionality so that requesters can know when to

@@ -18,8 +18,8 @@ public class DSMainNode extends DSNode {
     }
 
     @Override
-    protected String getLogName() {
-        return "Main";
+    public String getLogName() {
+        return getLogName("main");
     }
 
     /**

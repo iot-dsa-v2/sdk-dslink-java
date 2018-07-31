@@ -68,37 +68,30 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         return responder;
     }
 
-    public void onConnect() {
-    }
-
-    public void onConnectFail() {
-    }
-
-    /**
-     * Unsubscribes all.
-     */
-    public void onDisconnect() {
-        for (Integer i : sidMap.keySet()) {
-            unsubscribe(i);
-        }
-    }
-
     /**
      * Create or update a subscription.
      */
     public DSInboundSubscription subscribe(Integer sid, String path, int qos) {
-        trace(trace() ? "Subscribing " + path : null);
-        DSInboundSubscription subscription = sidMap.get(sid);
-        if (subscription == null) {
+        DSInboundSubscription subscription = pathMap.get(path);
+        if (subscription != null) {
+            trace(trace() ? String.format("Updating (sid=%s,qos=%s) %s", sid, qos, path)
+                          : null);
+            pathMap.remove(subscription.getPath());
+            if (sid != subscription.getSubscriptionId()) {
+                sidMap.remove(sid);
+                subscription.setSubscriptionId(sid);
+                sidMap.put(sid, subscription);
+            }
+            if (qos != subscription.getQos()) {
+                subscription.setQos(qos);
+            }
+            enqueue(subscription);
+        } else  {
+            trace(trace() ? String.format("Subscribing (sid=%s,qos=%s) %s", sid, qos, path)
+                          : null);
             subscription = makeSubscription(sid, path, qos);
             sidMap.put(sid, subscription);
             pathMap.put(path, subscription);
-        } else if (!path.equals(subscription.getPath())) {
-            unsubscribe(sid);
-            return subscribe(sid, path, qos);
-        } else {
-            subscription.setQos(qos);
-            //TODO refresh subscription, align w/v2
         }
         return subscription;
     }
@@ -109,12 +102,13 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     public void unsubscribe(Integer sid) {
         DSInboundSubscription subscription = sidMap.remove(sid);
         if (subscription != null) {
-            trace(trace() ? "Unsubscribing " + subscription.getPath() : null);
+            trace(trace() ? String.format("Unsubscribe (sid=%s) %s ", sid, subscription.getPath())
+                          : null);
             pathMap.remove(subscription.getPath());
             try {
                 subscription.onClose();
             } catch (Exception x) {
-                warn(warn() ? subscription.toString() : null, x);
+                debug(debug() ? subscription.toString() : null, x);
             }
         }
     }
@@ -161,6 +155,14 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         responder.sendResponse(this);
     }
 
+    @Override
+    protected String getLogName() {
+        if (responder != null) {
+            return responder.getLogName() + ".subscriptions";
+        }
+        return getClass().getName();
+    }
+
     /**
      * Returns a DSInboundSubscription for v1.
      *
@@ -170,6 +172,29 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
      */
     protected DSInboundSubscription makeSubscription(Integer sid, String path, int qos) {
         return new DSInboundSubscription(this, sid, path, qos);
+    }
+
+    protected void onConnected() {
+    }
+
+    /**
+     * Unsubscribes all.
+     */
+    protected void onDisconnected() {
+        DSInboundSubscription sub;
+        for (Map.Entry<String, DSInboundSubscription> me : pathMap.entrySet()) {
+            sub = me.getValue();
+            if (sub.getQos() < 2) {
+                unsubscribe(sub.getSubscriptionId());
+            } else {
+                sidMap.remove(sub.getSubscriptionId());
+                sub.setSubscriptionId(0);
+            }
+        }
+        synchronized (this) {
+            outbound.clear();
+            enqueued = false;
+        }
     }
 
     /**

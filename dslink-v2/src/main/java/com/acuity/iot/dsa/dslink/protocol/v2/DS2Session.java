@@ -10,9 +10,6 @@ import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.HashMap;
 import java.util.Map;
 import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.node.DSBytes;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSInt;
 
 /**
  * Implements DSA 1.1.2
@@ -26,14 +23,12 @@ public class DS2Session extends DSSession implements MessageConstants {
     ///////////////////////////////////////////////////////////////////////////
 
     static final int END_MSG_THRESHOLD = 48 * 1024;
-    static final String LAST_ACK_RCVD = "Last Ack Rcvd";
     static final int MAX_MSG_IVL = 45000;
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo lastAckRcvd = getInfo(LAST_ACK_RCVD);
     private long lastMessageSent;
     private DS2MessageReader messageReader;
     private DS2MessageWriter messageWriter;
@@ -77,52 +72,13 @@ public class DS2Session extends DSSession implements MessageConstants {
     }
 
     @Override
-    public void onConnect() {
-        super.onConnect();
-        messageReader = null;
-        messageWriter = null;
-        requester.onConnect();
-        responder.onConnect();
-    }
-
-    @Override
-    public void onConnectFail() {
-        super.onConnectFail();
-        messageReader = null;
-        messageWriter = null;
-        multiparts.clear();
-        requester.onConnectFail();
-        responder.onConnectFail();
-    }
-
-    @Override
-    public void onDisconnect() {
-        super.onDisconnect();
-        messageReader = null;
-        messageWriter = null;
-        multiparts.clear();
-        requester.onDisconnect();
-        responder.onDisconnect();
-    }
-
-    /**
-     * Returns true if the current message size has crossed a message size threshold.
-     */
     public boolean shouldEndMessage() {
-        if (getMessageWriter().getBodyLength() > END_MSG_THRESHOLD) {
-            return true;
-        }
-        return (System.currentTimeMillis() - lastMessageSent) > 1000;
+        return getMessageWriter().getBodyLength() > END_MSG_THRESHOLD;
     }
 
     /////////////////////////////////////////////////////////////////
     // Protected Methods
     /////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void declareDefaults() {
-        declareDefault(LAST_ACK_RCVD, DSInt.NULL).setReadOnly(true);
-    }
 
     @Override
     protected void doRecvMessage() {
@@ -133,7 +89,6 @@ public class DS2Session extends DSSession implements MessageConstants {
         int ack = reader.getAckId();
         if (ack > 0) {
             setAckRcvd(ack);
-            put(lastAckRcvd, DSInt.valueOf(ack));
         }
         if (reader.isMultipart()) {
             MultipartReader multi = multiparts.get(reader.getRequestId());
@@ -150,13 +105,13 @@ public class DS2Session extends DSSession implements MessageConstants {
         if (reader.isRequest()) {
             responder.handleRequest(reader);
             setAckToSend(reader.getRequestId());
-        } else if (reader.isAck()) {
-            put(lastAckRcvd, DSInt.valueOf(DSBytes.readInt(reader.getBody(), false)));
-        } else if (reader.isPing()) {
-            ;
         } else if (reader.isResponse()) {
             requester.handleResponse(reader);
             setAckToSend(reader.getRequestId());
+        } else if (reader.isAck()) {
+            ;
+        } else if (reader.isPing()) {
+            ;
         } else {
             error("Unknown method: " + reader.getMethod());
         }
@@ -168,22 +123,35 @@ public class DS2Session extends DSSession implements MessageConstants {
         send(requestsNext = !requestsNext);  //alternate reqs and resps
     }
 
-    /*
     @Override
-    protected void onStable() {
-        put("Requester Session", requesterSession);
-        put("Responder Session", responderSession);
+    protected boolean hasPingToSend() {
+        return (System.currentTimeMillis() - lastMessageSent) > MAX_MSG_IVL;
     }
-    */
 
-    /**
-     * Override point, returns true if there are any pending acks or outbound messages queued up.
-     */
-    protected boolean hasSomethingToSend() {
-        if (hasPingToSend()) {
-            return true;
-        }
-        return super.hasSomethingToSend();
+    @Override
+    protected void onConnected() {
+        super.onConnected();
+        messageReader = null;
+        messageWriter = null;
+        requester.onConnected();
+        responder.onConnected();
+    }
+
+    @Override
+    protected void onDisconnected() {
+        super.onDisconnected();
+        messageReader = null;
+        messageWriter = null;
+        multiparts.clear();
+        requester.onDisconnected();
+        responder.onDisconnected();
+    }
+
+    @Override
+    protected void onStarted() {
+        super.onStarted();
+        put(REQUESTER, requester);
+        put(RESPONDER, responder);
     }
 
     /////////////////////////////////////////////////////////////////
@@ -202,10 +170,6 @@ public class DS2Session extends DSSession implements MessageConstants {
             messageWriter = new DS2MessageWriter();
         }
         return messageWriter;
-    }
-
-    private boolean hasPingToSend() {
-        return (System.currentTimeMillis() - lastMessageSent) > MAX_MSG_IVL;
     }
 
     /**
@@ -239,6 +203,7 @@ public class DS2Session extends DSSession implements MessageConstants {
                     msg = null;
                 }
             }
+            setAckRequired();
         } else if (hasPingToSend()) {
             msg = new PingMessage(this);
         } else if (hasAckToSend()) {

@@ -92,25 +92,6 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         stub.process(timestamp, value, status);
     }
 
-    public void onConnect() {
-    }
-
-    public void onConnectFail() {
-    }
-
-    public void onDisconnect() {
-        for (DSOutboundSubscribeStubs stubs : pendingSubscribe) {
-            stubs.onDisconnect();
-        }
-        pendingSubscribe.clear();
-        pendingUnsubscribe.clear();
-        for (DSOutboundSubscribeStubs stubs : pathMap.values()) {
-            stubs.onDisconnect();
-        }
-        sidMap.clear();
-        pathMap.clear();
-    }
-
     @Override
     public void write(DSSession session, MessageWriter writer) {
         if (!pendingSubscribe.isEmpty()) {
@@ -211,6 +192,22 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     protected void doWriteUnsubscribe(MessageWriter writer, Integer sid) {
         DSIWriter out = writer.getWriter();
         out.value(sid);
+    }
+
+    protected void onConnected() {
+    }
+
+    protected void onDisconnected() {
+        for (DSOutboundSubscribeStubs stubs : pendingSubscribe) {
+            stubs.onDisconnect();
+        }
+        pendingSubscribe.clear();
+        pendingUnsubscribe.clear();
+        for (DSOutboundSubscribeStubs stubs : pathMap.values()) {
+            stubs.onDisconnect();
+        }
+        sidMap.clear();
+        pathMap.clear();
     }
 
     ///////////////////////////////////////////////////////////////////////////

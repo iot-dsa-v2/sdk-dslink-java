@@ -1,5 +1,6 @@
 package org.iot.dsa.logging;
 
+import com.acuity.iot.dsa.dslink.sys.logging.DSLevel;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Calendar;
@@ -17,7 +18,7 @@ import org.iot.dsa.time.DSTime;
  *
  * @author Aaron Hansen
  */
-public class DSLogHandler extends Handler implements DSILevels {
+public class DSLogHandler extends Handler {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -27,17 +28,19 @@ public class DSLogHandler extends Handler implements DSILevels {
     static final int STATE_OPEN = 1;
     static final int STATE_CLOSE_PENDING = 2;
     static final String lineSeparator;
-    protected StringBuilder builder = new StringBuilder();
+    private static Logger root;
+    private static Level rootLevel;
+    private int state = STATE_CLOSED;
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
+
     private LogHandlerThread logHandlerThread;
     private int maxQueueSize = 2500;
     private LinkedList<LogRecord> queue = new LinkedList<LogRecord>();
     private int queueThrottle = (int) (maxQueueSize * .90);
-    private static Level rootLevel;
-    private int state = STATE_CLOSED;
+    private StringBuilder builder = new StringBuilder();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -168,11 +171,15 @@ public class DSLogHandler extends Handler implements DSILevels {
      * Applies the level to the root logger and it's handlers.
      */
     public static void setRootLevel(Level level) {
-        Logger root = Logger.getLogger("");
+        if (root == null) {
+            root = Logger.getLogger("");
+        }
         root.setLevel(level);
+        /*
         for (Handler h : root.getHandlers()) {
             h.setLevel(level);
         }
+        */
     }
 
     /**
@@ -220,26 +227,7 @@ public class DSLogHandler extends Handler implements DSILevels {
      * The DSA name mapping.
      */
     static String toString(Level level) {
-        switch (level.intValue()) {
-            case TRACE: //finest
-                return "Trace";
-            case DEBUG: //finer
-                return "Debug";
-            case FINE: //fine
-            case CONFIG: //config
-                return "Fine ";
-            case WARN: //custom
-                return "Warn ";
-            case INFO: //info
-                return "Info ";
-            case ERROR: //warn
-                return "Error";
-            case ADMIN: //custom
-                return "Admin";
-            case FATAL: //severe
-                return "Fatal";
-        }
-        return level.getLocalizedName();
+        return DSLevel.valueOf(level).toString();
     }
 
     /**

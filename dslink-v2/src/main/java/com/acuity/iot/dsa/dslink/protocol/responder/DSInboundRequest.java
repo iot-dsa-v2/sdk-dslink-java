@@ -35,7 +35,11 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
 
     @Override
     protected String getLogName() {
-        return getClass().getSimpleName();
+        String pre = "";
+        if (responder != null) {
+            pre = responder.getLogName();
+        }
+        return pre + "." + getClass().getSimpleName();
     }
 
     public String getPath() {

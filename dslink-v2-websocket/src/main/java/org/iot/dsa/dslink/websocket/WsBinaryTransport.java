@@ -5,8 +5,6 @@ import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
 import javax.websocket.*;
 import org.glassfish.tyrus.client.ClientManager;
 import org.iot.dsa.util.DSException;
@@ -100,7 +98,7 @@ public class WsBinaryTransport extends BufferedBinaryTransport {
             client.setDefaultMaxBinaryMessageBufferSize(64 * 1024);
             client.setDefaultMaxTextMessageBufferSize(64 * 1024);
             client.connectToServer(this, new URI(getConnectionUrl()));
-            fine(fine() ? "Transport open" : null);
+            debug(debug() ? "Transport open" : null);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }

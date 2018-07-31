@@ -6,7 +6,6 @@ import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConfig;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSIReader;
@@ -36,31 +35,14 @@ public class DS1LinkConnection extends DSLinkConnection {
     ///////////////////////////////////////////////////////////////////////////
 
     private DS1ConnectionInit connectionInit;
-    private DSLink link;
-    private String pathInBroker;
     private DSIReader reader;
-    private DSTransport transport;
     private DS1Session session;
+    private DSTransport transport;
     private DSIWriter writer;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Forcefully closes an open connection.  Does not prevent reconnection, intended for
-     * problem resolution.
-     */
-    public void disconnect() {
-        if (session != null) {
-            session.disconnect();
-        }
-    }
-
-    @Override
-    public String getPathInBroker() {
-        return pathInBroker;
-    }
 
     public DSIReader getReader() {
         return reader;
@@ -85,12 +67,26 @@ public class DS1LinkConnection extends DSLinkConnection {
         return writer;
     }
 
+    public void updateSalt(String salt) {
+        connectionInit.updateSalt(salt);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void checkConfig() {
+        configOk();
+    }
+
     protected DS1ConnectionInit initializeConnection() {
         DS1ConnectionInit init = new DS1ConnectionInit();
         put(CONNECTION_INIT, init).setTransient(true);
+        put(BROKER_URI, getLink().getConfig().getBrokerUri());
         try {
             init.initializeConnection();
-            pathInBroker = init.getResponse().getString("path");
+            setPathInBroker(init.getResponse().getString("path"));
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
@@ -109,7 +105,7 @@ public class DS1LinkConnection extends DSLinkConnection {
         }
         DSTransport transport = null;
         try {
-            String type = link.getConfig().getConfig(
+            String type = getLink().getConfig().getConfig(
                     DSLinkConfig.CFG_WS_TRANSPORT_FACTORY,
                     "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
             factory = (DSTransport.Factory) Class.forName(type).newInstance();
@@ -125,72 +121,48 @@ public class DS1LinkConnection extends DSLinkConnection {
             DSException.throwRuntime(x);
         }
         String uri = init.makeWsUrl(wsUri);
-        fine(fine() ? "Connection URL = " + uri : null);
+        debug(debug() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
         transport.setReadTimeout(getLink().getConfig().getConfig(
                 DSLinkConfig.CFG_READ_TIMEOUT, 60000));
         setTransport(transport);
-        fine(fine() ? "Transport type: " + transport.getClass().getName() : null);
+        debug(debug() ? "Transport type: " + transport.getClass().getName() : null);
         return transport;
     }
 
     @Override
     protected void onConnect() {
         try {
+            if (session == null) {
+                session = new DS1Session(this);
+                put(SESSION, session).setTransient(true);
+            }
             DS1ConnectionInit init = connectionInit;
             //Don't reuse the connection init if there is connection problem.
             connectionInit = null;
+            if (init == null) {
+                init = initializeConnection();
+            }
+            makeTransport(init);
+            put(TRANSPORT, getTransport()).setTransient(true);
             getTransport().open();
-            session.onConnect();
             connectionInit = init;
+            info(getConnectionId() + " connected");
+            connOk();
         } catch (Exception x) {
-            session.onConnectFail();
-            DSException.throwRuntime(x);
+            connDown(DSException.makeMessage(x));
         }
     }
 
     @Override
-    protected void onDisconnect() {
-        if (session != null) {
-            session.onDisconnect();
-        }
+    protected void onDisconnected() {
+        super.onDisconnected();
         reader = null;
         writer = null;
         transport = null;
         remove(TRANSPORT);
-    }
-
-    @Override
-    protected void onInitialize() {
-        DS1ConnectionInit init = connectionInit;
-        //Don't reuse the connection init if there is connection problem.
-        connectionInit = null;
-        if (init == null) {
-            init = initializeConnection();
-        }
-        makeTransport(init);
-        put(TRANSPORT, getTransport()).setTransient(true);
-        if (session == null) {
-            session = new DS1Session(this);
-            put(SESSION, session).setTransient(true);
-        }
-        connectionInit = init;
-    }
-
-    @Override
-    protected void onRun() {
-        session.run();
-    }
-
-    @Override
-    protected void onStable() {
-        this.link = getLink();
-        super.onStable();
-    }
-
-    public void setRequesterAllowed() {
-        session.setRequesterAllowed();
+        info(getConnectionId() + " disconnected");
     }
 
     /**
@@ -215,10 +187,6 @@ public class DS1LinkConnection extends DSLinkConnection {
                     "Unexpected transport type: " + transport.getClass().getName());
         }
         this.transport = transport;
-    }
-
-    public void updateSalt(String salt) {
-        connectionInit.updateSalt(salt);
     }
 
 }

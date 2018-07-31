@@ -710,7 +710,6 @@ public class DSTime {
         if (tmp < 10) {
             buf.append('0');
         }
-        buf.append(tmp);
         buf.append(tmp).append(':');
         tmp = calendar.get(Calendar.MILLISECOND);
         if (tmp < 100) {

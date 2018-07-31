@@ -86,7 +86,7 @@ public class DSInboundInvoke extends DSInboundRequest
         }
         state = STATE_CLOSE_PENDING;
         enqueueResponse();
-        fine(fine() ? getPath() + " invoke closed locally" : null);
+        debug(debug() ? getPath() + " invoke closed locally" : null);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class DSInboundInvoke extends DSInboundRequest
         closeReason = reason;
         state = STATE_CLOSE_PENDING;
         enqueueResponse();
-        fine(fine() ? getPath() + " invoke closed locally" : null);
+        debug(debug() ? getPath() + " invoke closed locally" : null);
     }
 
     /**
@@ -133,7 +133,7 @@ public class DSInboundInvoke extends DSInboundRequest
             return;
         }
         state = STATE_CLOSED;
-        fine(debug() ? getPath() + " invoke closed" : null);
+        debug(debug() ? getPath() + " invoke closed" : null);
         synchronized (this) {
             updateHead = updateTail = null;
         }
