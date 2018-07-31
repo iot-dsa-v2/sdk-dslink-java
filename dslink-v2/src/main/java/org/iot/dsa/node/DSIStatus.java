@@ -7,6 +7,6 @@ package org.iot.dsa.node;
  */
 public interface DSIStatus {
 
-    public DSStatus toStatus();
+    public DSStatus getStatus();
 
 }

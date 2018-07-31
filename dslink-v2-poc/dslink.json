@@ -10,9 +10,9 @@
       "value": "org.iot.dsa.dslink.poc.MainNode"
     },
     "log": {
-      "desc": "all, trace, debug, fine, warn, info, error, admin, fatal, none",
+      "desc": "all, trace, debug, warn, info, error, admin, fatal, none",
       "type": "enum",
-      "value": "warn"
+      "value": "info"
     },
     "token": {
       "desc": "Authentication token for the broker.",

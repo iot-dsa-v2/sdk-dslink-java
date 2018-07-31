@@ -252,6 +252,16 @@ public class DSInfo implements ApiObject {
         return next != null;
     }
 
+    /**
+     * True if the value of the info is an instance of the give class.
+     */
+    public boolean is(Class clazz) {
+        if (value == null) {
+            return false;
+        }
+        return clazz.isAssignableFrom(value.getClass());
+    }
+
     @Override
     public boolean isAction() {
         return value instanceof DSAbstractAction;

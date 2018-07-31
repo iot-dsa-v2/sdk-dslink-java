@@ -37,6 +37,8 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
+    public DSRequester() {}
+
     public DSRequester(DSSession session) {
         this.session = session;
     }
@@ -71,16 +73,11 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
         return req;
     }
 
-    public void onConnect() {
-        subscriptions.onConnect();
+    public void onConnected() {
+        subscriptions.onConnected();
     }
 
-    public void onConnectFail() {
-        subscriptions.onConnectFail();
-    }
-
-    public void onDisconnect() {
-        subscriptions.onDisconnect();
+    public void onDisconnected() {
         Iterator<Entry<Integer, DSOutboundStub>> it = requests.entrySet().iterator();
         Map.Entry<Integer, DSOutboundStub> me;
         while (it.hasNext()) {
@@ -92,6 +89,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
             }
             it.remove();
         }
+        subscriptions.onDisconnected();
     }
 
     @Override

@@ -8,9 +8,15 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
-import javax.websocket.*;
+import javax.websocket.ClientEndpoint;
+import javax.websocket.CloseReason;
+import javax.websocket.EndpointConfig;
+import javax.websocket.OnClose;
+import javax.websocket.OnError;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.RemoteEndpoint;
+import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
 import org.iot.dsa.util.DSException;
 
@@ -54,6 +60,7 @@ public class WsTextTransport extends DSTextTransport {
             return this;
         }
         open = false;
+        debug(debug() ? "WsTextTransport.close()" : null, new Exception());
         try {
             if (session != null) {
                 session.close();
@@ -126,7 +133,9 @@ public class WsTextTransport extends DSTextTransport {
     @OnOpen
     public void onOpen(Session session, EndpointConfig config) {
         open = true;
+        buffer.open();
         this.session = session;
+        debug("WsTextTransport open");
     }
 
     @Override
@@ -141,9 +150,6 @@ public class WsTextTransport extends DSTextTransport {
             client.setDefaultMaxBinaryMessageBufferSize(64 * 1024);
             client.setDefaultMaxTextMessageBufferSize(64 * 1024);
             client.connectToServer(this, new URI(getConnectionUrl()));
-            buffer.open();
-            open = true;
-            fine(fine() ? "Transport open" : null);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
@@ -159,7 +165,7 @@ public class WsTextTransport extends DSTextTransport {
      */
     public void write(String text, boolean isLast) {
         if (!open) {
-            throw new DSIoException("Closed " + getConnectionUrl());
+            throw new DSIoException("Not open " + getConnectionUrl());
         }
         try {
             RemoteEndpoint.Basic basic = session.getBasicRemote();

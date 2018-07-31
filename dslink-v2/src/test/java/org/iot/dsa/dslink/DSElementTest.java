@@ -18,22 +18,6 @@ import org.junit.Test;
 public class DSElementTest {
 
     @Test
-    public void tmp() throws Exception {
-        System.out.println("max: " + Long.MAX_VALUE);
-        System.out.println("min: " + Long.MAX_VALUE);
-        long time = System.nanoTime();
-        System.out.println("now: " + time);
-        time /= DSTime.NANOS_IN_MS;
-        System.out.println("now millis: " + time);
-        time /= 60000;
-        System.out.println("now minutes: " + time);
-        System.out.println("currentTimeMIllis: " + System.currentTimeMillis());
-        long tmp = Long.MAX_VALUE - 2;
-        tmp += 3;
-        System.out.println("rollover: " + tmp);
-    }
-
-    @Test
     public void test() throws Exception {
         test(DSElement.make(true), true);
         test(DSElement.make(false), false);

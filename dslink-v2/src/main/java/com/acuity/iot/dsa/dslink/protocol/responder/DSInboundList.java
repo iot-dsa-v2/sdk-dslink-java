@@ -97,7 +97,7 @@ public class DSInboundList extends DSInboundRequest
         }
         state = STATE_CLOSE_PENDING;
         enqueueResponse();
-        fine(fine() ? getPath() + " list closed locally" : null);
+        debug(debug() ? getPath() + " list closed locally" : null);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class DSInboundList extends DSInboundRequest
         state = STATE_CLOSE_PENDING;
         closeReason = reason;
         enqueueResponse();
-        fine(fine() ? getPath() + " list closed locally" : null);
+        debug(debug() ? getPath() + " list closed locally" : null, reason);
     }
 
     @Override
@@ -137,7 +137,7 @@ public class DSInboundList extends DSInboundRequest
             return;
         }
         state = STATE_CLOSED;
-        fine(debug() ? getPath() + " list closed" : null);
+        debug(debug() ? getPath() + " list closed" : null);
         synchronized (this) {
             updateHead = updateTail = null;
         }
@@ -556,7 +556,7 @@ public class DSInboundList extends DSInboundRequest
                 case '@':
                     break;
                 default:
-                    cacheBuf.append(encodeName(name, cacheBuf));
+                    encodeName(name, cacheBuf);
                     cacheBuf.insert(0, '$');
                     name = cacheBuf.toString();
 

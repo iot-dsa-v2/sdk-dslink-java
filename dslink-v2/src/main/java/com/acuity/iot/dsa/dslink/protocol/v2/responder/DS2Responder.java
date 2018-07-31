@@ -35,6 +35,8 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     // Methods - Constructors
     /////////////////////////////////////////////////////////////////
 
+    public DS2Responder() {}
+
     public DS2Responder(DS2Session session) {
         super(session);
     }
@@ -84,7 +86,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         }
     }
 
-    public void onConnect() {
+    public void onConnected() {
     }
 
     public void onConnectFail() {

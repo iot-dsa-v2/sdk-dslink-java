@@ -45,7 +45,7 @@ public class DSCharBuffer {
     public synchronized void clear() {
         length = 0;
         offset = 0;
-        notify();
+        notifyAll();
     }
 
     /**
@@ -56,7 +56,7 @@ public class DSCharBuffer {
             return;
         }
         open = false;
-        notify();
+        notifyAll();
     }
 
     /**
@@ -68,7 +68,7 @@ public class DSCharBuffer {
         }
         closeException = toThrow;
         open = false;
-        notify();
+        notifyAll();
     }
 
     /**
@@ -106,7 +106,7 @@ public class DSCharBuffer {
         offset = 0;
         open = true;
         closeException = null;
-        notify();
+        notifyAll();
     }
 
     /**
@@ -128,7 +128,7 @@ public class DSCharBuffer {
         }
         buffer[length + offset] = b;
         length++;
-        notify();
+        notifyAll();
     }
 
     /**
@@ -163,7 +163,7 @@ public class DSCharBuffer {
         //System.arraycopy(msg, off, buffer, length + offset, len);
         System.arraycopy(msg, off, buffer, offset, len);
         length += len;
-        notify();
+        notifyAll();
     }
 
     /**
@@ -185,7 +185,7 @@ public class DSCharBuffer {
         }
         msg.getChars(0, len, buffer, offset + length);
         length += len;
-        notify();
+        notifyAll();
     }
 
     /**
@@ -204,7 +204,7 @@ public class DSCharBuffer {
             } catch (InterruptedException ignore) {
             }
         }
-        notify();
+        notifyAll();
         if (!open) {
             if (length == 0) {
                 if (closeException != null) {
@@ -241,7 +241,7 @@ public class DSCharBuffer {
             } catch (InterruptedException ignore) {
             }
         }
-        notify();
+        notifyAll();
         if (!open) {
             if (length == 0) {
                 if (closeException != null) {

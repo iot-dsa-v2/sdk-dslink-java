@@ -69,15 +69,11 @@ public class DSInboundSubscription extends DSInboundRequest
     public boolean canWrite(DSSession session) {
         if (ackRequired > 0) {
             int last = session.getAckRcvd();
-            if (last > ackRequired) {
+            if (last >= ackRequired) {
                 return true;
             }
             //is the last ack is so far away that we have a rollover.
-            boolean b = ((ackRequired - 10000000) > last);
-            //if (!b) { //TODO
-                //System.out.print('.');
-            //}
-            return b;
+            return ((ackRequired - 10000000) > last);
         }
         return true;
     }
@@ -93,6 +89,10 @@ public class DSInboundSubscription extends DSInboundRequest
     @Override
     public Integer getSubscriptionId() {
         return sid;
+    }
+
+    public int getQos() {
+        return qos;
     }
 
     /**
@@ -113,7 +113,7 @@ public class DSInboundSubscription extends DSInboundRequest
         }
         DSStatus status = DSStatus.ok;
         if (value instanceof DSIStatus) {
-            status = ((DSIStatus) value).toStatus();
+            status = ((DSIStatus) value).getStatus();
         }
         update(System.currentTimeMillis(), value, status);
     }
@@ -123,9 +123,25 @@ public class DSInboundSubscription extends DSInboundRequest
         close();
     }
 
+    /**
+     * For v2 only.
+     */
     public DSInboundSubscription setCloseAfterUpdate(boolean closeAfterUpdate) {
         this.closeAfterUpdate = closeAfterUpdate;
         return this;
+    }
+
+    public void setSubscriptionId(Integer id) {
+        sid = id;
+    }
+
+    public void setQos(Integer val) {
+        synchronized (this) {
+            if (val == 0) {
+                updateHead = updateTail;
+            }
+            qos = val;
+        }
     }
 
     @Override
@@ -168,7 +184,9 @@ public class DSInboundSubscription extends DSInboundRequest
                 enqueued = true;
             }
         }
-        manager.enqueue(this);
+        if (sid != 0) {
+            manager.enqueue(this);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -232,15 +250,17 @@ public class DSInboundSubscription extends DSInboundRequest
             ackRequired = session.getMessageId();
         }
         Update update = dequeue();
-        int count = 0;
+        int count = 500;
         while (update != null) {
             write(update, writer, buf);
             if ((qos == 0) || session.shouldEndMessage()) {
                 break;
-            } else if (++count > 1024) {
-                break;
             }
-            update = dequeue();
+            if (--count >= 0) {
+                update = dequeue();
+            } else {
+                update = null;
+            }
         }
         synchronized (this) {
             if (updateHead == null) {
@@ -296,14 +316,14 @@ public class DSInboundSubscription extends DSInboundRequest
                 closeHandler.onClose(getSubscriptionId());
             }
         } catch (Exception x) {
-            manager.warn(manager.getPath(), x);
+            manager.debug(manager.getPath(), x);
         }
         try {
             if (node != null) {
                 node.unsubscribe(DSNode.VALUE_TOPIC, child, this);
             }
         } catch (Exception x) {
-            manager.warn(manager.getPath(), x);
+            manager.debug(manager.getPath(), x);
         }
     }
 

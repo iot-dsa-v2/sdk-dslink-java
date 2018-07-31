@@ -2,6 +2,7 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
+import com.acuity.iot.dsa.dslink.sys.backup.SysBackupService;
 import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
 import com.acuity.iot.dsa.dslink.sys.logging.SysLogService;
 import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
@@ -22,23 +23,22 @@ public class DSSysNode extends DSNode {
 
     static final String CERTIFICATES = "Certificates";
     static final String CONNECTION = "Connection";
-    static final String SAVE = "Save";
     static final String STOP = "Stop";
     static final String PROFILER = "Profiler";
     static final String LOGGING = "Logging";
+    static final String BACKUPS = "Backups";
 
     private DSInfo connection = getInfo(CONNECTION);
-    private DSInfo save = getInfo(SAVE);
     private DSInfo stop = getInfo(STOP);
 
     @Override
     protected void declareDefaults() {
-        declareDefault(SAVE, DSAction.DEFAULT);
         declareDefault(STOP, DSAction.DEFAULT);
         declareDefault(CERTIFICATES, new SysCertManager());
         declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
         declareDefault(PROFILER, new SysProfiler()).setTransient(true);
         declareDefault(LOGGING, new SysLogService());
+        declareDefault(BACKUPS, new SysBackupService());
     }
 
     public DSLinkConnection getConnection() {
@@ -51,7 +51,7 @@ public class DSSysNode extends DSNode {
 
     @Override
     protected String getLogName() {
-        return "Sys";
+        return getLogName("sys");
     }
 
     void init() {
@@ -67,7 +67,7 @@ public class DSSysNode extends DSNode {
             } else { //2
                 conn = new DS2LinkConnection();
             }
-            fine(fine() ? "Connection type: " + conn.getClass().getName() : null);
+            debug(debug() ? "Connection type: " + conn.getClass().getName() : null);
             put(connection, conn);
         } catch (Exception x) {
             DSException.throwRuntime(x);
@@ -76,9 +76,7 @@ public class DSSysNode extends DSNode {
 
     @Override
     public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
-        if (action == save) {
-            getLink().save();
-        } else if (action == stop) {
+        if (action == stop) {
             getLink().shutdown();
         } else {
             super.onInvoke(action, invocation);

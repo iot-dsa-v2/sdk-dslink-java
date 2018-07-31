@@ -6,9 +6,14 @@ import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import org.iot.dsa.conn.DSConnection;
+import org.iot.dsa.conn.DSIConnected;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.node.DSBool;
+import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
+import org.iot.dsa.util.DSException;
 
 /**
  * The state of a connection to a broker as well as a protocol implementation. Not intended for link
@@ -16,12 +21,17 @@ import org.iot.dsa.node.DSNode;
  *
  * @author Aaron Hansen
  */
-public abstract class DSSession extends DSNode {
+public abstract class DSSession extends DSNode implements DSIConnected {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    protected static final String REQUESTER = "Requester";
+    protected static final String REQUESTER_ALLOWED = "Requester Allowed";
+    protected static final String RESPONDER = "Responder";
+
+    private static final int MAX_MISSING_ACKS = 8;
     private static final int MAX_MSG_ID = Integer.MAX_VALUE;
     private static final long MSG_TIMEOUT = 60000;
 
@@ -31,16 +41,19 @@ public abstract class DSSession extends DSNode {
 
     private int ackRcvd = -1;
     private int ackToSend = -1;
+    private int ackRequired = 0;
     private boolean connected = false;
     private DSLinkConnection connection;
     private long lastTimeRecv;
     private long lastTimeSend;
     private int messageId = 0;
     private int nextMessage = 1;
-    private Object outgoingMutex = new Object();
+    private final Object outgoingMutex = new Object();
     private List<OutboundMessage> outgoingRequests = new LinkedList<OutboundMessage>();
     private List<OutboundMessage> outgoingResponses = new LinkedList<OutboundMessage>();
-    protected boolean requesterAllowed = false;
+    private DSInfo requesterAllowed = getInfo(REQUESTER_ALLOWED);
+    private ReadThread readThread;
+    private WriteThread writeThread;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -58,27 +71,12 @@ public abstract class DSSession extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Can be called by the subclass to force exit the run method.
-     */
-    public void disconnect() {
-        if (!connected) {
-            return;
-        }
-        connected = false;
-        getTransport().close();
-        synchronized (outgoingMutex) {
-            notifyAll();
-        }
-        info(getPath() + " locally closed");
-    }
-
-    /**
      * Add a message to the outgoing request queue.
      */
     public void enqueueOutgoingRequest(OutboundMessage arg) {
         if (connected) {
-            if (!requesterAllowed) {
-                throw new IllegalStateException("Requests forbidden");
+            if (!isRequesterAllowed()) {
+                throw new IllegalStateException("Requester not allowed");
             }
             synchronized (outgoingMutex) {
                 outgoingRequests.add(arg);
@@ -134,58 +132,31 @@ public abstract class DSSession extends DSNode {
         return getConnection().getTransport();
     }
 
-    /**
-     * Override point, called when the previous connection can be resumed. The the transport will
-     * have already been set.
-     */
-    public void onConnect() {
-        connected = true;
+    public boolean isRequesterAllowed() {
+        return requesterAllowed.getElement().toBoolean();
     }
 
-    /**
-     * Override point, when a connection attempt failed.
-     */
-    public void onConnectFail() {
-        connected = false;
-    }
-
-    /**
-     * Override point, called after the connection is closed.
-     */
-    public void onDisconnect() {
-        synchronized (outgoingMutex) {
-            outgoingRequests.clear();
-            outgoingResponses.clear();
-        }
-    }
-
-    /**
-     * Called by the connection, this manages the running state and calls doRun for the specific
-     * implementation.  A separate thread is spun off to manage writing.
-     */
-    public void run() {
-        lastTimeRecv = lastTimeSend = System.currentTimeMillis();
-        new WriteThread(getConnection().getLink().getLinkName() + " Writer").start();
-        while (connected) {
-            try {
-                verifyLastSend();
-                doRecvMessage();
-                lastTimeRecv = System.currentTimeMillis();
-            } catch (Exception x) {
-                getTransport().close();
-                if (connected) {
-                    connected = false;
-                    error(getPath(), x);
-                }
-            }
+    @Override
+    public void onChange(DSConnection connection) {
+        switch (connection.getConnectionState()) {
+            case CONNECTED:
+                onConnected();
+                break;
+            case DISCONNECTED:
+                onDisconnected();
+                break;
+            case DISCONNECTING:
+                onDisconnecting();
+                break;
+            //case CONNECTING:
         }
     }
 
     /**
      * Called when the broker signifies that requests are allowed.
      */
-    public void setRequesterAllowed() {
-        requesterAllowed = true;
+    public void setRequesterAllowed(boolean allowed) {
+        put(requesterAllowed, DSBool.valueOf(allowed));
     }
 
     public abstract boolean shouldEndMessage();
@@ -193,6 +164,12 @@ public abstract class DSSession extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault(REQUESTER_ALLOWED, DSBool.FALSE);
+    }
 
     /**
      * Can return null.
@@ -232,10 +209,13 @@ public abstract class DSSession extends DSNode {
 
     @Override
     protected String getLogName() {
-        return "Session";
+        return getLogName("session");
     }
 
     protected int getMissingAcks() {
+        if (ackRequired > 0) {
+            return ackRequired - ackRcvd - 1;
+        }
         return messageId - ackRcvd - 1;
     }
 
@@ -254,19 +234,16 @@ public abstract class DSSession extends DSNode {
         return ackToSend > 0;
     }
 
-    protected boolean hasOutgoingRequests() {
-        return !outgoingRequests.isEmpty();
-    }
-
-    protected boolean hasOutgoingResponses() {
-        return !outgoingResponses.isEmpty();
-    }
+    protected abstract boolean hasPingToSend();
 
     /**
      * Override point, this returns the result of hasMessagesToSend.
      */
     protected boolean hasSomethingToSend() {
         if (ackToSend >= 0) {
+            return true;
+        }
+        if (hasPingToSend()) {
             return true;
         }
         if (waitingForAcks()) {
@@ -279,10 +256,6 @@ public abstract class DSSession extends DSNode {
             return true;
         }
         return false;
-    }
-
-    protected boolean isConnected() {
-        return connected;
     }
 
     /**
@@ -302,6 +275,52 @@ public abstract class DSSession extends DSNode {
         return outgoingResponses.size();
     }
 
+    /**
+     * Creates the starts the read and write threads.
+     */
+    protected void onConnected() {
+        connected = true;
+        lastTimeRecv = lastTimeSend = System.currentTimeMillis();
+        readThread = new ReadThread(getConnection().getLink().getLinkName() + " Reader");
+        writeThread = new WriteThread(getConnection().getLink().getLinkName() + " Writer");
+        readThread.start();
+        writeThread.start();
+    }
+
+    /**
+     * Clear the outgoing queues and waits for the the read and write threads to exit.
+     */
+    protected void onDisconnected() {
+        synchronized (outgoingMutex) {
+            outgoingRequests.clear();
+            outgoingResponses.clear();
+            outgoingMutex.notifyAll();
+        }
+        try {
+            writeThread.join();
+        } catch (Exception x) {
+            debug(getPath(), x);
+        }
+        try {
+            readThread.join();
+        } catch (Exception x) {
+            debug(getPath(), x);
+        }
+        writeThread = null;
+        readThread = null;
+    }
+
+    /**
+     * Sets the connected state to false so that the read and write threads will exit cleanly.
+     */
+    protected void onDisconnecting() {
+        if (!connected) {
+            return;
+        }
+        connected = false;
+        notifyOutgoing();
+    }
+
     protected void requeueOutgoingRequest(OutboundMessage arg) {
         synchronized (outgoingMutex) {
             outgoingRequests.add(arg);
@@ -319,10 +338,17 @@ public abstract class DSSession extends DSNode {
      */
     protected void setAckRcvd(int ackRcvd) {
         if (ackRcvd < this.ackRcvd) {
-            warn(warn() ? String.format("Ack rcvd %s < last %s", ackRcvd, this.ackRcvd) : null);
+            debug(debug() ? String.format("Ack rcvd %s < last %s", ackRcvd, this.ackRcvd) : null);
         }
         this.ackRcvd = ackRcvd;
         notifyOutgoing();
+    }
+
+    /**
+     * Used to indicate that the current message ID requires an ack.
+     */
+    protected void setAckRequired() {
+        ackRequired = messageId;
     }
 
     /**
@@ -336,7 +362,11 @@ public abstract class DSSession extends DSNode {
     }
 
     protected boolean waitingForAcks() {
-        return getMissingAcks() > 8;
+        boolean ret = getMissingAcks() > MAX_MISSING_ACKS;
+        if (ret) {
+            debug(debug() ? "Waiting for " + getMissingAcks() + " acks" : null);
+        }
+        return ret;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -360,7 +390,36 @@ public abstract class DSSession extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * A separate thread is used for writing to the connection.
+     * Receives messages.
+     */
+    private class ReadThread extends Thread {
+
+        ReadThread(String name) {
+            super(name);
+            setDaemon(true);
+        }
+
+        public void run() {
+            DSLinkConnection conn = getConnection();
+            try {
+                while (connected) {
+                    verifyLastSend();
+                    doRecvMessage();
+                    conn.connOk();
+                    lastTimeRecv = System.currentTimeMillis();
+                }
+            } catch (Exception x) {
+                if (connected) {
+                    connected = false;
+                    error(getPath(), x);
+                    conn.connDown(DSException.makeMessage(x));
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends messages.
      */
     private class WriteThread extends Thread {
 
@@ -370,6 +429,7 @@ public abstract class DSSession extends DSNode {
         }
 
         public void run() {
+            DSLinkConnection conn = getConnection();
             try {
                 while (connected) {
                     verifyLastRead();
@@ -378,19 +438,20 @@ public abstract class DSSession extends DSNode {
                             try {
                                 outgoingMutex.wait(5000);
                             } catch (InterruptedException x) {
-                                warn(getPath(), x);
+                                debug(getPath(), x);
                             }
                             continue;
                         }
                     }
                     doSendMessage();
+                    conn.connOk();
                     lastTimeSend = System.currentTimeMillis();
                 }
             } catch (Exception x) {
                 if (connected) {
                     connected = false;
-                    getTransport().close();
                     error(getPath(), x);
+                    conn.connDown(DSException.makeMessage(x));
                 }
             }
         }

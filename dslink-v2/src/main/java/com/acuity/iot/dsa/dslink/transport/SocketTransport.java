@@ -76,7 +76,7 @@ public class SocketTransport extends StreamBinaryTransport {
             }
             socket.setSoTimeout((int) getReadTimeout());
             init(socket.getInputStream(), socket.getOutputStream());
-            fine(fine() ? "SocketTransport open" : null);
+            debug(debug() ? "SocketTransport open" : null);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
