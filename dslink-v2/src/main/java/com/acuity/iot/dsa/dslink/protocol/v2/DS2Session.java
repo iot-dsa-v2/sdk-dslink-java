@@ -203,6 +203,7 @@ public class DS2Session extends DSSession implements MessageConstants {
                     msg = null;
                 }
             }
+            setAckRequired();
         } else if (hasPingToSend()) {
             msg = new PingMessage(this);
         } else if (hasAckToSend()) {

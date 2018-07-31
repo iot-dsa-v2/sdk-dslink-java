@@ -108,7 +108,7 @@ public class DSInboundList extends DSInboundRequest
         state = STATE_CLOSE_PENDING;
         closeReason = reason;
         enqueueResponse();
-        debug(debug() ? getPath() + " list closed locally" : null);
+        debug(debug() ? getPath() + " list closed locally" : null, reason);
     }
 
     @Override

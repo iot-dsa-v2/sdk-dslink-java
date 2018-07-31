@@ -31,6 +31,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     protected static final String REQUESTER_ALLOWED = "Requester Allowed";
     protected static final String RESPONDER = "Responder";
 
+    private static final int MAX_MISSING_ACKS = 8;
     private static final int MAX_MSG_ID = Integer.MAX_VALUE;
     private static final long MSG_TIMEOUT = 60000;
 
@@ -40,6 +41,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
 
     private int ackRcvd = -1;
     private int ackToSend = -1;
+    private int ackRequired = 0;
     private boolean connected = false;
     private DSLinkConnection connection;
     private long lastTimeRecv;
@@ -74,7 +76,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     public void enqueueOutgoingRequest(OutboundMessage arg) {
         if (connected) {
             if (!isRequesterAllowed()) {
-                throw new IllegalStateException("Requests forbidden");
+                throw new IllegalStateException("Requester not allowed");
             }
             synchronized (outgoingMutex) {
                 outgoingRequests.add(arg);
@@ -211,6 +213,9 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     }
 
     protected int getMissingAcks() {
+        if (ackRequired > 0) {
+            return ackRequired - ackRcvd - 1;
+        }
         return messageId - ackRcvd - 1;
     }
 
@@ -340,6 +345,13 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     }
 
     /**
+     * Used to indicate that the current message ID requires an ack.
+     */
+    protected void setAckRequired() {
+        ackRequired = messageId;
+    }
+
+    /**
      * Call for each incoming message id that needs to be acked.
      */
     protected void setAckToSend(int ackToSend) {
@@ -350,7 +362,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     }
 
     protected boolean waitingForAcks() {
-        boolean ret = getMissingAcks() > 8;
+        boolean ret = getMissingAcks() > MAX_MISSING_ACKS;
         if (ret) {
             debug(debug() ? "Waiting for " + getMissingAcks() + " acks" : null);
         }

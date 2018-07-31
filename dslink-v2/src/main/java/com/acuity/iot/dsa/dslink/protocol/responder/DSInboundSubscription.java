@@ -91,6 +91,10 @@ public class DSInboundSubscription extends DSInboundRequest
         return sid;
     }
 
+    public int getQos() {
+        return qos;
+    }
+
     /**
      * For v2 only.
      */
@@ -119,9 +123,25 @@ public class DSInboundSubscription extends DSInboundRequest
         close();
     }
 
+    /**
+     * For v2 only.
+     */
     public DSInboundSubscription setCloseAfterUpdate(boolean closeAfterUpdate) {
         this.closeAfterUpdate = closeAfterUpdate;
         return this;
+    }
+
+    public void setSubscriptionId(Integer id) {
+        sid = id;
+    }
+
+    public void setQos(Integer val) {
+        synchronized (this) {
+            if (val == 0) {
+                updateHead = updateTail;
+            }
+            qos = val;
+        }
     }
 
     @Override
@@ -164,7 +184,9 @@ public class DSInboundSubscription extends DSInboundRequest
                 enqueued = true;
             }
         }
-        manager.enqueue(this);
+        if (sid != 0) {
+            manager.enqueue(this);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -80,6 +80,7 @@ public abstract class DSResponder extends DSNode {
     }
 
     public void onDisconnected() {
+        getSubscriptions().onDisconnected();
         Iterator<Entry<Integer, DSStream>> it = inboundRequests.entrySet().iterator();
         Map.Entry<Integer, DSStream> me;
         while (it.hasNext()) {
@@ -91,7 +92,6 @@ public abstract class DSResponder extends DSNode {
             }
             it.remove();
         }
-        getSubscriptions().onDisconnected();
     }
 
     public DSStream removeRequest(Integer rid) {

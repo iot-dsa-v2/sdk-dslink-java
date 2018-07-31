@@ -41,7 +41,6 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    static final String ENABLED = "Enabled";
     static final String FAILURE = "Failure";
     static final String LAST_OK = "Last OK";
     static final String LAST_FAIL = "Last Fail";
@@ -53,7 +52,6 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo enabled = getInfo(ENABLED);
     private DSInfo failure = getInfo(FAILURE);
     private DSInfo lastFail = getInfo(LAST_FAIL);
     private DSInfo lastOk = getInfo(LAST_OK);
@@ -194,7 +192,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     }
 
     public boolean isEnabled() {
-        return enabled.getElement().toBoolean();
+        return true;
     }
 
     /**
@@ -286,7 +284,6 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
 
     @Override
     protected void declareDefaults() {
-        declareDefault(ENABLED, DSBool.TRUE);
         declareDefault(STATUS, DSStatus.down).setReadOnly(true).setTransient(true);
         declareDefault(STATE, DSConnectionState.DISCONNECTED).setReadOnly(true).setTransient(true);
         declareDefault(STATE_TIME, DSDateTime.currentTime()).setReadOnly(true).setTransient(true);
@@ -325,14 +322,6 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      */
     protected boolean isOperational() {
         return isRunning() && isConfigOk() && isEnabled();
-    }
-
-    protected void onChildChanged(DSInfo info) {
-        if (info == enabled) {
-            synchronized (this) {
-                notify();
-            }
-        }
     }
 
     /**

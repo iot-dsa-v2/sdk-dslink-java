@@ -78,7 +78,6 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     }
 
     public void onDisconnected() {
-        subscriptions.onDisconnected();
         Iterator<Entry<Integer, DSOutboundStub>> it = requests.entrySet().iterator();
         Map.Entry<Integer, DSOutboundStub> me;
         while (it.hasNext()) {
@@ -90,6 +89,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
             }
             it.remove();
         }
+        subscriptions.onDisconnected();
     }
 
     @Override

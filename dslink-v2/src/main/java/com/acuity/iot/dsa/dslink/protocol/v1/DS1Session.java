@@ -112,16 +112,19 @@ public class DS1Session extends DSSession {
     @Override
     protected void doSendMessage() {
         try {
-            requestsNext = !requestsNext;
-            beginMessage();
             if (!waitingForAcks()) {
+                requestsNext = !requestsNext;
+                beginMessage();
                 send(requestsNext);
                 if (!shouldEndMessage()) {
                     send(!requestsNext);
                 }
+                endMessage();
+                lastMessageSent = System.currentTimeMillis();
+                if (requestsBegun || responsesBegun) {
+                    setAckRequired();
+                }
             }
-            endMessage();
-            lastMessageSent = System.currentTimeMillis();
         } finally {
             requestsBegun = false;
             responsesBegun = false;
@@ -280,6 +283,7 @@ public class DS1Session extends DSSession {
                 if (reader.next() != Token.BOOLEAN) {
                     throw new IllegalStateException("Allowed not a boolean");
                 }
+                debug(debug() ? "Requester allowed" : null);
                 setRequesterAllowed(reader.getBoolean());
             } else if (key.equals("salt")) {
                 reader.next();
