@@ -160,7 +160,6 @@ public class DSCharBuffer {
                 offset = 0;
             }
         }
-        //System.arraycopy(msg, off, buffer, length + offset, len);
         System.arraycopy(msg, off, buffer, offset, len);
         length += len;
         notifyAll();

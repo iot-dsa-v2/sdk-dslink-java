@@ -2,7 +2,13 @@ package org.iot.dsa.io;
 
 import java.util.HashMap;
 import org.iot.dsa.io.DSIReader.Token;
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSIStorable;
+import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -99,6 +105,7 @@ public class NodeDecoder {
         DSElement state = null;
         String type = null;
         DSInfo info = null;
+        DSIObject obj = null;
         while (in.next() != Token.END_MAP) {
             validateEqual(in.last(), Token.STRING);
             String key = in.getString();
@@ -119,7 +126,6 @@ public class NodeDecoder {
                 if (name == null) {
                     throw new IllegalStateException("Missing name");
                 }
-                DSIObject obj = null;
                 if (type != null) {
                     obj = getInstance(type);
                     if (info == null) {
@@ -128,8 +134,13 @@ public class NodeDecoder {
                         parent.put(info, obj);
                     }
                 }
-                if ((info != null) && (obj == null)) {
-                    obj = info.getObject();
+                if (info != null) {
+                    if (obj == null) {
+                        obj = info.getObject();
+                    }
+                    if (state != null) {
+                        info.decodeState(state);
+                    }
                 }
                 if (obj == null) { //dynamic, or declareDefaults was modified
                     in.next();
@@ -146,10 +157,31 @@ public class NodeDecoder {
                         parent.put(info, val.valueOf(in.getElement()));
                     }
                 }
+            }
+        }
+        if (obj == null) { //Node with no children
+            if (name == null) {
+                throw new IllegalStateException("Missing name");
+            }
+            if (type != null) {
+                obj = getInstance(type);
+                if (info == null) {
+                    info = parent.put(name, obj);
+                } else {
+                    parent.put(info, obj);
+                }
+            }
+            if (info != null)  {
+                if (obj == null) {
+                    obj = info.getObject();
+                }
                 if (state != null) {
                     info.decodeState(state);
                 }
             }
+        }
+        if (obj == null) {
+            throw new IllegalStateException("Could not decode " + parent.getPath() + "/" + name);
         }
     }
 

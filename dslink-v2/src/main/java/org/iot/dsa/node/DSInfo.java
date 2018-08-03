@@ -176,10 +176,13 @@ public class DSInfo implements ApiObject {
     }
 
     /**
-     * A convenience that casts getObject().
+     * A convenience that casts the object.  Will call DSIValue.toElement on values.
      */
     public DSElement getElement() {
-        return (DSElement) value;
+        if (value instanceof DSElement) {
+            return (DSElement) value;
+        }
+        return ((DSIValue)value).toElement();
     }
 
     boolean getFlag(int position) {
@@ -373,6 +376,20 @@ public class DSInfo implements ApiObject {
      */
     public DSInfo next() {
         return next;
+    }
+
+    /**
+     * The next DSInfo in the parent whose is of the given type.
+     */
+    public DSInfo next(Class is) {
+        DSInfo cur = next;
+        while (cur != null) {
+            if (cur.is(is)) {
+                return cur;
+            }
+            cur = cur.next();
+        }
+        return cur;
     }
 
     /**

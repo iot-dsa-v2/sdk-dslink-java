@@ -1,6 +1,5 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.logging.DSLogHandler;
 import java.io.File;
 import java.net.URL;
 import java.util.logging.Handler;
@@ -8,6 +7,7 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.json.JsonReader;
+import org.iot.dsa.logging.DSLogHandler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.security.DSKeys;
@@ -44,7 +44,6 @@ public class DSLink extends DSNode implements Runnable {
     private DSInfo main = getInfo(MAIN);
     private String name;
     private Thread runThread;
-    private boolean saveEnabled = true;
     private DSInfo sys = getInfo(SYS);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -60,17 +59,8 @@ public class DSLink extends DSNode implements Runnable {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods in alphabetical order
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Adds the save action, overrides should call super if they want this action.
-     */
-    @Override
-    protected void declareDefaults() {
-        declareDefault(MAIN, new DSNode());
-        declareDefault(SYS, new DSSysNode()).setAdmin(true);
-    }
 
     public DSLinkConfig getConfig() {
         return config;
@@ -111,42 +101,12 @@ public class DSLink extends DSNode implements Runnable {
         return name;
     }
 
-    @Override
-    protected String getLogName() {
-        String s = getLinkName();
-        if (s.startsWith("dslink-java")) {
-            if (s.startsWith("dslink-java-v2-")) {
-                s = s.substring("dslink-java-v2-".length());
-            } else if (s.startsWith("dslink-java-")) {
-                s = s.substring("dslink-java-".length());
-            }
-        }
-        if (s.isEmpty()) {
-            return getClass().getSimpleName();
-        }
-        return s;
-    }
-
     public DSMainNode getMain() {
         return (DSMainNode) main.getNode();
     }
 
     public DSSysNode getSys() {
         return (DSSysNode) sys.getNode();
-    }
-
-    /**
-     * Configures a link instance including creating the appropriate connection.
-     *
-     * @return This
-     */
-    protected DSLink init(DSLinkConfig config) {
-        this.config = config;
-        DSLogHandler.setRootLevel(config.getLogLevel());
-        name = config.getLinkName();
-        keys = config.getKeys();
-        getSys().init();
-        return this;
     }
 
     /**
@@ -266,11 +226,9 @@ public class DSLink extends DSNode implements Runnable {
         }
     }
 
-    @Override
-    protected void onStopped() {
-        synchronized (this) {
-            notifyAll();
-        }
+    public DSLink setNodes(DSMainNode node) {
+        put(main, node);
+        return this;
     }
 
     /**
@@ -291,20 +249,54 @@ public class DSLink extends DSNode implements Runnable {
         }
     }
 
-    public DSLink setNodes(DSMainNode node) {
-        put(main, node);
-        return this;
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Adds the save action, overrides should call super if they want this action.
+     */
+    @Override
+    protected void declareDefaults() {
+        declareDefault(MAIN, new DSNode());
+        declareDefault(SYS, new DSSysNode()).setAdmin(true);
+    }
+
+    @Override
+    protected String getLogName() {
+        String s = getLinkName();
+        if (s.startsWith("dslink-java")) {
+            if (s.startsWith("dslink-java-v2-")) {
+                s = s.substring("dslink-java-v2-".length());
+            } else if (s.startsWith("dslink-java-")) {
+                s = s.substring("dslink-java-".length());
+            }
+        }
+        if (s.isEmpty()) {
+            return getClass().getSimpleName();
+        }
+        return s;
     }
 
     /**
-     * This is a transient option intended for unit tests. True by default.
+     * Configures a link instance including creating the appropriate connection.
+     *
+     * @return This
      */
-    protected DSLink setSaveEnabled(boolean enabled) {
-        saveEnabled = enabled;
+    protected DSLink init(DSLinkConfig config) {
+        this.config = config;
+        DSLogHandler.setRootLevel(config.getLogLevel());
+        name = config.getLinkName();
+        keys = config.getKeys();
+        getSys().init();
         return this;
     }
 
-    public boolean isSaveEnabled() {
-        return saveEnabled;
+    @Override
+    protected void onStopped() {
+        synchronized (this) {
+            notifyAll();
+        }
     }
+
 }

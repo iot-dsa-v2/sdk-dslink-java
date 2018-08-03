@@ -60,7 +60,7 @@ public class WsTextTransport extends DSTextTransport {
             return this;
         }
         open = false;
-        debug(debug() ? "WsTextTransport.close()" : null, new Exception());
+        debug(debug() ? "WsTextTransport.close()" : null);
         try {
             if (session != null) {
                 session.close();

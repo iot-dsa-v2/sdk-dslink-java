@@ -15,6 +15,7 @@ import org.iot.dsa.DSRuntime.Timer;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSLong;
@@ -25,55 +26,24 @@ import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.time.DSTime;
 
 public class SysBackupService extends DSNode implements Runnable {
-    
+
+    static final String ENABLED = "Enabled";
     static final String INTERVAL = "Backup Interval";
-    static final String MAXIMUM = "Max Number of Backups";
+    static final String MAXIMUM = "Max Backups";
     static final String SAVE = "Save";
-    
+
+    private DSInfo enabled = getInfo(ENABLED);
     private DSInfo interval = getInfo(INTERVAL);
-    private DSInfo maximum = getInfo(MAXIMUM);
-    private DSInfo save = getInfo(SAVE);
-    
     private DSLink link;
-    private Timer nextSave;
     private Object lock = new Object();
-    
-    @Override
-    protected void declareDefaults() {
-        declareDefault(SAVE, DSAction.DEFAULT);
-        declareDefault(INTERVAL, DSLong.valueOf(60));
-        declareDefault(MAXIMUM, DSLong.valueOf(3));
+    private DSInfo maximum = getInfo(MAXIMUM);
+    private Timer nextSave;
+    private DSInfo save = getInfo(SAVE);
+
+    public boolean isEnabled() {
+        return enabled.getElement().toBoolean();
     }
-    
-    @Override
-    protected void onStable() {
-        File nodes = getLink().getConfig().getNodesFile();
-        if (nodes.exists()) {
-            synchronized (lock) {
-                scheduleNextSave();
-            }
-        } else {
-            DSRuntime.run(this);
-        }
-    }
-    
-    private DSLink getLink() {
-        if (link == null) {
-            link = (DSLink) getAncestor(DSLink.class);
-        }
-        return link;
-    }
-    
-    @Override
-    public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
-        if (action == save) {
-            save();
-        } else {
-            super.onInvoke(action, invocation);
-        }
-        return null;
-    }
-    
+
     @Override
     public void onChildChanged(DSInfo info) {
         super.onChildChanged(info);
@@ -81,7 +51,8 @@ public class SysBackupService extends DSNode implements Runnable {
             DSIValue value = info.getValue();
             synchronized (lock) {
                 if (nextSave != null) {
-                    long newNextRun = (value.toElement().toLong() * 60000) + System.currentTimeMillis();
+                    long newNextRun =
+                            (value.toElement().toLong() * 60000) + System.currentTimeMillis();
                     long scheduledNextRun = nextSave.nextRun();
                     if (newNextRun < scheduledNextRun) {
                         nextSave.cancel();
@@ -91,12 +62,39 @@ public class SysBackupService extends DSNode implements Runnable {
             }
         }
     }
-    
+
+    @Override
+    public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
+        if (action == save) {
+            save();
+        } else {
+            super.onInvoke(action, invocation);
+        }
+        return null;
+    }
+
+    @Override
+    public void onStopped() {
+        if (nextSave != null) {
+            nextSave.cancel();
+            nextSave = null;
+        }
+        save();
+    }
+
+    @Override
+    public void run() {
+        synchronized (lock) {
+            save();
+            scheduleNextSave();
+        }
+    }
+
     /**
      * Serializes the configuration database.
      */
     public void save() {
-        if (!getLink().isSaveEnabled()) {
+        if (!isEnabled()) {
             return;
         }
         ZipOutputStream zos = null;
@@ -170,7 +168,47 @@ public class SysBackupService extends DSNode implements Runnable {
             error("Closing output", x);
         }
     }
-    
+
+    /**
+     * Intended for use by DSLink subclasses, such as testing links.
+     */
+    public void setEnabled(boolean arg) {
+        put(enabled, DSBool.valueOf(arg));
+    }
+
+    @Override
+    protected void declareDefaults() {
+        declareDefault(SAVE, DSAction.DEFAULT);
+        declareDefault(ENABLED, DSBool.TRUE).setTransient(true);
+        declareDefault(INTERVAL, DSLong.valueOf(60));
+        declareDefault(MAXIMUM, DSLong.valueOf(3));
+    }
+
+    @Override
+    protected void onStable() {
+        File nodes = getLink().getConfig().getNodesFile();
+        if (nodes.exists()) {
+            synchronized (lock) {
+                scheduleNextSave();
+            }
+        } else {
+            DSRuntime.run(this);
+        }
+    }
+
+    private DSLink getLink() {
+        if (link == null) {
+            link = (DSLink) getAncestor(DSLink.class);
+        }
+        return link;
+    }
+
+    private void scheduleNextSave() {
+        long saveInterval = interval.getElement().toLong();
+        saveInterval *= 60000;
+        nextSave = DSRuntime.runDelayed(this, saveInterval);
+    }
+
     /**
      * Called by save, no need to explicitly call.
      */
@@ -212,29 +250,6 @@ public class SysBackupService extends DSNode implements Runnable {
         for (int i = 0, len = backups.length - maxBackups; i < len; i++) {
             backups[i].delete();
         }
-    }
-    
-    private void scheduleNextSave() {
-        long saveInterval = interval.getElement().toLong();
-        saveInterval *= 60000;
-        nextSave = DSRuntime.runDelayed(this, saveInterval);
-    }
-
-    @Override
-    public void run() {
-        synchronized(lock) {
-            save();
-            scheduleNextSave();
-        }
-    }
-    
-    @Override
-    public void onStopped() {
-        if (nextSave != null) {
-            nextSave.cancel();
-            nextSave = null;
-        }
-        save();
     }
 
 }
