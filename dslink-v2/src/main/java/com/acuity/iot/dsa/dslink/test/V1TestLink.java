@@ -21,7 +21,7 @@ public class V1TestLink extends DSLink {
     }
 
     public V1TestLink(DSMainNode MainNode) {
-        setSaveEnabled(false);
+        getSys().getBackupService().setEnabled(false);
         setNodes(MainNode);
         DSLinkConfig cfg = new DSLinkConfig();
         cfg.setDslinkJson(new DSMap().put("configs", new DSMap()));
