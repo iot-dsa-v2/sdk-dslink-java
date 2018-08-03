@@ -112,19 +112,19 @@ public class DS1Session extends DSSession {
     @Override
     protected void doSendMessage() {
         try {
+            beginMessage();
             if (!waitingForAcks()) {
                 requestsNext = !requestsNext;
-                beginMessage();
                 send(requestsNext);
                 if (!shouldEndMessage()) {
                     send(!requestsNext);
                 }
-                endMessage();
                 lastMessageSent = System.currentTimeMillis();
                 if (requestsBegun || responsesBegun) {
                     setAckRequired();
                 }
             }
+            endMessage();
         } finally {
             requestsBegun = false;
             responsesBegun = false;
@@ -250,11 +250,9 @@ public class DS1Session extends DSSession {
      * Decomposes and processes a complete envelope which can contain multiple requests and
      * responses.
      *
-     * @param reader lastRun() will return BEGIN_MAP
+     * @param reader last() must return BEGIN_MAP
      */
     private void processEnvelope(DSIReader reader) {
-        int msg = -1;
-        Token next;
         switch (reader.next()) {
             case END_MAP:
                 return;
@@ -263,6 +261,8 @@ public class DS1Session extends DSSession {
             default:
                 throw new IllegalStateException("Poorly formatted request");
         }
+        int msg = -1;
+        Token next;
         boolean sendAck = false;
         do {
             String key = reader.getString();
