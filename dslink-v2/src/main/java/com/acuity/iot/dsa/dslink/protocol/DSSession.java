@@ -240,10 +240,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
      * Override point, this returns the result of hasMessagesToSend.
      */
     protected boolean hasSomethingToSend() {
-        if (ackToSend >= 0) {
-            return true;
-        }
-        if (hasPingToSend()) {
+        if (hasAckToSend() || hasPingToSend()) {
             return true;
         }
         if (waitingForAcks()) {
@@ -282,8 +279,9 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         connected = true;
         lastTimeRecv = lastTimeSend = System.currentTimeMillis();
         readThread = new ReadThread(getConnection().getLink().getLinkName() + " Reader");
-        writeThread = new WriteThread(getConnection().getLink().getLinkName() + " Writer");
         readThread.start();
+        Thread.yield();
+        writeThread = new WriteThread(getConnection().getLink().getLinkName() + " Writer");
         writeThread.start();
     }
 
@@ -295,11 +293,6 @@ public abstract class DSSession extends DSNode implements DSIConnected {
             outgoingRequests.clear();
             outgoingResponses.clear();
             outgoingMutex.notifyAll();
-        }
-        try {
-            writeThread.join();
-        } catch (Exception x) {
-            debug(getPath(), x);
         }
         try {
             readThread.join();
@@ -319,6 +312,13 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         }
         connected = false;
         notifyOutgoing();
+        try {
+            writeThread.join();
+        } catch (Exception x) {
+            debug(getPath(), x);
+        }
+        //Attempt to exit cleanly, try to get acks for sent messages.
+        waitForAcks(1000);
     }
 
     protected void requeueOutgoingRequest(OutboundMessage arg) {
@@ -385,6 +385,25 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         }
     }
 
+    /* Try to exit cleanly, wait for all acks for sent messages. */
+    private void waitForAcks(long timeout) {
+        long start = System.currentTimeMillis();
+        synchronized (outgoingMutex) {
+            while (getMissingAcks() > 0) {
+                try {
+                    outgoingMutex.wait(500);
+                } catch (InterruptedException x) {
+                    warn(getPath(), x);
+                }
+                if ((System.currentTimeMillis() - start) > timeout) {
+                    debug(debug() ? String.format("witForAcks timeout (%s / %s)",ackRcvd,messageId)
+                                  : null);
+                    break;
+                }
+            }
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
@@ -400,6 +419,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         }
 
         public void run() {
+            debug("Enter DSSession.ReadThread");
             DSLinkConnection conn = getConnection();
             try {
                 while (connected) {
@@ -415,6 +435,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
                     conn.connDown(DSException.makeMessage(x));
                 }
             }
+            debug("Exit DSSession.ReadThread");
         }
     }
 
@@ -430,6 +451,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
 
         public void run() {
             DSLinkConnection conn = getConnection();
+            debug("Enter DSSession.WriteThread");
             try {
                 while (connected) {
                     verifyLastRead();
@@ -454,6 +476,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
                     conn.connDown(DSException.makeMessage(x));
                 }
             }
+            debug("Exit DSSession.WriteThread");
         }
     }
 
