@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 //import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 //import org.bouncycastle.asn1.x500.X500Name;
 //import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -47,6 +50,7 @@ public class SysCertManager extends DSNode {
 
     private static final String ALLOW_CLIENTS = "Allow_Anonymous_Clients";
     private static final String ALLOW_SERVERS = "Allow_Anonymous_Servers";
+    private static final String VERIFY_HOSTNAMES = "Enable Hostname Verification";
     private static final String CERTFILE = "Cert_File";
     private static final String CERTFILE_PASS = "Cert_File_Pass";
     private static final String CERTFILE_TYPE = "Cert_File_Type";
@@ -64,11 +68,27 @@ public class SysCertManager extends DSNode {
 
     private DSInfo allowClients = getInfo(ALLOW_CLIENTS);
     private DSInfo allowServers = getInfo(ALLOW_SERVERS);
-    private DSInfo keystore = getInfo(CERTFILE);
+    private DSInfo verifyHostnames = getInfo(VERIFY_HOSTNAMES);
+    private DSInfo keystorePath = getInfo(CERTFILE);
     private DSInfo keystorePass = getInfo(CERTFILE_PASS);
     private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
     private CertCollection localTruststore; 
     private CertCollection quarantine;
+    private static SysCertManager inst;
+    
+    private static HostnameVerifier oldHostnameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
+    private HostnameVerifier hostnameVerifier = new SysHostnameVerifier();
+    
+    public SysCertManager() {
+    }
+    
+    public static SysCertManager getInstance() {
+        return inst;
+    }
+    
+    public HostnameVerifier getHostnameVerifier() {
+        return hostnameVerifier;
+    }
 
     private CertCollection getLocalTruststore() {
         if (localTruststore == null) {
@@ -100,11 +120,16 @@ public class SysCertManager extends DSNode {
     public boolean allowAnonymousServers() {
         return allowServers.getElement().toBoolean();
     }
+    
+    public boolean hostnameVerificationEnabled() {
+        return verifyHostnames.getElement().toBoolean();
+    }
 
     @Override
     public void declareDefaults() {
         declareDefault(ALLOW_CLIENTS, DSBool.FALSE);
         declareDefault(ALLOW_SERVERS, DSBool.TRUE);
+        declareDefault(VERIFY_HOSTNAMES, DSBool.TRUE);
         declareDefault(CERTFILE, DSString.valueOf("dslink.jks"));
         declareDefault(CERTFILE_TYPE, DSString.valueOf("JKS"));
         declareDefault(CERTFILE_PASS, DSPasswordAes128.valueOf("dsarocks"));
@@ -265,7 +290,7 @@ public class SysCertManager extends DSNode {
     }
     
     private String getKeystorePath() {
-        return keystore.getElement().toString();
+        return keystorePath.getElement().toString();
     }
 
     /**
@@ -277,8 +302,9 @@ public class SysCertManager extends DSNode {
 
     @Override
     public void onStarted() {
+        inst = this;
         AnonymousTrustFactory.init(this);
-        String keystore = this.keystore.getElement().toString();
+        String keystore = this.keystorePath.getElement().toString();
         File f = new File(keystore);
         if (!f.exists()) {
             keytoolGenkey();
@@ -291,6 +317,7 @@ public class SysCertManager extends DSNode {
         } catch (Exception x) {
             error(getParent(), x);
         }
+        HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
     }
 
     public boolean isInTrustStore(X509Certificate cert) {
@@ -311,6 +338,18 @@ public class SysCertManager extends DSNode {
         String certStr = certNode.toElement().toString();
         getQuarantine().remove(certInfo);
         getLocalTruststore().addCertificate(name, certStr);
+    }
+    
+    private class SysHostnameVerifier implements HostnameVerifier {
+        @Override
+        public boolean verify(String hostname, SSLSession session) {
+            if (hostnameVerificationEnabled()) {
+                //TODO implement whitelist
+                return oldHostnameVerifier.verify(hostname, session);
+            } else {
+                return true;
+            }
+        }
     }
     
 //    private static String generateCSR() {

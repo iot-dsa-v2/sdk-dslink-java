@@ -2,6 +2,7 @@ package org.iot.dsa.dslink.websocket;
 
 import com.acuity.iot.dsa.dslink.io.DSCharBuffer;
 import com.acuity.iot.dsa.dslink.io.DSIoException;
+import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
 import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
@@ -18,6 +19,9 @@ import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
+import org.glassfish.tyrus.client.ClientProperties;
+import org.glassfish.tyrus.client.SslContextConfigurator;
+import org.glassfish.tyrus.client.SslEngineConfigurator;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -149,6 +153,9 @@ public class WsTextTransport extends DSTextTransport {
             }
             client.setDefaultMaxBinaryMessageBufferSize(64 * 1024);
             client.setDefaultMaxTextMessageBufferSize(64 * 1024);
+            SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(new SslContextConfigurator());
+            sslEngineConfigurator.setHostnameVerifier(SysCertManager.getInstance().getHostnameVerifier());
+            client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
             client.connectToServer(this, new URI(getConnectionUrl()));
         } catch (Exception x) {
             DSException.throwRuntime(x);
