@@ -384,7 +384,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
                 }
                 if ((System.currentTimeMillis() - start) > timeout) {
                     debug(debug() ? String
-                            .format("witForAcks timeout (%s / %s)", ackRcvd, messageId)
+                            .format("waitForAcks timeout (%s / %s)", ackRcvd, messageId)
                                   : null);
                     break;
                 }
