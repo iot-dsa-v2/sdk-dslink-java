@@ -95,6 +95,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     @Override
     public void write(DSSession session, MessageWriter writer) {
         if (!pendingSubscribe.isEmpty()) {
+            debug(debug() ? "Sending subscribe requests" : null);
             doBeginSubscribe(writer);
             Iterator<DSOutboundSubscribeStubs> it = pendingSubscribe.iterator();
             while (it.hasNext() && !session.shouldEndMessage()) {
@@ -114,6 +115,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
             doEndMessage(writer);
         }
         if (!pendingUnsubscribe.isEmpty() && !session.shouldEndMessage()) {
+            debug(debug() ? "Sending unsubscribe requests" : null);
             doBeginUnsubscribe(writer);
             Iterator<DSOutboundSubscribeStubs> it = pendingUnsubscribe.iterator();
             while (it.hasNext() && !session.shouldEndMessage()) {
@@ -129,9 +131,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
             }
             doEndMessage(writer);
         }
-        synchronized (this) {
-            enqueued = false;
-        }
+        enqueued = false;
         if (!pendingSubscribe.isEmpty() || !pendingUnsubscribe.isEmpty()) {
             sendMessage();
         }
@@ -208,6 +208,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         }
         sidMap.clear();
         pathMap.clear();
+        enqueued = false;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -239,6 +240,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
      * Create or update a subscription.
      */
     OutboundSubscribeHandler subscribe(String path, int qos, OutboundSubscribeHandler req) {
+        trace(trace() ? String.format("Subscribe (qos=%s) %s", qos, path) : null);
         DSOutboundSubscribeStub stub = new DSOutboundSubscribeStub(path, qos, req);
         DSOutboundSubscribeStubs stubs = null;
         synchronized (pathMap) {

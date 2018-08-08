@@ -28,6 +28,7 @@ public class DSSysNode extends DSNode {
     static final String LOGGING = "Logging";
     static final String BACKUPS = "Backups";
 
+    private DSInfo backups = getInfo(BACKUPS);
     private DSInfo connection = getInfo(CONNECTION);
     private DSInfo stop = getInfo(STOP);
 
@@ -43,6 +44,10 @@ public class DSSysNode extends DSNode {
 
     public DSLinkConnection getConnection() {
         return (DSLinkConnection) connection.getObject();
+    }
+
+    public SysBackupService getBackupService() {
+        return (SysBackupService) backups.getObject();
     }
 
     public DSLink getLink() {

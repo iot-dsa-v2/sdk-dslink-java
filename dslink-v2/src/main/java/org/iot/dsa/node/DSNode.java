@@ -360,6 +360,14 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         return firstChild;
     }
 
+    public DSInfo getFirstInfo(Class type) {
+        DSInfo info = getFirstInfo();
+        if (info.is(type)) {
+            return info;
+        }
+        return info.next(type);
+    }
+
     /**
      * The info for the first child node, or null.
      */
