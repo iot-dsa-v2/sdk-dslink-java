@@ -153,10 +153,13 @@ public class WsTextTransport extends DSTextTransport {
             }
             client.setDefaultMaxBinaryMessageBufferSize(64 * 1024);
             client.setDefaultMaxTextMessageBufferSize(64 * 1024);
-            SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(new SslContextConfigurator());
-            sslEngineConfigurator.setHostnameVerifier(SysCertManager.getInstance().getHostnameVerifier());
-            client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
-            client.connectToServer(this, new URI(getConnectionUrl()));
+            URI connUri = new URI(getConnectionUrl());
+            if ("wss".equalsIgnoreCase(connUri.getScheme())) {
+                SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(new SslContextConfigurator());
+                sslEngineConfigurator.setHostnameVerifier(SysCertManager.getInstance().getHostnameVerifier());
+                client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
+            }
+            client.connectToServer(this, connUri);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
