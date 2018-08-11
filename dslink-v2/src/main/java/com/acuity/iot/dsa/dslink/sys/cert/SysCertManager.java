@@ -23,6 +23,7 @@ import javax.net.ssl.SSLSession;
 //import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
@@ -34,6 +35,7 @@ import org.iot.dsa.node.action.DSAbstractAction;
 import org.iot.dsa.node.action.DSActionValues;
 import org.iot.dsa.security.DSPasswordAes128;
 import org.iot.dsa.util.DSException;
+import com.acuity.iot.dsa.dslink.sys.cert.HostnameWhitelist.WhitelistValue;
 
 /**
  * Certificate management for the whole process.  This is basically a stub for future
@@ -51,6 +53,7 @@ public class SysCertManager extends DSNode {
     private static final String ALLOW_CLIENTS = "Allow_Anonymous_Clients";
     private static final String ALLOW_SERVERS = "Allow_Anonymous_Servers";
     private static final String VERIFY_HOSTNAMES = "Enable Hostname Verification";
+    private static final String HOSTNAME_WHITELIST = "Hostname Whitelist";
     private static final String CERTFILE = "Cert_File";
     private static final String CERTFILE_PASS = "Cert_File_Pass";
     private static final String CERTFILE_TYPE = "Cert_File_Type";
@@ -74,6 +77,7 @@ public class SysCertManager extends DSNode {
     private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
     private CertCollection localTruststore; 
     private CertCollection quarantine;
+    private HostnameWhitelist whitelist;
     private static SysCertManager inst;
     
     private static HostnameVerifier oldHostnameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
@@ -104,6 +108,13 @@ public class SysCertManager extends DSNode {
         return quarantine;
     }
     
+    private HostnameWhitelist getHostnameWhitelist() {
+        if (whitelist == null) {
+            whitelist = (HostnameWhitelist) getInfo(HOSTNAME_WHITELIST).getObject();
+        }
+        return whitelist;
+    }
+    
     // Methods
     // -------
 
@@ -130,6 +141,7 @@ public class SysCertManager extends DSNode {
         declareDefault(ALLOW_CLIENTS, DSBool.FALSE);
         declareDefault(ALLOW_SERVERS, DSBool.TRUE);
         declareDefault(VERIFY_HOSTNAMES, DSBool.TRUE);
+        declareDefault(HOSTNAME_WHITELIST, new HostnameWhitelist());
         declareDefault(CERTFILE, DSString.valueOf("dslink.jks"));
         declareDefault(CERTFILE_TYPE, DSString.valueOf("JKS"));
         declareDefault(CERTFILE_PASS, DSPasswordAes128.valueOf("dsarocks"));
@@ -343,8 +355,18 @@ public class SysCertManager extends DSNode {
     private class SysHostnameVerifier implements HostnameVerifier {
         @Override
         public boolean verify(String hostname, SSLSession session) {
+            if (getHostnameWhitelist().isEnabled()) {
+                WhitelistValue wlval = getHostnameWhitelist().checkHostname(hostname);
+                if (wlval != null) {
+                    switch (wlval) {
+                        case ALLOWED:
+                            return true;
+                        case FORBIDDEN:
+                            return false;
+                    }
+                }
+            }
             if (hostnameVerificationEnabled()) {
-                //TODO implement whitelist
                 return oldHostnameVerifier.verify(hostname, session);
             } else {
                 return true;
