@@ -1,7 +1,6 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
 import org.iot.dsa.node.DSBool;
-import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSJavaEnum;
@@ -16,6 +15,10 @@ public class HostnameWhitelist extends DSNode {
     
     public static enum WhitelistValue {
         ALLOWED, FORBIDDEN;
+    }
+    
+    public static enum WhitelistOption {
+        ALLOWED, FORBIDDEN, REMOVE;
     }
     
     private static final String ENABLED = "Enabled";
@@ -54,8 +57,9 @@ public class HostnameWhitelist extends DSNode {
     
     private void addHostname(DSMap parameters) {
         String hostname = parameters.getString("Hostname");
-        DSElement status = parameters.get("Status");
-        put(hostname, status).setRemovable(true);
+        String statusStr = parameters.getString("Status");
+        WhitelistOption option = WhitelistOption.valueOf(statusStr);
+        put(hostname, DSJavaEnum.valueOf(option));
     }
     
     public WhitelistValue checkHostname(String hostname) {
@@ -70,5 +74,15 @@ public class HostnameWhitelist extends DSNode {
             return null;
         }
     }
+    
+    protected void onChildChanged(DSInfo info) {
+        if (info.isValue()) {
+            String val = info.getValue().toElement().toString();
+            if (WhitelistOption.REMOVE.name().equals(val)) {
+                remove(info);
+            }
+        }
+    }
+    
 
 }
