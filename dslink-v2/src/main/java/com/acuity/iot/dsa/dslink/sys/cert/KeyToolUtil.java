@@ -10,6 +10,10 @@ import java.nio.file.Paths;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.time.DSTime;
 
+
+/**
+ * @author Daniel Shapiro
+ */
 public class KeyToolUtil extends DSLogger {
 	
 	private static KeyToolUtil inst = new KeyToolUtil();

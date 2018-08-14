@@ -7,6 +7,9 @@ import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
 
+/**
+ * @author Daniel Shapiro
+ */
 public class CertNode extends DSValueNode {
     
     private static final String VALUE = "value";

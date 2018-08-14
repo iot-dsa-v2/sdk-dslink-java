@@ -16,6 +16,9 @@ import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAbstractAction;
 
+/**
+ * @author Daniel Shapiro
+ */
 public class SysLogService extends StreamableLogNode {
 
     private DSInfo levelInfo = getInfo("Default Log Level");

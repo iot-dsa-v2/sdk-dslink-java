@@ -8,6 +8,9 @@ import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.time.DSTime;
 
+/**
+ * @author Daniel Shapiro
+ */
 public class CertCollection extends DSNode {
 
     public void addCertificate(X509Certificate cert) throws CertificateEncodingException {

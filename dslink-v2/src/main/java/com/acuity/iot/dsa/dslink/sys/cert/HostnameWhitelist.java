@@ -11,6 +11,9 @@ import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAbstractAction;
 
+/**
+ * @author Daniel Shapiro
+ */
 public class HostnameWhitelist extends DSNode {
     
     public static enum WhitelistValue {

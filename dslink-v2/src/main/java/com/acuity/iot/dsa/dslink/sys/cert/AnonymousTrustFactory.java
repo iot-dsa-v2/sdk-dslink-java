@@ -21,6 +21,7 @@ import javax.net.ssl.*;
  * falls back to the default Java trust manager.
  *
  * @author Aaron Hansen
+ * @author Daniel Shapiro
  */
 public class AnonymousTrustFactory extends TrustManagerFactorySpi {
 

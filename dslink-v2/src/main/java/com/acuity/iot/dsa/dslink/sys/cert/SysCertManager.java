@@ -49,13 +49,13 @@ public class SysCertManager extends DSNode {
     // Constants
     // ---------
 
-    private static final String ALLOW_CLIENTS = "Allow_Anonymous_Clients";
-    private static final String ALLOW_SERVERS = "Allow_Anonymous_Servers";
-    private static final String VERIFY_HOSTNAMES = "Enable Hostname Verification";
+    private static final String ALLOW_CLIENTS = "Allow Anonymous Clients";
+    private static final String ALLOW_SERVERS = "Allow Anonymous Servers";
+    private static final String VERIFY_HOSTNAMES = "Enable Hostname-Certificate Verification";
     private static final String HOSTNAME_WHITELIST = "Hostname Whitelist";
-    private static final String CERTFILE = "Cert_File";
-    private static final String CERTFILE_PASS = "Cert_File_Pass";
-    private static final String CERTFILE_TYPE = "Cert_File_Type";
+    private static final String CERTFILE = "Cert File";
+    private static final String CERTFILE_PASS = "Cert File Pass";
+    private static final String CERTFILE_TYPE = "Cert File Type";
     private static final String LOCAL_TRUSTSTORE = "Local Truststore";
     private static final String QUARANTINE = "Quarantine";
     private static final String GENERATE_CSR = "Generate Certificate Signing Request";
@@ -372,94 +372,5 @@ public class SysCertManager extends DSNode {
             }
         }
     }
-    
-//    private static String generateCSR() {
-//        KeyPairGenerator keyGen;
-//        try {
-//            keyGen = KeyPairGenerator.getInstance("RSA");
-//        } catch (NoSuchAlgorithmException e) {
-//            DSException.throwRuntime(e);
-//            return null;
-//        }
-//        keyGen.initialize(2048, new SecureRandom());
-//        KeyPair pair = keyGen.generateKeyPair();
-//        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(
-//            new X500Principal("CN=dslink-java-v2, O=DSA, C=US"), pair.getPublic());
-//        JcaContentSignerBuilder csBuilder = new JcaContentSignerBuilder("SHA256withRSA");
-//        ContentSigner signer;
-//        try {
-//            signer = csBuilder.build(pair.getPrivate());
-//        } catch (OperatorCreationException e) {
-//            DSException.throwRuntime(e);
-//            return null;
-//        }
-//        PKCS10CertificationRequest csr = p10Builder.build(signer);
-//        StringWriter str = new StringWriter();
-//        JcaPEMWriter pemWriter = new JcaPEMWriter(str);
-//        try {
-//            pemWriter.writeObject(csr);
-//        } catch (IOException e) {
-//            DSException.throwRuntime(e);
-//            return null;
-//        } finally {
-//            try {
-//                pemWriter.close();
-//                str.close();
-//            } catch (IOException e) {
-//                DSException.throwRuntime(e);
-//                return null;
-//            }
-//        }
-//        return str.toString();
-//    }
-    
-//    private static X509Certificate generateSelfSigned() {
-//        KeyPairGenerator keyGen;
-//        try {
-//            keyGen = KeyPairGenerator.getInstance("RSA");
-//        } catch (NoSuchAlgorithmException e) {
-//            DSException.throwRuntime(e);
-//            return null;
-//        }
-//        keyGen.initialize(2048, new SecureRandom());
-//        KeyPair pair = keyGen.generateKeyPair();
-//        
-//        Provider bcProvider = new BouncyCastleProvider();
-//        Security.addProvider(bcProvider);
-//
-//        long now = System.currentTimeMillis();
-//        Date startDate = new Date(now);
-//        
-//        X500Name dname = new X500Name("CN=dslink-java-v2, O=DSA, C=US");
-//        BigInteger certSerialNumber = new BigInteger(Long.toString(now)); // <-- Using the current timestamp as the certificate serial number
-//        
-//        Calendar calendar = Calendar.getInstance();
-//        calendar.setTime(startDate);
-//        calendar.add(Calendar.YEAR, 1); // <-- 1 Yr validity
-//        Date endDate = calendar.getTime();
-//        
-//        String signatureAlgorithm = "SHA256WithRSA"; // <-- Use appropriate signature algorithm based on your keyPair algorithm.
-//        
-//        try {
-//            ContentSigner contentSigner = new JcaContentSignerBuilder(signatureAlgorithm).build(pair.getPrivate());
-//            JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(dname, certSerialNumber, startDate, endDate, dname, pair.getPublic());
-//            
-//            BasicConstraints basicConstraints = new BasicConstraints(true); // <-- true for CA, false for EndEntity
-//            certBuilder.addExtension(new ASN1ObjectIdentifier("2.5.29.19"), true, basicConstraints); // Basic Constraints is usually marked as critical.
-//            
-//            return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
-//        } catch (OperatorCreationException e) {
-//            DSException.throwRuntime(e);
-//            return null;
-//        } catch (CertIOException e) {
-//            DSException.throwRuntime(e);
-//            return null;
-//        } catch (CertificateException e) {
-//            DSException.throwRuntime(e);
-//            return null;
-//        }
-//        
-//        
-//    }
 
 }
