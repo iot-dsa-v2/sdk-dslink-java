@@ -20,6 +20,9 @@ import org.iot.dsa.node.action.ActionSpec.ResultType;
 import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.DSAbstractAction;
 
+/**
+ * @author Daniel Shapiro
+ */
 public abstract class StreamableLogNode extends DSNode {
 
     private static DSList levelRange;

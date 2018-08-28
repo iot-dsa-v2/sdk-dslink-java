@@ -8,6 +8,9 @@ import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAbstractAction;
 
+/**
+ * @author Daniel Shapiro
+ */
 public class LoggerNode extends StreamableLogNode {
 
     private DSInfo levelInfo = getInfo("Log Level");
