@@ -68,7 +68,11 @@ public class DS1LinkConnection extends DSLinkConnection {
     }
 
     public void updateSalt(String salt) {
-        connectionInit.updateSalt(salt);
+        if ((salt == null) || salt.equals("1234"))  {
+            connectionInit = null;
+        } else {
+            connectionInit.updateSalt(salt);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -152,6 +156,7 @@ public class DS1LinkConnection extends DSLinkConnection {
             connOk();
         } catch (Exception x) {
             connDown(DSException.makeMessage(x));
+            connectionInit = null;
         }
     }
 

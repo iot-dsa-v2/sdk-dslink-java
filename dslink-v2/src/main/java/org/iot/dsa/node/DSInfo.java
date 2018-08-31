@@ -7,9 +7,9 @@ import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.util.DSUtil;
 
 /**
- * All node children have corresponding DSInfo instances. This type serves two purposes:
+ * All node children have corresponding DSInfo instances. DSInfo serves two purposes:
  * <ul>
- * <li>It carries some meta-data about the relationship between the parent node and the
+ * <li>It carries meta-data about the relationship between the parent node and the
  * child.
  * <li>It tracks whether or not the child matches a declared default.
  * </ul>
