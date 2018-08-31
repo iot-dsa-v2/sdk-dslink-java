@@ -1,33 +1,30 @@
 # Tooling
 **.classpath
 **.idea
+**.iml
 **.metadata
 **.project
 **.settings
-**eclipseBin
+**/eclipseBin
 
 # Build artifacts
+.gradle
 **.class
-**.iml
-**build
-**classes
-**libJar
-**out
-**target
-**/.gradle
-**javadoc
-**repository
+**/build
+**/classes
+**/libJar
+**/out
+**/target
 
 # Misc
 **.bak
-**.old
 **.log
+**.old
 **.DS_Store
 
 # Runtime files
 **.jks
 **.key
-**db
 **nodes.json
 **nodes*.zip
 **test.json

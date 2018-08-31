@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink.websocket;
 
+import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
 import com.acuity.iot.dsa.dslink.transport.BufferedBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
@@ -7,6 +8,9 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import javax.websocket.*;
 import org.glassfish.tyrus.client.ClientManager;
+import org.glassfish.tyrus.client.ClientProperties;
+import org.glassfish.tyrus.client.SslContextConfigurator;
+import org.glassfish.tyrus.client.SslEngineConfigurator;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -97,7 +101,13 @@ public class WsBinaryTransport extends BufferedBinaryTransport {
             }
             client.setDefaultMaxBinaryMessageBufferSize(64 * 1024);
             client.setDefaultMaxTextMessageBufferSize(64 * 1024);
-            client.connectToServer(this, new URI(getConnectionUrl()));
+            URI connUri = new URI(getConnectionUrl());
+            if ("wss".equalsIgnoreCase(connUri.getScheme())) {
+                SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(new SslContextConfigurator());
+                sslEngineConfigurator.setHostnameVerifier(SysCertManager.getInstance().getHostnameVerifier());
+                client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
+            }
+            client.connectToServer(this, connUri);
             debug(debug() ? "Transport open" : null);
         } catch (Exception x) {
             DSException.throwRuntime(x);

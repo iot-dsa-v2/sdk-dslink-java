@@ -1,12 +1,19 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.Security;
 import java.security.cert.CertificateException;
+import java.security.cert.PKIXCertPathBuilderResult;
+import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.net.ssl.*;
 
 /**
@@ -14,6 +21,7 @@ import javax.net.ssl.*;
  * falls back to the default Java trust manager.
  *
  * @author Aaron Hansen
+ * @author Daniel Shapiro
  */
 public class AnonymousTrustFactory extends TrustManagerFactorySpi {
 
@@ -114,8 +122,13 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 return;
             }
             if (defaultX509Mgr != null) {
-                defaultX509Mgr.checkClientTrusted(chain, authType);
+                try {
+                    defaultX509Mgr.checkClientTrusted(chain, authType);
+                    return;
+                } catch (CertificateException e) {
+                }
             }
+            checkLocally(chain, authType);
         }
 
         @Override
@@ -125,7 +138,43 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 return;
             }
             if (defaultX509Mgr != null) {
-                defaultX509Mgr.checkServerTrusted(chain, authType);
+                try {
+                    defaultX509Mgr.checkServerTrusted(chain, authType);
+                    return;
+                } catch (CertificateException e) {
+                }
+            }
+            checkLocally(chain, authType);
+        }
+        
+        private void checkLocally(X509Certificate[] chain, String authType) throws CertificateException {
+            Set<X509Certificate> chainAsSet = new HashSet<X509Certificate>();
+            Collections.addAll(chainAsSet, chain);
+            X509Certificate anchorCert;
+            try {
+                if (CertificateVerifier.isSelfSigned(chain[0])) {
+                    anchorCert = chain[0];
+                } else {
+                    PKIXCertPathBuilderResult result = CertificateVerifier.verifyCertificate(chain[0], chainAsSet);
+                    TrustAnchor anchor = result.getTrustAnchor();
+                    anchorCert = anchor.getTrustedCert();
+                }
+                
+                if (anchorCert == null) {
+                    throw new CertificateException();
+                }
+                
+                if (!certManager.isInTrustStore(anchorCert)) {
+                    certManager.addToQuarantine(anchorCert);
+                    throw new CertificateException();
+                }
+                
+            } catch (CertificateVerificationException e1) {
+                throw new CertificateException();
+            } catch (NoSuchAlgorithmException e) {
+                throw new CertificateException();
+            } catch (NoSuchProviderException e) {
+                throw new CertificateException();
             }
         }
 
