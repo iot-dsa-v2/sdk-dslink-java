@@ -22,18 +22,8 @@ public class DSValueTopic extends DSTopic implements DSIEvent {
     private DSValueTopic() {
     }
 
-    /**
-     * The possible events from this topic.
-     */
-    public enum Event implements DSIEvent {
-        /**
-         * For DSNodes that implement DSIValue.  The DSInfo arg to onEvent must be null.
-         */
-        NODE_CHANGED,
-        /**
-         * For node value children (who are not also nodes).  The DSInfo arg must not be null.
-         */
-        CHILD_CHANGED
+    public DSTopic getTopic() {
+        return INSTANCE;
     }
 
 }

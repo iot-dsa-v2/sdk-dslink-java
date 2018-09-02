@@ -145,8 +145,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSTopic topic, DSIEvent event, DSNode node, DSInfo child,
-                        Object... params) {
+    public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
         switch ((DSInfoTopic.Event) event) {
             case CHILD_ADDED:
                 childAdded(child);

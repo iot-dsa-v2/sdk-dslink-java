@@ -151,7 +151,7 @@ public class DSInfo implements ApiObject {
 
     private void fireInfoChanged() {
         if ((parent != null) && (parent.isRunning())) {
-            parent.fire(DSInfoTopic.INSTANCE, DSInfoTopic.Event.METADATA_CHANGED, this);
+            parent.fire(DSInfoTopic.Event.METADATA_CHANGED, this);
         }
     }
 

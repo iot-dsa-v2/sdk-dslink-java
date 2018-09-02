@@ -1,6 +1,5 @@
 package org.iot.dsa.conn;
 
-import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSIStatus;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
@@ -41,24 +40,24 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    static final String FAILURE = "Failure";
     static final String LAST_OK = "Last OK";
     static final String LAST_FAIL = "Last Fail";
     static final String STATE = "State";
     static final String STATE_TIME = "State Timestamp";
     static final String STATUS = "Status";
+    static final String STATUS_TEXT = "Status Text";
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo failure = getInfo(FAILURE);
     private DSInfo lastFail = getInfo(LAST_FAIL);
     private DSInfo lastOk = getInfo(LAST_OK);
     private long lastOkMillis;
     private DSInfo state = getInfo(STATE);
     private DSInfo stateTime = getInfo(STATE_TIME);
     private DSInfo status = getInfo(STATUS);
+    private DSInfo statusText = getInfo(STATUS_TEXT);
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -76,8 +75,8 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
         if (getConnectionState().isEngaged()) {
             put(lastFail, DSDateTime.currentTime());
             if (reason != null) {
-                if (!failure.getElement().toString().equals(reason)) {
-                    put(failure, DSString.valueOf(reason));
+                if (!statusText.getElement().toString().equals(reason)) {
+                    put(statusText, DSString.valueOf(reason));
                 }
             }
             disconnect();
@@ -263,8 +262,8 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
         debug(debug() ? "Config Fault: " + msg : null);
         put(lastFail, DSDateTime.currentTime());
         if (msg != null) {
-            if (!failure.getElement().toString().equals(msg)) {
-                put(failure, DSString.valueOf(msg));
+            if (!statusText.getElement().toString().equals(msg)) {
+                put(statusText, DSString.valueOf(msg));
             }
         }
         if (!getStatus().isFault()) {
@@ -287,7 +286,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
         declareDefault(STATUS, DSStatus.down).setReadOnly(true).setTransient(true);
         declareDefault(STATE, DSConnectionState.DISCONNECTED).setReadOnly(true).setTransient(true);
         declareDefault(STATE_TIME, DSDateTime.currentTime()).setReadOnly(true).setTransient(true);
-        declareDefault(FAILURE, DSString.EMPTY).setReadOnly(true).setTransient(true);
+        declareDefault(STATUS_TEXT, DSString.EMPTY).setReadOnly(true).setTransient(true);
         declareDefault(LAST_OK, DSDateTime.NULL).setReadOnly(true);
         declareDefault(LAST_FAIL, DSDateTime.NULL).setReadOnly(true);
     }
