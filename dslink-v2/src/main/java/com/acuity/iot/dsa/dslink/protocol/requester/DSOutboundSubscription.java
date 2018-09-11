@@ -9,7 +9,7 @@ import org.iot.dsa.time.DSDateTime;
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
-class DSOutboundSubscribeStubs {
+class DSOutboundSubscription {
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -31,7 +31,7 @@ class DSOutboundSubscribeStubs {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSOutboundSubscribeStubs(
+    public DSOutboundSubscription(
             String path,
             DSOutboundSubscriptions subscriptions) {
         this.path = path;
@@ -74,7 +74,7 @@ class DSOutboundSubscribeStubs {
         }
     }
 
-    public DSOutboundSubscribeStubs setSid(Integer sid) {
+    public DSOutboundSubscription setSid(Integer sid) {
         this.sid = sid;
         return this;
     }
@@ -93,7 +93,7 @@ class DSOutboundSubscribeStubs {
         if (contains(stub)) {
             return;
         }
-        stub.setStubs(this);
+        stub.setSub(this);
         if (last == null) {
             first = stub;
             last = stub;
@@ -174,6 +174,7 @@ class DSOutboundSubscribeStubs {
         if (--size == 0) {
             subscriptions.unsubscribe(this);
         }
+        //TODO else if qos now lower, resubscribe
     }
 
     void setState(State state) {

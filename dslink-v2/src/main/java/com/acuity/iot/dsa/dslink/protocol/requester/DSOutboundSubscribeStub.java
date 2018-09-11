@@ -13,18 +13,18 @@ import org.iot.dsa.time.DSDateTime;
  * <p>
  * <p>
  * There can be multiple subscriptions to a single path.  They are all contained in a
- * DSOutboundSubscribeStubs object.
+ * DSOutboundSubscription object.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
 class DSOutboundSubscribeStub implements OutboundStream {
 
-    private DSOutboundSubscribeStub next; //linked list in stubs object
+    private DSOutboundSubscribeStub next; //linked list in subscription object
     private boolean open = true;
     private String path;
     private int qos = 0;
     private OutboundSubscribeHandler request;
-    private DSOutboundSubscribeStubs stubs;
+    private DSOutboundSubscription sub;
 
     public DSOutboundSubscribeStub(String path, int qos, OutboundSubscribeHandler request) {
         this.path = path;
@@ -40,11 +40,11 @@ class DSOutboundSubscribeStub implements OutboundStream {
             }
             open = false;
         }
-        stubs.remove(this);
+        sub.remove(this);
         try {
             request.onClose();
         } catch (Exception x) {
-            stubs.getSubscriptions().error(path, x);
+            sub.getSubscriptions().error(path, x);
         }
     }
 
@@ -72,7 +72,7 @@ class DSOutboundSubscribeStub implements OutboundStream {
         try {
             request.onUpdate(ts, value, status);
         } catch (Exception x) {
-            stubs.getSubscriptions().error(path, x);
+            sub.getSubscriptions().error(path, x);
         }
     }
 
@@ -83,8 +83,8 @@ class DSOutboundSubscribeStub implements OutboundStream {
         this.next = next;
     }
 
-    void setStubs(DSOutboundSubscribeStubs stubs) {
-        this.stubs = stubs;
+    void setSub(DSOutboundSubscription sub) {
+        this.sub = sub;
     }
 
 }

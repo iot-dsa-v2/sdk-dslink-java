@@ -107,15 +107,13 @@ public class MsgpackTest {
         DSMap map = parser.getElement().toMap();
         Assert.assertEquals(map.size(), 7);
         Assert.assertEquals(map.get("first").toString(), "abc");
-        Assert.assertEquals(map.get(1).toInt(), 10);
         Assert.assertTrue(map.get("third").toBoolean());
         Assert.assertEquals(map.get("fourth").toDouble(), 10.1d, 0);
         Assert.assertTrue(map.get("fifth").isMap());
-        Assert.assertTrue(map.get(5).isList());
         Assert.assertTrue(map.get("seventh").isBytes());
         Assert.assertEquals(
                 new String(map.get("seventh").toBytes(), "UTF-8"), "somebytes");
-        list = map.getList(5);
+        list = map.getList("sixth");
         Assert.assertEquals(list.size(), 6);
         Assert.assertEquals(list.get(0).toString(), "abc");
         Assert.assertEquals(list.get(1).toInt(), 10);

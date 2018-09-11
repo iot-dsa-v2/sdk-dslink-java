@@ -2,28 +2,22 @@ package org.iot.dsa.node;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
-import org.iot.dsa.util.DSUtil;
+import org.iot.dsa.node.DSMap.Entry;
 
 /**
- * String keyed collection of elements that preserves the order of addition.  Keys and values can be
- * accessed via index.
- * <p>
- * <p>
+ * String keyed collection of elements that preserves the order of addition.
  * <p>
  * This can be mounted in the node tree.  However, the parent node will not know when it has been
  * modified, so the modifier is responsible for calling DSNode.childChanged(DSInfo).
- * <p>
- * <p>
  * <p>
  * This is not thread safe.
  *
  * @author Aaron Hansen
  */
-public class DSMap extends DSGroup {
+public class DSMap extends DSGroup implements Iterable<Entry> {
 
     // Constants
     // ---------
@@ -31,11 +25,9 @@ public class DSMap extends DSGroup {
     // Fields
     // ------
 
-    /**
-     * For preserving order.
-     */
-    protected List<Entry> keys = new ArrayList<Entry>();
-    protected Map<String, Entry> map = new HashMap<String, Entry>();
+    private Entry first;
+    private Entry last;
+    private Map<String, Entry> map = new HashMap<String, Entry>();
 
     // Constructors
     // ------------
@@ -48,47 +40,71 @@ public class DSMap extends DSGroup {
 
     @Override
     public DSMap clear() {
-        keys.clear();
+        first = null;
+        last = null;
         map.clear();
         return this;
     }
 
     public boolean contains(String key) {
-        return indexOf(key) >= 0;
+        return getEntry(key) != null;
     }
 
     @Override
     public DSMap copy() {
         DSMap ret = new DSMap();
-        for (int i = 0, len = size(); i < len; i++) {
-            ret.put(getKey(i), get(i).copy());
+        Entry e = firstEntry();
+        while (e != null) {
+            ret.put(e.getKey(), e.getValue().copy());
+            e = e.next();
         }
         return ret;
     }
 
     @Override
     public boolean equals(Object arg) {
-        if (!(arg instanceof DSMap)) {
+        if (arg == null) {
             return false;
         }
-        DSMap argMap = (DSMap) arg;
-        int size = size();
-        if (argMap.size() != size) {
-            return false;
+        if (arg == this) {
+            return true;
         }
-        Entry mine = null;
-        for (int i = size; --i >= 0; ) {
-            mine = getEntry(i);
-            if (!DSUtil.equal(mine.getValue(), argMap.get(mine.getKey()))) {
+        if (arg instanceof DSMap) {
+            DSMap argMap = (DSMap) arg;
+            int size = size();
+            if (argMap.size() != size) {
                 return false;
             }
+            Entry myEntry = firstEntry();
+            Entry argEntry = argMap.firstEntry();
+            while (myEntry != null) {
+                if (argEntry == null) {
+                    return false;
+                }
+                if (!myEntry.equals(argEntry)) {
+                    return false;
+                }
+                myEntry = myEntry.next();
+                argEntry = argEntry.next();
+            }
+            if (argEntry != null) {
+                return false;
+            }
+            return true;
         }
-        return true;
+        return false;
     }
 
     @Override
-    public DSElement get(int idx) {
-        return keys.get(idx).getValue();
+    public DSElement first() {
+        if (first != null) {
+            return first.getValue();
+        }
+        return null;
+    }
+
+    public Entry firstEntry() {
+        return first;
     }
 
     /**
@@ -197,12 +213,15 @@ public class DSMap extends DSGroup {
         return DSElementType.MAP;
     }
 
-    public Entry getEntry(int index) {
-        return keys.get(index);
-    }
-
     public Entry getEntry(String key) {
         return map.get(key);
+    }
+
+    /**
+     * Primitive getter.
+     */
+    public int getInt(String key) {
+        return get(key).toInt();
     }
 
     /**
@@ -223,20 +242,6 @@ public class DSMap extends DSGroup {
      */
     public long getLong(String key) {
         return get(key).toLong();
-    }
-
-    /**
-     * Primitive getter.
-     */
-    public int getInt(String key) {
-        return get(key).toInt();
-    }
-
-    /**
-     * Returns the key at the given index.
-     */
-    public String getKey(int idx) {
-        return keys.get(idx).getKey();
     }
 
     /**
@@ -273,9 +278,10 @@ public class DSMap extends DSGroup {
     @Override
     public int hashCode() {
         int hashCode = 1;
-        for (int i = size(); --i >= 0; ) {
-            hashCode = 31 * hashCode + getKey(i).hashCode();
-            hashCode = 31 * hashCode + get(i).hashCode();
+        Entry e = firstEntry();
+        while (e != null) {
+            hashCode = 31 * hashCode + e.hashCode();
+            e = e.next();
         }
         return hashCode;
     }
@@ -307,20 +313,20 @@ public class DSMap extends DSGroup {
         return o.getElementType() == DSElementType.NULL;
     }
 
-    /**
-     * Index of the given key, or -1.
-     */
-    public int indexOf(String key) {
-        if (map.get(key) == null) {
-            return -1;
+    @Override
+    public Iterator<Entry> iterator() {
+        return new EntryIterator();
+    }
+
+    public DSElement last() {
+        if (last != null) {
+            return last.getValue();
         }
-        List<Entry> l = keys;
-        for (int i = 0, len = l.size(); i < len; i++) {
-            if (key.equals(l.get(i).getKey())) {
-                return i;
-            }
-        }
-        return -1;
+        return null;
+    }
+
+    public Entry lastEntry() {
+        return last;
     }
 
     /**
@@ -336,10 +342,13 @@ public class DSMap extends DSGroup {
         }
         Entry e = map.get(key);
         if (e != null) {
-            //lets not err if putting same key/val pair.
-            if (e.getValue() != val) {
+            DSElement curr = e.getValue();
+            if (curr != val) {
                 if (val.isGroup()) {
                     val.toGroup().setParent(this);
+                }
+                if (curr.isGroup()) {
+                    curr.toGroup().setParent(null);
                 }
                 e.setValue(val);
             }
@@ -349,7 +358,13 @@ public class DSMap extends DSGroup {
             }
             e = new Entry(key, val);
             map.put(key, e);
-            keys.add(e);
+            if (first == null) {
+                first = e;
+                last = e;
+            } else {
+                last.setNext(e);
+                last = e;
+            }
         }
         return this;
     }
@@ -424,9 +439,8 @@ public class DSMap extends DSGroup {
      * @return This
      */
     public DSMap putAll(DSMap toAdd) {
-        Entry e;
-        for (int i = 0, len = toAdd.size(); i < len; i++) {
-            e = toAdd.getEntry(i);
+        Entry e = toAdd.firstEntry();
+        while (e != null) {
             put(e.getKey(), e.getValue().copy());
         }
         return this;
@@ -457,17 +471,6 @@ public class DSMap extends DSGroup {
         return put(key, DSNull.NULL);
     }
 
-    @Override
-    public DSElement remove(int idx) {
-        Entry e = keys.remove(idx);
-        map.remove(e.getKey());
-        DSElement ret = e.getValue();
-        if (ret.isGroup()) {
-            ret.toGroup().setParent(null);
-        }
-        return ret;
-    }
-
     /**
      * Removes the key-value pair and returns the removed value.
      *
@@ -478,17 +481,47 @@ public class DSMap extends DSGroup {
         if (e == null) {
             return null;
         }
-        keys.remove(e);
+        if (size() == 0) {
+            first = null;
+            last = null;
+        } else if (e == first) {
+            first = first.next();
+        } else {
+            Entry prev = getPrev(key);
+            prev.setNext(e.next());
+            if (e == last) {
+                last = prev;
+            }
+        }
         DSElement ret = e.getValue();
         if (ret.isGroup()) {
             ret.toGroup().setParent(null);
         }
         return ret;
+
+    }
+
+    @Override
+    public DSElement removeFirst() {
+        Entry e = first;
+        if (e != null) {
+            return remove(e.getKey());
+        }
+        return null;
+    }
+
+    @Override
+    public DSElement removeLast() {
+        Entry e = last;
+        if (e != null) {
+            return remove(e.getKey());
+        }
+        return null;
     }
 
     @Override
     public int size() {
-        return keys.size();
+        return map.size();
     }
 
     @Override
@@ -506,6 +539,22 @@ public class DSMap extends DSGroup {
         return element.toMap();
     }
 
+    // Private Methods
+    // ---------------
+
+    private Entry getPrev(String key) {
+        Entry prev = null;
+        Entry entry = firstEntry();
+        while (entry != null) {
+            if (entry.getKey().equals(key)) {
+                return prev;
+            }
+            prev = entry;
+            entry = entry.next();
+        }
+        return prev;
+    }
+
     // Inner Classes
     // -------------
 
@@ -516,6 +565,7 @@ public class DSMap extends DSGroup {
     public static class Entry {
 
         String key;
+        Entry next;
         DSElement val;
 
         Entry(String key, DSElement val) {
@@ -525,11 +575,17 @@ public class DSMap extends DSGroup {
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof Entry)) {
-                return false;
+            if (obj == this) {
+                return true;
             }
-            Entry e = (Entry) obj;
-            return e.getKey().equals(key);
+            if (obj instanceof Entry) {
+                Entry e = (Entry) obj;
+                if (!e.getKey().equals(key)) {
+                    return false;
+                }
+                return e.getValue().equals(val);
+            }
+            return false;
         }
 
         public String getKey() {
@@ -542,12 +598,49 @@ public class DSMap extends DSGroup {
 
         @Override
         public int hashCode() {
-            return key.hashCode();
+            return key.hashCode() ^ val.hashCode();
+        }
+
+        public Entry next() {
+            return next;
+        }
+
+        void setNext(Entry entry) {
+            next = entry;
         }
 
         void setValue(DSElement val) {
             this.val = val;
         }
     }
+
+    private class EntryIterator implements Iterator<Entry> {
+
+        private Entry last;
+        private Entry next;
+
+        EntryIterator() {
+            next = firstEntry();
+        }
+
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        public Entry next() {
+            last = next;
+            next = next.next();
+            return last;
+        }
+
+        public void remove() {
+            if (last == null) {
+                throw new NullPointerException();
+            }
+            DSMap.this.remove(last.getKey());
+        }
+
+    }
+
 
 }

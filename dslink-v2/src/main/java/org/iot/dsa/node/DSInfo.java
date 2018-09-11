@@ -31,11 +31,11 @@ public class DSInfo implements ApiObject {
     ///////////////////////////////////////////////////////////////////////////
 
     static final int ADMIN = 0;
-    static final int DEFAULT_ON_COPY = 5;
     static final int HIDDEN = 1;
-    static final int PERMANENT = 4;
-    static final int READONLY = 3;
     static final int TRANSIENT = 2;
+    static final int READONLY = 3;
+    static final int PERMANENT = 4;
+    static final int DEFAULT_ON_COPY = 5;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -343,6 +343,16 @@ public class DSInfo implements ApiObject {
      */
     public boolean isNode() {
         return value instanceof DSNode;
+    }
+
+    /**
+     * True if the object is null.
+     */
+    public boolean isNull() {
+        if (value == null) {
+            return true;
+        }
+        return value.isNull();
     }
 
     /**

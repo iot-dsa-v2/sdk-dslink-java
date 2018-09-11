@@ -83,6 +83,7 @@ public class ThreadNode extends MXBeanNode {
 
     @Override
     public void refreshImpl() {
+        clear();
         long[] ids = mxbean.getAllThreadIds();
         DSList l = new DSList();
         for (long id : ids) {
@@ -94,8 +95,9 @@ public class ThreadNode extends MXBeanNode {
             long id = info.getThreadId();
             ThreadInfoNode infoNode = infoNodes.get(id);
             if (infoNode == null) {
-                DSInfo dsinfo =
-                        add(info.getThreadName(), new ThreadInfoNode(id)).setTransient(true);
+                DSInfo dsinfo = put(
+                        info.getThreadName() + " #" + id,
+                        new ThreadInfoNode(id)).setTransient(true);
                 infoNode = (ThreadInfoNode) dsinfo.getNode();
                 infoNodes.put(id, infoNode);
             }

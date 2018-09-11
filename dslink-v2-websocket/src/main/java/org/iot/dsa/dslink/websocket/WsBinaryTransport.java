@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink.websocket;
 
-import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
+import com.acuity.iot.dsa.dslink.sys.cert.SysCertService;
 import com.acuity.iot.dsa.dslink.transport.BufferedBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
@@ -104,7 +104,7 @@ public class WsBinaryTransport extends BufferedBinaryTransport {
             URI connUri = new URI(getConnectionUrl());
             if ("wss".equalsIgnoreCase(connUri.getScheme())) {
                 SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(new SslContextConfigurator());
-                sslEngineConfigurator.setHostnameVerifier(SysCertManager.getInstance().getHostnameVerifier());
+                sslEngineConfigurator.setHostnameVerifier(SysCertService.getInstance().getHostnameVerifier());
                 client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
             }
             client.connectToServer(this, connUri);

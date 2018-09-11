@@ -210,8 +210,8 @@ public class DSElementTest {
         testPrimitiveList(list);
         map.put("map", primitiveMap());
         map.put("list", primitiveList());
-        Assert.assertTrue(map.get(6).isMap());
-        Assert.assertTrue(map.get(7).isList());
+        Assert.assertTrue(map.get("map").isMap());
+        Assert.assertTrue(map.get("list").isList());
         testMap(map);
         testPrimitiveMap(map.getMap("map"));
         //encode and reconstitute
@@ -219,8 +219,6 @@ public class DSElementTest {
         new JsonWriter(out, "UTF-8").value(map).close();
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         map = new JsonReader(in, "UTF-8").getElement().toMap();
-        Assert.assertTrue(map.get(6).isMap());
-        Assert.assertTrue(map.get(7).isList());
         testPrimitiveMap(map.getMap("map"));
         list.add(primitiveMap());
         list.add(primitiveList());
@@ -231,8 +229,6 @@ public class DSElementTest {
         new JsonWriter(out, "UTF-8").value(map).close();
         in = new ByteArrayInputStream(out.toByteArray());
         map = new JsonReader(in, "UTF-8").getElement().toMap();
-        Assert.assertTrue(map.get(6).isMap());
-        Assert.assertTrue(map.get(7).isList());
         testPrimitiveList(list.get(7).toList());
     }
 
@@ -291,24 +287,12 @@ public class DSElementTest {
 
     private void testPrimitiveMap(DSMap map) {
         testMap(map);
-        Assert.assertTrue(map.get(0).isBoolean());
-        Assert.assertTrue(map.get(1).isDouble());
-        Assert.assertTrue(map.get(2).isLong()); //Deserializes as a long
-        Assert.assertTrue(map.get(3).isNumber());
-        Assert.assertTrue(map.get(4).isString());
-        Assert.assertTrue(map.get(5).isNull());
         Assert.assertTrue(map.get("boolean").isBoolean());
         Assert.assertTrue(map.get("double").isDouble());
         Assert.assertTrue(map.get("int").isLong()); //Deserializes as a long
         Assert.assertTrue(map.get("long").isLong());
         Assert.assertTrue(map.get("string").isString());
         Assert.assertTrue(map.get("null").isNull());
-        Assert.assertTrue(map.indexOf("boolean") == 0);
-        Assert.assertTrue(map.indexOf("double") == 1);
-        Assert.assertTrue(map.indexOf("int") == 2);
-        Assert.assertTrue(map.indexOf("long") == 3);
-        Assert.assertTrue(map.indexOf("string") == 4);
-        Assert.assertTrue(map.indexOf("null") == 5);
     }
 
     private void testNull(DSElement obj) {

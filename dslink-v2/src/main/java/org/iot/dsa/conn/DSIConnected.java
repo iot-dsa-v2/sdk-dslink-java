@@ -1,12 +1,17 @@
 package org.iot.dsa.conn;
 
 /**
- * Connected objects receive callbacks when their associate connection changes state.
+ * DSIConnected instances receive this notification when the ancestral DSConnection changes state.
+ * The DSIConnected instance is responsible for propagating state changes to their subtree if that
+ * is needed.
+ *
+ * @author Aaron Hansen
  */
 public interface DSIConnected {
 
     /**
-     * Notification that the connection has changed state.
+     * Called when the ancestral DSIConnected changes state.  The subtree of this instance will not
+     * notified, that is the responsibility of the DSIConnected implementation..
      */
     public void onChange(DSConnection conn);
 

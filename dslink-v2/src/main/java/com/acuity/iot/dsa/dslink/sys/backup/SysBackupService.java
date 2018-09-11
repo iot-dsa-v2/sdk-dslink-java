@@ -23,6 +23,7 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -33,12 +34,16 @@ public class SysBackupService extends DSNode implements Runnable {
 
     static final String ENABLED = "Enabled";
     static final String INTERVAL = "Backup Interval";
+    static final String LAST_DURATION = "Last Duration";
+    static final String LAST_TIME = "Last Time";
     static final String MAXIMUM = "Max Backups";
     static final String SAVE = "Save";
 
     private DSInfo enabled = getInfo(ENABLED);
     private DSInfo interval = getInfo(INTERVAL);
     private DSLink link;
+    private DSInfo lastDuration = getInfo(LAST_DURATION);
+    private DSInfo lastTime = getInfo(LAST_TIME);
     private Object lock = new Object();
     private DSInfo maximum = getInfo(MAXIMUM);
     private Timer nextSave;
@@ -141,6 +146,7 @@ public class SysBackupService extends DSNode implements Runnable {
                 DSTime.recycle(cal);
             }
             long time = System.currentTimeMillis();
+            put(lastTime, DSDateTime.valueOf(time));
             info("Saving node database " + nodes.getAbsolutePath());
             JsonWriter writer = null;
             if (name.endsWith(".zip")) {
@@ -153,6 +159,7 @@ public class SysBackupService extends DSNode implements Runnable {
             writer.close();
             trimBackups();
             time = System.currentTimeMillis() - time;
+            put(lastDuration, DSLong.valueOf(time));
             info("Node database saved: " + time + "ms");
         } catch (Exception x) {
             error("Saving node database", x);
@@ -185,6 +192,8 @@ public class SysBackupService extends DSNode implements Runnable {
         declareDefault(SAVE, DSAction.DEFAULT);
         declareDefault(ENABLED, DSBool.TRUE).setTransient(true);
         declareDefault(INTERVAL, DSLong.valueOf(60));
+        declareDefault(LAST_TIME, DSDateTime.NULL).setReadOnly(true);
+        declareDefault(LAST_DURATION, DSLong.NULL).setReadOnly(true);
         declareDefault(MAXIMUM, DSLong.valueOf(3));
     }
 

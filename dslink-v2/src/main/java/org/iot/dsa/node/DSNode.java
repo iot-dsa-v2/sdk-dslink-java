@@ -898,7 +898,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public final void stable() {
         if (!isStarted()) {
-            throw new IllegalStateException("Not starting: " + getPath());
+            throw new IllegalStateException("Not started: " + getPath());
         }
         DSInfo info = getFirstInfo();
         while (info != null) {
@@ -973,12 +973,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
 
     /**
-     * Subscribes the topic, the child can be null if subscribing to the node.
+     * Subscribes to the topic on this node.
      *
-     * TODO
-     * If subscribing to the VALUE_TOPIC with a child, the subscriber will only receive callbacks
-     * when that child changes.  However, if no child is supplied, then the subscriber will
-     * be notified of changes of any child.
+     * @param topic      Can not be null.
+     * @param subscriber Can not be null.
+     */
+    public void subscribe(DSTopic topic, DSISubscriber subscriber) {
+    }
+
+    /**
+     * Subscribes to the topic on this node, the child can be null if subscribing to the node
+     * rather than a child.
+     *
+     * TODO - how value to use built in topics
      *
      * @param topic      Can not be null.
      * @param child      Can be null, and cannot be a child node.
@@ -1188,8 +1195,28 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     /**
      * Convenience for instanceof DSNode.
      */
-    protected static final boolean isNode(Object obj) {
+    protected static boolean isNode(Object obj) {
         return obj instanceof DSNode;
+    }
+
+    /**
+     * A convenience for determining null.  First, == null is tested, otherwise if the parameter is
+     * a DSIObject or a DSInfo, arg.isNull() is returned.
+     *
+     * @param obj Can be anything, but DSIObjects and DSInfos will be tested with their isNull
+     *            method.
+     * @return True if the parameter is null.
+     */
+    protected static boolean isNull(Object obj) {
+        if (obj == null) {
+            return true;
+        }
+        if (obj instanceof DSIObject) {
+            return ((DSIObject) obj).isNull();
+        } else if (obj instanceof DSInfo) {
+            return ((DSInfo) obj).isNull();
+        }
+        return false;
     }
 
     /**

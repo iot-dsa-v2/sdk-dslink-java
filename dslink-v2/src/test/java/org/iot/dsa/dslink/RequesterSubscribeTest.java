@@ -1,10 +1,15 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.TestLink;
+import org.iot.dsa.conn.DSConnection;
+import org.iot.dsa.conn.DSConnection.DSConnectionEvent;
 import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
 import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.SimpleRequestHandler;
 import org.iot.dsa.node.*;
+import org.iot.dsa.node.event.DSIEvent;
+import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSTopic;
 import org.iot.dsa.time.DSDateTime;
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,7 +17,7 @@ import org.junit.Test;
 /**
  * @author Aaron Hansen
  */
-public class RequesterSubscribeTest implements DSLinkConnection.Listener {
+public class RequesterSubscribeTest implements DSISubscriber {
 
     // Fields
     // ------
@@ -60,13 +65,21 @@ public class RequesterSubscribeTest implements DSLinkConnection.Listener {
                 });
     }
 
-    public void onDisconnect(DSLinkConnection connection) {
+    @Override
+    public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
+        if (event == DSConnectionEvent.CONNECTED) {
+            onConnect((DSLinkConnection)node);
+        }
+    }
+
+    @Override
+    public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
     }
 
     @Test
     public void theTest() throws Exception {
         link = new TestLink(root = new MyMain());
-        link.getConnection().addListener(this);
+        link.getConnection().subscribe(DSConnection.CONN_TOPIC, null, this);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         Assert.assertFalse(root.isSubscribed());
