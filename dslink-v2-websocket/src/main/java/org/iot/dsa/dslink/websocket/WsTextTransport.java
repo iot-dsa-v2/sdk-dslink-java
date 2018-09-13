@@ -2,7 +2,7 @@ package org.iot.dsa.dslink.websocket;
 
 import com.acuity.iot.dsa.dslink.io.DSCharBuffer;
 import com.acuity.iot.dsa.dslink.io.DSIoException;
-import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
+import com.acuity.iot.dsa.dslink.sys.cert.SysCertService;
 import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
@@ -156,7 +156,7 @@ public class WsTextTransport extends DSTextTransport {
             URI connUri = new URI(getConnectionUrl());
             if ("wss".equalsIgnoreCase(connUri.getScheme())) {
                 SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(new SslContextConfigurator());
-                sslEngineConfigurator.setHostnameVerifier(SysCertManager.getInstance().getHostnameVerifier());
+                sslEngineConfigurator.setHostnameVerifier(SysCertService.getInstance().getHostnameVerifier());
                 client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
             }
             client.connectToServer(this, connUri);

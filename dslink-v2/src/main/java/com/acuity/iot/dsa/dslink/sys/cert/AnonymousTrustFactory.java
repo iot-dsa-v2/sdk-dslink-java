@@ -30,7 +30,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     /////////////////////////////////////////////////////////////////
 
     private static X509TrustManager defaultX509Mgr;
-    private static SysCertManager certManager;
+    private static SysCertService certManager;
     private static TrustManager[] trustManagers;
 
     /////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     /**
      * Captures the default trust factory and installs this one.
      */
-    static void init(SysCertManager mgr) {
+    static void init(SysCertService mgr) {
         certManager = mgr;
         try {
             TrustManagerFactory fac = TrustManagerFactory.getInstance(

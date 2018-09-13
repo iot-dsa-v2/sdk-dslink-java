@@ -25,18 +25,18 @@ public class DSInfoTopic extends DSTopic {
      * The possible events for this topic.
      */
     public enum Event implements DSIEvent {
-        /**
-         * Events will have a single parameter, the info of the new child.
-         */
+
         CHILD_ADDED,
-        /**
-         * Events will have a single parameter, the unparented info of the child.
-         */
+
         CHILD_REMOVED,
-        /**
-         * TBD. Node? Child? Both?
-         */
-        METADATA_CHANGED
+
+        METADATA_CHANGED;
+
+        @Override
+        public DSTopic getTopic() {
+            return INSTANCE;
+        }
+
     }
 
 }

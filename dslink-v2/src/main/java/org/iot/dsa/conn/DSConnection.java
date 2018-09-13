@@ -1,11 +1,12 @@
 package org.iot.dsa.conn;
 
-import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSIStatus;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.event.DSIEvent;
+import org.iot.dsa.node.event.DSTopic;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
@@ -26,8 +27,9 @@ import org.iot.dsa.util.DSException;
  * <p>
  *
  * <b>DSIConnected</b>
- * By default, DSConnection will notify subtree instances of DSIConnected when the connection
- * transitions to connected and disconnected.  Subclasses could choose to notify at other times.
+ * DSConnection will notifies subtree instances of DSIConnected when the connection
+ * state changes.  DSIConnected instances are responsible for notifying their own subscribe
+ * of any state changes.
  *
  * Connection Sequence
  *
@@ -41,24 +43,32 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    static final String FAILURE = "Failure";
+    static final String CONNECTION_TOPIC = "Connection Topic";
     static final String LAST_OK = "Last OK";
     static final String LAST_FAIL = "Last Fail";
     static final String STATE = "State";
-    static final String STATE_TIME = "State Timestamp";
+    static final String STATE_TIME = "State Time";
     static final String STATUS = "Status";
+    static final String STATUS_TEXT = "Status Text";
+
+    /**
+     * The singleton instance that can be used for subscribing.  Events will be instances
+     * of the DSConnectionEvent enum.
+     */
+    public static final DSConnectionTopic CONN_TOPIC = new DSConnectionTopic();
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo failure = getInfo(FAILURE);
+    private DSInfo connTopic = getInfo(CONNECTION_TOPIC);
     private DSInfo lastFail = getInfo(LAST_FAIL);
     private DSInfo lastOk = getInfo(LAST_OK);
     private long lastOkMillis;
     private DSInfo state = getInfo(STATE);
     private DSInfo stateTime = getInfo(STATE_TIME);
     private DSInfo status = getInfo(STATUS);
+    private DSInfo statusText = getInfo(STATUS_TEXT);
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -76,8 +86,8 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
         if (getConnectionState().isEngaged()) {
             put(lastFail, DSDateTime.currentTime());
             if (reason != null) {
-                if (!failure.getElement().toString().equals(reason)) {
-                    put(failure, DSString.valueOf(reason));
+                if (!statusText.getElement().toString().equals(reason)) {
+                    put(statusText, DSString.valueOf(reason));
                 }
             }
             disconnect();
@@ -91,6 +101,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
             } catch (Exception x) {
                 error(error() ? getPath() : null, x);
             }
+            fire(DSConnectionEvent.DISCONNECTED, null);
         }
     }
 
@@ -118,6 +129,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
             } catch (Exception x) {
                 error(error() ? getPath() : null, x);
             }
+            fire(DSConnectionEvent.CONNECTED, null);
         }
     }
 
@@ -200,12 +212,12 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      * until the node is stopped.
      */
     public void run() {
-        long INTERVAL = 5000;
+        long INTERVAL = 2000;
         long retryMs = 0;
         long lastPing = 0;
         while (isRunning()) {
             if (isConnected()) {
-                retryMs = 5000;
+                retryMs = INTERVAL;
                 if (!isEnabled()) {
                     disconnect();
                 } else {
@@ -263,8 +275,8 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
         debug(debug() ? "Config Fault: " + msg : null);
         put(lastFail, DSDateTime.currentTime());
         if (msg != null) {
-            if (!failure.getElement().toString().equals(msg)) {
-                put(failure, DSString.valueOf(msg));
+            if (!statusText.getElement().toString().equals(msg)) {
+                put(statusText, DSString.valueOf(msg));
             }
         }
         if (!getStatus().isFault()) {
@@ -284,10 +296,11 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
 
     @Override
     protected void declareDefaults() {
+        declareDefault(CONNECTION_TOPIC, CONN_TOPIC).setTransient(true);
         declareDefault(STATUS, DSStatus.down).setReadOnly(true).setTransient(true);
         declareDefault(STATE, DSConnectionState.DISCONNECTED).setReadOnly(true).setTransient(true);
         declareDefault(STATE_TIME, DSDateTime.currentTime()).setReadOnly(true).setTransient(true);
-        declareDefault(FAILURE, DSString.EMPTY).setReadOnly(true).setTransient(true);
+        declareDefault(STATUS_TEXT, DSString.EMPTY).setReadOnly(true).setTransient(true);
         declareDefault(LAST_OK, DSDateTime.NULL).setReadOnly(true);
         declareDefault(LAST_FAIL, DSDateTime.NULL).setReadOnly(true);
     }
@@ -362,15 +375,6 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Calls DSIConnected.onChange on all implementations in the subtree.  Does not notify
-     * children of DSIConnected objects.  Stops at instances of DSConnection, but if they
-     * implement DSIConnected, they will receive the callback.
-     */
-    private void notifyDescendants() {
-        notifyDescendants(this);
-    }
-
-    /**
      * Calls DSIConnected.onChange on implementations in the subtree.  Stops at instances of
      * DSIConnected and DSConnection.
      */
@@ -390,5 +394,36 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Inner Classes
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * The possible events for this topic.
+     */
+    public enum DSConnectionEvent implements DSIEvent {
+
+        CONNECTED,
+
+        DISCONNECTED;
+
+        @Override
+        public DSTopic getTopic() {
+            return CONN_TOPIC;
+        }
+
+    }
+
+    /**
+     * Used to notify subscribers of connected and disconnected events.  The event objects
+     * with the
+     */
+    public static class DSConnectionTopic extends DSTopic {
+
+        // Prevent instantiation
+        private DSConnectionTopic() {
+        }
+
+    }
 
 }

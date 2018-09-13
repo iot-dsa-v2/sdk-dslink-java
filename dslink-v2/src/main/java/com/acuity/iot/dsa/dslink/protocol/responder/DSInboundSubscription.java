@@ -15,8 +15,9 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.node.event.DSTopic;
-import org.iot.dsa.node.event.DSValueTopic.Event;
+import org.iot.dsa.node.event.DSValueTopic;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -103,8 +104,7 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSTopic topic, DSIEvent event, DSNode node, DSInfo child,
-                        Object... params) {
+    public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
         DSIValue value;
         if (child != null) {
             value = child.getValue();
@@ -221,15 +221,13 @@ public class DSInboundSubscription extends DSInboundRequest
             if (obj instanceof DSNode) {
                 node = (DSNode) obj;
                 node.subscribe(DSNode.VALUE_TOPIC, null, this);
-                onEvent(DSNode.VALUE_TOPIC, Event.NODE_CHANGED, node, null,
-                        (Object[]) null);
+                onEvent(node, null, DSNode.VALUE_TOPIC);
             } else {
                 DSInfo info = path.getInfo();
                 node = path.getParent();
                 child = info;
                 node.subscribe(DSNode.VALUE_TOPIC, info, this);
-                onEvent(DSNode.VALUE_TOPIC, Event.CHILD_CHANGED, node, info,
-                        (Object[]) null);
+                onEvent(node, info, DSNode.VALUE_TOPIC);
             }
         }
     }

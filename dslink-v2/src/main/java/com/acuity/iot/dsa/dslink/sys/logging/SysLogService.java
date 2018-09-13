@@ -49,7 +49,6 @@ public class SysLogService extends StreamableLogNode {
         if (info == getLevelInfo()) {
             DSLevel level = (DSLevel) info.getObject();
             getLoggerObj().setLevel(level.toLevel());
-            System.out.println("Setting log level: " + level);//XXX
         } else {
             super.onChildChanged(info);
         }

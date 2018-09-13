@@ -3,11 +3,12 @@ package com.acuity.iot.dsa.dslink.protocol.requester;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSubscribeStubs.State;
+import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundSubscription.State;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
@@ -33,14 +34,16 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private final ConcurrentLinkedQueue<DSOutboundSubscribeStubs> pendingSubscribe =
-            new ConcurrentLinkedQueue<DSOutboundSubscribeStubs>();
-    private final ConcurrentLinkedQueue<DSOutboundSubscribeStubs> pendingUnsubscribe =
-            new ConcurrentLinkedQueue<DSOutboundSubscribeStubs>();
-    private final Map<String, DSOutboundSubscribeStubs> pathMap =
-            new ConcurrentHashMap<String, DSOutboundSubscribeStubs>();
-    private final Map<Integer, DSOutboundSubscribeStubs> sidMap =
-            new ConcurrentHashMap<Integer, DSOutboundSubscribeStubs>();
+    private final ConcurrentLinkedQueue<DSOutboundSubscription> pendingSubscribe =
+            new ConcurrentLinkedQueue<DSOutboundSubscription>();
+    private final ConcurrentLinkedQueue<DSOutboundSubscription> pendingUnsubscribe =
+            new ConcurrentLinkedQueue<DSOutboundSubscription>();
+    private final Map<String, DSOutboundSubscription> pathMap =
+            new ConcurrentHashMap<String, DSOutboundSubscription>();
+    private final Map<Integer, DSOutboundSubscription> sidMap =
+            new ConcurrentHashMap<Integer, DSOutboundSubscription>();
+    private boolean connected = false;
+    private DSRuntime.Timer disconnectedTimer;
     private boolean enqueued = false;
     private int nextSid = 1;
     private DSRequester requester;
@@ -71,7 +74,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
             debug(debug() ? "Update missing sid" : null);
             return;
         }
-        DSOutboundSubscribeStubs stub = sidMap.get(sid);
+        DSOutboundSubscription stub = sidMap.get(sid);
         if (stub == null) {
             debug(debug() ? ("Unexpected subscription sid " + sid) : null);
             return;
@@ -89,7 +92,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         if (value == null) {
             value = DSNull.NULL;
         }
-        stub.process(timestamp, value, status);
+        stub.update(timestamp, value, status);
     }
 
     @Override
@@ -97,18 +100,18 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         if (!pendingSubscribe.isEmpty()) {
             debug(debug() ? "Sending subscribe requests" : null);
             doBeginSubscribe(writer);
-            Iterator<DSOutboundSubscribeStubs> it = pendingSubscribe.iterator();
+            Iterator<DSOutboundSubscription> it = pendingSubscribe.iterator();
             while (it.hasNext() && !session.shouldEndMessage()) {
-                DSOutboundSubscribeStubs stubs = it.next();
-                if (!stubs.hasSid()) {
+                DSOutboundSubscription sub = it.next();
+                if (!sub.hasSid()) {
                     synchronized (pathMap) {
-                        stubs.setSid(getNextSid());
-                        sidMap.put(stubs.getSid(), stubs);
+                        sub.setSid(getNextSid());
+                        sidMap.put(sub.getSid(), sub);
                     }
                 }
-                if (stubs.getState() == State.PENDING_SUBSCRIBE) {
-                    doWriteSubscribe(writer, stubs.getPath(), stubs.getSid(), stubs.getQos());
-                    stubs.setState(State.SUBSCRIBED);
+                if (sub.getState() == State.PENDING_SUBSCRIBE) {
+                    doWriteSubscribe(writer, sub.getPath(), sub.getSid(), sub.getQos());
+                    sub.setState(State.SUBSCRIBED);
                 }
                 it.remove();
             }
@@ -117,14 +120,14 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         if (!pendingUnsubscribe.isEmpty() && !session.shouldEndMessage()) {
             debug(debug() ? "Sending unsubscribe requests" : null);
             doBeginUnsubscribe(writer);
-            Iterator<DSOutboundSubscribeStubs> it = pendingUnsubscribe.iterator();
+            Iterator<DSOutboundSubscription> it = pendingUnsubscribe.iterator();
             while (it.hasNext() && !session.shouldEndMessage()) {
-                DSOutboundSubscribeStubs stubs = it.next();
+                DSOutboundSubscription sub = it.next();
                 synchronized (pathMap) {
-                    if (stubs.size() == 0) {
-                        pathMap.remove(stubs.getPath());
-                        sidMap.remove(stubs.getSid());
-                        doWriteUnsubscribe(writer, stubs.getSid());
+                    if (sub.size() == 0) {
+                        pathMap.remove(sub.getPath());
+                        sidMap.remove(sub.getSid());
+                        doWriteUnsubscribe(writer, sub.getSid());
                     }
                 }
                 it.remove();
@@ -195,20 +198,48 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     }
 
     protected void onConnected() {
+        connected = true;
+        if (disconnectedTimer != null) {
+            disconnectedTimer.cancel();
+            disconnectedTimer = null;
+        }
+        for (DSOutboundSubscription sub : pathMap.values()) {
+            sub.setState(State.PENDING_SUBSCRIBE);
+            pendingSubscribe.add(sub);
+        }
+        if (!pendingSubscribe.isEmpty()) {
+            sendMessage();
+        }
     }
 
     protected void onDisconnected() {
-        for (DSOutboundSubscribeStubs stubs : pendingSubscribe) {
-            stubs.onDisconnect();
+        connected = false;
+        synchronized (pathMap) {
+            pendingSubscribe.clear();
+            for (DSOutboundSubscription sub : pendingUnsubscribe) {
+                pathMap.remove(sub.getPath());
+                sidMap.remove(sub.getSid());
+            }
+            pendingUnsubscribe.clear();
         }
-        pendingSubscribe.clear();
-        pendingUnsubscribe.clear();
-        for (DSOutboundSubscribeStubs stubs : pathMap.values()) {
-            stubs.onDisconnect();
-        }
-        sidMap.clear();
-        pathMap.clear();
         enqueued = false;
+        if (disconnectedTimer == null) {
+            disconnectedTimer = DSRuntime.runDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    updateDisconnected();
+                }
+            }, 15000);
+        }
+    }
+
+    protected void updateDisconnected() {
+        disconnectedTimer = null;
+        if (!connected) {
+            for (Map.Entry<String, DSOutboundSubscription> entry : pathMap.entrySet()) {
+                entry.getValue().updateDisconnected();
+            }
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -237,43 +268,54 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     }
 
     /**
+     * Called by the subscription add method when a subscribe message needs to be sent because
+     * it is a new subscription or there change in qos.
+     */
+    void sendSubscribe(DSOutboundSubscription sub) {
+        if (connected) {
+            sub.setState(State.PENDING_SUBSCRIBE);
+            pendingSubscribe.add(sub);
+            sendMessage();
+        }
+    }
+
+    /**
      * Create or update a subscription.
      */
     OutboundSubscribeHandler subscribe(String path, int qos, OutboundSubscribeHandler req) {
         trace(trace() ? String.format("Subscribe (qos=%s) %s", qos, path) : null);
         DSOutboundSubscribeStub stub = new DSOutboundSubscribeStub(path, qos, req);
-        DSOutboundSubscribeStubs stubs = null;
+        DSOutboundSubscription sub = null;
         synchronized (pathMap) {
-            stubs = pathMap.get(path);
-            if (stubs == null) {
-                stubs = new DSOutboundSubscribeStubs(path, this);
-                stubs.add(stub);
-                pathMap.put(path, stubs);
-                pendingSubscribe.add(stubs);
-            } else {
-                stubs.add(stub);
-                stubs.setState(State.PENDING_SUBSCRIBE);
-                pendingSubscribe.add(stubs);
+            sub = pathMap.get(path);
+            if (sub == null) {
+                sub = new DSOutboundSubscription(path, this);
+                pathMap.put(path, sub);
             }
         }
         try {
-            req.onInit(path, stubs.getQos(), stub);
+            req.onInit(path, sub.getQos(), stub);
         } catch (Exception x) {
             error(path, x);
         }
-        sendMessage();
+        sub.add(stub);
         return req;
     }
 
     /**
      * Remove the subscription and call onClose.
      */
-    void unsubscribe(DSOutboundSubscribeStubs stubs) {
+    void unsubscribe(DSOutboundSubscription sub) {
         synchronized (pathMap) {
-            if (stubs.size() == 0) {
-                stubs.setState(State.PENDING_UNSUBSCRIBE);
-                pendingUnsubscribe.add(stubs);
-                sendMessage();
+            if (connected) {
+                if (sub.size() == 0) {
+                    sub.setState(State.PENDING_UNSUBSCRIBE);
+                    pendingUnsubscribe.add(sub);
+                    sendMessage();
+                }
+            } else {
+                pathMap.remove(sub.getPath());
+                sidMap.remove(sub.getSid());
             }
         }
     }

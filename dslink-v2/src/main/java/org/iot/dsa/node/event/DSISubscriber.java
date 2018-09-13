@@ -6,32 +6,25 @@ import org.iot.dsa.node.DSNode;
 /**
  * DSISubscribers subscribe to DSTopics on DSNodes.
  * <p>
- * A single topic can emanate multiple types of events.  The event object is an empty interface,
- * each topic will define it's own events.
- * <p>
- * Events can also supply parameters.  The parameters specific to each kind of event.
- * <p>
- * See the class documentation of a specific topic to understand the possible events and their
- * parameters.
+ * A single topic can emanate multiple types of events.  See the class documentation of a
+ * specific topic to understand the possible events and their * parameters.
  * <p>
  * The two most important topics are built into every node, they are: DSValueTopic and DSInfoTopic.
  *
  * @see DSIEvent
- * @see DSTopic
  * @see DSNode#subscribe(DSTopic, DSInfo, DSISubscriber)
+ * @see DSNode#INFO_TOPIC
+ * @see DSNode#VALUE_TOPIC
  */
 public interface DSISubscriber {
 
     /**
      * Subscription callback.
-     *
-     * @param topic  Required, the topic emanating the event.
-     * @param event  Required, the actual event.
      * @param node   Required, node subscribed to.
      * @param child  Optional, if the event concerns a child.
-     * @param params Can be null, only used if the event defines it.
+     * @param event  Required, the actual event.
      */
-    public void onEvent(DSTopic topic, DSIEvent event, DSNode node, DSInfo child, Object... params);
+    public void onEvent(DSNode node, DSInfo child, DSIEvent event);
 
     /**
      * Called no matter how the unsubscribe happens, whether explicitly or if the node

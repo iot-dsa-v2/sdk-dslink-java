@@ -41,6 +41,14 @@ public class DS1LinkConnection extends DSLinkConnection {
     private DSIWriter writer;
 
     ///////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ///////////////////////////////////////////////////////////////////////////
+
+    public DS1LinkConnection() {
+        getSession();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
@@ -50,11 +58,15 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     @Override
     public DSIRequester getRequester() {
-        return session.getRequester();
+        return getSession().getRequester();
     }
 
     @Override
     public DS1Session getSession() {
+        if (session == null) {
+            session = new DS1Session(this);
+            put(SESSION, session).setTransient(true);
+        }
         return session;
     }
 
@@ -138,10 +150,6 @@ public class DS1LinkConnection extends DSLinkConnection {
     @Override
     protected void onConnect() {
         try {
-            if (session == null) {
-                session = new DS1Session(this);
-                put(SESSION, session).setTransient(true);
-            }
             DS1ConnectionInit init = connectionInit;
             //Don't reuse the connection init if there is connection problem.
             connectionInit = null;

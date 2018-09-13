@@ -1,18 +1,26 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.TestLink;
+import org.iot.dsa.conn.DSConnection.DSConnectionEvent;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.event.DSIEvent;
+import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSTopic;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Aaron Hansen
  */
-public class RequesterInvokeTest implements DSLinkConnection.Listener {
+public class RequesterInvokeTest {
 
     // Fields
     // ------
@@ -24,24 +32,27 @@ public class RequesterInvokeTest implements DSLinkConnection.Listener {
     // Methods
     // -------
 
-    public void onConnect(DSLinkConnection connection) {
-        DSIRequester requester = link.getConnection().getRequester();
-        success = true;
-        synchronized (this) {
-            notifyAll();
-        }
-    }
-
-    public void onDisconnect(DSLinkConnection connection) {
-    }
-
     @Test
     public void theTest() throws Exception {
         link = new TestLink(root = new MyMain());
-        link.getConnection().addListener(this);
+        link.getConnection().subscribe(DSLinkConnection.CONN_TOPIC, new DSISubscriber() {
+            @Override
+            public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
+                if (event == DSConnectionEvent.CONNECTED) {
+                    success = true;
+                    synchronized (RequesterInvokeTest.this) {
+                        RequesterInvokeTest.this.notifyAll();
+                    }
+                }
+            }
+
+            @Override
+            public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
+            }
+        });
+        success = false;
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
-        success = false;
         synchronized (this) {
             this.wait(5000);
         }

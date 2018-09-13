@@ -3,7 +3,7 @@ package org.iot.dsa.dslink;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import com.acuity.iot.dsa.dslink.sys.backup.SysBackupService;
-import com.acuity.iot.dsa.dslink.sys.cert.SysCertManager;
+import com.acuity.iot.dsa.dslink.sys.cert.SysCertService;
 import com.acuity.iot.dsa.dslink.sys.logging.SysLogService;
 import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
 import org.iot.dsa.node.DSInfo;
@@ -35,7 +35,7 @@ public class DSSysNode extends DSNode {
     @Override
     protected void declareDefaults() {
         declareDefault(STOP, DSAction.DEFAULT);
-        declareDefault(CERTIFICATES, new SysCertManager());
+        declareDefault(CERTIFICATES, new SysCertService());
         declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
         declareDefault(PROFILER, new SysProfiler()).setTransient(true);
         declareDefault(LOGGING, new SysLogService());
