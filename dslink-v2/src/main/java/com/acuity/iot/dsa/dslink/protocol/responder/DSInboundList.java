@@ -145,8 +145,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSTopic topic, DSIEvent event, DSNode node, DSInfo child,
-                        Object... params) {
+    public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
         switch ((DSInfoTopic.Event) event) {
             case CHILD_ADDED:
                 childAdded(child);
@@ -546,10 +545,9 @@ public class DSInboundList extends DSInboundRequest
      * Called by encodeTarget, encodes meta-data as configs.
      */
     private void encodeTargetMetadata(DSMap metadata, MessageWriter writer) {
-        Entry entry;
         String name;
-        for (int i = 0, len = metadata.size(); i < len; i++) {
-            entry = metadata.getEntry(i);
+        Entry entry = metadata.firstEntry();
+        while (entry != null) {
             name = entry.getKey();
             switch (name.charAt(0)) {
                 case '$':
@@ -562,6 +560,7 @@ public class DSInboundList extends DSInboundRequest
 
             }
             encode(name, entry.getValue(), writer);
+            entry = entry.next();
         }
     }
 

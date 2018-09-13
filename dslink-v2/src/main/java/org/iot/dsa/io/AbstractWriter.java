@@ -220,10 +220,10 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             case MAP:
                 DSMap map = arg.toMap();
                 beginMap(map.size());
-                Entry e;
-                for (int i = 0, len = map.size(); i < len; i++) {
-                    e = map.getEntry(i);
+                Entry e = map.firstEntry();
+                while (e != null) {
                     key(e.getKey()).value(e.getValue());
+                    e = e.next();
                 }
                 endMap();
                 break;

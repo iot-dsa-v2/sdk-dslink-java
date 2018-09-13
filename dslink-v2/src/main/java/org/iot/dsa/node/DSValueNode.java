@@ -1,7 +1,5 @@
 package org.iot.dsa.node;
 
-import org.iot.dsa.node.event.DSValueTopic.Event;
-
 /**
  * A convenience implementation of a node that is also a value.  The value of the node must be
  * stored as a child.  Subclasses only need to override is getValueChild()
@@ -20,7 +18,7 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
         DSInfo info = getValueChild();
         if (child == info) {
             DSIValue val = info.getValue();
-            fire(VALUE_TOPIC, Event.NODE_CHANGED, null);
+            fire(VALUE_TOPIC, null);
         }
     }
 

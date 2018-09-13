@@ -20,7 +20,7 @@ public class CertNode extends DSValueNode {
     private DSInfo allow = getInfo(ALLOW);
     private DSInfo remove = getInfo(REMOVE);
     
-    private SysCertManager certManager;
+    private SysCertService certManager;
     
     @Override
     protected void declareDefaults() {
@@ -60,9 +60,9 @@ public class CertNode extends DSValueNode {
         getCertManager().allow(getInfo());
     }
     
-    public SysCertManager getCertManager() {
+    public SysCertService getCertManager() {
         if (certManager == null) {
-            certManager = (SysCertManager) getAncestor(SysCertManager.class);
+            certManager = (SysCertService) getAncestor(SysCertService.class);
         }
         return certManager;
     }

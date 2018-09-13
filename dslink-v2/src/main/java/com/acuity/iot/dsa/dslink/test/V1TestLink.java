@@ -43,14 +43,6 @@ public class V1TestLink extends DSLink {
         }
 
         /**
-         * Looks at the connection initialization response to determine the protocol
-         * implementation.
-         */
-        protected DS1Session makeSession(DS1ConnectionInit init) {
-            return new DS1Session(TestConnection.this);
-        }
-
-        /**
          * Looks at the connection initialization response to determine the type of transport then
          * instantiates the correct type fom the config.
          */

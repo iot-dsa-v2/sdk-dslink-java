@@ -56,6 +56,14 @@ public class DS2LinkConnection extends DSLinkConnection {
     private DSBinaryTransport transport;
 
     ///////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ///////////////////////////////////////////////////////////////////////////
+
+    public DS2LinkConnection() {
+        getSession();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
@@ -75,11 +83,15 @@ public class DS2LinkConnection extends DSLinkConnection {
 
     @Override
     public DSIRequester getRequester() {
-        return session.getRequester();
+        return getSession().getRequester();
     }
 
     @Override
     public DS2Session getSession() {
+        if (session == null) {
+            session = new DS2Session(this);
+            put(SESSION, session);
+        }
         return session;
     }
 
@@ -125,10 +137,6 @@ public class DS2LinkConnection extends DSLinkConnection {
     @Override
     protected void onConnect() {
         try {
-            if (session == null) {
-                session = new DS2Session(this);
-                put(SESSION, session);
-            }
             transport = makeTransport();
             put(TRANSPORT, transport);
             transport.setConnection(this);
@@ -227,7 +235,7 @@ public class DS2LinkConnection extends DSLinkConnection {
             }
         }
         boolean allowed = in.read() == 1;
-        session.setRequesterAllowed(allowed);
+        getSession().setRequesterAllowed(allowed);
         String pathOnBroker = reader.readString(in);
         setPathInBroker(pathOnBroker);
         byte[] tmp = new byte[32];

@@ -4,8 +4,16 @@ import java.lang.management.MemoryUsage;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSBool;
+import org.iot.dsa.node.DSDouble;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSLong;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMap.Entry;
+import org.iot.dsa.node.DSMetadata;
+import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.DSValueType;
 
 
 public class ProfilerUtils {
@@ -16,9 +24,10 @@ public class ProfilerUtils {
 
     public static Map<String, String> dsMapToMap(DSMap dsMap) {
         Map<String, String> map = new HashMap<String, String>();
-        for (int i = 0; i < dsMap.size(); i++) {
-            Entry en = dsMap.getEntry(i);
-            map.put(en.getKey(), en.getValue().toString());
+        Entry e = dsMap.firstEntry();
+        while (e != null) {
+            map.put(e.getKey(), e.getValue().toString());
+            e = e.next();
         }
         return map;
     }
