@@ -208,7 +208,7 @@ public class DSLogHandler extends Handler {
     }
 
     /**
-     * Formats and writes the logging record the underlying stream.  Easily overridable if you
+     * Formats and writes the logging record to System.out.  Easily overridable if you
      * wish to do something else.
      */
     protected void write(LogRecord record) {

@@ -979,13 +979,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param subscriber Can not be null.
      */
     public void subscribe(DSTopic topic, DSISubscriber subscriber) {
+        subscribe(topic, null, subscriber);
     }
 
     /**
      * Subscribes to the topic on this node, the child can be null if subscribing to the node
      * rather than a child.
-     *
-     * TODO - how value to use built in topics
      *
      * @param topic      Can not be null.
      * @param child      Can be null, and cannot be a child node.

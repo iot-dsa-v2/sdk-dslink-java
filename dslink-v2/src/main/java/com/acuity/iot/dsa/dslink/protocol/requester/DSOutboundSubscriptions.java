@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
@@ -42,6 +43,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     private final Map<Integer, DSOutboundSubscription> sidMap =
             new ConcurrentHashMap<Integer, DSOutboundSubscription>();
     private boolean connected = false;
+    private DSRuntime.Timer disconnectedTimer;
     private boolean enqueued = false;
     private int nextSid = 1;
     private DSRequester requester;
@@ -90,7 +92,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         if (value == null) {
             value = DSNull.NULL;
         }
-        stub.process(timestamp, value, status);
+        stub.update(timestamp, value, status);
     }
 
     @Override
@@ -197,11 +199,13 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
 
     protected void onConnected() {
         connected = true;
-        synchronized (pathMap) {
-            for (DSOutboundSubscription sub : pathMap.values()) {
-                sub.setState(State.PENDING_SUBSCRIBE);
-                    pendingSubscribe.add(sub);
-            }
+        if (disconnectedTimer != null) {
+            disconnectedTimer.cancel();
+            disconnectedTimer = null;
+        }
+        for (DSOutboundSubscription sub : pathMap.values()) {
+            sub.setState(State.PENDING_SUBSCRIBE);
+            pendingSubscribe.add(sub);
         }
         if (!pendingSubscribe.isEmpty()) {
             sendMessage();
@@ -219,6 +223,23 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
             pendingUnsubscribe.clear();
         }
         enqueued = false;
+        if (disconnectedTimer == null) {
+            disconnectedTimer = DSRuntime.runDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    updateDisconnected();
+                }
+            }, 15000);
+        }
+    }
+
+    protected void updateDisconnected() {
+        disconnectedTimer = null;
+        if (!connected) {
+            for (Map.Entry<String, DSOutboundSubscription> entry : pathMap.entrySet()) {
+                entry.getValue().updateDisconnected();
+            }
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -247,6 +268,18 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     }
 
     /**
+     * Called by the subscription add method when a subscribe message needs to be sent because
+     * it is a new subscription or there change in qos.
+     */
+    void sendSubscribe(DSOutboundSubscription sub) {
+        if (connected) {
+            sub.setState(State.PENDING_SUBSCRIBE);
+            pendingSubscribe.add(sub);
+            sendMessage();
+        }
+    }
+
+    /**
      * Create or update a subscription.
      */
     OutboundSubscribeHandler subscribe(String path, int qos, OutboundSubscribeHandler req) {
@@ -257,17 +290,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
             sub = pathMap.get(path);
             if (sub == null) {
                 sub = new DSOutboundSubscription(path, this);
-                sub.add(stub);
                 pathMap.put(path, sub);
-                if (connected) {
-                    pendingSubscribe.add(sub);
-                }
-            } else {
-                sub.add(stub);
-                sub.setState(State.PENDING_SUBSCRIBE);
-                if (connected) {
-                    pendingSubscribe.add(sub);
-                }
             }
         }
         try {
@@ -275,9 +298,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         } catch (Exception x) {
             error(path, x);
         }
-        if (connected) {
-            sendMessage();
-        }
+        sub.add(stub);
         return req;
     }
 

@@ -35,31 +35,10 @@ public abstract class DSLinkConnection extends DSConnection {
     private DSInfo brokerPath = getInfo(BROKER_PATH);
     private String connectionId;
     private DSLink link;
-    private ConcurrentHashMap<Listener, Listener> listeners;
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Adds a listener for connection events.  If already connected, onConnect
-     * will be called on the listener.
-     */
-    public void addListener(Listener listener) {
-        synchronized (this) {
-            if (listeners == null) {
-                listeners = new ConcurrentHashMap<Listener, Listener>();
-            }
-        }
-        listeners.put(listener, listener);
-        if (isConnected()) {
-            try {
-                listener.onConnect(this);
-            } catch (Exception x) {
-                error(getPath(), x);
-            }
-        }
-    }
 
     /**
      * A unique descriptive tag such as a combination of the link name and the broker host.
@@ -121,15 +100,6 @@ public abstract class DSLinkConnection extends DSConnection {
 
     public abstract DSTransport getTransport();
 
-    /**
-     * Removes a listener for connection events.
-     */
-    public void removeListener(Listener listener) {
-        if (listeners != null) {
-            listeners.remove(listener);
-        }
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
@@ -147,20 +117,6 @@ public abstract class DSLinkConnection extends DSConnection {
     }
 
     @Override
-    protected void onConnected() {
-        super.onConnected();
-        if (listeners != null) {
-            for (Listener l : listeners.keySet()) {
-                try {
-                    l.onConnect(this);
-                } catch (Exception x) {
-                    error(getPath(), x);
-                }
-            }
-        }
-    }
-
-    @Override
     protected void onDisconnect() {
         try {
             if (getTransport() != null) {
@@ -170,20 +126,6 @@ public abstract class DSLinkConnection extends DSConnection {
         } catch (Exception x) {
             debug(getPath(), x);
             connDown(DSException.makeMessage(x));
-        }
-    }
-
-    @Override
-    protected void onDisconnected() {
-        super.onDisconnected();
-        if (listeners != null) {
-            for (Listener l : listeners.keySet()) {
-                try {
-                    l.onDisconnect(this);
-                } catch (Exception x) {
-                    error(getPath(), x);
-                }
-            }
         }
     }
 
@@ -210,28 +152,6 @@ public abstract class DSLinkConnection extends DSConnection {
 
     protected void setPathInBroker(String path) {
         put(brokerPath, DSString.valueOf(path));
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Intended for requester functionality so that requesters can know when to
-     * start and stop making requests.
-     */
-    public interface Listener {
-
-        /**
-         * Called asynchronously after the connection with the endpoint is opened.
-         */
-        public void onConnect(DSLinkConnection connection);
-
-        /**
-         * Called synchronously after the connection with the endpoint is closed.
-         */
-        public void onDisconnect(DSLinkConnection connection);
-
     }
 
 }

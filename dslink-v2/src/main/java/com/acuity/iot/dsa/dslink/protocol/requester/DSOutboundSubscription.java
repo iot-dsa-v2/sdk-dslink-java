@@ -1,6 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.requester;
 
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
 
@@ -21,7 +22,7 @@ class DSOutboundSubscription {
     private DSDateTime lastTs;
     private DSElement lastValue;
     private String path;
-    private int qos = 0;
+    private int qos = -1;
     private Integer sid;
     private int size;
     private State state = State.PENDING_SUBSCRIBE;
@@ -87,10 +88,14 @@ class DSOutboundSubscription {
      * If already subscribed, will pass the last update to the new subscriber.
      */
     void add(DSOutboundSubscribeStub stub) {
+        int prevQos = qos;
         if (stub.getQos() > qos) {
             qos = stub.getQos();
         }
         if (contains(stub)) {
+            if (qos > prevQos) {
+                getSubscriptions().sendSubscribe(this);
+            }
             return;
         }
         stub.setSub(this);
@@ -101,15 +106,17 @@ class DSOutboundSubscription {
             last.setNext(stub);
             last = stub;
         }
-        //Send the last update to the new subscription
         if (++size > 1) {
             if (lastValue != null) {
                 try {
-                    stub.process(lastTs, lastValue, lastStatus);
+                    stub.update(lastTs, lastValue, lastStatus);
                 } catch (Exception x) {
                     subscriptions.error(path, x);
                 }
             }
+        }
+        if (qos > prevQos) { //need to resubscribe for new qos
+            getSubscriptions().sendSubscribe(this);
         }
     }
 
@@ -140,21 +147,6 @@ class DSOutboundSubscription {
         return cur;
     }
 
-    void process(DSDateTime ts, DSElement value, DSStatus status) {
-        DSOutboundSubscribeStub stub = first;
-        while (stub != null) {
-            try {
-                stub.process(ts, value, status);
-            } catch (Exception x) {
-                subscriptions.error(path, x);
-            }
-            stub = stub.getNext();
-        }
-        lastTs = ts;
-        lastValue = value;
-        lastStatus = status;
-    }
-
     void remove(DSOutboundSubscribeStub stub) {
         DSOutboundSubscribeStub pred = predecessor(stub);
         if (pred == last) { //not contained
@@ -173,8 +165,20 @@ class DSOutboundSubscription {
         }
         if (--size == 0) {
             subscriptions.unsubscribe(this);
+        } else {
+            stub = first;
+            int max = 0;
+            while (stub != null) {
+                if (stub.getQos() > max) {
+                    max = stub.getQos();
+                }
+                stub = stub.getNext();
+            }
+            if (max != qos) {
+                qos = max;
+                getSubscriptions().sendSubscribe(this);
+            }
         }
-        //TODO else if qos now lower, resubscribe
     }
 
     void setState(State state) {
@@ -183,6 +187,37 @@ class DSOutboundSubscription {
 
     int size() {
         return size;
+    }
+
+    void update(DSDateTime ts, DSElement value, DSStatus status) {
+        DSOutboundSubscribeStub stub = first;
+        while (stub != null) {
+            try {
+                stub.update(ts, value, status);
+            } catch (Exception x) {
+                subscriptions.error(path, x);
+            }
+            stub = stub.getNext();
+        }
+        lastTs = ts;
+        lastValue = value;
+        lastStatus = status;
+    }
+
+    void updateDisconnected() {
+        if (lastStatus == DSStatus.unknown) {
+            return;
+        }
+        lastStatus = DSStatus.unknown;
+        lastTs = DSDateTime.currentTime();
+        if (lastValue == null) {
+            lastValue = DSNull.NULL;
+        }
+        DSOutboundSubscribeStub cur = first;
+        while (cur.getNext() != null) {
+            cur.update(lastTs, lastValue, lastStatus);
+            cur = cur.getNext();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////

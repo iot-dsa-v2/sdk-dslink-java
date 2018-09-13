@@ -65,7 +65,7 @@ class DSOutboundSubscribeStub implements OutboundStream {
         return open;
     }
 
-    public void process(DSDateTime ts, DSElement value, DSStatus status) {
+    public void update(DSDateTime ts, DSElement value, DSStatus status) {
         if (!open) {
             return;
         }
