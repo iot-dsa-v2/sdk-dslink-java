@@ -3,6 +3,8 @@ package com.acuity.iot.dsa.dslink.sys.profiler;
 import java.lang.management.PlatformManagedObject;
 import java.lang.reflect.Method;
 import java.util.List;
+import org.iot.dsa.DSRuntime;
+import org.iot.dsa.DSRuntime.Timer;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
@@ -11,7 +13,9 @@ import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
 
-public abstract class MXBeanNode extends DSNode {
+public abstract class MXBeanNode extends DSNode implements Runnable {
+    
+    private Timer pollTimer;
 
     private static DSAction refreshAction = new DSAction() {
         @Override
@@ -31,6 +35,23 @@ public abstract class MXBeanNode extends DSNode {
     protected void onStable() {
         setupMXBean();
         refresh();
+        setupPolling();
+    }
+
+    private void setupPolling() {
+        pollTimer = DSRuntime.run(this, 0, 5000);
+    }
+    
+    @Override
+    public void run() {
+        if (isTreeSubscribed()) {
+            refresh();
+        }
+    }
+    
+    @Override
+    protected void onStopped() {
+        pollTimer.cancel();
     }
 
     private void refresh() {
@@ -78,5 +99,7 @@ public abstract class MXBeanNode extends DSNode {
     protected void putProp(String name, DSIObject obj) {
         put(name, obj).setReadOnly(true).setTransient(true);
     }
+    
+    
 
 }
