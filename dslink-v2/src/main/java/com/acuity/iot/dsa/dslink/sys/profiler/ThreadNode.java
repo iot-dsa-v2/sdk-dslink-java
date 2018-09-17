@@ -123,7 +123,6 @@ public class ThreadNode extends MXBeanNode {
 
     @Override
     public void refreshImpl() {
-        clear();
         long[] ids = mxbean.getAllThreadIds();
         DSList l = new DSList();
         for (long id : ids) {
@@ -131,8 +130,10 @@ public class ThreadNode extends MXBeanNode {
         }
         putProp("AllThreadIds", l);
         ThreadInfo[] infos = mxbean.getThreadInfo(ids, false, false);
+        Set<Long> prevIds =  new HashSet<Long>(infoNodes.keySet());
         for (ThreadInfo info : infos) {
             long id = info.getThreadId();
+            prevIds.remove(id);
             ThreadInfoNode infoNode = infoNodes.get(id);
             if (infoNode == null) {
                 DSInfo dsinfo = put(
@@ -142,6 +143,19 @@ public class ThreadNode extends MXBeanNode {
                 infoNodes.put(id, infoNode);
             }
             infoNode.update(info, mxbean.getThreadCpuTime(id), mxbean.getThreadUserTime(id));
+        }
+        for (long id: prevIds) {
+            ThreadInfoNode infoNode = infoNodes.get(id);
+            ThreadInfo info = mxbean.getThreadInfo(id);
+            if (infoNode != null && info != null) {
+                infoNode.update(info, mxbean.getThreadCpuTime(id), mxbean.getThreadUserTime(id));
+            } else {
+                ThreadInfoNode removed = infoNodes.remove(id);
+                if (removed != null) {
+                    remove(removed.getInfo());
+                }
+            }
+            
         }
     }
 
