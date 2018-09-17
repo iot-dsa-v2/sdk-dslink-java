@@ -8,6 +8,8 @@ import java.util.*;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.*;
 import org.iot.dsa.node.action.ActionSpec.ResultType;
@@ -20,25 +22,63 @@ public class ThreadNode extends MXBeanNode {
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
-        DSAction act = new DSAction() {
+        DSAbstractAction act = new DSAbstractAction() {
             @Override
             public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
                 return ((ThreadNode) info.getParent()).findDeadlocked(info);
+            }
+
+            @Override
+            public void prepareParameter(DSInfo info, DSMap parameter) {
             }
         };
         act.setResultType(ResultType.VALUES);
         act.addValueResult("Result", DSValueType.STRING);
         declareDefault("Find Deadlocked Threads", act);
 
-        act = new DSAction() {
+        act = new DSAbstractAction() {
             @Override
             public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
                 return ((ThreadNode) info.getParent()).findMonitorDeadlocked(info);
+            }
+
+            @Override
+            public void prepareParameter(DSInfo info, DSMap parameter) {
             }
         };
         act.setResultType(ResultType.VALUES);
         act.addValueResult("Result", DSValueType.STRING);
         declareDefault("Find Monitor Deadlocked Threads", act);
+        
+        act = new DSAbstractAction() {
+            
+            @Override
+            public void prepareParameter(DSInfo info, DSMap parameter) {
+            }
+            
+            @Override
+            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
+                return ((ThreadNode) info.getParent()).getThreadDump(info, invocation.getParameters());
+            }
+        };
+        act.addParameter("Dump Locked Monitors", DSValueType.BOOL, "If true, dump all locked monitors");
+        act.addParameter("Dump Locked Synschronizers", DSValueType.BOOL, "If true, dump all locked ownable synchronizers");
+        act.addValueResult("Thread Dump", DSValueType.STRING).setEditor("textarea");
+        act.setResultType(ResultType.VALUES);
+        declareDefault("Get Thread Dump", act);
+    }
+
+    protected ActionResult getThreadDump(DSInfo info, DSMap parameters) {
+        boolean lockedMonitors = parameters.getBoolean("Dump Locked Monitors");
+        boolean lockedSynchronizers = parameters.getBoolean("Dump Locked Synschronizers");
+        ThreadInfo[] threads = mxbean.dumpAllThreads(lockedMonitors, lockedSynchronizers);
+        StringBuilder dump = new StringBuilder();
+        for (ThreadInfo thread : threads) {
+            dump.append(thread.toString());
+            dump.append('\n');
+            //ProfilerUtils.stackTraceToString(thread.getStackTrace());
+        }
+        return new DSActionValues(info.getAction()).addResult(DSString.valueOf(dump.toString()));
     }
 
     public ActionResult findDeadlocked(DSInfo actionInfo) {
