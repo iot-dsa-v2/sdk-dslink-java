@@ -2,7 +2,6 @@ package com.acuity.iot.dsa.dslink.sys.profiler;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.lang.management.PlatformManagedObject;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,12 +20,12 @@ public class MemoryNode extends MXBeanNode {
     }
 
     @Override
-    public PlatformManagedObject getMXBean() {
+    public Object getMXBean() {
         return mxbean;
     }
 
     @Override
-    public Class<? extends PlatformManagedObject> getMXInterface() {
+    public Class<? extends Object> getMXInterface() {
         return MemoryMXBean.class;
     }
 

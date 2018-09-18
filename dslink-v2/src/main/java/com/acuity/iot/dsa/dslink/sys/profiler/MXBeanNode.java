@@ -1,6 +1,5 @@
 package com.acuity.iot.dsa.dslink.sys.profiler;
 
-import java.lang.management.PlatformManagedObject;
 import java.lang.reflect.Method;
 import java.util.List;
 import org.iot.dsa.DSRuntime;
@@ -63,15 +62,15 @@ public abstract class MXBeanNode extends DSNode implements Runnable {
 
     public abstract void refreshImpl();
 
-    public abstract PlatformManagedObject getMXBean();
+    public abstract Object getMXBean();
 
-    public abstract Class<? extends PlatformManagedObject> getMXInterface();
+    public abstract Class<? extends Object> getMXInterface();
 
     public abstract List<String> getOverriden();
 
     public void discover() {
-        PlatformManagedObject bean = getMXBean();
-        Class<? extends PlatformManagedObject> clazz = getMXInterface();
+        Object bean = getMXBean();
+        Class<? extends Object> clazz = getMXInterface();
         for (Method meth : clazz.getMethods()) {
             String methName = meth.getName();
             if (meth.getParameterCount() == 0 && meth.getReturnType() != Void.TYPE) {
