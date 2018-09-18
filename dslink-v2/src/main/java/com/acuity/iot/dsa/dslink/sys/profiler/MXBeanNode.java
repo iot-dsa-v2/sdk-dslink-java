@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.sys.profiler;
 
+import java.lang.management.MemoryPoolMXBean;
 import java.lang.reflect.Method;
 import java.util.List;
 import org.iot.dsa.DSRuntime;
@@ -88,7 +89,11 @@ public abstract class MXBeanNode extends DSNode implements Runnable {
                         putProp(name,
                                 o != null ? ProfilerUtils.objectToDSIValue(o) : DSString.EMPTY);
                     } catch (Exception e) {
-                        debug(e);
+                        if (bean instanceof MemoryPoolMXBean && (name.startsWith("UsageThreshold") || name.startsWith("CollectionUsageThreshold"))) {
+                            // ignore
+                        } else {
+                            debug("Exception when invoking " + clazz.getName() + "." + meth.getName() + " on " + getName() + ": ", e);
+                        }
                     }
                 }
             }
@@ -98,7 +103,4 @@ public abstract class MXBeanNode extends DSNode implements Runnable {
     protected void putProp(String name, DSIObject obj) {
         put(name, obj).setReadOnly(true).setTransient(true);
     }
-    
-    
-
 }

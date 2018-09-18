@@ -41,5 +41,10 @@ public class SysProfiler extends DSNode {
             mpNode.put(mxbean.getName(), new MemoryPoolNode(mxbean)).setTransient(true);
         }
     }
+    
+    @Override
+    public String getLogName() {
+        return getLogName("profiler");
+    }
 
 }
