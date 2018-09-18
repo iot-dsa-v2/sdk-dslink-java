@@ -15,15 +15,15 @@ public class SysProfiler extends DSNode {
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
-        declareDefault("Runtime", new RuntimeNode());
-        declareDefault("Class Loading", new ClassLoadingNode());
-        declareDefault("Compilation", new CompilationNode());
-        declareDefault("Memory", new MemoryNode());
-        declareDefault("Operating System", new OperatingSystemNode());
-        declareDefault("Thread", new ThreadNode());
-        declareDefault("Garbage Collectors", new DSNode());
-        declareDefault("Memory Managers", new DSNode());
-        declareDefault("Memory Pools", new DSNode());
+        declareDefault("Runtime", new RuntimeNode()).setTransient(true);
+        declareDefault("Class Loading", new ClassLoadingNode()).setTransient(true);
+        declareDefault("Compilation", new CompilationNode()).setTransient(true);
+        declareDefault("Memory", new MemoryNode()).setTransient(true);
+        declareDefault("Operating System", new OperatingSystemNode()).setTransient(true);
+        declareDefault("Thread", new ThreadNode()).setTransient(true);
+        declareDefault("Garbage Collectors", new DSNode()).setTransient(true);
+        declareDefault("Memory Managers", new DSNode()).setTransient(true);
+        declareDefault("Memory Pools", new DSNode()).setTransient(true);
     }
 
     @Override
@@ -40,6 +40,11 @@ public class SysProfiler extends DSNode {
         for (MemoryPoolMXBean mxbean : ManagementFactory.getMemoryPoolMXBeans()) {
             mpNode.put(mxbean.getName(), new MemoryPoolNode(mxbean)).setTransient(true);
         }
+    }
+    
+    @Override
+    public String getLogName() {
+        return getLogName("profiler");
     }
 
 }

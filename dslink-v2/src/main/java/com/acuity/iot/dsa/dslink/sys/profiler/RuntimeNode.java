@@ -1,7 +1,6 @@
 package com.acuity.iot.dsa.dslink.sys.profiler;
 
 import java.lang.management.ManagementFactory;
-import java.lang.management.PlatformManagedObject;
 import java.lang.management.RuntimeMXBean;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -46,12 +45,12 @@ public class RuntimeNode extends MXBeanNode {
     }
 
     @Override
-    public PlatformManagedObject getMXBean() {
+    public Object getMXBean() {
         return mxbean;
     }
 
     @Override
-    public Class<? extends PlatformManagedObject> getMXInterface() {
+    public Class<? extends Object> getMXInterface() {
         return RuntimeMXBean.class;
     }
 
