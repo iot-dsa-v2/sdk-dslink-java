@@ -1,10 +1,11 @@
 subprojects {
 
     apply plugin: 'java'
+    apply plugin: 'jacoco'
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.37.0'
+    version '0.38.0'
 
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
@@ -23,6 +24,17 @@ subprojects {
         classifier = 'javadoc'
         from javadoc.destinationDir
     }
+
+    /*
+    jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.enabled true
+    }
+}
+*/
+
 }
 
 wrapper {

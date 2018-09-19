@@ -131,6 +131,7 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     protected void onConnected() {
         super.onConnected();
+        setRequesterAllowed(true); //TODO - currently used for testing
         messageReader = null;
         messageWriter = null;
         requester.onConnected();
@@ -140,11 +141,11 @@ public class DS2Session extends DSSession implements MessageConstants {
     @Override
     protected void onDisconnected() {
         super.onDisconnected();
+        requester.onDisconnected();
+        responder.onDisconnected();
         messageReader = null;
         messageWriter = null;
         multiparts.clear();
-        requester.onDisconnected();
-        responder.onDisconnected();
     }
 
     @Override

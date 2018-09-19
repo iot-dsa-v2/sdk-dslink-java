@@ -86,12 +86,6 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         }
     }
 
-    public void onConnected() {
-    }
-
-    public void onConnectFail() {
-    }
-
     /**
      * Handles an invoke request.
      */
