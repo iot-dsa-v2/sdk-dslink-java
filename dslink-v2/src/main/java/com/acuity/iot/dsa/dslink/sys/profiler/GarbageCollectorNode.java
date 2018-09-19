@@ -1,7 +1,6 @@
 package com.acuity.iot.dsa.dslink.sys.profiler;
 
 import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.PlatformManagedObject;
 import java.util.ArrayList;
 import java.util.List;
 import org.iot.dsa.node.DSString;
@@ -31,12 +30,12 @@ public class GarbageCollectorNode extends MXBeanNode {
     }
 
     @Override
-    public PlatformManagedObject getMXBean() {
+    public Object getMXBean() {
         return mxbean;
     }
 
     @Override
-    public Class<? extends PlatformManagedObject> getMXInterface() {
+    public Class<? extends Object> getMXInterface() {
         return GarbageCollectorMXBean.class;
     }
 

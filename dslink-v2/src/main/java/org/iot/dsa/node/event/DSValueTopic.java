@@ -23,7 +23,7 @@ public class DSValueTopic extends DSTopic implements DSIEvent {
     }
 
     public DSTopic getTopic() {
-        return INSTANCE;
+        return this;
     }
 
 }

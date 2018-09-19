@@ -27,19 +27,52 @@ public class DSSysNode extends DSNode {
     static final String PROFILER = "Profiler";
     static final String LOGGING = "Logging";
     static final String BACKUPS = "Backups";
+    static final String OPEN_PROFILER = "Open Profiler";
+    static final String CLOSE_PROFILER = "Close Profiler";
 
     private DSInfo backups = getInfo(BACKUPS);
     private DSInfo connection = getInfo(CONNECTION);
     private DSInfo stop = getInfo(STOP);
+    private DSInfo profilerToggle;
+    private DSInfo profiler = null;
 
     @Override
     protected void declareDefaults() {
         declareDefault(STOP, DSAction.DEFAULT);
         declareDefault(CERTIFICATES, new SysCertService());
         declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
-        declareDefault(PROFILER, new SysProfiler()).setTransient(true);
+//        declareDefault(PROFILER, new SysProfiler()).setTransient(true);
         declareDefault(LOGGING, new SysLogService());
         declareDefault(BACKUPS, new SysBackupService());
+    }
+    
+    @Override
+    protected void onStable() {
+        profiler = getInfo(PROFILER);
+        if (profiler == null) {
+            profilerToggle = put(OPEN_PROFILER, DSAction.DEFAULT).setTransient(true);
+        } else {
+            profilerToggle = put(CLOSE_PROFILER, DSAction.DEFAULT).setTransient(true);
+        }
+    }
+    
+    private void openProfiler() {
+        profiler = put(PROFILER, new SysProfiler());
+        if (profilerToggle != null) {
+            remove(profilerToggle);
+        }
+        profilerToggle = put(CLOSE_PROFILER, DSAction.DEFAULT).setTransient(true);
+    }
+    
+    private void closeProfiler() {
+        if (profiler != null) {
+            remove(profiler);
+            profiler = null;
+        }
+        if (profilerToggle != null) {
+            remove(profilerToggle);
+        }
+        profilerToggle = put(OPEN_PROFILER, DSAction.DEFAULT).setTransient(true);
     }
 
     public DSLinkConnection getConnection() {
@@ -83,6 +116,12 @@ public class DSSysNode extends DSNode {
     public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
         if (action == stop) {
             getLink().shutdown();
+        } else if (action == profilerToggle) {
+            if (profiler == null) {
+                openProfiler();
+            } else {
+                closeProfiler();
+            }
         } else {
             super.onInvoke(action, invocation);
         }

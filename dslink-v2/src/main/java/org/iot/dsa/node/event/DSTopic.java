@@ -6,10 +6,11 @@ import org.iot.dsa.node.DSInfo;
 /**
  * DSISubscribers subscribe to DSTopics on DSNodes.
  * <p>
- * A single topic can emanate multiple types of events.  See the class documentation of a specific
- * topic to understand the possible events and their parameters.
+ * A single topic can emanate one or more types of events.  See the class documentation of a
+ * specific topic to understand the possible events.
  * <p>
- * The two most important topics are built into every node, they are: DSValueTopic and DSInfoTopic.
+ * Topics can be mounted children of a node or simply implied as are the value and info topics
+ * implicitly available on every node.
  *
  * @see DSIEvent
  * @see DSISubscriber
