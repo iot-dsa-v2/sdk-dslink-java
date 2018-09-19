@@ -25,18 +25,18 @@ subprojects {
         from javadoc.destinationDir
     }
 
-    /*
     jacocoTestReport {
-    reports {
-        xml.enabled false
-        csv.enabled false
-        html.enabled true
+        reports {
+            xml.enabled true
+            csv.enabled false
+            html.enabled false
+        }
     }
-}
-*/
+
+    build.dependsOn jacocoTestReport
 
 }
 
 wrapper {
-    gradleVersion = '4.10'
+    gradleVersion = '4.10.1'
 }
