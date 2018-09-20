@@ -4,7 +4,12 @@ artifacts {
 }
 
 dependencies {
-    testImplementation 'junit:junit:[4.12,)'
+    //testImplementation 'junit:junit:[4.12,)'
+    testImplementation 'org.testng:testng:[6.14.3,)'
+}
+
+test {
+    useTestNG()
 }
 
 javadoc {

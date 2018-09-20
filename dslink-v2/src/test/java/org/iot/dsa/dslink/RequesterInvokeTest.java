@@ -15,8 +15,8 @@ import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSTopic;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * @author Aaron Hansen
@@ -88,6 +88,20 @@ public class RequesterInvokeTest {
     // Inner Classes
     // -------------
 
+    public static class ANode extends DSNode {
+
+        @Override
+        public void declareDefaults() {
+            declareDefault("int", DSInt.valueOf(0));
+        }
+
+        @Override
+        public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
+            return null;
+        }
+
+    }
+
     public static class MyMain extends DSMainNode {
 
         @Override
@@ -111,20 +125,6 @@ public class RequesterInvokeTest {
             } else if (name.equals("exception")) {
                 throw new IllegalStateException("my message");
             }
-            return null;
-        }
-
-    }
-
-    public static class ANode extends DSNode {
-
-        @Override
-        public void declareDefaults() {
-            declareDefault("int", DSInt.valueOf(0));
-        }
-
-        @Override
-        public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
             return null;
         }
 

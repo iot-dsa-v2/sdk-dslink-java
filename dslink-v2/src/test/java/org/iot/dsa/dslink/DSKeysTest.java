@@ -6,8 +6,8 @@ import java.security.Signature;
 import org.iot.dsa.io.DSBase64;
 import org.iot.dsa.security.DSKeys;
 import org.iot.dsa.util.DSException;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * @author Aaron Hansen
@@ -31,6 +31,30 @@ public class DSKeysTest {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    @Test
+    public void documentedTestCase() throws Exception {
+        String keyFile =
+                "BEACGownMzthVjNFT7Ry-RPX395kPSoUqhQ_H_vz0dZzs5RYoVJKA16XZhdYd__ksJP0DOlwQXAvoDjSMWAhkg4"
+                        + " " + "M6S41GAL0gH0I97Hhy7A2-icf8dHnxXPmYIRwem03HE";
+        DSKeys keys = DSKeys.decodeKeys(keyFile);
+        String test = keys.encodeKeys();
+        DSKeys keys2 = DSKeys.decodeKeys(test);
+        Assert.assertTrue(keys.getPublicKey().equals(keys2.getPublicKey()));
+        Assert.assertTrue(keys.getPrivateKey().equals(keys2.getPrivateKey()));
+        String tempKey =
+                "BCVrEhPXmozrKAextseekQauwrRz3lz2sj56td9j09Oajar0RoVR5Uo95AVuuws1vVEbDzhOUu7freU0BXD759U";
+        byte[] salt = "0000".getBytes("UTF-8");
+        byte[] secret = keys.generateSharedSecret(tempKey);
+        byte[] bytes = new byte[salt.length + secret.length];
+        System.arraycopy(salt, 0, bytes, 0, salt.length);
+        System.arraycopy(secret, 0, bytes, salt.length, secret.length);
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        messageDigest.update(bytes);
+        bytes = messageDigest.digest();
+        String auth = DSBase64.encodeUrl(bytes);
+        Assert.assertTrue(auth.equals("V2P1nwhoENIi7SqkNBuRFcoc8daWd_iWYYDh_0Z01rs"));
+    }
 
     @Test
     public void testAll() throws Exception {
@@ -84,30 +108,6 @@ public class DSKeysTest {
         signer.initVerify(keyPair.getPublic());
         signer.update(TEST_MSG);
         Assert.assertTrue(signer.verify(signature));
-    }
-
-    @Test
-    public void documentedTestCase() throws Exception {
-        String keyFile =
-                "BEACGownMzthVjNFT7Ry-RPX395kPSoUqhQ_H_vz0dZzs5RYoVJKA16XZhdYd__ksJP0DOlwQXAvoDjSMWAhkg4"
-                        + " " + "M6S41GAL0gH0I97Hhy7A2-icf8dHnxXPmYIRwem03HE";
-        DSKeys keys = DSKeys.decodeKeys(keyFile);
-        String test = keys.encodeKeys();
-        DSKeys keys2 = DSKeys.decodeKeys(test);
-        Assert.assertTrue(keys.getPublicKey().equals(keys2.getPublicKey()));
-        Assert.assertTrue(keys.getPrivateKey().equals(keys2.getPrivateKey()));
-        String tempKey =
-                "BCVrEhPXmozrKAextseekQauwrRz3lz2sj56td9j09Oajar0RoVR5Uo95AVuuws1vVEbDzhOUu7freU0BXD759U";
-        byte[] salt = "0000".getBytes("UTF-8");
-        byte[] secret = keys.generateSharedSecret(tempKey);
-        byte[] bytes = new byte[salt.length + secret.length];
-        System.arraycopy(salt, 0, bytes, 0, salt.length);
-        System.arraycopy(secret, 0, bytes, salt.length, secret.length);
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-        messageDigest.update(bytes);
-        bytes = messageDigest.digest();
-        String auth = DSBase64.encodeUrl(bytes);
-        Assert.assertTrue(auth.equals("V2P1nwhoENIi7SqkNBuRFcoc8daWd_iWYYDh_0Z01rs"));
     }
 
     ///////////////////////////////////////////////////////////////////////////
