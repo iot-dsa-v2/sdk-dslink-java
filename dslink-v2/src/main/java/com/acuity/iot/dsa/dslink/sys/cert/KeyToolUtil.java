@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.time.DSTime;
 
@@ -40,7 +39,7 @@ public class KeyToolUtil extends DSLogger {
 		}
 	}
 	
-	public static void generateSelfSigned(String keystore, String password) {
+	public static String generateSelfSigned(String keystore, String password) {
 		String[] cmd = new String[]{
                 "keytool",
                 "-genkey",
@@ -52,10 +51,10 @@ public class KeyToolUtil extends DSLogger {
                 "-validity", "18000",
                 "-dname", "\"CN=dslink-java-v2, O=DSA, C=US\""
         };
-		inst.executeCommand(cmd);
+		return inst.executeCommand(cmd);
 	}
 	
-	public static String generateCSR(String keystore, String password) throws IOException {
+	public static String[] generateCSR(String keystore, String password) throws IOException {
 		String filename = "dsa.csr";
 		String[] cmd = new String[]{
                 "keytool",
@@ -68,11 +67,12 @@ public class KeyToolUtil extends DSLogger {
                 "-dname", "\"CN=dslink-java-v2, O=DSA, C=US\"",
                 "-file", filename
         };
-		inst.executeCommand(cmd);
-		return new String(Files.readAllBytes(Paths.get(filename)));
+		String result = inst.executeCommand(cmd);
+		String csr = new String(Files.readAllBytes(Paths.get(filename)));
+		return new String[] {result, csr};
 	}
 	
-	public static void importCACert(String keystore, String certStr, String alias, String password) throws IOException {
+	public static String importCACert(String keystore, String certStr, String alias, String password) throws IOException {
 		String filename = DSTime.encodeForFiles(DSTime.getCalendar(System.currentTimeMillis()), new StringBuilder("tempCACert")).toString();
 		Files.write(Paths.get(filename), certStr.getBytes());
 		String[] cmd = new String[]{
@@ -84,12 +84,13 @@ public class KeyToolUtil extends DSLogger {
                 "-alias", alias,
                 "-file", filename
         };
-		inst.executeCommand(cmd);
+		String result = inst.executeCommand(cmd);
 		
 		new File(filename).delete();
+		return result;
 	}
 	
-	public static void importPrimaryCert(String keystore, String certStr, String password) throws IOException {
+	public static String importPrimaryCert(String keystore, String certStr, String password) throws IOException {
 		String filename = DSTime.encodeForFiles(DSTime.getCalendar(System.currentTimeMillis()), new StringBuilder("tempCert")).toString();
 		Files.write(Paths.get(filename), certStr.getBytes());
 		String[] cmd = new String[]{
@@ -101,9 +102,10 @@ public class KeyToolUtil extends DSLogger {
                 "-alias", "dsa",
                 "-file", filename
         };
-		inst.executeCommand(cmd);
+		String result = inst.executeCommand(cmd);
 		
 		new File(filename).delete();
+		return result;
 	}
 	
 	public static String getEntry(String keystore, String password) {
@@ -118,7 +120,7 @@ public class KeyToolUtil extends DSLogger {
         return inst.executeCommand(cmd);
 	}
 	
-	public static void deleteEntry(String keystore, String password) {
+	public static String deleteEntry(String keystore, String password) {
 	    String[] cmd = new String[]{
                 "keytool",
                 "-delete",
@@ -126,7 +128,15 @@ public class KeyToolUtil extends DSLogger {
                 "-storepass", password,
                 "-alias", "dsa",
         };
-	    inst.executeCommand(cmd);
+	    return inst.executeCommand(cmd);
+	}
+	
+	public static String help() {
+	    String[] cmd = new String[] {
+	            "keytool",
+	            "-help"
+	    };
+	    return inst.executeCommand(cmd);
 	}
 
 }
