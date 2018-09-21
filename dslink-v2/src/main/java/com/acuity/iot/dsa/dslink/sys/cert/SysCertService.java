@@ -153,17 +153,23 @@ public class SysCertService extends DSNode {
 
             @Override
             public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                String csr = ((SysCertService) info.getParent()).generateCSR();
-                return csr != null ? new DSActionValues(info.getAction())
-                        .addResult(DSString.valueOf(csr)) : null;
+                String[] results = ((SysCertService) info.getParent()).generateCSR();
+                if (results != null && results.length > 1) {
+                    return new DSActionValues(info.getAction())
+                            .addResult(DSString.valueOf(results[0]))
+                            .addResult(DSString.valueOf(results[1]));
+                } else {
+                    return null;
+                }
             }
         };
         act.setResultType(ResultType.VALUES);
+        act.addValueResult("Result", DSValueType.STRING);
         act.addValueResult("CSR", DSValueType.STRING).setEditor("textarea");
         return act;
     }
 
-    private String generateCSR() {
+    private String[] generateCSR() {
         try {
             return KeyToolUtil.generateCSR(getKeystorePath(), getCertFilePass());
         } catch (IOException e) {
@@ -182,22 +188,25 @@ public class SysCertService extends DSNode {
             @Override
             public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
                 DSMap parameters = invocation.getParameters();
-                ((SysCertService) info.getParent()).importCACert(parameters);
-                return null;
+                String result = ((SysCertService) info.getParent()).importCACert(parameters);
+                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(result));
             }
         };
         act.addParameter("Alias", DSValueType.STRING, null);
         act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
+        act.setResultType(ResultType.VALUES);
+        act.addValueResult("Result", DSValueType.STRING);
         return act;
     }
 
-    private void importCACert(DSMap parameters) {
+    private String importCACert(DSMap parameters) {
         String alias = parameters.getString("Alias");
         String certStr = parameters.getString("Certificate");
         try {
-            KeyToolUtil.importCACert(getKeystorePath(), certStr, alias, getCertFilePass());
+            return KeyToolUtil.importCACert(getKeystorePath(), certStr, alias, getCertFilePass());
         } catch (IOException e) {
             DSException.throwRuntime(e);
+            return null;
         }
     }
 
@@ -211,20 +220,23 @@ public class SysCertService extends DSNode {
             @Override
             public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
                 DSMap parameters = invocation.getParameters();
-                ((SysCertService) info.getParent()).importPrimaryCert(parameters);
-                return null;
+                String result = ((SysCertService) info.getParent()).importPrimaryCert(parameters);
+                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(result));
             }
         };
         act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
+        act.setResultType(ResultType.VALUES);
+        act.addValueResult("Result", DSValueType.STRING);
         return act;
     }
 
-    private void importPrimaryCert(DSMap parameters) {
+    private String importPrimaryCert(DSMap parameters) {
         String certStr = parameters.getString("Certificate");
         try {
-            KeyToolUtil.importPrimaryCert(getKeystorePath(), certStr, getCertFilePass());
+            return KeyToolUtil.importPrimaryCert(getKeystorePath(), certStr, getCertFilePass());
         } catch (IOException e) {
             DSException.throwRuntime(e);
+            return null;
         }
     }
 
@@ -237,10 +249,12 @@ public class SysCertService extends DSNode {
 
             @Override
             public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                ((SysCertService) info.getParent()).keytoolGenkey();
-                return null;
+                String result = ((SysCertService) info.getParent()).keytoolGenkey();
+                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(result));
             }
         };
+        act.setResultType(ResultType.VALUES);
+        act.addValueResult("Result", DSValueType.STRING);
         return act;
     }
 
@@ -275,15 +289,17 @@ public class SysCertService extends DSNode {
 
             @Override
             public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                ((SysCertService) info.getParent()).deleteKSEntry();
-                return null;
+                String result = ((SysCertService) info.getParent()).deleteKSEntry();
+                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(result));
             }
         };
+        act.setResultType(ResultType.VALUES);
+        act.addValueResult("Result", DSValueType.STRING);
         return act;
     }
 
-    private void deleteKSEntry() {
-        KeyToolUtil.deleteEntry(getKeystorePath(), getCertFilePass());
+    private String deleteKSEntry() {
+        return KeyToolUtil.deleteEntry(getKeystorePath(), getCertFilePass());
     }
 
     private String getCertFilePass() {
@@ -298,19 +314,44 @@ public class SysCertService extends DSNode {
     /**
      * Executes the java keytool to generate a new self signed cert.
      */
-    private void keytoolGenkey() {
-        KeyToolUtil.generateSelfSigned(getKeystorePath(), getCertFilePass());
+    private String keytoolGenkey() {
+        return KeyToolUtil.generateSelfSigned(getKeystorePath(), getCertFilePass());
+    }
+    
+    private boolean isKeytoolAvailable() {
+        String result = null;
+        try {
+            result = KeyToolUtil.help();
+        } catch (Exception e) {
+            debug("", e);
+            result = null;
+        }
+        return result != null;
     }
 
     @Override
     public void onStarted() {
         inst = this;
         AnonymousTrustFactory.init(this);
-        String keystore = this.keystorePath.getElement().toString();
+        String keystore = getKeystorePath();
         File f = new File(keystore);
-        if (!f.exists()) {
-            keytoolGenkey();
+        if (isKeytoolAvailable()) {
+            if (!f.exists()) {
+                keytoolGenkey();
+            }
+        } else {
+            info("Keytool not available. Disabling keytool functionality and attempting to use existing keystore");
+            if (!f.exists()) {
+                error("Existing keystore not found and new one could not be generated");
+            }
+            remove(GENERATE_CSR);
+            remove(IMPORT_CA_CERT);
+            remove(IMPORT_PRIMARY_CERT);
+            remove(GENERATE_SELF_SIGNED);
+            remove(GET_KS_ENTRY);
+            remove(DELETE_KS_ENTRY);
         }
+        
         try {
             System.setProperty("javax.net.ssl.keyStore", keystore);
             System.setProperty("javax.net.ssl.keyStoreType",
@@ -320,6 +361,18 @@ public class SysCertService extends DSNode {
             error(getParent(), x);
         }
         HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
+    }
+    
+    @Override
+    protected void onChildChanged(DSInfo info) {
+        if (info == keystorePath) {
+            System.setProperty("javax.net.ssl.keyStore", getKeystorePath());
+        } else if (info == keystoreType) {
+            System.setProperty("javax.net.ssl.keyStoreType",
+                    keystoreType.getElement().toString());
+        } else if (info == keystorePass) {
+            System.setProperty("javax.net.ssl.keyStorePassword", getCertFilePass());
+        }
     }
 
     public boolean isInTrustStore(X509Certificate cert) {
