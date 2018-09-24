@@ -122,10 +122,8 @@ public abstract class DSLinkConnection extends DSConnection {
             if (getTransport() != null) {
                 getTransport().close();
             }
-            connDown(null);
         } catch (Exception x) {
-            debug(getPath(), x);
-            connDown(DSException.makeMessage(x));
+            error(getPath(), x);
         }
     }
 

@@ -286,7 +286,9 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         outgoingResponses.clear();
         notifyOutgoing();
         try {
-            readThread.join();
+            if (Thread.currentThread() != readThread) {
+                readThread.join();
+            }
         } catch (Exception x) {
             debug(getPath(), x);
         }
@@ -304,7 +306,9 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         connected = false;
         notifyOutgoing();
         try {
-            writeThread.join();
+            if (Thread.currentThread() != writeThread) {
+                writeThread.join();
+            }
         } catch (Exception x) {
             debug(getPath(), x);
         }

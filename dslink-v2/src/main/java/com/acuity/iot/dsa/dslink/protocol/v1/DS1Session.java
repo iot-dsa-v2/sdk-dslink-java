@@ -103,7 +103,7 @@ public class DS1Session extends DSSession {
             case ROOT:
                 break;
             case END_INPUT:
-                return;
+                throw new IOException("Connection remotely closed");
             default:
                 throw new IOException("Unexpected input: " + reader.last());
         }
