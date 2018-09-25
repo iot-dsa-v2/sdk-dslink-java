@@ -49,7 +49,7 @@ public class KeyToolUtil extends DSLogger {
                 "-alias", "dsa",
                 "-keyalg", "RSA",
                 "-validity", "18000",
-                "-dname", "\"CN=dslink-java-v2, O=DSA, C=US\""
+                "-dname", "CN=dslink-java-v2, O=DSA, C=US"
         };
 		return inst.executeCommand(cmd);
 	}
