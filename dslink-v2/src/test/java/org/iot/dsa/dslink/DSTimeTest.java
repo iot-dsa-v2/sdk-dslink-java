@@ -3,28 +3,13 @@ package org.iot.dsa.dslink;
 import java.util.Calendar;
 import java.util.TimeZone;
 import org.iot.dsa.time.DSTime;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * Tests for org.dsa.iot.dslink.util.DSTime
  */
 public class DSTimeTest {
-
-    /**
-     * Convenience for constructing calendars.
-     */
-    private Calendar make(
-            int year,
-            int month,
-            int day,
-            int hour,
-            int minute,
-            int second) {
-        Calendar ret = Calendar.getInstance();
-        ret.set(year, month, day, hour, minute, second);
-        return DSTime.alignSecond(ret);
-    }
 
     @Test
     public void testAdding() {
@@ -260,6 +245,21 @@ public class DSTimeTest {
         validateEqual(encoded, "2016-01-01T00:00:00.000");
         encoded = DSTime.encode(cal, true, null).toString();
         validateEqual(encoded, "2016-01-01T00:00:00.000-08:00");
+    }
+
+    /**
+     * Convenience for constructing calendars.
+     */
+    private Calendar make(
+            int year,
+            int month,
+            int day,
+            int hour,
+            int minute,
+            int second) {
+        Calendar ret = Calendar.getInstance();
+        ret.set(year, month, day, hour, minute, second);
+        return DSTime.alignSecond(ret);
     }
 
     /**

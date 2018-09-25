@@ -175,7 +175,7 @@ public class DS1LinkConnection extends DSLinkConnection {
         writer = null;
         transport = null;
         remove(TRANSPORT);
-        info(getConnectionId() + " disconnected");
+        debug(getConnectionId() + " disconnected");
     }
 
     /**

@@ -8,9 +8,8 @@ import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSElementType;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.time.DSTime;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * @author Aaron Hansen
@@ -275,6 +274,12 @@ public class DSElementTest {
         Assert.assertTrue(map.removeLast() == tmp);
     }
 
+    private void testNull(DSElement obj) {
+        Assert.assertTrue(DSElement.makeNull() == obj);
+        Assert.assertTrue(obj.isNull());
+        Assert.assertTrue(obj.getElementType() == DSElementType.NULL);
+    }
+
     private void testPrimitiveList(DSList list) {
         testList(list);
         Assert.assertTrue(list.get(0).isBoolean());
@@ -293,12 +298,6 @@ public class DSElementTest {
         Assert.assertTrue(map.get("long").isLong());
         Assert.assertTrue(map.get("string").isString());
         Assert.assertTrue(map.get("null").isNull());
-    }
-
-    private void testNull(DSElement obj) {
-        Assert.assertTrue(DSElement.makeNull() == obj);
-        Assert.assertTrue(obj.isNull());
-        Assert.assertTrue(obj.getElementType() == DSElementType.NULL);
     }
 
 }

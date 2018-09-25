@@ -1,5 +1,8 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
+import com.acuity.iot.dsa.dslink.sys.profiler.ThreadNode;
+import com.acuity.iot.dsa.dslink.test.TestLink;
 import org.iot.dsa.conn.DSConnection.DSConnectionEvent;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
 import org.iot.dsa.node.DSIObject;
@@ -8,17 +11,14 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSTopic;
-import org.junit.Assert;
-import org.junit.Test;
-import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
-import com.acuity.iot.dsa.dslink.sys.profiler.ThreadNode;
-import com.acuity.iot.dsa.dslink.test.TestLink;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class SysProfilerTest {
-    
-    private static boolean success = false;
+
     private DSLink link;
-    
+    private static boolean success = false;
+
     @Test
     public void theTest() throws Exception {
         link = new TestLink(new DSMainNode());
@@ -49,24 +49,20 @@ public class SysProfilerTest {
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/sys/" + DSSysNode.OPEN_PROFILER, null, new SimpleInvokeHandler());
         res.getResult(1000);
-        
+
         DSSysNode sys = link.getSys();
         DSIObject profobj = sys.get(DSSysNode.PROFILER);
         Assert.assertTrue(profobj instanceof SysProfiler);
-        
+
         SysProfiler profiler = (SysProfiler) profobj;
         DSIObject threadobj = profiler.get("Thread");
         Assert.assertTrue(threadobj instanceof ThreadNode);
-        
+
         final ThreadNode thread = (ThreadNode) threadobj;
         final DSInfo cpuTime = thread.getInfo("CurrentThreadCpuTime");
         Assert.assertTrue(cpuTime != null);
         thread.subscribe(DSNode.VALUE_TOPIC, cpuTime, new DSISubscriber() {
-            
-            @Override
-            public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
-            }
-            
+
             @Override
             public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
                 Assert.assertEquals(thread, node);
@@ -77,6 +73,10 @@ public class SysProfilerTest {
                 synchronized (SysProfilerTest.this) {
                     SysProfilerTest.this.notifyAll();
                 }
+            }
+
+            @Override
+            public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
             }
         });
         synchronized (this) {

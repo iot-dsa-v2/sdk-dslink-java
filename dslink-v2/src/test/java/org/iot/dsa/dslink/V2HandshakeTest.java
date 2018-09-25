@@ -11,8 +11,8 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import javax.xml.bind.DatatypeConverter;
 import org.iot.dsa.security.DSKeys;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * @author Aaron Hansen
@@ -28,32 +28,6 @@ public class V2HandshakeTest {
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    private DSKeys getBrokerKeys() {
-        //broker private key
-        String privKeyHex = "82848ef9d9204097a98a8c393e06aac9cb9a1ba3cdabf772f4ca7e6899b9f277";
-        byte[] privKeyBytes = toBytesFromHex(privKeyHex);
-        PrivateKey privKey = DSKeys.decodePrivate(privKeyBytes);
-        //broker public key
-        String pubKeyHex = "04f9e64edcec5ea0a645bd034e46ff209dd9fb21d8aba74a5531dc6dcbea28d696c6c9386d924ebc2f48092a1d6c8b2ca907005cca7e8d2a58783b8a765d8eb29d";
-        byte[] pubKeyBytes = toBytesFromHex(pubKeyHex);
-        Assert.assertTrue(pubKeyBytes.length == 65);
-        PublicKey pubKey = DSKeys.decodePublic(pubKeyBytes);
-        return new DSKeys(new KeyPair(pubKey, privKey));
-    }
-
-    private DSKeys getLinkKeys() {
-        //link private key
-        String privKeyHex = "55e1bcad391b655f97fe3ba2f8e3031c9b5828b16793b7da538c2787c3a4dc59";
-        byte[] privKeyBytes = toBytesFromHex(privKeyHex);
-        PrivateKey privKey = DSKeys.decodePrivate(privKeyBytes);
-        //link public key
-        String pubKeyHex = "0415caf59c92efecb9253ea43912b419941fdb59a23d5d1289027128bf3d6ee4cb86fbe251b675a8d9bd991a65caa1bb23f8a8e0dd4eb0974f6b1eaa3436cec0e9";
-        byte[] pubKeyBytes = toBytesFromHex(pubKeyHex);
-        Assert.assertTrue(pubKeyBytes.length == 65);
-        PublicKey pubKey = DSKeys.decodePublic(pubKeyBytes);
-        return new DSKeys(new KeyPair(pubKey, privKey));
-    }
 
     @Test
     public void test() throws Exception {
@@ -87,7 +61,7 @@ public class V2HandshakeTest {
         String correctResult = "9e0000000700f0020032006d796c696e6b2d54544458744c2d555f4e5132736746525535773048725a56696232442d4f3443785851724b6b34685573490415caf59c92efecb9253ea43912b419941fdb59a23d5d1289027128bf3d6ee4cb86fbe251b675a8d9bd991a65caa1bb23f8a8e0dd4eb0974f6b1eaa3436cec0e9c4ca4238a0b923820dcc509a6f75849bc81e728d9d4c2f636f067f89cc14862c"
                 .toUpperCase();
         byte[] correctBytes = toBytesFromHex(correctResult);
-        Assert.assertArrayEquals(bytes, correctBytes);
+        Assert.assertEquals(bytes, correctBytes);
     }
 
     public void testF1() throws Exception {
@@ -116,7 +90,7 @@ public class V2HandshakeTest {
         String correctResult = "9c0000000700f1320062726f6b65722d67363735676153516f677a4d786a4a46764c374873436279533842304c79325f4162686b775f2d6734694904f9e64edcec5ea0a645bd034e46ff209dd9fb21d8aba74a5531dc6dcbea28d696c6c9386d924ebc2f48092a1d6c8b2ca907005cca7e8d2a58783b8a765d8eb29deccbc87e4b5ce2fe28308fd9f2a7baf3a87ff679a2f3e71d9181a67b7542122c"
                 .toUpperCase();
         byte[] correctBytes = toBytesFromHex(correctResult);
-        Assert.assertArrayEquals(bytes, correctBytes);
+        Assert.assertEquals(bytes, correctBytes);
         //validate reading
         DS2MessageReader reader = new DS2MessageReader();
         reader.init(new ByteArrayInputStream(bytes));
@@ -127,10 +101,10 @@ public class V2HandshakeTest {
         Assert.assertEquals(dsId, tmp);
         bytes = new byte[publicKey.length];
         in.read(bytes);
-        Assert.assertArrayEquals(bytes, publicKey);
+        Assert.assertEquals(bytes, publicKey);
         bytes = new byte[saltBytes.length];
         in.read(bytes);
-        Assert.assertArrayEquals(bytes, saltBytes);
+        Assert.assertEquals(bytes, saltBytes);
     }
 
     public void testF2() throws Exception {
@@ -161,7 +135,7 @@ public class V2HandshakeTest {
         String correctResult = "3f0000000700f2130073616d706c655f746f6b656e5f737472696e67010000f58c10e212a82bf327a020679c424fc63e852633a53253119df74114fac8b2ba"
                 .toUpperCase();
         byte[] correctBytes = toBytesFromHex(correctResult);
-        Assert.assertArrayEquals(tmp, correctBytes);
+        Assert.assertEquals(tmp, correctBytes);
     }
 
     public void testF3() throws Exception {
@@ -203,7 +177,7 @@ public class V2HandshakeTest {
         Assert.assertEquals("/downstream/mlink1", reader.readString(in));
         tmp = new byte[auth.length];
         in.read(tmp);
-        Assert.assertArrayEquals(tmp, auth);
+        Assert.assertEquals(tmp, auth);
     }
 
     public static byte[] toBytesFromHex(String s) {
@@ -212,6 +186,32 @@ public class V2HandshakeTest {
 
     public static String toHexFromBytes(byte[] bytes) {
         return DatatypeConverter.printHexBinary(bytes);
+    }
+
+    private DSKeys getBrokerKeys() {
+        //broker private key
+        String privKeyHex = "82848ef9d9204097a98a8c393e06aac9cb9a1ba3cdabf772f4ca7e6899b9f277";
+        byte[] privKeyBytes = toBytesFromHex(privKeyHex);
+        PrivateKey privKey = DSKeys.decodePrivate(privKeyBytes);
+        //broker public key
+        String pubKeyHex = "04f9e64edcec5ea0a645bd034e46ff209dd9fb21d8aba74a5531dc6dcbea28d696c6c9386d924ebc2f48092a1d6c8b2ca907005cca7e8d2a58783b8a765d8eb29d";
+        byte[] pubKeyBytes = toBytesFromHex(pubKeyHex);
+        Assert.assertTrue(pubKeyBytes.length == 65);
+        PublicKey pubKey = DSKeys.decodePublic(pubKeyBytes);
+        return new DSKeys(new KeyPair(pubKey, privKey));
+    }
+
+    private DSKeys getLinkKeys() {
+        //link private key
+        String privKeyHex = "55e1bcad391b655f97fe3ba2f8e3031c9b5828b16793b7da538c2787c3a4dc59";
+        byte[] privKeyBytes = toBytesFromHex(privKeyHex);
+        PrivateKey privKey = DSKeys.decodePrivate(privKeyBytes);
+        //link public key
+        String pubKeyHex = "0415caf59c92efecb9253ea43912b419941fdb59a23d5d1289027128bf3d6ee4cb86fbe251b675a8d9bd991a65caa1bb23f8a8e0dd4eb0974f6b1eaa3436cec0e9";
+        byte[] pubKeyBytes = toBytesFromHex(pubKeyHex);
+        Assert.assertTrue(pubKeyBytes.length == 65);
+        PublicKey pubKey = DSKeys.decodePublic(pubKeyBytes);
+        return new DSKeys(new KeyPair(pubKey, privKey));
     }
 
 }

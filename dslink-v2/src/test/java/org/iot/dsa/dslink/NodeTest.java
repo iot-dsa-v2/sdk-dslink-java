@@ -1,8 +1,12 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.node.*;
-import org.junit.Assert;
-import org.junit.Test;
+import org.iot.dsa.node.DSBool;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSNode;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * @author Aaron Hansen

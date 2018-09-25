@@ -10,8 +10,8 @@ import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSValueNode;
 import org.iot.dsa.time.DSDateTime;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * @author Aaron Hansen
@@ -21,10 +21,10 @@ public class RequesterSubscribeTest {
     // Fields
     // ------
 
-    private boolean success = false;
+    private AbstractSubscribeHandler handler;
     private DSLink link;
     private MyMain root;
-    private AbstractSubscribeHandler handler;
+    private boolean success = false;
 
     // Methods
     // -------
@@ -88,19 +88,6 @@ public class RequesterSubscribeTest {
                     boolean first = true;
 
                     @Override
-                    public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
-                        if (first) {
-                            success = value.equals(DSInt.valueOf(0));
-                            first = false;
-                        } else {
-                            success = value.equals(DSInt.valueOf(10));
-                        }
-                        synchronized (RequesterSubscribeTest.this) {
-                            RequesterSubscribeTest.this.notifyAll();
-                        }
-                    }
-
-                    @Override
                     public void onClose() {
                         success = true;
                         synchronized (RequesterSubscribeTest.this) {
@@ -112,6 +99,19 @@ public class RequesterSubscribeTest {
                     public void onError(ErrorType type, String msg) {
                         Thread.dumpStack();
                     }
+
+                    @Override
+                    public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
+                        if (first) {
+                            success = value.equals(DSInt.valueOf(0));
+                            first = false;
+                        } else {
+                            success = value.equals(DSInt.valueOf(10));
+                        }
+                        synchronized (RequesterSubscribeTest.this) {
+                            RequesterSubscribeTest.this.notifyAll();
+                        }
+                    }
                 });
     }
 
@@ -120,15 +120,15 @@ public class RequesterSubscribeTest {
         AbstractSubscribeHandler handler = (AbstractSubscribeHandler) requester.subscribe(
                 "/main/aNode", 0, new AbstractSubscribeHandler() {
                     @Override
-                    public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
-                    }
-
-                    @Override
                     public void onClose() {
                     }
 
                     @Override
                     public void onError(ErrorType type, String msg) {
+                    }
+
+                    @Override
+                    public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
                     }
                 });
         synchronized (node) {
@@ -153,28 +153,6 @@ public class RequesterSubscribeTest {
     // Inner Classes
     // -------------
 
-    public static class MyMain extends DSMainNode {
-
-        public void declareDefaults() {
-            declareDefault("int", DSInt.valueOf(0));
-        }
-
-        @Override
-        public synchronized void onSubscribed() {
-            notifyAll();
-        }
-
-        @Override
-        public synchronized void onUnsubscribed() {
-            notifyAll();
-        }
-
-        public synchronized void onStable() {
-            put("aNode", new ANode());
-        }
-
-    }
-
     public static class ANode extends DSValueNode {
 
         public boolean subscribeCalled = false;
@@ -198,6 +176,28 @@ public class RequesterSubscribeTest {
         @Override
         public synchronized void onUnsubscribed() {
             unsubscribeCalled = true;
+            notifyAll();
+        }
+
+    }
+
+    public static class MyMain extends DSMainNode {
+
+        public void declareDefaults() {
+            declareDefault("int", DSInt.valueOf(0));
+        }
+
+        public synchronized void onStable() {
+            put("aNode", new ANode());
+        }
+
+        @Override
+        public synchronized void onSubscribed() {
+            notifyAll();
+        }
+
+        @Override
+        public synchronized void onUnsubscribed() {
             notifyAll();
         }
 
