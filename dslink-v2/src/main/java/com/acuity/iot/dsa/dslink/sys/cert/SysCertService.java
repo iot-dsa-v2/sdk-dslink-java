@@ -60,6 +60,12 @@ public class SysCertService extends DSNode {
     private DSInfo keystorePath = getInfo(CERTFILE);
     private DSInfo keystorePass = getInfo(CERTFILE_PASS);
     private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
+    private DSInfo generateCsr = getInfo(GENERATE_CSR);
+    private DSInfo importCaCert = getInfo(IMPORT_CA_CERT);
+    private DSInfo importPrimaryCert = getInfo(IMPORT_PRIMARY_CERT);
+    private DSInfo generateSSCert = getInfo(GENERATE_SELF_SIGNED);
+    private DSInfo getKSEntry = getInfo(GET_KS_ENTRY);
+    private DSInfo deleteKSEntry = getInfo(DELETE_KS_ENTRY);
     private CertCollection localTruststore;
     private CertCollection quarantine;
     private HostnameWhitelist whitelist;
@@ -319,14 +325,8 @@ public class SysCertService extends DSNode {
     }
     
     private boolean isKeytoolAvailable() {
-        String result = null;
-        try {
-            result = KeyToolUtil.help();
-        } catch (Exception e) {
-            debug("", e);
-            result = null;
-        }
-        return result != null;
+        String result = KeyToolUtil.help();
+        return result != null && !result.isEmpty();
     }
 
     @Override
@@ -344,12 +344,12 @@ public class SysCertService extends DSNode {
             if (!f.exists()) {
                 error("Existing keystore not found and new one could not be generated");
             }
-            remove(GENERATE_CSR);
-            remove(IMPORT_CA_CERT);
-            remove(IMPORT_PRIMARY_CERT);
-            remove(GENERATE_SELF_SIGNED);
-            remove(GET_KS_ENTRY);
-            remove(DELETE_KS_ENTRY);
+            generateCsr.setHidden(true);
+            importCaCert.setHidden(true);
+            importPrimaryCert.setHidden(true);
+            generateSSCert.setHidden(true);
+            getKSEntry.setHidden(true);
+            deleteKSEntry.setHidden(true);
         }
         
         try {
