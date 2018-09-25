@@ -3,8 +3,8 @@ package org.iot.dsa.dslink;
 import java.util.Iterator;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSJavaEnum;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * @author Aaron Hansen

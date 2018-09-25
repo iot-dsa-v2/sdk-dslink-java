@@ -1,6 +1,11 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSBool;
+import org.iot.dsa.node.DSDouble;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.DSAction;
 
 /**
@@ -10,6 +15,54 @@ public class PerfTest {
 
     private static final boolean WITH_DEFAULTS = true;
     private DSNode root;
+
+    //@Test
+    public void execute() {
+        System.out.println("\nStarting " + new java.util.Date());
+        System.out.println("Test (1/3)...");
+        test(false);
+        System.out.println("Test (2/3)...");
+        test(false);
+        System.out.println("Test (3/3)...");
+        test(true);
+        System.out.println("\nFinished " + new java.util.Date());
+    }
+
+    public void test(boolean print) {
+        root = null;
+        long before = memoryUsed();
+        if (print) {
+            System.out.println("Memory before: " + format(before));
+        }
+        long time = System.currentTimeMillis();
+        root = makeNode();
+        for (int i = 0; i < 10; i++) {
+            DSNode iNode = makeNode();
+            root.add("test" + i, iNode);
+            for (int j = 0; j < 100; j++) {
+                DSNode jNode = makeNode();
+                iNode.add("test" + j, jNode);
+                for (int k = 0; k < 100; k++) {
+                    jNode.add("test" + k, makeNode());
+                }
+            }
+        }
+        time = System.currentTimeMillis() - time;
+        long after = memoryUsed();
+        if (print) {
+            System.out.println("Memory after: " + format(after));
+            System.out.println("Memory used: " + format(after - before));
+            System.out.println("Create time: " + time + "ms");
+        }
+        time = System.currentTimeMillis();
+        iterate(root);
+        time = System.currentTimeMillis() - time;
+        after = memoryUsed();
+        if (print) {
+            System.out.println("Iterate time: " + time + "ms");
+            System.out.println("Memory used: " + format(after - before));
+        }
+    }
 
     private String format(long mem) {
         return (mem / 1000) + "KB";
@@ -58,54 +111,6 @@ public class PerfTest {
             }
         }
         return mem;
-    }
-
-    //@Test
-    public void execute() {
-        System.out.println("\nStarting " + new java.util.Date());
-        System.out.println("Test (1/3)...");
-        test(false);
-        System.out.println("Test (2/3)...");
-        test(false);
-        System.out.println("Test (3/3)...");
-        test(true);
-        System.out.println("\nFinished " + new java.util.Date());
-    }
-
-    public void test(boolean print) {
-        root = null;
-        long before = memoryUsed();
-        if (print) {
-            System.out.println("Memory before: " + format(before));
-        }
-        long time = System.currentTimeMillis();
-        root = makeNode();
-        for (int i = 0; i < 10; i++) {
-            DSNode iNode = makeNode();
-            root.add("test" + i, iNode);
-            for (int j = 0; j < 100; j++) {
-                DSNode jNode = makeNode();
-                iNode.add("test" + j, jNode);
-                for (int k = 0; k < 100; k++) {
-                    jNode.add("test" + k, makeNode());
-                }
-            }
-        }
-        time = System.currentTimeMillis() - time;
-        long after = memoryUsed();
-        if (print) {
-            System.out.println("Memory after: " + format(after));
-            System.out.println("Memory used: " + format(after - before));
-            System.out.println("Create time: " + time + "ms");
-        }
-        time = System.currentTimeMillis();
-        iterate(root);
-        time = System.currentTimeMillis() - time;
-        after = memoryUsed();
-        if (print) {
-            System.out.println("Iterate time: " + time + "ms");
-            System.out.println("Memory used: " + format(after - before));
-        }
     }
 
     public static class TestNode extends DSNode {

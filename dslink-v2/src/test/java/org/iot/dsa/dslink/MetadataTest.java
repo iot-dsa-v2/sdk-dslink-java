@@ -6,9 +6,14 @@ import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
-import org.iot.dsa.node.*;
-import org.junit.Assert;
-import org.junit.Test;
+import org.iot.dsa.node.DSFlexEnum;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMetadata;
+import org.iot.dsa.node.DSNode;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * @author Aaron Hansen
@@ -22,22 +27,6 @@ public class MetadataTest {
 
     // Methods
     // -------
-
-    private DSNode decode(byte[] bytes) throws Exception {
-        ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-        JsonReader reader = new JsonReader(bin, "UTF-8");
-        DSNode ret = NodeDecoder.decode(reader);
-        reader.close();
-        return ret;
-    }
-
-    private byte[] encode(DSNode node) throws Exception {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        JsonWriter writer = new JsonWriter(bos);
-        NodeEncoder.encode(writer, node);
-        writer.close();
-        return bos.toByteArray();
-    }
 
     @Test
     public void theTest() throws Exception {
@@ -56,6 +45,22 @@ public class MetadataTest {
         Assert.assertTrue(metadata.getEnumRange().get(0).equals("abc"));
         Assert.assertTrue(metadata.getEnumRange().get(1).equals("def"));
         Assert.assertTrue(metadata.getEnumRange().get(2).equals("ghi"));
+    }
+
+    private DSNode decode(byte[] bytes) throws Exception {
+        ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+        JsonReader reader = new JsonReader(bin, "UTF-8");
+        DSNode ret = NodeDecoder.decode(reader);
+        reader.close();
+        return ret;
+    }
+
+    private byte[] encode(DSNode node) throws Exception {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(bos);
+        NodeEncoder.encode(writer, node);
+        writer.close();
+        return bos.toByteArray();
     }
 
     // Inner Classes

@@ -75,15 +75,14 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * If the connection state is connecting or connected, this will call disconnect.  If
-     * disconnect has already been called, this notifies the subtree if the connection actually
-     * transitions to disconnected.
+     * If the connection state is connected, this will call disconnect.  Otherwise, if not
+     * already disconnected this transitions the connection to disconnected.
      *
      * @param reason Optional
      */
     public void connDown(String reason) {
         debug(debug() ? "connDown: " + reason : null);
-        if (getConnectionState().isEngaged()) {
+        if (getConnectionState().isConnected()) {
             put(lastFail, DSDateTime.currentTime());
             if (reason != null) {
                 if (!statusText.getElement().toString().equals(reason)) {
@@ -91,7 +90,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
                 }
             }
             disconnect();
-        } else if (getConnectionState().isDisconnecting()) {
+        } else if (!getConnectionState().isDisconnected()) {
             put(status, getStatus().add(DSStatus.DOWN));
             put(state, DSConnectionState.DISCONNECTED);
             put(stateTime, DSDateTime.currentTime());
@@ -112,6 +111,7 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
      */
     public void connOk() {
         if (getConnectionState().isDisengaged()) {
+            debug(debug() ? "Not connecting or connected, ignoring connOk()" : null);
             return;
         }
         long now = System.currentTimeMillis();
@@ -164,13 +164,10 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     }
 
     /**
-     * Initiates disconnection logic.
+     * Transitions the connection to disconnecting then disconnected and makes all the
+     * respective callbacks.
      */
     public void disconnect() {
-        if (!getConnectionState().isConnected()) {
-            debug(debug() ? "Not connected, ignoring disconnect()" : null);
-            return;
-        }
         debug(debug() ? "Disconnect" : null);
         put(state, DSConnectionState.DISCONNECTING);
         put(stateTime, DSDateTime.currentTime());
@@ -179,8 +176,17 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
             onDisconnect();
         } catch (Throwable x) {
             error(getPath(), x);
-            connDown(DSException.makeMessage(x));
         }
+        put(status, getStatus().add(DSStatus.DOWN));
+        put(state, DSConnectionState.DISCONNECTED);
+        put(stateTime, DSDateTime.currentTime());
+        notifyDescendants(this);
+        try {
+            onDisconnected();
+        } catch (Exception x) {
+            error(error() ? getPath() : null, x);
+        }
+        fire(DSConnectionEvent.DISCONNECTED, null);
     }
 
     public DSConnectionState getConnectionState() {
@@ -351,7 +357,8 @@ public abstract class DSConnection extends DSNode implements DSIStatus, Runnable
     }
 
     /**
-     * Close and clean up resources.
+     * Close and clean up resources, when this returns, the connection will be put into
+     * the disconnected state, onDisconnected will be called, and descendants will be notified.
      */
     protected abstract void onDisconnect();
 
