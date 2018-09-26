@@ -177,6 +177,11 @@ public class DSInboundInvoke extends DSInboundRequest
                 }
             }
             DSAbstractAction action = info.getAction();
+            //todo
+            /*
+            If action is table action wrap dsicursor
+            If action is values action...
+            */
             result = action.invoke(info, this);
         } catch (Exception x) {
             error(getPath(), x);
