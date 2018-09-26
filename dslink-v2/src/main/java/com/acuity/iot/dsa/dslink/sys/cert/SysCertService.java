@@ -2,7 +2,9 @@ package com.acuity.iot.dsa.dslink.sys.cert;
 
 import com.acuity.iot.dsa.dslink.sys.cert.HostnameWhitelist.WhitelistValue;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.HostnameVerifier;
@@ -50,6 +52,7 @@ public class SysCertService extends DSNode {
     private static final String GENERATE_SELF_SIGNED = "Generate Self-Signed Certificate";
     private static final String DELETE_KS_ENTRY = "Delete Keystore Entry";
     private static final String GET_KS_ENTRY = "Get Keystore Entry";
+    private static final String DEFAULT_CERTFILE = "dslink.jks";
 
     // Fields
     // ------
@@ -134,7 +137,7 @@ public class SysCertService extends DSNode {
         declareDefault(ALLOW_SERVERS, DSBool.TRUE);
         declareDefault(VERIFY_HOSTNAMES, DSBool.TRUE);
         declareDefault(HOSTNAME_WHITELIST, new HostnameWhitelist());
-        declareDefault(CERTFILE, DSString.valueOf("dslink.jks"));
+        declareDefault(CERTFILE, DSString.valueOf(DEFAULT_CERTFILE));
         declareDefault(CERTFILE_TYPE, DSString.valueOf("JKS"));
         declareDefault(CERTFILE_PASS, DSPasswordAes128.valueOf("dsarocks"));
         declareDefault(LOCAL_TRUSTSTORE, new CertCollection());
@@ -342,7 +345,35 @@ public class SysCertService extends DSNode {
         } else {
             info("Keytool not available. Disabling keytool functionality and attempting to use existing keystore");
             if (!f.exists()) {
-                error("Existing keystore not found and new one could not be generated");
+                InputStream inpStream = null;
+                FileOutputStream outStream = null;
+                try {
+                    inpStream = SysCertService.class.getResourceAsStream(DEFAULT_CERTFILE);
+                    if (inpStream != null) {
+                        int readBytes;
+                        byte[] buffer = new byte[4096];
+                        outStream = new FileOutputStream(f);
+                        while ((readBytes = inpStream.read(buffer)) > 0) {
+                            outStream.write(buffer, 0, readBytes);
+                        }
+                    }
+                } catch (Exception e) {
+                    debug("", e);
+                } finally {
+                    try {
+                        if (inpStream != null) {
+                            inpStream.close();
+                        }
+                        if (outStream != null) {
+                            outStream.close();
+                        }
+                    } catch (Exception e) {
+                        debug("", e);
+                    }
+                }
+                if (!f.exists()) {
+                    error("Existing keystore not found and new one could not be generated");
+                }
             }
             generateCsr.setHidden(true);
             importCaCert.setHidden(true);
