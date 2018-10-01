@@ -1,8 +1,8 @@
 package org.iot.dsa.node.action;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSMap;
 
 /**
  * This is a convenience implementation of ActionValues.  It is for actions that return one or
@@ -43,8 +43,22 @@ public class DSActionValues implements ActionValues {
         return action;
     }
 
-    public Iterator<DSIValue> getValues() {
-        return values.iterator();
+    @Override
+    public int getColumnCount() {
+        return values.size();
+    }
+
+    @Override
+    public void getColumnMetadata(int idx, DSMap map) {
+        DSMap meta = action.getValueResult(idx);
+        if (meta != null) {
+            map.putAll(meta);
+        }
+    }
+
+    @Override
+    public DSIValue getValue(int idx) {
+        return values.get(idx);
     }
 
     /**

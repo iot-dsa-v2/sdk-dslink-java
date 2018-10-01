@@ -647,7 +647,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Returns an info iterator of child DSIValues.
+     * Returns an info iterator of child values.
      */
     public Iterator<DSInfo> iterateValues() {
         return new ValueIterator();

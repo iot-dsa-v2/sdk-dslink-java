@@ -5,10 +5,8 @@ import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;
 
 /**
- * Encapsulates the details of an action invocation and provides the mechanism for updating and open
+ * Encapsulates the details of an action invocation and provides the mechanism for updating an open
  * stream.
- * <p>
- * The action
  *
  * @author Aaron Hansen
  */
@@ -25,7 +23,7 @@ public interface ActionInvocation {
     public void close();
 
     /**
-     * Close and send and error. For use with streams and open tables, will have no effect if the
+     * Close and send an error. For use with streams and open tables, will have no effect if the
      * stream is already closed.
      */
     public void close(Exception reason);

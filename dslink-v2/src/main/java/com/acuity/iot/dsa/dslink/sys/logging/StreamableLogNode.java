@@ -1,12 +1,12 @@
 package com.acuity.iot.dsa.dslink.sys.logging;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.iot.dsa.logging.DSLogHandler;
+import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -62,7 +62,7 @@ public abstract class StreamableLogNode extends DSNode {
             }
         };
         loggerObj.addHandler(handler);
-        DSMap col = new DSMetadata().setName("Record").setType(DSValueType.STRING).getMap();
+        final DSMap col = new DSMetadata().setName("Record").setType(DSValueType.STRING).getMap();
         final List<DSMap> columns = Collections.singletonList(col);
 
         return new ActionTable() {
@@ -73,14 +73,23 @@ public abstract class StreamableLogNode extends DSNode {
             }
 
             @Override
-            public Iterator<DSMap> getColumns() {
-                return columns.iterator();
+            public DSIValue getValue(int col) {
+                return null;
             }
 
             @Override
-            public Iterator<DSList> getRows() {
-                List<DSList> empty = Collections.emptyList();
-                return empty.iterator();
+            public int getColumnCount() {
+                return columns.size();
+            }
+
+            @Override
+            public void getColumnMetadata(int col, DSMap bucket) {
+                bucket.putAll(columns.get(col));
+            }
+
+            @Override
+            public boolean next() {
+                return false;
             }
 
             @Override
