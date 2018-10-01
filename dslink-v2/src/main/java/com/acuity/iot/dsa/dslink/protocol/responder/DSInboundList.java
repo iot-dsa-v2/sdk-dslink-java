@@ -511,9 +511,11 @@ public class DSInboundList extends DSInboundRequest
         }
         if (action.getResultType().isValues()) {
             e = cacheMap.remove("$columns");
-            if (e == null) {
+            if (e != null) {
+                encode("$columns", e, writer);
+            } else {
                 DSList list = new DSList();
-                Iterator<DSMap> cols = action.getValueResults();
+                Iterator<DSMap> cols = action.getValueMetadata();
                 if (cols != null) {
                     DSMap param;
                     while (cols.hasNext()) {
@@ -529,8 +531,6 @@ public class DSInboundList extends DSInboundRequest
                     }
                 }
                 encode("$columns", list, writer);
-            } else {
-                encode("$columns", e, writer);
             }
         }
         e = cacheMap.remove("$result");

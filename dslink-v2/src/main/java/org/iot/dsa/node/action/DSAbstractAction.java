@@ -216,8 +216,15 @@ public abstract class DSAbstractAction implements ActionSpec, DSIObject {
     }
 
     @Override
-    public Iterator<DSMap> getValueResults() {
+    public Iterator<DSMap> getValueMetadata() {
         return valueResults.iterator();
+    }
+
+    public DSMap getValueResult(int idx) {
+        if ((valueResults == null) || valueResults.isEmpty()) {
+            return null;
+        }
+        return valueResults.get(idx);
     }
 
     /**

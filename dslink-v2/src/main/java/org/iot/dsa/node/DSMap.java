@@ -439,9 +439,12 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
      * @return This
      */
     public DSMap putAll(DSMap toAdd) {
-        Entry e = toAdd.firstEntry();
-        while (e != null) {
-            put(e.getKey(), e.getValue().copy());
+        if (toAdd != null) {
+            Entry e = toAdd.firstEntry();
+            while (e != null) {
+                put(e.getKey(), e.getValue().copy());
+                e = e.next();
+            }
         }
         return this;
     }
