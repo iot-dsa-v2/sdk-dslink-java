@@ -1,11 +1,11 @@
-allprojects {
+subprojects {
 
     apply plugin: 'jacoco'
     apply plugin: 'java'
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.41.0.2'
+    version '0.41.0.3'
 
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
@@ -35,27 +35,8 @@ allprojects {
     }
 
     build.dependsOn jacocoTestReport
-    //test.finalizedBy(project.tasks.jacocoTestReport)
 
 }
-
-/*
-task jacocoRootReport(type: JacocoReport) {
-
-    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
-
-    subprojects.each {
-        sourceSets it.sourceSets.main
-    }
-
-    reports {
-        xml.enabled true
-        html.enabled false
-        csv.enabled false
-    }
-
-}
-*/
 
 wrapper {
     gradleVersion = '4.10.2'
