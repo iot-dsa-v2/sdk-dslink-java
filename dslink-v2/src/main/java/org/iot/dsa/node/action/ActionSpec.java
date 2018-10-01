@@ -31,9 +31,9 @@ public interface ActionSpec {
     public ResultType getResultType();
 
     /**
-     * This is only called for the VALUES result type.
+     * Return the metadata for each column in a VALUES result type.
      */
-    public Iterator<DSMap> getValueResults();
+    public Iterator<DSMap> getValueMetadata();
 
     /**
      * Defines what the action returns.
@@ -41,13 +41,14 @@ public interface ActionSpec {
     public enum ResultType {
 
         /**
-         * A finite sized table whose stream is closed when the row iterator is complete.
+         * A finite sized table whose stream is closed when the row cursor is complete.
          */
         CLOSED_TABLE("table"),
 
         /**
          * A finite sized table whose stream is left open after the row iterator is complete because
-         * it can change over time.  The row iterator does not have to represent the entire table.
+         * it can change over time.  The initial row cursor does not have to transmit the entire
+         * table.
          */
         OPEN_TABLE("stream"),
 
@@ -62,7 +63,7 @@ public interface ActionSpec {
         VOID(""),
 
         /**
-         * One or more return values.
+         * A single row table.
          */
         VALUES("values");
 

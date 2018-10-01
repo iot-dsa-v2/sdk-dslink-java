@@ -1,15 +1,12 @@
 package org.iot.dsa.node.action;
 
-import java.util.Iterator;
-import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.table.DSIRow;
 
 /**
  * Simple set of return values from an action.
  *
  * @author Aaron Hansen
  */
-public interface ActionValues extends ActionResult {
-
-    public Iterator<DSIValue> getValues();
+public interface ActionValues extends ActionResult, DSIRow {
 
 }

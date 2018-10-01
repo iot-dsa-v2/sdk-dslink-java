@@ -12,7 +12,6 @@ import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.responder.InboundInvokeRequest;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -22,6 +21,8 @@ import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.ActionValues;
 import org.iot.dsa.node.action.DSAbstractAction;
 import org.iot.dsa.security.DSPermission;
+import org.iot.dsa.table.DSIRow;
+import org.iot.dsa.table.DSIRowCursor;
 
 /**
  * Invoke implementation for a responder.
@@ -177,6 +178,11 @@ public class DSInboundInvoke extends DSInboundRequest
                 }
             }
             DSAbstractAction action = info.getAction();
+            //todo
+            /*
+            If action is table action wrap dsicursor
+            If action is values action...
+            */
             result = action.invoke(info, this);
         } catch (Exception x) {
             error(getPath(), x);
@@ -356,16 +362,7 @@ public class DSInboundInvoke extends DSInboundRequest
 
     private void writeColumns(MessageWriter writer) {
         DSIWriter out = writer.getWriter();
-        if (result instanceof ActionValues) {
-            out.key("columns").beginList();
-            Iterator<DSMap> it = result.getAction().getValueResults();
-            if (it != null) {
-                while (it.hasNext()) {
-                    out.value(it.next());
-                }
-            }
-            out.endList();
-        } else if (result instanceof ActionTable) {
+        if (result instanceof ActionTable) {
             ActionSpec action = result.getAction();
             out.key("meta")
                .beginMap()
@@ -373,13 +370,23 @@ public class DSInboundInvoke extends DSInboundRequest
                .key("meta").beginMap().endMap()
                .endMap();
             out.key("columns").beginList();
-            Iterator<DSMap> iterator = ((ActionTable) result).getColumns();
-            if (iterator != null) {
-                while (iterator.hasNext()) {
-                    out.value(iterator.next());
-                }
+            ActionTable tbl = (ActionTable) result;
+            DSMap col = new DSMap();
+            for (int i = 0, len = tbl.getColumnCount(); i < len; i++) {
+                tbl.getMetadata(i, col.clear());
+                out.value(col);
             }
             out.endList();
+        } else if (result instanceof ActionValues) {
+            out.key("columns").beginList();
+            ActionValues vals = (ActionValues) result;
+            DSMap col = new DSMap();
+            for (int i = 0, len = vals.getColumnCount(); i < len; i++) {
+                vals.getMetadata(i, col.clear());
+                out.value(col);
+            }
+            out.endList();
+
         } else {
             out.key("columns").beginList().endList();
         }
@@ -389,29 +396,30 @@ public class DSInboundInvoke extends DSInboundRequest
         DSIWriter out = writer.getWriter();
         state = STATE_ROWS;
         out.key(getRowsName()).beginList();
-        if (result instanceof ActionValues) {
-            out.beginList();
-            Iterator<DSIValue> values = ((ActionValues) result).getValues();
-            if (values != null) {
-                while (values.hasNext()) {
-                    DSIValue val = values.next();
-                    out.value(val.toElement());
-                }
-            }
-            out.endList();
-        } else if (result instanceof ActionTable) {
-            if (rows == null) {
-                rows = ((ActionTable) result).getRows();
-            }
+        if (result instanceof DSIRowCursor) {
             DSResponder session = getResponder();
-            while (rows.hasNext()) {
-                out.value(rows.next());
+            DSIRowCursor cur = (DSIRowCursor) result;
+            int cols = cur.getColumnCount();
+            while (cur.next()) {
+                out.beginList();
+                for (int i = 0; i < cols; i++) {
+                    out.value(cur.getValue(i).toElement());
+                }
+                out.endList();
                 if (session.shouldEndMessage()) {
                     out.endList();
                     enqueueResponse();
                     return;
                 }
             }
+        } else if (result instanceof DSIRow) {
+            DSIRow row = (DSIRow) result;
+            int cols = row.getColumnCount();
+            out.beginList();
+            for (int i = 0; i < cols; i++) {
+                out.value(row.getValue(i).toElement());
+            }
+            out.endList();
         }
         out.endList();
         if ((result == null) || !result.getAction().getResultType().isOpen() || !stream) {
