@@ -373,7 +373,7 @@ public class DSInboundInvoke extends DSInboundRequest
             ActionTable tbl = (ActionTable) result;
             DSMap col = new DSMap();
             for (int i = 0, len = tbl.getColumnCount(); i < len; i++) {
-                tbl.getColumnMetadata(i, col.clear());
+                tbl.getMetadata(i, col.clear());
                 out.value(col);
             }
             out.endList();
@@ -382,7 +382,7 @@ public class DSInboundInvoke extends DSInboundRequest
             ActionValues vals = (ActionValues) result;
             DSMap col = new DSMap();
             for (int i = 0, len = vals.getColumnCount(); i < len; i++) {
-                vals.getColumnMetadata(i, col.clear());
+                vals.getMetadata(i, col.clear());
                 out.value(col);
             }
             out.endList();

@@ -49,7 +49,7 @@ public class DSActionValues implements ActionValues {
     }
 
     @Override
-    public void getColumnMetadata(int idx, DSMap map) {
+    public void getMetadata(int idx, DSMap map) {
         DSMap meta = action.getValueResult(idx);
         if (meta != null) {
             map.putAll(meta);

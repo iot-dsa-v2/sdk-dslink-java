@@ -73,18 +73,18 @@ public abstract class StreamableLogNode extends DSNode {
             }
 
             @Override
-            public DSIValue getValue(int col) {
-                return null;
-            }
-
-            @Override
             public int getColumnCount() {
                 return columns.size();
             }
 
             @Override
-            public void getColumnMetadata(int col, DSMap bucket) {
+            public void getMetadata(int col, DSMap bucket) {
                 bucket.putAll(columns.get(col));
+            }
+
+            @Override
+            public DSIValue getValue(int col) {
+                return null;
             }
 
             @Override

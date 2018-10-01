@@ -22,7 +22,7 @@ public interface DSIRow {
      * @param index  0 based column identifier.
      * @param bucket Must not be null and the caller is responsible for clearing it.
      */
-    public void getColumnMetadata(int index, DSMap bucket);
+    public void getMetadata(int index, DSMap bucket);
 
     /**
      * Retrieves the value at the given index.  In the cursor subclass, this must only

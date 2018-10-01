@@ -128,7 +128,7 @@ public class ThreadNode extends MXBeanNode {
             }
 
             @Override
-            public void getColumnMetadata(int idx, DSMap bucket) {
+            public void getMetadata(int idx, DSMap bucket) {
                 bucket.putAll(action.getValueResult(idx));
             }
 
