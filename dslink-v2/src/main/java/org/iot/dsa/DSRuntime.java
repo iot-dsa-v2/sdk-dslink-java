@@ -14,7 +14,7 @@ public class DSRuntime {
     ///////////////////////////////////////////////////////////////////////////
 
     private static boolean alive = true;
-    private static long nextCycle = -1;
+    private static Long nextCycle = null;
     private static RuntimeThread runtimeThread;
     private static Timer timerHead;
     private static Timer timerTail;
@@ -35,13 +35,13 @@ public class DSRuntime {
      * Returns the next time execution is needed.
      */
     private static void executeTimers() {
-        long now = System.currentTimeMillis();
-        long nextCycleTmp = now + 60000;
+        long now = System.nanoTime();
+        long nextCycleTmp = now + 60000000000l;
         Timer current = null;
         Timer next = null;
         Timer keepHead = null;
         Timer keepTail = null;
-        long tmp;
+        Long tmp;
         //Take the task link list.
         synchronized (DSRuntime.class) {
             nextCycle = nextCycleTmp;
@@ -54,8 +54,8 @@ public class DSRuntime {
             tmp = current.run(now);
             next = current.next;
             current.next = null;
-            if (tmp > 0) {
-                if (tmp < nextCycleTmp) {
+            if (tmp != null) {
+                if (tmp - nextCycleTmp < 0) {
                     nextCycleTmp = tmp;
                 }
                 if (keepHead == null) {
@@ -70,7 +70,7 @@ public class DSRuntime {
         }
         //Add the tasks that have future work back to the main linked list.
         synchronized (DSRuntime.class) {
-            if (nextCycleTmp < nextCycle) {
+            if (nextCycleTmp - nextCycle < 0) {
                 nextCycle = nextCycleTmp;
             }
             if (keepHead != null) {
@@ -100,8 +100,24 @@ public class DSRuntime {
      * @param interval The millisecond interval at which to run.
      * @return For inspecting and cancel execution.
      */
-    public static Timer run(Runnable arg, long start, long interval) {
-        Timer f = new Timer(arg, start, interval);
+    public static Timer run(Runnable arg, long start, long intervalMillis) {
+        long delayMillis = start - System.currentTimeMillis();
+        return runAfterDelay(arg, delayMillis, intervalMillis);
+    }
+    
+    /**
+     * Run periodically starting after the given millisecond delay and repeat at the given millisecond interval.
+     *
+     * @param arg      What to runAt.
+     * @param start    First absolute execution time, or if less or equal to 0, start immediately.
+     * @param interval The millisecond interval at which to run.
+     * @return For inspecting and cancel execution.
+     */
+    public static Timer runAfterDelay(Runnable arg, long delayMillis, long intervalMillis) {
+        long intervalNanos = intervalMillis * 1000000;
+        long delyNanos = delayMillis * 1000000;
+        long startNanos = System.nanoTime() + delyNanos;
+        Timer f = new Timer(arg, startNanos, intervalNanos);
         synchronized (DSRuntime.class) {
             if (timerHead == null) {
                 timerHead = f;
@@ -110,8 +126,8 @@ public class DSRuntime {
                 timerTail.next = f;
                 timerTail = f;
             }
-            if (start < nextCycle) {
-                nextCycle = start;
+            if (startNanos - nextCycle < 0) {
+                nextCycle = startNanos;
                 DSRuntime.class.notifyAll();
             }
         }
@@ -126,21 +142,8 @@ public class DSRuntime {
      * @return For inspecting and cancel execution.
      */
     public static Timer runAt(Runnable arg, long at) {
-        Timer f = new Timer(arg, at, -1);
-        synchronized (DSRuntime.class) {
-            if (timerHead == null) {
-                timerHead = f;
-                timerTail = f;
-            } else {
-                timerTail.next = f;
-                timerTail = f;
-            }
-            if (at < nextCycle) {
-                nextCycle = at;
-                DSRuntime.class.notifyAll();
-            }
-        }
-        return f;
+        long delayMillis = at - System.currentTimeMillis();
+        return runDelayed(arg, delayMillis);
     }
 
     /**
@@ -151,7 +154,24 @@ public class DSRuntime {
      * @return For inspecting and cancel execution.
      */
     public static Timer runDelayed(Runnable arg, long delayMillis) {
-        return runAt(arg, System.currentTimeMillis() + delayMillis);
+//        return runAt(arg, System.currentTimeMillis() + delayMillis);
+        long delyNanos = delayMillis * 1000000;
+        long startNanos = System.nanoTime() + delyNanos;
+        Timer f = new Timer(arg, startNanos, -1);
+        synchronized (DSRuntime.class) {
+            if (timerHead == null) {
+                timerHead = f;
+                timerTail = f;
+            } else {
+                timerTail.next = f;
+                timerTail = f;
+            }
+            if (startNanos - nextCycle < 0) {
+                nextCycle = startNanos;
+                DSRuntime.class.notifyAll();
+            }
+        }
+        return f;
     }
 
     private static void shutdown() {
@@ -173,18 +193,19 @@ public class DSRuntime {
 
         private long count = 0;
         private long interval = 0;
-        private long lastRun = -1;
+        private Long lastRun = null;
         private Timer next; //linked list
-        private long nextRun = 1; //0 == canceled, <0 == done
+        private Long nextRun = null;
+        boolean cancelled = false;
         private Runnable runnable;
         private boolean running = false;
         private boolean skipMissed = true;
 
-        Timer(Runnable runnable, long start, long interval) {
+        private Timer(Runnable runnable, long start, long interval) {    
             this.interval = interval;
-            if (start <= 0) {
-                start = System.currentTimeMillis();
-            }
+//            if (start <= 0) {
+//                start = System.currentTimeMillis();
+//            }
             this.nextRun = start;
             this.runnable = runnable;
         }
@@ -194,17 +215,18 @@ public class DSRuntime {
          * already cancelled.
          */
         public void cancel() {
-            if (nextRun > 0) {
-                nextRun = 0;
+            if (nextRun != null) {
+                nextRun = null;
+                cancelled = true;
             }
         }
 
-        private long computeNextRun(long now) {
+        private Long computeNextRun(long now) {
             if (interval <= 0) {
-                return nextRun = -1;
+                return nextRun = null;
             }
             if (skipMissed) {
-                while (nextRun <= now) {
+                while (nextRun - now <= 0) {
                     nextRun += interval;
                 }
             } else {
@@ -228,14 +250,14 @@ public class DSRuntime {
         }
 
         public boolean isCancelled() {
-            return nextRun == 0;
+            return cancelled;
         }
 
         /**
          * True if cancelled or was a one time execution and that has finished.
          */
         public boolean isFinished() {
-            return nextRun <= 0;
+            return nextRun == null;
         }
 
         /**
@@ -246,16 +268,16 @@ public class DSRuntime {
         }
 
         /**
-         * The lastRun run or -1 if it hasn't run yet.
+         * The lastRun run or null if it hasn't run yet.
          */
-        public long lastRun() {
+        public Long lastRun() {
             return lastRun;
         }
 
         /**
          * The next scheduled time to run.
          *
-         * @return 0 or less when finished.
+         * @return null when finished.
          */
         public long nextRun() {
             return nextRun;
@@ -278,11 +300,11 @@ public class DSRuntime {
          * @param now The current time, just an efficiency.
          * @return The next update time, or 0 or less if done.
          */
-        long run(long now) {
-            if (nextRun <= 0) {
+        Long run(long now) {
+            if (nextRun == null) {
                 return nextRun;
             }
-            if (now < nextRun) {
+            if (now - nextRun < 0) {
                 return nextRun;
             }
             if (running) {
@@ -316,10 +338,21 @@ public class DSRuntime {
             this.skipMissed = skipMissed;
             return this;
         }
+        
+        public long nextRunInSystemTimeMillis() {
+            if (nextRun == null) {
+                return cancelled ? 0 : -1;
+            }
+            long nowNanos = System.nanoTime();
+            long nowMillis = System.currentTimeMillis();
+            long nanosToRun = nextRun - nowNanos;
+            long millisToRun = nanosToRun / 1000000;
+            return nowMillis + millisToRun;
+        }
 
         public String toString() {
             StringBuilder buf = new StringBuilder();
-            DSTime.encode(nextRun, false, buf);
+            DSTime.encode(nextRunInSystemTimeMillis(), false, buf);
             buf.append(" - ").append(runnable.toString());
             return buf.toString();
         }
@@ -341,7 +374,7 @@ public class DSRuntime {
             while (alive) {
                 executeTimers();
                 synchronized (DSRuntime.class) {
-                    delta = nextCycle - System.currentTimeMillis();
+                    delta = nextCycle - System.nanoTime();
                     if (delta > 0) {
                         try {
                             DSRuntime.class.wait(delta);
