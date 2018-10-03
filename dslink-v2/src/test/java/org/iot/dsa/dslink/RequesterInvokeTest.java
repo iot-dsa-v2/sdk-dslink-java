@@ -2,7 +2,6 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import com.acuity.iot.dsa.dslink.test.V2TestLink;
-import org.iot.dsa.conn.DSConnection.DSConnectionEvent;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSInt;
@@ -39,14 +38,12 @@ public class RequesterInvokeTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe(DSLinkConnection.CONN_TOPIC, new DSISubscriber() {
+        link.getConnection().subscribe(DSLinkConnection.CONNECTED, new DSISubscriber() {
             @Override
             public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-                if (event == DSConnectionEvent.CONNECTED) {
-                    success = true;
-                    synchronized (RequesterInvokeTest.this) {
-                        RequesterInvokeTest.this.notifyAll();
-                    }
+                success = true;
+                synchronized (RequesterInvokeTest.this) {
+                    RequesterInvokeTest.this.notifyAll();
                 }
             }
 

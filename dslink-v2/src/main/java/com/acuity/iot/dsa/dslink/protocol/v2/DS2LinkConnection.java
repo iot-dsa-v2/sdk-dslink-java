@@ -135,7 +135,7 @@ public class DS2LinkConnection extends DSLinkConnection {
     }
 
     @Override
-    protected void onConnect() {
+    protected void doConnect() {
         try {
             transport = makeTransport();
             put(TRANSPORT, transport);
