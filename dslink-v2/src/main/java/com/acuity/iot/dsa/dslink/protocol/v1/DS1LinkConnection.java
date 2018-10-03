@@ -148,7 +148,7 @@ public class DS1LinkConnection extends DSLinkConnection {
     }
 
     @Override
-    protected void onConnect() {
+    protected void doConnect() {
         try {
             DS1ConnectionInit init = connectionInit;
             //Don't reuse the connection init if there is connection problem.

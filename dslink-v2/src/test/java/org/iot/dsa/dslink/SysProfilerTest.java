@@ -3,7 +3,6 @@ package org.iot.dsa.dslink;
 import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
 import com.acuity.iot.dsa.dslink.sys.profiler.ThreadNode;
 import com.acuity.iot.dsa.dslink.test.TestLink;
-import org.iot.dsa.conn.DSConnection.DSConnectionEvent;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInfo;
@@ -22,14 +21,12 @@ public class SysProfilerTest {
     @Test
     public void theTest() throws Exception {
         link = new TestLink(new DSMainNode());
-        link.getConnection().subscribe(DSLinkConnection.CONN_TOPIC, new DSISubscriber() {
+        link.getConnection().subscribe(DSLinkConnection.CONNECTED, new DSISubscriber() {
             @Override
             public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-                if (event == DSConnectionEvent.CONNECTED) {
-                    success = true;
-                    synchronized (SysProfilerTest.this) {
-                        SysProfilerTest.this.notifyAll();
-                    }
+                success = true;
+                synchronized (SysProfilerTest.this) {
+                    SysProfilerTest.this.notifyAll();
                 }
             }
 

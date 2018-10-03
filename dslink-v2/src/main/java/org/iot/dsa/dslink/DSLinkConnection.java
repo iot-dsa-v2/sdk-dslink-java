@@ -2,7 +2,6 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
-import java.util.concurrent.ConcurrentHashMap;
 import org.iot.dsa.conn.DSConnection;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
@@ -11,7 +10,6 @@ import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.util.DSException;
 
 /**
  * Represents an upstream connection to a broker.
@@ -117,7 +115,7 @@ public abstract class DSLinkConnection extends DSConnection {
     }
 
     @Override
-    protected void onDisconnect() {
+    protected void doDisconnect() {
         try {
             if (getTransport() != null) {
                 getTransport().close();
