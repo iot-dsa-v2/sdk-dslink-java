@@ -377,7 +377,7 @@ public class DSRuntime {
                     delta = nextCycle - System.nanoTime();
                     if (delta > 0) {
                         try {
-                            DSRuntime.class.wait(delta);
+                            DSRuntime.class.wait(delta / 1000000);
                         } catch (Exception ignore) {
                         }
                     }
