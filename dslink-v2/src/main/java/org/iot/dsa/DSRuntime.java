@@ -97,7 +97,7 @@ public class DSRuntime {
      *
      * @param arg      What to runAt.
      * @param start    First absolute execution time, or if less or equal to 0, start immediately.
-     * @param interval The millisecond interval at which to run.
+     * @param intervalMillis The millisecond interval at which to run.
      * @return For inspecting and cancel execution.
      */
     public static Timer run(Runnable arg, long start, long intervalMillis) {
@@ -109,8 +109,8 @@ public class DSRuntime {
      * Run periodically starting after the given millisecond delay and repeat at the given millisecond interval.
      *
      * @param arg      What to runAt.
-     * @param start    First absolute execution time, or if less or equal to 0, start immediately.
-     * @param interval The millisecond interval at which to run.
+     * @param delayMillis    The number of millis to wait before first execution.
+     * @param intervalMillis The millisecond interval at which to run.
      * @return For inspecting and cancel execution.
      */
     public static Timer runAfterDelay(Runnable arg, long delayMillis, long intervalMillis) {
@@ -298,7 +298,7 @@ public class DSRuntime {
          * Executes the task if it is time.
          *
          * @param now The current time, just an efficiency.
-         * @return The next update time, or 0 or less if done.
+         * @return The next update time, or null if done.
          */
         Long run(long now) {
             if (nextRun == null) {
