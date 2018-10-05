@@ -1,6 +1,7 @@
 package org.iot.dsa.dslink;
 
 import org.iot.dsa.DSRuntime;
+import org.iot.dsa.DSRuntime.Timer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -14,11 +15,13 @@ public class DSRuntimeTest {
     private static Object lock3 = new Object();
     private static boolean successWithDelay = false;
     private static Object lock4 = new Object();
+    private static int runsImmed = 0;
+    private static Object lock5 = new Object();
     
     @Test
     public void test1() throws Exception {
         runs = 0;
-        DSRuntime.run(new Runnable() {
+        Timer tim = DSRuntime.run(new Runnable() {
 
             @Override
             public void run() {
@@ -32,6 +35,9 @@ public class DSRuntimeTest {
             
         }, System.currentTimeMillis() + 400, 100);
         
+//        System.out.println("test1    now: " + System.nanoTime());
+//        System.out.println("test1nextrun: " + tim.nextRun());
+        
         synchronized(lock1) {
             lock1.wait(1000); 
         }
@@ -41,7 +47,7 @@ public class DSRuntimeTest {
     @Test
     public void test2() throws Exception {
         runsWithDelay = 0;
-        DSRuntime.runAfterDelay(new Runnable() {
+        Timer tim = DSRuntime.runAfterDelay(new Runnable() {
 
             @Override
             public void run() {
@@ -55,6 +61,9 @@ public class DSRuntimeTest {
             
         }, 400, 100);
         
+//        System.out.println("test2    now: " + System.nanoTime());
+//        System.out.println("test2nextrun: " + tim.nextRun());
+        
         synchronized(lock2) {
             lock2.wait(1000); 
         }
@@ -64,7 +73,7 @@ public class DSRuntimeTest {
     @Test
     public void test3() throws Exception {
         success = false;
-        DSRuntime.runAt(new Runnable() {
+        Timer tim = DSRuntime.runAt(new Runnable() {
 
             @Override
             public void run() {
@@ -76,6 +85,9 @@ public class DSRuntimeTest {
             
         }, System.currentTimeMillis() + 400);
         
+//        System.out.println("test3    now: " + System.nanoTime());
+//        System.out.println("test3nextrun: " + tim.nextRun());
+        
         synchronized(lock3) {
             lock3.wait(500); 
         }
@@ -85,7 +97,7 @@ public class DSRuntimeTest {
     @Test
     public void test4() throws Exception {
         successWithDelay = false;
-        DSRuntime.runDelayed(new Runnable() {
+        Timer tim = DSRuntime.runDelayed(new Runnable() {
 
             @Override
             public void run() {
@@ -97,10 +109,39 @@ public class DSRuntimeTest {
             
         }, 400);
         
+//        System.out.println("test4    now: " + System.nanoTime());
+//        System.out.println("test4nextrun: " + tim.nextRun());
+        
         synchronized(lock4) {
             lock4.wait(500); 
         }
         Assert.assertTrue(successWithDelay);
+    }
+    
+    @Test
+    public void test5() throws Exception {
+        runsImmed = 0;
+        Timer tim = DSRuntime.run(new Runnable() {
+
+            @Override
+            public void run() {
+                runsImmed+=1;
+                if (runsImmed >= 5) {
+                    synchronized (lock5) {
+                        lock5.notifyAll();
+                    }
+                }
+            }
+            
+        }, 0, 100);
+        
+//        System.out.println("test1    now: " + System.nanoTime());
+//        System.out.println("test1nextrun: " + tim.nextRun());
+        
+        synchronized(lock5) {
+            lock5.wait(600); 
+        }
+        Assert.assertTrue(runsImmed >= 5);
     }
 
 }
