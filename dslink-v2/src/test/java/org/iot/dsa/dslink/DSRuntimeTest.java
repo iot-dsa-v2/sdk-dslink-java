@@ -2,6 +2,7 @@ package org.iot.dsa.dslink;
 
 import org.iot.dsa.DSRuntime;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class DSRuntimeTest {
     
@@ -14,6 +15,7 @@ public class DSRuntimeTest {
     private static boolean successWithDelay = false;
     private static Object lock4 = new Object();
     
+    @Test
     public void test1() throws Exception {
         runs = 0;
         DSRuntime.run(new Runnable() {
@@ -36,6 +38,7 @@ public class DSRuntimeTest {
         Assert.assertTrue(runs >= 5);
     }
     
+    @Test
     public void test2() throws Exception {
         runsWithDelay = 0;
         DSRuntime.runAfterDelay(new Runnable() {
@@ -58,6 +61,7 @@ public class DSRuntimeTest {
         Assert.assertTrue(runsWithDelay >= 5);
     }
     
+    @Test
     public void test3() throws Exception {
         success = false;
         DSRuntime.runAt(new Runnable() {
@@ -78,6 +82,7 @@ public class DSRuntimeTest {
         Assert.assertTrue(success);
     }
     
+    @Test
     public void test4() throws Exception {
         successWithDelay = false;
         DSRuntime.runDelayed(new Runnable() {
