@@ -102,7 +102,7 @@ public class DSRuntime {
      */
     public static Timer run(Runnable arg, long start, long intervalMillis) {
         long delayMillis = start - System.currentTimeMillis();
-        return runAfterDelay(arg, delayMillis, intervalMillis);
+        return runAfterDelay(arg, delayMillis < 0 ? 0 : delayMillis, intervalMillis);
     }
     
     /**
@@ -115,8 +115,8 @@ public class DSRuntime {
      */
     public static Timer runAfterDelay(Runnable arg, long delayMillis, long intervalMillis) {
         long intervalNanos = intervalMillis * 1000000;
-        long delyNanos = delayMillis * 1000000;
-        long startNanos = System.nanoTime() + delyNanos;
+        long delayNanos = delayMillis * 1000000;
+        long startNanos = System.nanoTime() + delayNanos;
         Timer f = new Timer(arg, startNanos, intervalNanos);
         synchronized (DSRuntime.class) {
             if (timerHead == null) {
@@ -143,7 +143,7 @@ public class DSRuntime {
      */
     public static Timer runAt(Runnable arg, long at) {
         long delayMillis = at - System.currentTimeMillis();
-        return runDelayed(arg, delayMillis);
+        return runDelayed(arg,  delayMillis < 0 ? 0 : delayMillis);
     }
 
     /**
@@ -154,9 +154,8 @@ public class DSRuntime {
      * @return For inspecting and cancel execution.
      */
     public static Timer runDelayed(Runnable arg, long delayMillis) {
-//        return runAt(arg, System.currentTimeMillis() + delayMillis);
-        long delyNanos = delayMillis * 1000000;
-        long startNanos = System.nanoTime() + delyNanos;
+        long delayNanos = delayMillis * 1000000;
+        long startNanos = System.nanoTime() + delayNanos;
         Timer f = new Timer(arg, startNanos, -1);
         synchronized (DSRuntime.class) {
             if (timerHead == null) {
@@ -279,7 +278,7 @@ public class DSRuntime {
          *
          * @return null when finished.
          */
-        public long nextRun() {
+        public Long nextRun() {
             return nextRun;
         }
 
@@ -374,10 +373,10 @@ public class DSRuntime {
             while (alive) {
                 executeTimers();
                 synchronized (DSRuntime.class) {
-                    delta = nextCycle - System.nanoTime();
+                    delta = (nextCycle - System.nanoTime()) / 1000000;
                     if (delta > 0) {
                         try {
-                            DSRuntime.class.wait(delta / 1000000);
+                            DSRuntime.class.wait(delta);
                         } catch (Exception ignore) {
                         }
                     }
