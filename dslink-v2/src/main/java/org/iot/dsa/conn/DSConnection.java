@@ -38,8 +38,8 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    static final String STATE = "State";
-    static final String STATE_TIME = "State Time";
+    protected static final String STATE = "State";
+    protected static final String STATE_TIME = "State Time";
 
     /**
      * The topic to subscribe to for connected events.
@@ -55,8 +55,8 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo state = getInfo(STATE);
-    private DSInfo stateTime = getInfo(STATE_TIME);
+    protected DSInfo state = getInfo(STATE);
+    protected DSInfo stateTime = getInfo(STATE_TIME);
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -266,7 +266,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     protected abstract void doDisconnect();
 
     /**
-     * Override point, called by the run method.  Implementations should call verify the connection
+     * Override point, called by the run method.  Implementations should verify the connection
      * is still valid and call connOk or connDown, but those can be async and after this method
      * returns.  Throwing an exception will be treated as a connDown.  By default, this does
      * nothing.
@@ -302,7 +302,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     protected void onDisconnected() {
     }
 
-   ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
 

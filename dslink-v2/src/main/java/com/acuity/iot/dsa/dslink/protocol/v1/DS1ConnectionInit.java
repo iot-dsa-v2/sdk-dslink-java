@@ -61,6 +61,43 @@ public class DS1ConnectionInit extends DSNode {
     // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Opens an http/s connection and handles redirects that switch protocols.
+     */
+    InputStream connect(URL url, int redirects) throws Exception {
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        conn.setInstanceFollowRedirects(true);
+        conn.setUseCaches(false);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        //write the request map
+        writeConnectionRequest(conn);
+        //read response
+        int rc = conn.getResponseCode();
+        debug(debug() ? "Connection initialization response code " + rc : null);
+        if ((rc >= 300) && (rc <= 307) && (rc != 306) &&
+                (rc != HttpURLConnection.HTTP_NOT_MODIFIED)) {
+            conn.disconnect();
+            if (++redirects > 5) {
+                throw new IllegalStateException("Too many redirects");
+            }
+            String location = conn.getHeaderField("Location");
+            if (location == null) {
+                throw new IllegalStateException("Redirect missing location header");
+            }
+            url = new URL(url, location);
+            debug(debug() ? "Following redirect to " + url : null);
+            return connect(url, redirects);
+        }
+        if ((rc < 200) || (rc >= 300)) {
+            conn.disconnect();
+            throwConnectionException(conn, rc);
+        }
+        return conn.getInputStream();
+    }
+
     DSLink getLink() {
         return connection.getLink();
     }
@@ -81,24 +118,9 @@ public class DS1ConnectionInit extends DSNode {
     void initializeConnection() throws Exception {
         String uri = makeBrokerUrl();
         debug(debug() ? "Broker URI " + uri : null);
-        HttpURLConnection conn = (HttpURLConnection) new URL(uri).openConnection();
-        conn.setDoInput(true);
-        conn.setDoOutput(true);
-        conn.setInstanceFollowRedirects(true);
-        conn.setUseCaches(false);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json");
-        //write the request map
-        writeConnectionRequest(conn);
-        //read response
-        int rc = conn.getResponseCode();
-        debug(debug() ? "Connection initialization response code " + rc : null);
-        if ((rc < 200) || (rc >= 300)) {
-            throwConnectionException(conn, rc);
-        }
         JsonReader in = null;
         try {
-            in = new JsonReader(conn.getInputStream(), "UTF-8");
+            in = new JsonReader(connect(new URL(uri), 0), "UTF-8");
             response = in.getMap();
             put(BROKER_RES, response).setReadOnly(true);
             trace(trace() ? response : null);
