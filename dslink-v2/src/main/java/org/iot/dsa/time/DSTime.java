@@ -795,6 +795,14 @@ public class DSTime {
             throw new IllegalStateException();
         }
     }
+    
+    public static long nanoTimeToSystemTimeMillis(long nanoTime) {
+        long nowNanos = System.nanoTime();
+        long nowMillis = System.currentTimeMillis();
+        long nanosTillTime = nanoTime - nowNanos;
+        long millisTillTime = nanosTillTime / NANOS_IN_MS;
+        return nowMillis + millisTillTime;
+    }
 
 
 }
