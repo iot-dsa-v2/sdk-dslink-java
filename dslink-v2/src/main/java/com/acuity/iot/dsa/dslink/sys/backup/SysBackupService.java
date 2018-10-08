@@ -62,7 +62,7 @@ public class SysBackupService extends DSNode implements Runnable {
                 if (nextSave != null) {
                     long newNextRun =
                             (value.toElement().toLong() * 60000) + System.currentTimeMillis();
-                    long scheduledNextRun = nextSave.nextRunInSystemTimeMillis();
+                    long scheduledNextRun = nextSave.nextRun();
                     if (newNextRun < scheduledNextRun) {
                         nextSave.cancel();
                         nextSave = DSRuntime.runAt(this, newNextRun);
