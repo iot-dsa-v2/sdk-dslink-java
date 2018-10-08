@@ -24,10 +24,10 @@ public abstract class DSBaseConnection extends DSNode implements DSIStatus {
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    static final String LAST_OK = "Last Ok";
-    static final String LAST_FAIL = "Last Fail";
-    static final String STATUS = "Status";
-    static final String STATUS_TEXT = "Status Text";
+    protected static final String LAST_OK = "Last Ok";
+    protected static final String LAST_FAIL = "Last Fail";
+    protected static final String STATUS = "Status";
+    protected static final String STATUS_TEXT = "Status Text";
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
