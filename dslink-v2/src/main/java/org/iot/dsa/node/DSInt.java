@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSInt extends DSValue implements Comparable<DSINumber>, DSINumber {
+public class DSInt extends DSValue implements Comparable<DSINumber>, DSIMetadata, DSINumber {
 
     // Constants
     // ---------
@@ -66,6 +66,11 @@ public class DSInt extends DSValue implements Comparable<DSINumber>, DSINumber {
             }
         }
         return false;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        bucket.put(DSMetadata.EDITOR, DSMetadata.NUM_EDITOR_INT);
     }
 
     @Override

@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSLong extends DSElement implements Comparable<DSINumber>, DSINumber {
+public class DSLong extends DSElement implements Comparable<DSINumber>, DSIMetadata, DSINumber {
 
     // Constants
     // ---------
@@ -71,6 +71,11 @@ public class DSLong extends DSElement implements Comparable<DSINumber>, DSINumbe
     @Override
     public DSElementType getElementType() {
         return DSElementType.LONG;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        bucket.put(DSMetadata.EDITOR, DSMetadata.NUM_EDITOR_INT);
     }
 
     @Override

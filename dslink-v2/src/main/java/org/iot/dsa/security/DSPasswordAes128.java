@@ -7,7 +7,10 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import org.iot.dsa.io.DSBase64;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIStorable;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValue;
@@ -21,7 +24,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DSPasswordAes128 extends DSValue implements DSIPassword, DSIStorable {
+public class DSPasswordAes128 extends DSValue implements DSIMetadata, DSIPassword, DSIStorable {
 
     // Constants
     // ---------
@@ -97,6 +100,11 @@ public class DSPasswordAes128 extends DSValue implements DSIPassword, DSIStorabl
             return value.equals(obj.toString());
         }
         return false;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        bucket.put(DSMetadata.EDITOR, DSMetadata.STR_EDITOR_PASSWORD);
     }
 
     @Override
