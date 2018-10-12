@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
  *
  * @author Aaron Hansen
  */
-public class DSString extends DSElement {
+public class DSString extends DSElement implements Comparable<Object> {
 
     // Constants
     // ---------
@@ -38,6 +38,17 @@ public class DSString extends DSElement {
 
     // Public Methods
     // --------------
+
+    @Override
+    public int compareTo(Object arg) {
+        if ((arg instanceof DSIValue) && (((DSIValue) arg).isNull())) {
+            return (this == NULL) ? 0 : 1;
+        }
+        if (isNull()) {
+            return -1;
+        }
+        return value.compareTo(arg.toString());
+    }
 
     @Override
     public boolean equals(Object o) {

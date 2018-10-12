@@ -5,7 +5,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.iot.dsa.io.DSBase64;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIStorable;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValue;
@@ -18,7 +21,7 @@ import org.iot.dsa.node.DSValueType;
  *
  * @author Aaron Hansen
  */
-public class DSPasswordSha1 extends DSValue implements DSIPassword, DSIStorable {
+public class DSPasswordSha1 extends DSValue implements DSIMetadata, DSIPassword, DSIStorable {
 
     // Constants
     // ---------
@@ -66,6 +69,11 @@ public class DSPasswordSha1 extends DSValue implements DSIPassword, DSIStorable 
             return value.equals(obj.toString());
         }
         return false;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        bucket.put(DSMetadata.EDITOR, DSMetadata.STR_EDITOR_PASSWORD);
     }
 
     @Override
