@@ -13,23 +13,25 @@ public class DSMetadata {
 
     public static final String BOOLEAN_RANGE = "booleanRange";
     public static final String DESCRIPTION = "description";
-    public static final String DECIMAL_PLACES = "decimalPlaces";
     public static final String DEFAULT = "default";
     public static final String DISPLAY_NAME = "displayName";
     public static final String EDITOR = "editor";
     public static final String ENUM_RANGE = "enumRange";
     public static final String NAME = "name";
-    public static final String MAX_VALUE = "maxValue";
-    public static final String MIN_VALUE = "minValue";
+    public static final String MAX = "max";
+    public static final String MIN = "min";
     public static final String PLACEHOLDER = "placeholder";
+    public static final String PRECISION = "precision";
     public static final String TYPE = "type";
     public static final String UNIT = "unit";
 
-    //public static final String EDITOR_DATE = "date";
-    //public static final String EDITOR_DATE_RANGE = "daterange";
-    //public static final String EDITOR_FILE_INPUT = "fileinput";
-    //public static final String EDITOR_PASSWORD = "password";
-    //public static final String EDITOR_TEXT_AREA = "textarea";
+    public static final String NUM_EDITOR_INT = "int";
+    public static final String NUM_EDITOR_COLOR = "color";
+    public static final String STR_EDITOR_DATE = "date";
+    public static final String STR_EDITOR_DATE_RANGE = "daterange";
+    public static final String STR_EDITOR_FILE_INPUT = "fileinput";
+    public static final String STR_EDITOR_PASSWORD = "password";
+    public static final String STR_EDITOR_TEXT_AREA = "textarea";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -63,23 +65,12 @@ public class DSMetadata {
         return this;
     }
 
-    public DSMap getMap() {
-        return map;
-    }
-
     /**
      * The boolean range, or null.  If not null, the length will be 2, index 0 will be the false
      * text and index 1 the true text.
      */
     public DSList getBooleanRange() {
         return (DSList) map.get(BOOLEAN_RANGE);
-    }
-
-    /**
-     * The decimal precision or null.
-     */
-    public DSLong getDecimalPlaces() {
-        return (DSLong) map.get(DECIMAL_PLACES);
     }
 
     /**
@@ -117,11 +108,15 @@ public class DSMetadata {
         return map.getList(ENUM_RANGE);
     }
 
+    public DSMap getMap() {
+        return map;
+    }
+
     /**
      * The max value, or null.
      */
     public DSElement getMaxValue() {
-        return map.get(MAX_VALUE);
+        return map.get(MAX);
     }
 
     /**
@@ -152,7 +147,7 @@ public class DSMetadata {
      * The min value, or null.
      */
     public DSElement getMinValue() {
-        return map.get(MIN_VALUE);
+        return map.get(MIN);
     }
 
     /**
@@ -167,6 +162,13 @@ public class DSMetadata {
      */
     public String getPlaceHolder() {
         return map.getString(PLACEHOLDER);
+    }
+
+    /**
+     * The decimal precision or null.
+     */
+    public DSLong getPrecision() {
+        return (DSLong) map.get(PRECISION);
     }
 
     /**
@@ -233,13 +235,6 @@ public class DSMetadata {
         return this;
     }
 
-    public DSMetadata setDecimalPlaces(DSLong arg) {
-        if (arg != null) {
-            map.put(DECIMAL_PLACES, arg);
-        }
-        return this;
-    }
-
     public DSMetadata setDescription(String arg) {
         if (arg != null) {
             map.put(DESCRIPTION, arg);
@@ -298,7 +293,7 @@ public class DSMetadata {
      */
     public DSMetadata setMaxValue(DSElement arg) {
         if (arg != null) {
-            map.put(MIN_VALUE, arg);
+            map.put(MIN, arg);
         }
         return this;
     }
@@ -308,7 +303,7 @@ public class DSMetadata {
      */
     public DSMetadata setMinValue(DSElement arg) {
         if (arg != null) {
-            map.put(MIN_VALUE, arg);
+            map.put(MIN, arg);
         }
         return this;
     }
@@ -326,6 +321,13 @@ public class DSMetadata {
     public DSMetadata setPlaceHolder(String arg) {
         if (arg != null) {
             map.put(PLACEHOLDER, arg);
+        }
+        return this;
+    }
+
+    public DSMetadata setPrecision(DSLong arg) {
+        if (arg != null) {
+            map.put(PRECISION, arg);
         }
         return this;
     }

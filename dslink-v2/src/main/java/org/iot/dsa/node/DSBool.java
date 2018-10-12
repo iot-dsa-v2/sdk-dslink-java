@@ -6,7 +6,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSBool extends DSElement implements DSIBoolean {
+public class DSBool extends DSElement implements Comparable<DSIValue>, DSIBoolean {
 
     // Constants
     // ---------
@@ -29,6 +29,21 @@ public class DSBool extends DSElement implements DSIBoolean {
 
     // Public Methods
     // --------------
+
+    @Override
+    public int compareTo(DSIValue val) {
+        if ((val instanceof DSIValue) && (((DSIValue) val).isNull())) {
+            return (this == NULL) ? 0 : 1;
+        }
+        if (isNull()) {
+            return -1;
+        }
+        boolean b = val.toElement().toBoolean();
+        if (b == value) {
+            return 0;
+        }
+        return b ? -1 : 1;
+    }
 
     @Override
     public boolean equals(Object arg) {
