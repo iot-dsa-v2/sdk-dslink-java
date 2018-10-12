@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSInt extends DSValue implements DSINumber {
+public class DSInt extends DSValue implements Comparable<DSINumber>, DSINumber {
 
     // Constants
     // ---------
@@ -26,6 +26,24 @@ public class DSInt extends DSValue implements DSINumber {
 
     // Public Methods
     // --------------
+
+    @Override
+    public int compareTo(DSINumber arg) {
+        if ((arg instanceof DSIValue) && (((DSIValue) arg).isNull())) {
+            return (this == NULL) ? 0 : 1;
+        }
+        if (isNull()) {
+            return -1;
+        }
+        if (arg.isInt()) {
+            return value - arg.toInt();
+        } else if (arg.isDouble()) {
+            return (int) (value - arg.toDouble());
+        } else if (arg.isFloat()) {
+            return (int) (value - arg.toFloat());
+        }
+        return (int) (value - arg.toLong());
+    }
 
     /**
      * True if the argument is a DSINumber and the values are equal or they are both isNull.

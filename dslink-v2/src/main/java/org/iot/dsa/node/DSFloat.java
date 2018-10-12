@@ -6,7 +6,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public class DSFloat extends DSValue implements DSINumber {
+public class DSFloat extends DSValue implements Comparable<DSINumber>, DSINumber {
 
     // Constants
     // ---------
@@ -27,6 +27,24 @@ public class DSFloat extends DSValue implements DSINumber {
 
     // Public Methods
     // --------------
+
+    @Override
+    public int compareTo(DSINumber arg) {
+        if ((arg instanceof DSIValue) && (((DSIValue) arg).isNull())) {
+            return (this == NULL) ? 0 : 1;
+        }
+        if (isNull()) {
+            return -1;
+        }
+        if (arg.isFloat()) {
+            return (int) (value - arg.toFloat());
+        } else if (arg.isDouble()) {
+            return (int) (value - arg.toDouble());
+        } else if (arg.isInt()) {
+            return (int) (value - arg.toInt());
+        }
+        return (int) (value - arg.toLong());
+    }
 
     /**
      * True if the argument is a DSINumber and the values are equal or they are both isNull.
