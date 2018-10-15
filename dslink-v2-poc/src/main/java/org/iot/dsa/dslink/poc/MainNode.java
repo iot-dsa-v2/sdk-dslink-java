@@ -38,7 +38,10 @@ public class MainNode extends DSMainNode implements Runnable {
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
-        declareDefault("Incrementing Int", DSLong.valueOf(1)).setReadOnly(true);
+        declareDefault("Incrementing Int", DSLong.valueOf(1)).setReadOnly(true)
+                                                             .getMetadata()
+                                                             .setDescription("this is a description")
+                                                             .setUnit("ms");
         declareDefault("Writable Boolean", DSBool.valueOf(true)).setAdmin(true);
         declareDefault("Writable Enum",
                        DSFlexEnum.valueOf("On",
@@ -72,7 +75,7 @@ public class MainNode extends DSMainNode implements Runnable {
             @Override
             public void prepareParameter(DSInfo info, DSMap parameter) {
             }
-        });
+        }).getMetadata().setActionGroup("Tests", "List");
     }
 
     private class ListHandler implements OutboundListHandler {

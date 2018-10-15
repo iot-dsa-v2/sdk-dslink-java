@@ -11,6 +11,8 @@ public class DSMetadata {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
+    public static final String ACTION_GROUP = "actionGroup";
+    public static final String ACTION_GROUP_SUBTITLE = "actionGroupSubTitle";
     public static final String BOOLEAN_RANGE = "booleanRange";
     public static final String DESCRIPTION = "description";
     public static final String DEFAULT = "default";
@@ -18,9 +20,13 @@ public class DSMetadata {
     public static final String EDITOR = "editor";
     public static final String ENUM_RANGE = "enumRange";
     public static final String NAME = "name";
+    /** Max numeric value */
     public static final String MAX = "max";
+    /** Min numeric value */
     public static final String MIN = "min";
+    /** Text to show in empty textfields. */
     public static final String PLACEHOLDER = "placeholder";
+    /** Number of decimal places. */
     public static final String PRECISION = "precision";
     public static final String TYPE = "type";
     public static final String UNIT = "unit";
@@ -121,8 +127,8 @@ public class DSMetadata {
 
     /**
      * Fully acquires metadata about the info.  If the target of the info implements DSIMetadata,
-     * it is put in the bucket first.  Then if the parent node is allowed is given the the chance
-     * to add/edit the bucket.
+     * it is put in the bucket first.  Then if metadata has been added to the info, it is put
+     * into the bucket.  Finally, the parent node is given the chance to add/edit the bucket.
      *
      * @param info   Who to get metadata for.
      * @param bucket Where to put the metadata, can be null in which case a new map will be
@@ -137,6 +143,7 @@ public class DSMetadata {
         if (obj instanceof DSIMetadata) {
             ((DSIMetadata) obj).getMetadata(bucket);
         }
+        info.getMetadata(bucket);
         if (info.getParent() != null) {
             info.getParent().getMetadata(info, bucket);
         }
@@ -195,6 +202,20 @@ public class DSMetadata {
     public DSMetadata set(String key, DSElement value) {
         if (value != null) {
             map.put(key, value);
+        }
+        return this;
+    }
+
+    /**
+     * Use to group similar actions.  If you want to change the display name of the action in
+     * it's group, use the optional second parameter.
+     * @param groupName Name of a group of related actions.
+     * @param subTitle Changes the display name of the action in it's group.
+     */
+    public DSMetadata setActionGroup(String groupName, String subTitle) {
+        map.put(ACTION_GROUP, groupName);
+        if (subTitle != null) {
+            map.put(ACTION_GROUP_SUBTITLE, subTitle);
         }
         return this;
     }

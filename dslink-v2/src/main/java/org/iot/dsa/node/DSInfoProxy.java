@@ -33,45 +33,36 @@ class DSInfoProxy extends DSInfo {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    void copy(DSInfo info) {
-        if (info instanceof DSInfoProxy) {
-            defaultInfo = ((DSInfoProxy) info).defaultInfo;
-        } else {
-            defaultInfo = info;
-        }
-        super.copy(info);
-    }
-
-    @Override
     public DSInfo copy() {
         DSInfoProxy ret = new DSInfoProxy(defaultInfo);
         ret.flags = flags;
         ret.name = name;
         ret.defaultInfo = defaultInfo;
+        ret.metadata = metadata.copy();
         if (isDefaultOnCopy()) {
             DSIObject val = getDefaultObject();
             if (val != null) {
                 ret.setObject(val.copy());
             }
-        } else if (value != null) {
-            ret.setObject(value.copy());
+        } else if (object != null) {
+            ret.setObject(object.copy());
         }
         return ret;
     }
 
-    /**
-     * The instance value if it differs from the default, otherwise the default.
-     */
-    public DSIObject getObject() {
-        if (value == null) {
-            return null;
-        }
-        return value;
+    @Override
+    public boolean equalsDefault() {
+        return equalsDefaultState() && equalsDefaultMetadata() && equalsDefaultValue();
     }
 
     @Override
-    public boolean equalsDefault() {
-        return equalsDefaultState() && equalsDefaultValue();
+    public boolean equalsDefaultMetadata() {
+        if (metadata == null) {
+            return true;
+        } else if (defaultInfo.metadata == null) {
+            return metadata.isEmpty();
+        }
+        return metadata.equals(defaultInfo.metadata);
     }
 
     @Override
@@ -81,18 +72,52 @@ class DSInfoProxy extends DSInfo {
 
     @Override
     public boolean equalsDefaultType() {
-        if (value == null) {
-            return defaultInfo.value == null;
+        if (object == null) {
+            return defaultInfo.object == null;
         }
-        if (defaultInfo.value == null) {
+        if (defaultInfo.object == null) {
             return false;
         }
-        return DSUtil.equal(value.getClass(), defaultInfo.value.getClass());
+        return DSUtil.equal(object.getClass(), defaultInfo.object.getClass());
     }
 
     @Override
     public boolean equalsDefaultValue() {
-        return DSUtil.equal(value, defaultInfo.value);
+        return DSUtil.equal(object, defaultInfo.object);
+    }
+
+    @Override
+    public DSIObject getDefaultObject() {
+        return defaultInfo.getObject();
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        if (metadata != null) {
+            bucket.putAll(metadata);
+            return;
+        }
+        defaultInfo.getMetadata(bucket);
+    }
+
+    @Override
+    public DSMetadata getMetadata() {
+        if (metadata != null) {
+            return new DSMetadata(metadata);
+        }
+        metadata = new DSMap();
+        defaultInfo.getMetadata(metadata);
+        return new DSMetadata(metadata);
+    }
+
+    @Override
+    void copy(DSInfo info) {
+        if (info instanceof DSInfoProxy) {
+            defaultInfo = ((DSInfoProxy) info).defaultInfo;
+        } else {
+            defaultInfo = info;
+        }
+        super.copy(info);
     }
 
     @Override

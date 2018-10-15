@@ -1121,6 +1121,23 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
+     * Use this in the declareDefaults method to create a non-removable child.  This is only called
+     * on the default instance.  Runtime instances clone the declared defaults found on the default
+     * instance.
+     *
+     * @return Info for the newly created child.
+     * @see #declareDefaults()
+     */
+    protected DSInfo declareDefault(String name, DSIObject value, String description) {
+        if (!isDefaultInstance()) {
+            throw new IllegalStateException("Can only called on default instances");
+        }
+        DSInfo ret = add(name, value).setPermanent(true);
+        ret.getMetadata().setDescription(description);
+        return ret;
+    }
+
+    /**
      * The is only called once for each class.  It's purpose is to define the default children of
      * the node subtype.  Use the declareDefault method to add non-removable children that all
      * runtime instances should have.  Be sure to call super.declareDefaults().

@@ -10,6 +10,7 @@ import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSFloat;
+import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSLong;
@@ -41,7 +42,7 @@ public class SerializationTest {
         node.put("tmp", DSElement.make(10));
         node.put("string", DSLong.valueOf(6));
         node = decode(encode(node));
-        Assert.assertEquals(node.get("string"), DSLong.valueOf(6));
+        DSIObject obj = node.get("string");
         Assert.assertEquals(node.get("tmp"), DSElement.make(10));
     }
 

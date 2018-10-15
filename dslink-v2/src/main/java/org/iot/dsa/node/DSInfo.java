@@ -24,7 +24,7 @@ import org.iot.dsa.util.DSUtil;
  *
  * @author Aaron Hansen
  */
-public class DSInfo implements ApiObject {
+public class DSInfo implements ApiObject, GroupListener {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -42,11 +42,12 @@ public class DSInfo implements ApiObject {
     ///////////////////////////////////////////////////////////////////////////
 
     int flags = 0;
+    DSMap metadata;
     String name;
     DSInfo next;
+    DSIObject object;
     DSNode parent;
     DSInfo prev;
-    DSIObject value;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -55,29 +56,14 @@ public class DSInfo implements ApiObject {
     DSInfo() {
     }
 
-    protected DSInfo(String name, DSIObject value) {
+    protected DSInfo(String name, DSIObject object) {
         this.name = name;
-        setObject(value);
+        setObject(object);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * This is only called by DSNode.copy.  Therefore, this will already
-     * be populated with the default value.
-     */
-    void copy(DSInfo info) {
-        flags = info.flags;
-        name = info.name;
-        if (isDefaultOnCopy()) {
-            return;
-        }
-        if (info.value != null) {
-            setObject(info.value.copy());
-        }
-    }
 
     public DSInfo copy() {
         DSInfo ret = new DSInfo();
@@ -90,8 +76,8 @@ public class DSInfo implements ApiObject {
                 return ret;
             }
         }
-        if (value != null) {
-            ret.setObject(value.copy());
+        if (object != null) {
+            ret.setObject(object.copy());
         }
         return ret;
     }
@@ -120,6 +106,13 @@ public class DSInfo implements ApiObject {
     }
 
     /**
+     * True if this proxies a default and the metadata matches the default.
+     */
+    public boolean equalsDefaultMetadata() {
+        return (metadata == null);
+    }
+
+    /**
      * True if the state matches the default state.
      */
     public boolean equalsDefaultState() {
@@ -140,24 +133,9 @@ public class DSInfo implements ApiObject {
         return false;
     }
 
-    private boolean equivalent(DSInfo arg) {
-        if (getFlags() != arg.getFlags()) {
-            return false;
-        } else if (!DSUtil.equal(arg.getName(), getName())) {
-            return false;
-        }
-        return DSUtil.equal(getObject(), arg.getObject());
-    }
-
-    private void fireInfoChanged() {
-        if ((parent != null) && (parent.isRunning())) {
-            parent.fire(DSInfoTopic.Event.METADATA_CHANGED, this);
-        }
-    }
-
     @Override
     public DSAbstractAction getAction() {
-        return (DSAbstractAction) value;
+        return (DSAbstractAction) getObject();
     }
 
     @Override
@@ -166,51 +144,53 @@ public class DSInfo implements ApiObject {
     }
 
     /**
-     * If this represents a dynamic child, this just returns the current value.
+     * If this is a proxy , this will return the original default instance.
      */
     public DSIObject getDefaultObject() {
-        if (value == null) {
-            return null;
-        }
-        return value;
+        return getObject();
     }
 
     /**
      * A convenience that casts the object.  Will call DSIValue.toElement on values.
      */
     public DSElement getElement() {
-        if (value instanceof DSElement) {
-            return (DSElement) value;
+        DSIObject obj = getObject();
+        if (obj instanceof DSElement) {
+            return (DSElement) object;
         }
-        return ((DSIValue)value).toElement();
+        return ((DSIValue) obj).toElement();
     }
 
-    boolean getFlag(int position) {
-        return DSUtil.getBit(flags, position);
+    @Override
+    public void getMetadata(DSMap bucket) {
+        if (metadata != null) {
+            bucket.putAll(metadata);
+        }
     }
 
-    int getFlags() {
-        return flags;
+    /**
+     * Use to configure metadata only.  Creates a DSMetadata wrapper, and possibly the metadata map.
+     */
+    public DSMetadata getMetadata() {
+        if (metadata == null) {
+            metadata = new DSMap();
+        }
+        return new DSMetadata(metadata);
     }
 
     public String getName() {
         return name;
     }
 
-    @Override
-    public void getMetadata(DSMap bucket) {
-        DSMetadata.getMetadata(this, bucket);
-    }
-
     /**
      * A convenience that casts getObject().
      */
     public DSNode getNode() {
-        return (DSNode) value;
+        return (DSNode) getObject();
     }
 
     public DSIObject getObject() {
-        return value;
+        return object;
     }
 
     public DSNode getParent() {
@@ -232,7 +212,7 @@ public class DSInfo implements ApiObject {
      */
     @Override
     public DSIValue getValue() {
-        return (DSIValue) value;
+        return (DSIValue) object;
     }
 
     @Override
@@ -243,11 +223,6 @@ public class DSInfo implements ApiObject {
         return false;
     }
 
-    @Override
-    public int hashCode() {
-        return System.identityHashCode(this);
-    }
-
     /**
      * True if there is another info after this one.
      */
@@ -255,19 +230,24 @@ public class DSInfo implements ApiObject {
         return next != null;
     }
 
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
+
     /**
      * True if the value of the info is an instance of the give class.
      */
     public boolean is(Class clazz) {
-        if (value == null) {
+        if (object == null) {
             return false;
         }
-        return clazz.isAssignableFrom(value.getClass());
+        return clazz.isAssignableFrom(object.getClass());
     }
 
     @Override
     public boolean isAction() {
-        return value instanceof DSAbstractAction;
+        return object instanceof DSAbstractAction;
     }
 
     @Override
@@ -342,24 +322,17 @@ public class DSInfo implements ApiObject {
      * Whether or not the object is a DSNode.
      */
     public boolean isNode() {
-        return value instanceof DSNode;
+        return object instanceof DSNode;
     }
 
     /**
      * True if the object is null.
      */
     public boolean isNull() {
-        if (value == null) {
+        if (object == null) {
             return true;
         }
-        return value.isNull();
-    }
-
-    /**
-     * Quick test for a proxy info.
-     */
-    boolean isProxy() {
-        return false;
+        return object.isNull();
     }
 
     /**
@@ -378,7 +351,11 @@ public class DSInfo implements ApiObject {
 
     @Override
     public boolean isValue() {
-        return value instanceof DSIValue;
+        return object instanceof DSIValue;
+    }
+
+    public void modified(DSGroup map) {
+        //TODO info modified
     }
 
     /**
@@ -389,7 +366,7 @@ public class DSInfo implements ApiObject {
     }
 
     /**
-     * The next DSInfo in the parent whose is of the given type.
+     * The next DSInfo in the parent whose object is of the given type.
      */
     public DSInfo next(Class is) {
         DSInfo cur = next;
@@ -453,12 +430,6 @@ public class DSInfo implements ApiObject {
         return this;
     }
 
-    DSInfo setFlag(int position, boolean on) {
-        fireInfoChanged();
-        flags = DSUtil.setBit(flags, position, on);
-        return this;
-    }
-
     /**
      * False by default, set to true if you don't want the child to be sent to clients.
      */
@@ -467,23 +438,9 @@ public class DSInfo implements ApiObject {
         return this;
     }
 
-    DSInfo setName(String arg) {
-        this.name = arg;
-        return this;
-    }
-
-    DSInfo setObject(DSIObject arg) {
-        this.value = arg;
-        return this;
-    }
-
-    DSInfo setParent(DSNode arg) {
-        this.parent = arg;
-        return this;
-    }
-
-    DSInfo setPermanent(boolean arg) {
-        setFlag(PERMANENT, arg);
+    public DSInfo setMetadata(DSMap map) {
+        map.setParent(this);
+        metadata = map;
         return this;
     }
 
@@ -501,6 +458,77 @@ public class DSInfo implements ApiObject {
     public DSInfo setTransient(boolean trans) {
         setFlag(TRANSIENT, trans);
         return this;
+    }
+
+    /**
+     * This is only called by DSNode.copy.  Therefore, this will already
+     * be populated with the default value.
+     */
+    void copy(DSInfo info) {
+        flags = info.flags;
+        name = info.name;
+        if (isDefaultOnCopy()) {
+            return;
+        }
+        if (info.object != null) {
+            setObject(info.object.copy());
+        }
+    }
+
+    boolean getFlag(int position) {
+        return DSUtil.getBit(flags, position);
+    }
+
+    int getFlags() {
+        return flags;
+    }
+
+    /**
+     * Quick test for a proxy info.
+     */
+    boolean isProxy() {
+        return false;
+    }
+
+    DSInfo setFlag(int position, boolean on) {
+        fireInfoChanged();
+        flags = DSUtil.setBit(flags, position, on);
+        return this;
+    }
+
+    DSInfo setName(String arg) {
+        this.name = arg;
+        return this;
+    }
+
+    DSInfo setObject(DSIObject arg) {
+        this.object = arg;
+        return this;
+    }
+
+    DSInfo setParent(DSNode arg) {
+        this.parent = arg;
+        return this;
+    }
+
+    DSInfo setPermanent(boolean arg) {
+        setFlag(PERMANENT, arg);
+        return this;
+    }
+
+    private boolean equivalent(DSInfo arg) {
+        if (getFlags() != arg.getFlags()) {
+            return false;
+        } else if (!DSUtil.equal(arg.getName(), getName())) {
+            return false;
+        }
+        return DSUtil.equal(getObject(), arg.getObject());
+    }
+
+    private void fireInfoChanged() {
+        if ((parent != null) && (parent.isRunning())) {
+            parent.fire(DSInfoTopic.Event.METADATA_CHANGED, this);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
