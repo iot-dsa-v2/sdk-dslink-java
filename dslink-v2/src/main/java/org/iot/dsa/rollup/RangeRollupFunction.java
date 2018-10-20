@@ -50,7 +50,7 @@ final class RangeRollupFunction extends AbstractRollupFunction {
     }
 
     @Override
-    protected boolean onUpdate(DSElement arg, DSStatus status) {
+    protected boolean onUpdate(DSElement arg, int status) {
         double val = arg.toDouble();
         if (getCount() == 0) {
             min = val;

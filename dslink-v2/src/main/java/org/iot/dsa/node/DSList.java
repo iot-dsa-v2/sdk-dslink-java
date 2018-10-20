@@ -46,6 +46,7 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
             val.toGroup().setParent(this);
         }
         list.add(val);
+        modified();
         return this;
     }
 
@@ -458,6 +459,7 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
             val = DSNull.NULL;
         }
         list.set(idx, val);
+        modified();
         return this;
     }
 
@@ -506,6 +508,7 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
         if (ret.isGroup()) {
             ret.toGroup().setParent(null);
         }
+        modified();
         return ret;
     }
 

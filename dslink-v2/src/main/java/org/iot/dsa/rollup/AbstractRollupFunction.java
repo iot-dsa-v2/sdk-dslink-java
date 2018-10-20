@@ -42,8 +42,8 @@ abstract class AbstractRollupFunction implements RollupFunction {
     }
 
     @Override
-    public DSStatus getStatus() {
-        return DSStatus.valueOf(bits);
+    public int getStatus() {
+        return bits;
     }
 
     @Override
@@ -56,7 +56,7 @@ abstract class AbstractRollupFunction implements RollupFunction {
     }
 
     @Override
-    public boolean update(DSElement value, DSStatus status) {
+    public boolean update(DSElement value, int status) {
         if (!isValid(value, status)) {
             if (count == 0) {
                 resetOnValid = true;
@@ -71,9 +71,9 @@ abstract class AbstractRollupFunction implements RollupFunction {
             return false;
         }
         if (count == 0) {
-            bits = (status == null ? 0 : status.getBits());
+            bits = status;
         } else {
-            bits = bits | (status == null ? 0 : status.getBits());
+            bits = bits | status;
         }
         count++;
         return true;
@@ -86,14 +86,14 @@ abstract class AbstractRollupFunction implements RollupFunction {
     /**
      * Returns true if the value is non-null and the status is good.
      */
-    protected boolean isValid(DSElement value, DSStatus status) {
+    protected boolean isValid(DSElement value, int status) {
         if (value == null) {
             return false;
         }
         if (value.isNull()) {
             return false;
         }
-        return status.isGood();
+        return DSStatus.isGood(status);
     }
 
     /**
@@ -105,6 +105,6 @@ abstract class AbstractRollupFunction implements RollupFunction {
      * Return true if the call is represented in the results. Returning
      * true will update the count.
      */
-    protected abstract boolean onUpdate(DSElement value, DSStatus status);
+    protected abstract boolean onUpdate(DSElement value, int status);
 
 }

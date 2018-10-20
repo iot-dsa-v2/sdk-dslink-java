@@ -29,7 +29,7 @@ public class DSTopic implements DSIObject {
     }
 
     /**
-     * Only test instance equality.
+     * Only tests instance equality.
      */
     @Override
     public boolean isEqual(Object obj) {

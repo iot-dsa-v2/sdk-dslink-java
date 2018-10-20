@@ -45,7 +45,7 @@ final class LastRollupFunction extends AbstractRollupFunction {
     }
 
     @Override
-    protected boolean onUpdate(DSElement arg, DSStatus status) {
+    protected boolean onUpdate(DSElement arg, int status) {
         val = arg;
         return true;
     }

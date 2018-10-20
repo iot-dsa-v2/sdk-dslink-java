@@ -9,7 +9,7 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Aaron Hansen
  */
-public class TrendWrapper implements DSITrend {
+public class DSTrendWrapper implements DSITrend {
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -21,7 +21,7 @@ public class TrendWrapper implements DSITrend {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public TrendWrapper(DSITrend inner) {
+    public DSTrendWrapper(DSITrend inner) {
         this.inner = inner;
     }
 
@@ -34,13 +34,28 @@ public class TrendWrapper implements DSITrend {
         return inner.getStatus();
     }
 
+    @Override
+    public int getStatusColumn() {
+        return inner.getStatusColumn();
+    }
+
     public long getTimestamp() {
         return inner.getTimestamp();
     }
 
     @Override
+    public int getTimestampColumn() {
+        return inner.getTimestampColumn();
+    }
+
+    @Override
     public DSElement getValue() {
         return inner.getValue();
+    }
+
+    @Override
+    public int getValueColumn() {
+        return inner.getValueColumn();
     }
 
     @Override

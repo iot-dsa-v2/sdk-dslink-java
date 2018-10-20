@@ -43,6 +43,7 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
         first = null;
         last = null;
         map.clear();
+        modified();
         return this;
     }
 
@@ -366,6 +367,7 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
                 last = e;
             }
         }
+        modified();
         return this;
     }
 
@@ -500,8 +502,8 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
         if (ret.isGroup()) {
             ret.toGroup().setParent(null);
         }
+        modified();
         return ret;
-
     }
 
     @Override

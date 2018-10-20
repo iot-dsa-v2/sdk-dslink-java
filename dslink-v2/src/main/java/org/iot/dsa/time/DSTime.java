@@ -122,6 +122,33 @@ public class DSTime {
      * @param timestamp The calendar to modify.
      * @return The timestamp parameter.
      */
+    public static Calendar addMillis(int count, Calendar timestamp) {
+        timestamp.add(Calendar.MILLISECOND, count);
+        return timestamp;
+    }
+
+    /**
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
+     *
+     * @param count     The quantity to change, can be negative.
+     * @param timestamp The time to modify.
+     * @return The adjusted time.
+     */
+    public static long addMillis(int count, long timestamp) {
+        Calendar cal = getCalendar(timestamp);
+        addMillis(count, cal);
+        timestamp = cal.getTimeInMillis();
+        recycle(cal);
+        return timestamp;
+    }
+
+    /**
+     * Adds or subtracts the corresponding time field, does not perform any alignment.
+     *
+     * @param count     The quantity to change, can be negative.
+     * @param timestamp The calendar to modify.
+     * @return The timestamp parameter.
+     */
     public static Calendar addMinutes(int count, Calendar timestamp) {
         timestamp.add(Calendar.MINUTE, count);
         return timestamp;
@@ -803,6 +830,5 @@ public class DSTime {
         long millisTillTime = nanosTillTime / NANOS_IN_MS;
         return nowMillis + millisTillTime;
     }
-
 
 }

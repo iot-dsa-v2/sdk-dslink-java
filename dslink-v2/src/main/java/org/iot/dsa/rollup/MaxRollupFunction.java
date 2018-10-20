@@ -48,7 +48,7 @@ final class MaxRollupFunction extends AbstractRollupFunction {
     }
 
     @Override
-    protected boolean onUpdate(DSElement arg, DSStatus status) {
+    protected boolean onUpdate(DSElement arg, int status) {
         double tmp = arg.toDouble();
         if (getCount() == 0) {
             val = tmp;

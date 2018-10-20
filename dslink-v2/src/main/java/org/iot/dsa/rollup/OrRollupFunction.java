@@ -47,7 +47,7 @@ final class OrRollupFunction extends AbstractRollupFunction {
     }
 
     @Override
-    protected boolean onUpdate(DSElement arg, DSStatus status) {
+    protected boolean onUpdate(DSElement arg, int status) {
         if (getCount() == 0) {
             val = arg.toBoolean();
         } else {

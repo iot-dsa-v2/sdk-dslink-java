@@ -1,20 +1,21 @@
 package org.iot.dsa.io;
 
+import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import org.iot.dsa.io.DSIReader.Token;
+import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIStorable;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.util.DSException;
 
 /**
  * Decodes a node (tree) that was encoded with NodeEncoder.
- * <p>
- * <p>
  * <p>
  * This is for storing the configuration database, not for DSA interop.
  *
@@ -48,6 +49,17 @@ public class NodeDecoder {
     public static DSNode decode(DSIReader in) {
         NodeDecoder decoder = new NodeDecoder(in);
         return decoder.read();
+    }
+
+    /**
+     * Reads a node tree from the give byte array.
+     */
+    public static DSNode decode(byte[] bytes) {
+        ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+        JsonReader reader = new JsonReader(bin, "UTF-8");
+        DSNode ret = decode(reader);
+        reader.close();
+        return ret;
     }
 
     /**
@@ -105,6 +117,7 @@ public class NodeDecoder {
         DSElement state = null;
         String type = null;
         DSInfo info = null;
+        DSMap meta = null;
         DSIObject obj = null;
         while (in.next() != Token.END_MAP) {
             validateEqual(in.last(), Token.STRING);
@@ -116,12 +129,12 @@ public class NodeDecoder {
                 validateEqual(in.next(), Token.STRING);
                 name = in.getString();
                 info = parent.getInfo(name);
-                if (info != null) {
-                    ;//TODO parent.reorderToLast(info);
-                }
             } else if ("i".equals(key)) {
                 in.next();
                 state = in.getElement();
+            } else if ("m".equals(key)) {
+                validateEqual(in.next(), Token.BEGIN_MAP);
+                meta = in.getMap();
             } else if ("v".equals(key)) {
                 if (name == null) {
                     throw new IllegalStateException("Missing name");
@@ -133,14 +146,8 @@ public class NodeDecoder {
                     } else {
                         parent.put(info, obj);
                     }
-                }
-                if (info != null) {
-                    if (obj == null) {
-                        obj = info.getObject();
-                    }
-                    if (state != null) {
-                        info.decodeState(state);
-                    }
+                } else if (info != null) {
+                    obj = info.getObject();
                 }
                 if (obj == null) { //dynamic, or declareDefaults was modified
                     in.next();
@@ -170,19 +177,22 @@ public class NodeDecoder {
                 } else {
                     parent.put(info, obj);
                 }
+            } else if (info != null) {
+                obj = info.getObject();
             }
-            if (info != null)  {
-                if (obj == null) {
-                    obj = info.getObject();
-                }
-                if (state != null) {
-                    info.decodeState(state);
-                }
+        }
+        if (info != null) {
+            if (state != null) {
+                info.decodeState(state);
+            }
+            if (meta != null) {
+                info.setMetadata(meta);
             }
         }
         if (obj == null) {
             throw new IllegalStateException("Could not decode " + parent.getPath() + "/" + name);
         }
+        //TODO parent.reorderToLast(info);
     }
 
     private void readChildren(DSNode parent) {

@@ -13,8 +13,14 @@ public interface DSITrend extends DSIRowCursor {
 
     public int getStatus();
 
+    public int getStatusColumn();
+
     public long getTimestamp();
 
+    public int getTimestampColumn();
+
     public DSElement getValue();
+
+    public int getValueColumn();
 
 }
