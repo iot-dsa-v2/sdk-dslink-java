@@ -53,7 +53,7 @@ final class ModeRollupFunction extends AbstractRollupFunction {
     }
 
     @Override
-    protected boolean onUpdate(DSElement arg, DSStatus status) {
+    protected boolean onUpdate(DSElement arg, int status) {
         if (getCount() == 0) {
             curCnt = 1;
             curVal = arg;

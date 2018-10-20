@@ -10,31 +10,18 @@ import org.iot.dsa.node.DSMap;
  * between. To get an entire graph, call getElement(), getMap() or getList(). Otherwise, use the
  * next() method to iterate the elements of the input.
  * <p>
- * <p>
- * <p>
  * When next() returns:
- *
  * <ul>
- *
  * <li>ROOT - The initial state, not in a list or map, call next() or getElement().
- *
  * <li>BEGIN_LIST - Call getList() to decodeKeys the entire list, or call next again to get the
  * first element of the list (or END_LIST if empty).
- *
  * <li>BEGIN_MAP - Call getMap() to decodeKeys the entire map, or call next again to get the first
  * key of the map (or END_MAP if empty).
- *
  * <li>END_INPUT - Parsing is finished, close the reader.
- *
  * <li>END_LIST - The current list is complete, call next again.
- *
  * <li>END_MAP - The current map is complete, call next again.
- *
  * <li>BOOLEAN,DOUBLE,LONG,NULL,STRING - Call getElement() or the corresponding getter.
- *
  * </ul>
- * <p>
- * <p>
  * <p>
  * Be aware that if the underlying encoding (such as JSON) doesn't provide a mechanism to
  * differentiate between data types (such as numbers), values might not get as the same type they

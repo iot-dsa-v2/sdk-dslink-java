@@ -226,13 +226,68 @@ public class DSLogHandler extends Handler {
     /**
      * The DSA name mapping.
      */
-    static String toString(Level level) {
-        return DSLevel.valueOf(level).toString();
+    static void toString(Level level, StringBuilder buf) {
+        String s = DSLevel.valueOf(level).toString();
+        buf.append(s);
+        int pad = 6 - s.length();
+        for (int i = pad; --i >= 0; ) {
+            buf.append(' ');
+        }
     }
 
     /**
      * Formats and writes the logging record the underlying stream.
      */
+     static void write(Handler handler, LogRecord record, StringBuilder builder) {
+         if (builder == null) {
+             builder = new StringBuilder();
+         }
+         builder.append('[');
+         // timestamp
+         Calendar calendar = DSTime.getCalendar(record.getMillis());
+         DSTime.encodeForLogs(calendar, builder);
+         builder.append(']');
+         builder.append(' ');
+         // severity
+         toString(record.getLevel(), builder);
+         //builder.append(toString(record.getLevel()));
+         // log name
+         builder.append(" [");
+         builder.append(record.getLoggerName()).append("] ");
+         // class
+         if (record.getSourceClassName() != null) {
+             builder.append(record.getSourceClassName());
+             builder.append(" - ");
+         }
+         // method
+         if (record.getSourceMethodName() != null) {
+             builder.append(record.getSourceMethodName());
+             builder.append(" - ");
+         }
+         // message
+         String msg = record.getMessage();
+         if ((msg != null) && (msg.length() > 0)) {
+             Object[] params = record.getParameters();
+             if (params != null) {
+                 msg = String.format(msg, params);
+             }
+             builder.append(msg);
+         }
+         // exception
+         Throwable thrown = record.getThrown();
+         if (thrown != null) {
+             builder.append(lineSeparator);
+             StringWriter sw = new StringWriter();
+             PrintWriter pw = new PrintWriter(sw);
+             thrown.printStackTrace(pw);
+             pw.close();
+             builder.append(sw.toString());
+         }
+         DSTime.recycle(calendar);
+     }
+
+    /* Old V2 Format, save for now...
+     * Formats and writes the logging record the underlying stream.
     static void write(Handler handler, LogRecord record, StringBuilder buf) {
         Formatter formatter = handler.getFormatter();
         if (formatter != null) {
@@ -285,6 +340,7 @@ public class DSLogHandler extends Handler {
             buf.append(sw.toString());
         }
     }
+    */
 
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes

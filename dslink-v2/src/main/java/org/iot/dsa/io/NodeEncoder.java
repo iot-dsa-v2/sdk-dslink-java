@@ -16,8 +16,6 @@ import org.iot.dsa.node.DSNode;
  * Encodes a node tree using a compact JSON schema.  Defaults are omitted and class names are
  * tokenized to minimize size. Use NodeDecoder for deserialization.
  * <p>
- * <p>
- * <p>
  * This is for saving a configuration database, not for DSA interop.
  *
  * @author Aaron Hansen

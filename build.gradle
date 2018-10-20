@@ -38,6 +38,14 @@ subprojects {
 
 }
 
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+}
+
 wrapper {
     gradleVersion = '4.10.2'
 }

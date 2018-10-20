@@ -17,8 +17,6 @@ import org.iot.dsa.util.DSException;
 /**
  * Decodes a node (tree) that was encoded with NodeEncoder.
  * <p>
- * <p>
- * <p>
  * This is for storing the configuration database, not for DSA interop.
  *
  * @author Aaron Hansen

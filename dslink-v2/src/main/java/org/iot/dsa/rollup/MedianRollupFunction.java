@@ -54,7 +54,8 @@ final class MedianRollupFunction extends AbstractRollupFunction {
     protected void onReset() {
     }
 
-    protected boolean onUpdate(DSElement arg, DSStatus status) {
+    @Override
+    protected boolean onUpdate(DSElement arg, int status) {
         int len = getCount();
         if (getCount() == 0) {
             vals[0] = arg.toDouble();

@@ -24,18 +24,18 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("and");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSBool.TRUE, DSStatus.ok);
+        func.update(DSBool.TRUE, DSStatus.OK);
         Assert.assertTrue(func.getValue().toBoolean());
-        func.update(DSBool.TRUE, DSStatus.ok);
+        func.update(DSBool.TRUE, DSStatus.OK);
         Assert.assertTrue(func.getValue().toBoolean());
         func.reset();
-        func.update(DSBool.TRUE, DSStatus.ok);
-        func.update(DSBool.FALSE, DSStatus.ok);
+        func.update(DSBool.TRUE, DSStatus.OK);
+        func.update(DSBool.FALSE, DSStatus.OK);
         Assert.assertFalse(func.getValue().toBoolean());
         func.reset();
-        func.update(DSBool.FALSE, DSStatus.ok);
+        func.update(DSBool.FALSE, DSStatus.OK);
         Assert.assertFalse(func.getValue().toBoolean());
-        func.update(DSBool.FALSE, DSStatus.ok);
+        func.update(DSBool.FALSE, DSStatus.OK);
         Assert.assertFalse(func.getValue().toBoolean());
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
@@ -50,11 +50,11 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("avg");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSDouble.valueOf(2), DSStatus.ok);
+        func.update(DSDouble.valueOf(2), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 2d);
-        func.update(DSDouble.valueOf(4), DSStatus.ok);
+        func.update(DSDouble.valueOf(4), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 3d);
-        func.update(DSDouble.valueOf(4), DSStatus.fault);
+        func.update(DSDouble.valueOf(4), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 3d);
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
@@ -70,16 +70,16 @@ public class RollupTest {
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
         Assert.assertTrue(func.getValue().toDouble() == 0);
-        func.update(DSDouble.valueOf(2), DSStatus.fault);
+        func.update(DSDouble.valueOf(2), DSStatus.FAULT);
         Assert.assertTrue(func.getCount() == 1);
         Assert.assertTrue(func.getValue().toDouble() == 1);
-        func.update(DSDouble.valueOf(2), DSStatus.fault);
+        func.update(DSDouble.valueOf(2), DSStatus.FAULT);
         Assert.assertTrue(func.getCount() == 2);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(2), DSStatus.ok);
+        func.update(DSDouble.valueOf(2), DSStatus.OK);
         Assert.assertTrue(func.getCount() == 1);
         Assert.assertTrue(func.getValue().toDouble() == 1);
-        func.update(DSDouble.valueOf(2), DSStatus.fault);
+        func.update(DSDouble.valueOf(2), DSStatus.FAULT);
         Assert.assertTrue(func.getCount() == 1);
         Assert.assertTrue(func.getValue().toDouble() == 1);
         func.reset();
@@ -96,11 +96,11 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("first");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSDouble.valueOf(2), DSStatus.fault);
+        func.update(DSDouble.valueOf(2), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(3), DSStatus.fault);
+        func.update(DSDouble.valueOf(3), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(4), DSStatus.ok);
+        func.update(DSDouble.valueOf(4), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 4);
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
@@ -115,13 +115,13 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("last");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSDouble.valueOf(2), DSStatus.fault);
+        func.update(DSDouble.valueOf(2), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(3), DSStatus.fault);
+        func.update(DSDouble.valueOf(3), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 3);
-        func.update(DSDouble.valueOf(4), DSStatus.ok);
+        func.update(DSDouble.valueOf(4), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 4);
-        func.update(DSDouble.valueOf(3), DSStatus.fault);
+        func.update(DSDouble.valueOf(3), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 4);
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
@@ -136,13 +136,13 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("Max");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSDouble.valueOf(2), DSStatus.fault);
+        func.update(DSDouble.valueOf(2), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(3), DSStatus.fault);
+        func.update(DSDouble.valueOf(3), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 3);
-        func.update(DSDouble.valueOf(1), DSStatus.ok);
+        func.update(DSDouble.valueOf(1), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 1);
-        func.update(DSDouble.valueOf(3), DSStatus.fault);
+        func.update(DSDouble.valueOf(3), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 1);
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
@@ -157,24 +157,24 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("Median");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSDouble.valueOf(2), DSStatus.fault);
+        func.update(DSDouble.valueOf(2), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(3), DSStatus.fault);
+        func.update(DSDouble.valueOf(3), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 3);
-        func.update(DSDouble.valueOf(2), DSStatus.fault);
+        func.update(DSDouble.valueOf(2), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(1), DSStatus.ok);
+        func.update(DSDouble.valueOf(1), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 1);
-        func.update(DSDouble.valueOf(5), DSStatus.ok);
+        func.update(DSDouble.valueOf(5), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 5);
-        func.update(DSDouble.valueOf(5), DSStatus.ok);
+        func.update(DSDouble.valueOf(5), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 5);
-        func.update(DSDouble.valueOf(10), DSStatus.ok);
+        func.update(DSDouble.valueOf(10), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 5);
-        func.update(DSDouble.valueOf(10), DSStatus.ok);
+        func.update(DSDouble.valueOf(10), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 5);
         for (int i = 10; --i >= 0; ) {
-            func.update(DSDouble.valueOf(7), DSStatus.fault);
+            func.update(DSDouble.valueOf(7), DSStatus.FAULT);
         }
         Assert.assertTrue(func.getValue().toDouble() == 5);
         func.reset();
@@ -190,13 +190,13 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("Min");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSDouble.valueOf(2), DSStatus.fault);
+        func.update(DSDouble.valueOf(2), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(3), DSStatus.fault);
+        func.update(DSDouble.valueOf(3), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(2), DSStatus.ok);
+        func.update(DSDouble.valueOf(2), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(1), DSStatus.fault);
+        func.update(DSDouble.valueOf(1), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
@@ -211,19 +211,19 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("Mode");
         RollupFunction func = roll.getFunction();
         for (int i = 9; --i >= 0; ) {
-            func.update(DSDouble.valueOf(9), DSStatus.fault);
+            func.update(DSDouble.valueOf(9), DSStatus.FAULT);
         }
         Assert.assertTrue(func.getValue().toDouble() == 9);
         for (int i = 10; --i >= 0; ) {
-            func.update(DSDouble.valueOf(10), DSStatus.fault);
+            func.update(DSDouble.valueOf(10), DSStatus.FAULT);
         }
         Assert.assertTrue(func.getValue().toDouble() == 10);
         for (int i = 3; --i >= 0; ) {
-            func.update(DSDouble.valueOf(3), DSStatus.ok);
+            func.update(DSDouble.valueOf(3), DSStatus.OK);
         }
         Assert.assertTrue(func.getValue().toDouble() == 3);
         for (int i = 10; --i >= 0; ) {
-            func.update(DSDouble.valueOf(10), DSStatus.fault);
+            func.update(DSDouble.valueOf(10), DSStatus.FAULT);
         }
         Assert.assertTrue(func.getValue().toDouble() == 3);
         func.reset();
@@ -239,18 +239,18 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("Or");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSBool.FALSE, DSStatus.ok);
+        func.update(DSBool.FALSE, DSStatus.OK);
         Assert.assertFalse(func.getValue().toBoolean());
-        func.update(DSBool.TRUE, DSStatus.ok);
+        func.update(DSBool.TRUE, DSStatus.OK);
         Assert.assertTrue(func.getValue().toBoolean());
         func.reset();
-        func.update(DSBool.FALSE, DSStatus.ok);
-        func.update(DSBool.FALSE, DSStatus.ok);
+        func.update(DSBool.FALSE, DSStatus.OK);
+        func.update(DSBool.FALSE, DSStatus.OK);
         Assert.assertFalse(func.getValue().toBoolean());
         func.reset();
-        func.update(DSBool.FALSE, DSStatus.ok);
+        func.update(DSBool.FALSE, DSStatus.OK);
         Assert.assertFalse(func.getValue().toBoolean());
-        func.update(DSBool.TRUE, DSStatus.fault);
+        func.update(DSBool.TRUE, DSStatus.FAULT);
         Assert.assertFalse(func.getValue().toBoolean());
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
@@ -265,17 +265,17 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("Range");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSDouble.valueOf(9), DSStatus.fault);
+        func.update(DSDouble.valueOf(9), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 0);
-        func.update(DSDouble.valueOf(11), DSStatus.fault);
+        func.update(DSDouble.valueOf(11), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(15), DSStatus.fault);
+        func.update(DSDouble.valueOf(15), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 6);
-        func.update(DSDouble.valueOf(-1), DSStatus.ok);
+        func.update(DSDouble.valueOf(-1), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 0);
-        func.update(DSDouble.valueOf(1), DSStatus.ok);
+        func.update(DSDouble.valueOf(1), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 2);
-        func.update(DSDouble.valueOf(10), DSStatus.fault);
+        func.update(DSDouble.valueOf(10), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 2);
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
@@ -290,17 +290,17 @@ public class RollupTest {
         DSRollup roll = DSRollup.valueFor("sum");
         RollupFunction func = roll.getFunction();
         Assert.assertTrue(func.getCount() == 0);
-        func.update(DSDouble.valueOf(9), DSStatus.fault);
+        func.update(DSDouble.valueOf(9), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 9);
-        func.update(DSDouble.valueOf(11), DSStatus.fault);
+        func.update(DSDouble.valueOf(11), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 20);
-        func.update(DSDouble.valueOf(15), DSStatus.fault);
+        func.update(DSDouble.valueOf(15), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 35);
-        func.update(DSDouble.valueOf(-1), DSStatus.ok);
+        func.update(DSDouble.valueOf(-1), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == -1);
-        func.update(DSDouble.valueOf(1), DSStatus.ok);
+        func.update(DSDouble.valueOf(1), DSStatus.OK);
         Assert.assertTrue(func.getValue().toDouble() == 0);
-        func.update(DSDouble.valueOf(10), DSStatus.fault);
+        func.update(DSDouble.valueOf(10), DSStatus.FAULT);
         Assert.assertTrue(func.getValue().toDouble() == 0);
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
@@ -310,26 +310,26 @@ public class RollupTest {
     public void testStatus() throws Exception {
         DSRollup roll = DSRollup.valueFor("sum");
         RollupFunction func = roll.getFunction();
-        func.update(DSDouble.valueOf(0), DSStatus.fault);
-        func.update(DSDouble.valueOf(0), DSStatus.down);
+        func.update(DSDouble.valueOf(0), DSStatus.FAULT);
+        func.update(DSDouble.valueOf(0), DSStatus.DOWN);
         Assert.assertTrue(func.getCount() == 2);
-        Assert.assertTrue(func.getStatus().isAnyDown());
-        Assert.assertTrue(func.getStatus().isAnyFault());
+        Assert.assertTrue(DSStatus.isAnyDown(func.getStatus()));
+        Assert.assertTrue(DSStatus.isAnyFault(func.getStatus()));
     }
 
     @Test
     public void testValid() throws Exception {
         DSRollup roll = DSRollup.valueFor("and");
         RollupFunction func = roll.getFunction();
-        func.update(DSBool.TRUE, DSStatus.fault);
+        func.update(DSBool.TRUE, DSStatus.FAULT);
         Assert.assertTrue(func.getCount() == 1);
-        func.update(DSBool.FALSE, DSStatus.fault);
+        func.update(DSBool.FALSE, DSStatus.FAULT);
         Assert.assertTrue(func.getCount() == 2);
-        func.update(DSBool.TRUE, DSStatus.ok);
+        func.update(DSBool.TRUE, DSStatus.OK);
         Assert.assertTrue(func.getCount() == 1);
-        func.update(DSBool.TRUE, DSStatus.ok);
+        func.update(DSBool.TRUE, DSStatus.OK);
         Assert.assertTrue(func.getCount() == 2);
-        func.update(DSBool.FALSE, DSStatus.fault);
+        func.update(DSBool.FALSE, DSStatus.FAULT);
         Assert.assertTrue(func.getCount() == 2);
         Assert.assertTrue(func.getValue().toBoolean());
     }
