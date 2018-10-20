@@ -1,6 +1,5 @@
 package org.iot.dsa.logging;
 
-import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.admin;
 import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.debug;
 import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.error;
 import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.info;
@@ -79,23 +78,6 @@ public class DSLogger {
     /////////////////////////////////////////////////////////////////
     // Public Methods
     /////////////////////////////////////////////////////////////////
-
-    /**
-     * True if the level is loggable.
-     */
-    public boolean admin() {
-        return getLogger().isLoggable(admin);
-    }
-
-    public void admin(Object msg) {
-        if (msg != null) {
-            getLogger().log(admin, string(msg));
-        }
-    }
-
-    public void admin(Object msg, Throwable x) {
-        getLogger().log(admin, string(msg), x);
-    }
 
     /**
      * True if the level is loggable.
@@ -179,6 +161,13 @@ public class DSLogger {
     /**
      * Log a trace or verbose event.
      */
+    public void trace(Object msg, Throwable x) {
+        getLogger().log(trace, string(msg), x);
+    }
+
+    /**
+     * Log a trace or verbose event.
+     */
     public void warn(Object msg, Throwable x) {
         getLogger().log(warn, string(msg), x);
     }
@@ -197,13 +186,6 @@ public class DSLogger {
         if (msg != null) {
             getLogger().log(warn, string(msg));
         }
-    }
-
-    /**
-     * Log a trace or verbose event.
-     */
-    public void trace(Object msg, Throwable x) {
-        getLogger().log(trace, string(msg), x);
     }
 
     /////////////////////////////////////////////////////////////////

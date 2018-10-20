@@ -1,14 +1,11 @@
 package org.iot.dsa.dslink;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.node.DSFlexEnum;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSNode;
@@ -29,7 +26,7 @@ public class MetadataTest {
     // -------
 
     @Test
-    public void theTest() throws Exception {
+    public void testNode() throws Exception {
         DSNode node = new DSNode();
         DSInfo info = node.put("enum", DSFlexEnum.valueOf("abc", DSList.valueOf("abc", "def")));
         DSMap meta = DSMetadata.getMetadata(info, null);
@@ -47,26 +44,27 @@ public class MetadataTest {
         Assert.assertTrue(metadata.getEnumRange().get(2).equals("ghi"));
     }
 
-    private DSNode decode(byte[] bytes) throws Exception {
-        ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-        JsonReader reader = new JsonReader(bin, "UTF-8");
-        DSNode ret = NodeDecoder.decode(reader);
-        reader.close();
-        return ret;
-    }
-
-    private byte[] encode(DSNode node) throws Exception {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        JsonWriter writer = new JsonWriter(bos);
-        NodeEncoder.encode(writer, node);
-        writer.close();
-        return bos.toByteArray();
+    @Test
+    public void testProxy() {
+        MyNode node = new MyNode();
+        Assert.assertTrue(node.getInfo("foobar").getMetadata().getUnit().equals("ms"));
+        node = (MyNode) NodeDecoder.decode(NodeEncoder.encode(node));
+        Assert.assertTrue(node.getInfo("foobar").getMetadata().getUnit().equals("ms"));
+        node.getInfo("foobar").getMetadata().setUnit("sec");
+        Assert.assertTrue(node.getInfo("foobar").getMetadata().getUnit().equals("sec"));
+        node = (MyNode) NodeDecoder.decode(NodeEncoder.encode(node));
+        Assert.assertTrue(node.getInfo("foobar").getMetadata().getUnit().equals("sec"));
     }
 
     // Inner Classes
     // -------------
 
     public static class MyNode extends DSNode {
+
+        @Override
+        protected void declareDefaults() {
+            declareDefault("foobar", DSLong.valueOf(5)).getMetadata().setUnit("ms");
+        }
 
         @Override
         public void getMetadata(DSInfo info, DSMap bucket) {

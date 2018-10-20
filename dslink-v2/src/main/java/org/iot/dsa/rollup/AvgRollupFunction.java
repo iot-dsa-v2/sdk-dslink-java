@@ -48,7 +48,7 @@ final class AvgRollupFunction extends AbstractRollupFunction {
     }
 
     @Override
-    protected boolean onUpdate(DSElement arg, DSStatus status) {
+    protected boolean onUpdate(DSElement arg, int status) {
         sum += arg.toDouble();
         return true;
     }

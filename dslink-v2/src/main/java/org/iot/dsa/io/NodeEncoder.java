@@ -1,14 +1,20 @@
 package org.iot.dsa.io;
 
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import org.iot.dsa.io.json.AbstractJsonWriter;
-import org.iot.dsa.node.*;
+import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSIStorable;
+import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSNode;
 
 /**
  * Encodes a node tree using a compact JSON schema.  Defaults are omitted and class names are
  * tokenized to minimize size. Use NodeDecoder for deserialization.
- * <p>
- * <p>
  * <p>
  * This is for saving a configuration database, not for DSA interop.
  *
@@ -21,10 +27,10 @@ public class NodeEncoder {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private DSMap cacheMap = new DSMap();
+    private HashMap<Class, String> classMap = new HashMap<Class, String>();
     private int nextToken = 1;
     private DSIWriter out;
-    private DSMap cacheMap;
-    private HashMap<Class, String> classMap = new HashMap<Class, String>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -43,25 +49,36 @@ public class NodeEncoder {
      *
      * @param out  Where to write the node, also the return value (unclosed).
      * @param node What to encode.
-     * @return The writer parameter, flushed, but not closed.
      */
-    public static DSIWriter encode(DSIWriter out, DSNode node) {
+    public static void encode(DSIWriter out, DSNode node) {
         NodeEncoder encoder = new NodeEncoder(out);
         encoder.write(node);
         out.flush();
-        return out;
     }
 
-    private String getToken(Object arg) {
-        Class clazz = arg.getClass();
-        String ret = classMap.get(clazz);
-        if (ret == null) {
-            ret = "t" + nextToken;
-            nextToken++;
-            classMap.put(clazz, ret);
-            ret = ret + '=' + clazz.getName();
-        }
-        return ret;
+    /**
+     * Encodes the node to a byte array.
+     *
+     * @param node What to encode.
+     * @return Json serialized node.
+     */
+    public static byte[] encode(DSNode node) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(bos);
+        NodeEncoder.encode(writer, node);
+        writer.close();
+        return bos.toByteArray();
+    }
+
+    /**
+     * Prints the JSON encoded node to System.out.
+     *
+     * @param node What to encode.
+     */
+    public static void print(DSNode node) {
+        JsonWriter writer = new JsonWriter(System.out );
+        NodeEncoder.encode(writer, node);
+        System.out.flush();
     }
 
     void write(DSNode arg) {
@@ -73,15 +90,6 @@ public class NodeEncoder {
         out.beginMap();
         out.key("t").value(getToken(arg));
         writeChildren(arg);
-        out.endMap();
-    }
-
-    void writeDefault(DSInfo arg) {
-        out.beginMap();
-        if (out instanceof AbstractJsonWriter) {
-            ((AbstractJsonWriter) out).writeNewLineIndent();
-        }
-        out.key("n").value(arg.getName());
         out.endMap();
     }
 
@@ -112,8 +120,6 @@ public class NodeEncoder {
                     writeNode(info);
                 } else if (info.isValue()) {
                     writeValue(info);
-                } else {
-                    writeObject(info);
                 }
             } catch (IndexOutOfBoundsException x) {
                 arg.trace(arg.getPath(), x);
@@ -123,27 +129,16 @@ public class NodeEncoder {
         out.endList();
     }
 
-    void writeNode(DSInfo arg) {
+    void writeDefault(DSInfo arg) {
         out.beginMap();
         if (out instanceof AbstractJsonWriter) {
             ((AbstractJsonWriter) out).writeNewLineIndent();
         }
         out.key("n").value(arg.getName());
-        if (!arg.equalsDefaultState()) {
-            out.key("i").value(arg.encodeState());
-        }
-        if (!arg.equalsDefaultType()) {
-            DSNode node = (DSNode) arg.getObject();
-            if (node != null) {
-                out.key("t").value(getToken(node));
-            }
-        }
-        writeChildren((DSNode) arg.getObject());
         out.endMap();
     }
 
-    void writeObject(DSInfo arg) {
-        out.beginMap();
+    void writeInfo(DSInfo arg) {
         if (out instanceof AbstractJsonWriter) {
             ((AbstractJsonWriter) out).writeNewLineIndent();
         }
@@ -153,30 +148,30 @@ public class NodeEncoder {
         }
         if (!arg.equalsDefaultType()) {
             DSIObject obj = arg.getObject();
-            if ((obj != null) && !(obj instanceof DSElement)) {
+            if (obj != null) {
                 out.key("t").value(getToken(obj));
             }
         }
+        if (!arg.equalsDefaultMetadata()) {
+            arg.getMetadata(cacheMap);
+            if (!cacheMap.isEmpty()) {
+                out.key("m").value(cacheMap);
+                cacheMap.clear();
+            }
+        }
+    }
+
+    void writeNode(DSInfo arg) {
+        out.beginMap();
+        writeInfo(arg);
+        writeChildren((DSNode) arg.getObject());
         out.endMap();
     }
 
     void writeValue(DSInfo arg) {
         out.beginMap();
-        if (out instanceof AbstractJsonWriter) {
-            ((AbstractJsonWriter) out).writeNewLineIndent();
-        }
-        out.key("n").value(arg.getName());
-        if (!arg.equalsDefaultState()) {
-            out.key("i").value(arg.encodeState());
-        }
-        DSIValue v = (DSIValue) arg.getObject();
-        if (v == null) {
-            out.key("v").value((String) null);
-            return;
-        }
-        if (!arg.equalsDefaultType()) {
-            out.key("t").value(getToken(v));
-        }
+        writeInfo(arg);
+        DSIValue v = arg.getValue();
         if (!arg.equalsDefaultValue()) {
             if (v instanceof DSIStorable) {
                 out.key("v").value(((DSIStorable) v).store());
@@ -185,6 +180,18 @@ public class NodeEncoder {
             }
         }
         out.endMap();
+    }
+
+    private String getToken(Object arg) {
+        Class clazz = arg.getClass();
+        String ret = classMap.get(clazz);
+        if (ret == null) {
+            ret = "t" + nextToken;
+            nextToken++;
+            classMap.put(clazz, ret);
+            ret = ret + '=' + clazz.getName();
+        }
+        return ret;
     }
 
 }

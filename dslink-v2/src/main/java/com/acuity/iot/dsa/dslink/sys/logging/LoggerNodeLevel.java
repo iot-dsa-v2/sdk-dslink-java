@@ -24,7 +24,6 @@ public enum LoggerNodeLevel implements DSIEnum, DSIValue {
     INFO(LoggingConstants.info),
     WARN(LoggingConstants.warn),
     ERROR(LoggingConstants.error),
-    ADMIN(LoggingConstants.admin),
     OFF(LoggingConstants.off);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -138,8 +137,6 @@ public enum LoggerNodeLevel implements DSIEnum, DSIValue {
                 return WARN;
             case LoggingConstants.SEVERE: //error
                 return ERROR;
-            case LoggingConstants.ADMIN: //admin
-                return ADMIN;
             case LoggingConstants.OFF: //off
                 return OFF;
         }

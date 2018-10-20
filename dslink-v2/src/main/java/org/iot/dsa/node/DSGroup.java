@@ -80,6 +80,24 @@ public abstract class DSGroup extends DSElement {
         return buf.toString();
     }
 
+    // Protected Methods
+    // -----------------
+
+    void modified() {
+        Object p = parent;
+        while (p != null) {
+            if (parent instanceof GroupListener) {
+                ((GroupListener) parent).modified(this);
+                return;
+            }
+            if (p instanceof DSGroup) {
+                p = ((DSGroup)p).parent;
+            } else {
+                p = null;
+            }
+        }
+    }
+
     /**
      * Sets the parent and returns this for un-parented groups, otherwise throws an
      * IllegalStateException.

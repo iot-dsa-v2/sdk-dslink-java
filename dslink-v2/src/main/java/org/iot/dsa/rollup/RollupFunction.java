@@ -22,7 +22,12 @@ public interface RollupFunction {
      */
     public DSRollup getRollup();
 
-    public DSStatus getStatus();
+    /**
+     * Status bits.
+     *
+     * @see DSStatus#getBits()
+     */
+    public int getStatus();
 
     /**
      * The current state of the rollup.
@@ -41,6 +46,6 @@ public interface RollupFunction {
      * example, for a "first" combination, the first element will return
      * true, but all others will return false.
      */
-    public boolean update(DSElement value, DSStatus status);
+    public boolean update(DSElement value, int status);
 
 }

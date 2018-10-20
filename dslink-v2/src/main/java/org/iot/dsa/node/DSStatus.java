@@ -45,93 +45,72 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    private static ConcurrentHashMap<Integer, DSStatus> intCache =
-            new ConcurrentHashMap<Integer, DSStatus>();
-    private static ConcurrentHashMap<String, Integer> stringCache =
-            new ConcurrentHashMap<String, Integer>();
-
     private static final int UNCERTAIN_MASK = 0x0000FF00;
     private static final int BAD_MASK = 0x00FF0000;
     private static final int HIS_MASK = 0xFF000000; //for history flags
     private static final int NOT_GOOD_MASK = 0x00FFFF00;
-
     /**
      * Good, no other status applies. Always implied when not present.
      */
     public static final int OK = 0; //"ok"
-
     /**
      * Good, the value is overridden within DSA.
      */
     public static final int OVERRIDE = 0x00000001; //"override"
-
     /**
      * Good, the remote system is reporting the value is overridden.
      */
     public static final int REMOTE_OVERRIDE = 0x00000002; //"remoteOverride"
-
     /**
      * Uncertain, the value hasn't updated in a reasonable amount of time (usually
      * configurable) within DSA.
      */
     public static final int STALE = 0x00000100; //"stale"
-
     /**
      * Uncertain, the remote system is reporting the value is stale.
      */
     public static final int REMOTE_STALE = 0x00000200; //"remoteStale"
-
     /**
      * Uncertain, the value is outside the bounds of normal operation.
      */
     public static final int OFFNORMAL = 0x00000400; //"offnormal"
-
     /**
      * Uncertain, the remote system is remote reporting the value is offnormal.
      */
     public static final int REMOTE_OFFNORMAL = 0x00000800; //"remoteOffnormal"
-
     /**
      * Bad, an operational or configuration error has occurred within DSA.
      */
     public static final int FAULT = 0x00001000; //"fault"
-
     /**
      * Bad, the remote system is reporting a fault.
      */
     public static final int REMOTE_FAULT = 0x00002000; //"remoteFault"
-
     /**
      * Bad, a communication failure has occurred in DSA.
      */
     public static final int DOWN = 0x00010000; //"down"
-
     /**
      * Bad, the remote system is reporting down.
      */
     public static final int REMOTE_DOWN = 0x00020000; //"remoteDown"
-
     /**
      * Bad, the object has been disabled within DSA.
      */
     public static final int DISABLED = 0x00040000; //"disabled"
-
     /**
      * Bad, the remote system is reporting disabled.
      */
     public static final int REMOTE_DISABLED = 0x00080000; //"remoteDisabled"
-
     /**
      * Bad, the status is unknown within DSA.  This will typically be reported for
      * invalid paths.
      */
     public static final int UNKNOWN = 0x00100000; //"unknown"
-
     /**
      * Bad, the remote system is reporting unknown.
      */
     public static final int REMOTE_UNKNOWN = 0x00200000; //"remoteUnknown"
-
     //The string for each unique status.
     public static final String OK_STR = "ok";
     public static final String OVERRIDE_STR = "override";
@@ -148,9 +127,11 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     public static final String REMOTE_DISABLED_STR = "remoteDisabled";
     public static final String UNKNOWN_STR = "unknown";
     public static final String REMOTE_UNKNOWN_STR = "remoteUnknown";
-
     //The instance for each unique status.
     public static final DSStatus ok = new DSStatus(0);
+    private int bits;
+    private static ConcurrentHashMap<Integer, DSStatus> intCache =
+            new ConcurrentHashMap<Integer, DSStatus>();
     public static final DSStatus override = valueOf(OVERRIDE);
     public static final DSStatus remoteOverride = valueOf(REMOTE_OVERRIDE);
     public static final DSStatus stale = valueOf(STALE);
@@ -169,8 +150,8 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
-
-    private int bits;
+    private static ConcurrentHashMap<String, Integer> stringCache =
+            new ConcurrentHashMap<String, Integer>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -204,35 +185,9 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         return add(flags.getBits());
     }
 
-    private void append(StringBuilder buf, String status) {
-        if (buf.length() > 0) {
-            buf.append(",");
-        }
-        buf.append(status);
-    }
-
     @Override
     public boolean equals(Object obj) {
         return isEqual(obj);
-    }
-
-    /**
-     * Finds the bit representation for the given status string.
-     *
-     * @throws IllegalArgumentException If the string is unknown.
-     */
-    private static Integer getBit(String s) {
-        String orig = s;
-        s = s.trim();
-        Integer i = stringCache.get(s);
-        if (i == null) {
-            s = s.toLowerCase();
-            i = stringCache.get(s);
-        }
-        if (i == null) {
-            throw new IllegalArgumentException("Unknown status: " + orig);
-        }
-        return i;
     }
 
     /**
@@ -240,6 +195,11 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      */
     public int getBits() {
         return bits;
+    }
+
+    @Override
+    public DSStatus getStatus() {
+        return this;
     }
 
     /**
@@ -259,63 +219,127 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * True if either the local or remote status is true.
      */
     public boolean isAnyDisabled() {
-        return isDisabled() || isRemoteDisabled();
+        return isAnyDisabled(bits);
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public static boolean isAnyDisabled(int bits) {
+        return isDisabled(bits) || isRemoteDisabled(bits);
     }
 
     /**
      * True if either the local or remote status is true.
      */
     public boolean isAnyDown() {
-        return isDown() || isRemoteDown();
+        return isAnyDown(bits);
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public static boolean isAnyDown(int bits) {
+        return isDown(bits) || isRemoteDown(bits);
     }
 
     /**
      * True if either the local or remote status is true.
      */
     public boolean isAnyFault() {
-        return isFault() || isRemoteFault();
+        return isAnyFault(bits);
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public static boolean isAnyFault(int bits) {
+        return isFault(bits) || isRemoteFault(bits);
     }
 
     /**
      * True if either the local or remote status is true.
      */
     public boolean isAnyOffnormal() {
-        return isOffnormal() || isRemoteOffnormal();
+        return isAnyOffnormal(bits);
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public static boolean isAnyOffnormal(int bits) {
+        return isOffnormal(bits) || isRemoteOffnormal(bits);
     }
 
     /**
      * True if either the local or remote status is true.
      */
     public boolean isAnyOverride() {
-        return isOverride() || isRemoteOverride();
+        return isAnyOverride(bits);
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public static boolean isAnyOverride(int bits) {
+        return isOverride(bits) || isRemoteOverride(bits);
     }
 
     /**
      * True if either the local or remote status is true.
      */
     public boolean isAnyStale() {
-        return isStale() || isRemoteStale();
+        return isAnyStale(bits);
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public static boolean isAnyStale(int bits) {
+        return isStale(bits) || isRemoteStale(bits);
     }
 
     /**
      * True if either the local or remote status is true.
      */
     public boolean isAnyUnknown() {
-        return isUnknown() || isRemoteUnknown();
+        return isAnyUnknown(bits);
+    }
+
+    /**
+     * True if either the local or remote status is true.
+     */
+    public static boolean isAnyUnknown(int bits) {
+        return isUnknown(bits) || isRemoteUnknown(bits);
     }
 
     /**
      * If any of the bad flags are set.
      */
     public boolean isBad() {
+        return isBad(bits);
+    }
+
+    /**
+     * If any of the bad flags are set.
+     */
+    public static boolean isBad(int bits) {
         return (bits & BAD_MASK) != 0;
     }
 
     public boolean isDisabled() {
+        return isDisabled(bits);
+    }
+
+    public static boolean isDisabled(int bits) {
         return (DISABLED & bits) != 0;
     }
 
     public boolean isDown() {
+        return isDown(bits);
+    }
+
+    public static boolean isDown(int bits) {
         return (DOWN & bits) != 0;
     }
 
@@ -328,6 +352,10 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     public boolean isFault() {
+        return isFault(bits);
+    }
+
+    public static boolean isFault(int bits) {
         return (FAULT & bits) != 0;
     }
 
@@ -335,6 +363,13 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * If true, any associate object / value can be trusted.
      */
     public boolean isGood() {
+        return isGood(bits);
+    }
+
+    /**
+     * If true, any associate object / value can be trusted.
+     */
+    public static boolean isGood(int bits) {
         return (bits & NOT_GOOD_MASK) == 0;
     }
 
@@ -347,46 +382,91 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     public boolean isOffnormal() {
+        return isOffnormal(bits);
+    }
+
+    public static boolean isOffnormal(int bits) {
         return (OFFNORMAL & bits) != 0;
     }
 
     public boolean isOk() {
+        return isOk(bits);
+    }
+
+    public static boolean isOk(int bits) {
         return bits == 0;
     }
 
     public boolean isOverride() {
+        return isOverride(bits);
+    }
+
+    public static boolean isOverride(int bits) {
         return (OVERRIDE & bits) != 0;
     }
 
     public boolean isRemoteDisabled() {
+        return isRemoteDisabled(bits);
+
+    }
+
+    public static boolean isRemoteDisabled(int bits) {
         return (REMOTE_DISABLED & bits) != 0;
     }
 
     public boolean isRemoteDown() {
+        return isRemoteDown(bits);
+    }
+
+    public static boolean isRemoteDown(int bits) {
         return (REMOTE_DOWN & bits) != 0;
     }
 
     public boolean isRemoteFault() {
+        return isRemoteFault(bits);
+    }
+
+    public static boolean isRemoteFault(int bits) {
         return (REMOTE_FAULT & bits) != 0;
     }
 
     public boolean isRemoteOffnormal() {
+        return isRemoteOffnormal(bits);
+    }
+
+    public static boolean isRemoteOffnormal(int bits) {
         return (REMOTE_OFFNORMAL & bits) != 0;
     }
 
     public boolean isRemoteOverride() {
+        return isRemoteOverride(bits);
+    }
+
+    public static boolean isRemoteOverride(int bits) {
         return (REMOTE_OVERRIDE & bits) != 0;
     }
 
     public boolean isRemoteStale() {
+        return isRemoteStale(bits);
+    }
+
+    public static boolean isRemoteStale(int bits) {
         return (REMOTE_STALE & bits) != 0;
     }
 
     public boolean isRemoteUnknown() {
+        return isRemoteUnknown(bits);
+    }
+
+    public static boolean isRemoteUnknown(int bits) {
         return (REMOTE_UNKNOWN & bits) != 0;
     }
 
     public boolean isStale() {
+        return isStale(bits);
+    }
+
+    public static boolean isStale(int bits) {
         return (STALE & bits) != 0;
     }
 
@@ -394,21 +474,52 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * If true, any associate object / value might be bad.
      */
     public boolean isUncertain() {
+        return isUncertain(bits);
+    }
+
+    /**
+     * If true, any associate object / value might be bad.
+     */
+    public static boolean isUncertain(int bits) {
         return (bits & UNCERTAIN_MASK) != 0;
     }
 
     public boolean isUnknown() {
+        return isUnknown(bits);
+    }
+
+    public static boolean isUnknown(int bits) {
         return (UNKNOWN & bits) != 0;
     }
 
-    @Override
-    public DSLong store() {
-        return DSLong.valueOf(bits);
+    /**
+     * Remove the given bits and either return a new status if there is a change, or this status
+     * if no change.
+     */
+    public DSStatus remove(int flags) {
+        int newBits = bits & ~flags;
+        if (newBits == bits) {
+            return this;
+        }
+        return valueOf(newBits);
+    }
+
+    /**
+     * Remove the given bits and either return a new status if there is a change, or this status
+     * if no change.
+     */
+    public DSStatus remove(DSStatus flags) {
+        return remove(flags.getBits());
     }
 
     @Override
     public DSStatus restore(DSElement arg) {
         return valueOf(arg.toInt());
+    }
+
+    @Override
+    public DSLong store() {
+        return DSLong.valueOf(bits);
     }
 
     @Override
@@ -471,11 +582,6 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     @Override
-    public DSStatus getStatus() {
-        return this;
-    }
-
-    @Override
     public DSStatus valueOf(DSElement element) {
         if ((element == null) || element.isNull()) {
             return ok;
@@ -531,24 +637,30 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         return valueOf(max);
     }
 
-    /**
-     * Remove the given bits and either return a new status if there is a change, or this status
-     * if no change.
-     */
-    public DSStatus remove(int flags) {
-        int newBits = bits & ~flags;
-        if (newBits == bits) {
-            return this;
+    private void append(StringBuilder buf, String status) {
+        if (buf.length() > 0) {
+            buf.append(",");
         }
-        return valueOf(newBits);
+        buf.append(status);
     }
 
     /**
-     * Remove the given bits and either return a new status if there is a change, or this status
-     * if no change.
+     * Finds the bit representation for the given status string.
+     *
+     * @throws IllegalArgumentException If the string is unknown.
      */
-    public DSStatus remove(DSStatus flags) {
-        return remove(flags.getBits());
+    private static Integer getBit(String s) {
+        String orig = s;
+        s = s.trim();
+        Integer i = stringCache.get(s);
+        if (i == null) {
+            s = s.toLowerCase();
+            i = stringCache.get(s);
+        }
+        if (i == null) {
+            throw new IllegalArgumentException("Unknown status: " + orig);
+        }
+        return i;
     }
 
     ///////////////////////////////////////////////////////////////////////////
