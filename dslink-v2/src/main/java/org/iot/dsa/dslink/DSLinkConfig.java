@@ -28,7 +28,6 @@ public class DSLinkConfig {
 
     public static final String CFG_CONNECTION_TYPE = "connectionType";
     public static final String CFG_READ_TIMEOUT = "readTimeout";
-    public static final String CFG_SAVE_INTERVAL = "saveInterval";
     public static final String CFG_STABLE_DELAY = "stableDelay";
     public static final String CFG_WS_TRANSPORT_FACTORY = "wsTransportFactory";
 
