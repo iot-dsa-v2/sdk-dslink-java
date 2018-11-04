@@ -1,5 +1,7 @@
 package org.iot.dsa.node.event;
 
+import org.iot.dsa.node.DSMap;
+
 /**
  * This topic is for info related events on DSNodes.
  * <p>
@@ -31,6 +33,14 @@ public class DSInfoTopic extends DSTopic {
         CHILD_REMOVED,
 
         METADATA_CHANGED;
+
+        /**
+         * Returns null.
+         */
+        @Override
+        public DSMap getData() {
+            return null;
+        }
 
         @Override
         public DSTopic getTopic() {

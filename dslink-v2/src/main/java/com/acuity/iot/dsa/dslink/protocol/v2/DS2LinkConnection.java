@@ -14,7 +14,7 @@ import java.io.InputStream;
 import java.security.SecureRandom;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkConfig;
+import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.node.DSBytes;
@@ -114,12 +114,12 @@ public class DS2LinkConnection extends DSLinkConnection {
      */
     protected DSBinaryTransport makeTransport() {
         DSTransport.Factory factory = null;
-        String uri = getLink().getConfig().getBrokerUri();
+        String uri = getLink().getOptions().getBrokerUri();
         transport = null;
         if (uri.startsWith("ws")) {
             try {
-                String type = getLink().getConfig().getConfig(
-                        DSLinkConfig.CFG_WS_TRANSPORT_FACTORY,
+                String type = getLink().getOptions().getConfig(
+                        DSLinkOptions.CFG_WS_TRANSPORT_FACTORY,
                         "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
                 factory = (DSTransport.Factory) Class.forName(type).newInstance();
                 transport = factory.makeBinaryTransport(this);
@@ -261,7 +261,7 @@ public class DS2LinkConnection extends DSLinkConnection {
         DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod(0xf2);
         DSByteBuffer buffer = writer.getBody();
-        String token = getLink().getConfig().getToken();
+        String token = getLink().getOptions().getToken();
         if (token == null) {
             token = "";
         }

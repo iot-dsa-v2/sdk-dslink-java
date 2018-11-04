@@ -109,7 +109,7 @@ public class SysBackupService extends DSNode implements Runnable {
         ZipOutputStream zos = null;
         InputStream in = null;
         try {
-            File nodes = getLink().getConfig().getNodesFile();
+            File nodes = getLink().getOptions().getNodesFile();
             String name = nodes.getName();
             if (nodes.exists()) {
                 info("Backing up the node database...");
@@ -199,7 +199,7 @@ public class SysBackupService extends DSNode implements Runnable {
 
     @Override
     protected void onStable() {
-        File nodes = getLink().getConfig().getNodesFile();
+        File nodes = getLink().getOptions().getNodesFile();
         if (nodes.exists()) {
             synchronized (lock) {
                 scheduleNextSave();
@@ -226,7 +226,7 @@ public class SysBackupService extends DSNode implements Runnable {
      * Called by save, no need to explicitly call.
      */
     private void trimBackups() {
-        final File nodes = getLink().getConfig().getNodesFile();
+        final File nodes = getLink().getOptions().getNodesFile();
         if (nodes == null) {
             return;
         }

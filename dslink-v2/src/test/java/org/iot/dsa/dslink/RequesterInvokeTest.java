@@ -50,7 +50,7 @@ public class RequesterInvokeTest {
             @Override
             public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
             }
-        });
+        }, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         synchronized (this) {

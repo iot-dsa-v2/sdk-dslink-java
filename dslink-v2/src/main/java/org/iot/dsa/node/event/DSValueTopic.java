@@ -1,5 +1,7 @@
 package org.iot.dsa.node.event;
 
+import org.iot.dsa.node.DSMap;
+
 /**
  * This topic is for change of value events on DSNodes.  There are two types of events,
  * NODE_CHANGED for nodes that implement DSIValue and CHILD_CHANGED for child values of the
@@ -22,6 +24,15 @@ public class DSValueTopic extends DSTopic implements DSIEvent {
     private DSValueTopic() {
     }
 
+    /**
+     * Returns null.
+     */
+    @Override
+    public DSMap getData() {
+        return null;
+    }
+
+    @Override
     public DSTopic getTopic() {
         return this;
     }

@@ -43,7 +43,7 @@ public class ThreadNode extends MXBeanNode {
             }
         };
         act.setResultType(ResultType.VALUES);
-        act.addValueResult("Result", DSValueType.STRING);
+        act.addColumnMetadata("Result", DSValueType.STRING);
         declareDefault("Find Deadlocked Threads", act);
 
         act = new DSAbstractAction() {
@@ -57,7 +57,7 @@ public class ThreadNode extends MXBeanNode {
             }
         };
         act.setResultType(ResultType.VALUES);
-        act.addValueResult("Result", DSValueType.STRING);
+        act.addColumnMetadata("Result", DSValueType.STRING);
         declareDefault("Find Monitor Deadlocked Threads", act);
 
         act = new DSAbstractAction() {
@@ -76,7 +76,7 @@ public class ThreadNode extends MXBeanNode {
                          "If true, dump all locked monitors");
         act.addParameter("Dump Locked Synschronizers", DSValueType.BOOL,
                          "If true, dump all locked ownable synchronizers");
-        act.addValueResult("Thread Dump", DSValueType.STRING).setEditor("textarea");
+        act.addColumnMetadata("Thread Dump", DSValueType.STRING).setEditor("textarea");
         act.setResultType(ResultType.VALUES);
         declareDefault("Get Thread Dump", act);
     }
@@ -129,7 +129,7 @@ public class ThreadNode extends MXBeanNode {
 
             @Override
             public void getMetadata(int idx, DSMap bucket) {
-                bucket.putAll(action.getValueResult(idx));
+                action.getColumnMetadata(idx, bucket);
             }
 
             @Override

@@ -1,9 +1,14 @@
 package org.iot.dsa.node.action;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import org.iot.dsa.node.*;
+import org.iot.dsa.node.DSIMetadata;
+import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMetadata;
+import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.security.DSPermission;
 
 /**
@@ -26,11 +31,11 @@ public abstract class DSAbstractAction implements ActionSpec, DSIObject {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private List<DSMap> columns;
     private boolean immutable = false;
     private List<DSMap> parameters;
     private DSPermission permission = DSPermission.READ;
     private ResultType result = ResultType.VOID;
-    private List<DSMap> valueResults;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -41,11 +46,64 @@ public abstract class DSAbstractAction implements ActionSpec, DSIObject {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Returns this.
+     * Fully describes a return value when the result type is VALUES.  Must be added in
+     * the order that the values will be returned. At the very least, the map should have
+     * a unique name and a value type, use the DSMetadata utility class.
+     *
+     * @return This.
+     * @see DSMetadata
      */
-    @Override
-    public DSAbstractAction copy() {
+    public DSAbstractAction addColumnMetadata(DSMap metadata) {
+        if (immutable) {
+            throw new IllegalStateException("Action is immutable");
+        }
+        if (columns == null) {
+            columns = new ArrayList<DSMap>();
+        }
+        validate(metadata, columns);
+        columns.add(metadata);
         return this;
+    }
+
+    /**
+     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to
+     * the results list and returns the metadata instance for further configuration.
+     *
+     * @param name  Must not be null.
+     * @param value Must not be null.
+     * @return Metadata for further configuration.
+     */
+    public DSMetadata addColumnMetadata(String name, DSIValue value) {
+        if (immutable) {
+            throw new IllegalStateException("Action is immutable");
+        }
+        DSMetadata ret = new DSMetadata();
+        if (value instanceof DSIMetadata) {
+            ((DSIMetadata) value).getMetadata(ret.getMap());
+        }
+        ret.setName(name)
+           .setType(value);
+        addColumnMetadata(ret.getMap());
+        return ret;
+    }
+
+    /**
+     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to
+     * the results list and returns the metadata instance for further configuration.
+     *
+     * @param name Must not be null.
+     * @param type Must not be null.
+     * @return Metadata for further configuration.
+     */
+    public DSMetadata addColumnMetadata(String name, DSValueType type) {
+        if (immutable) {
+            throw new IllegalStateException("Action is immutable");
+        }
+        DSMetadata ret = new DSMetadata();
+        ret.setName(name)
+           .setType(type);
+        addColumnMetadata(ret.getMap());
+        return ret;
     }
 
     /**
@@ -56,13 +114,13 @@ public abstract class DSAbstractAction implements ActionSpec, DSIObject {
      * @param value       Must not be null.
      * @param description Can be null.
      * @return Metadata for further configuration.
-     */
     public DSMetadata addDefaultParameter(String name, DSIValue value, String description) {
-        if (immutable) {
-            throw new IllegalStateException("Action is immutable");
-        }
-        return addParameter(name, value, description).setDefault(value);
+    if (immutable) {
+    throw new IllegalStateException("Action is immutable");
     }
+    return addParameter(name, value, description).setDefault(value);
+    }
+     */
 
     /**
      * Fully describes a parameter for method invocation.  At the very least, the map
@@ -98,11 +156,9 @@ public abstract class DSAbstractAction implements ActionSpec, DSIObject {
             throw new IllegalStateException("Action is immutable");
         }
         DSMetadata ret = new DSMetadata();
-        if (value instanceof DSIMetadata) {
-            ((DSIMetadata) value).getMetadata(ret.getMap());
-        }
         ret.setName(name)
            .setType(value)
+           .setDefault(value)
            .setDescription(description);
         addParameter(ret.getMap());
         return ret;
@@ -130,74 +186,37 @@ public abstract class DSAbstractAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * Fully describes a return value when the result type is VALUES.  Must be added in
-     * the order that the values will be returned. At the very least, the map should have
-     * a unique name and a value type, use the DSMetadata utility class.
-     *
-     * @return This.
-     * @see DSMetadata
+     * Returns this.
      */
-    public DSAbstractAction addValueResult(DSMap metadata) {
-        if (immutable) {
-            throw new IllegalStateException("Action is immutable");
-        }
-        if (valueResults == null) {
-            valueResults = new ArrayList<DSMap>();
-        }
-        validate(metadata, valueResults);
-        valueResults.add(metadata);
+    @Override
+    public DSAbstractAction copy() {
         return this;
     }
 
-    /**
-     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to
-     * the results list and returns the metadata instance for further configuration.
-     *
-     * @param name  Must not be null.
-     * @param value Must not be null.
-     * @return Metadata for further configuration.
-     */
-    public DSMetadata addValueResult(String name, DSIValue value) {
-        if (immutable) {
-            throw new IllegalStateException("Action is immutable");
+    @Override
+    public int getColumnCount() {
+        if (columns != null) {
+            return columns.size();
         }
-        DSMetadata ret = new DSMetadata();
-        if (value instanceof DSIMetadata) {
-            ((DSIMetadata) value).getMetadata(ret.getMap());
-        }
-        ret.setName(name)
-           .setType(value);
-        addValueResult(ret.getMap());
-        return ret;
-    }
-
-    /**
-     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to
-     * the results list and returns the metadata instance for further configuration.
-     *
-     * @param name Must not be null.
-     * @param type Must not be null.
-     * @return Metadata for further configuration.
-     */
-    public DSMetadata addValueResult(String name, DSValueType type) {
-        if (immutable) {
-            throw new IllegalStateException("Action is immutable");
-        }
-        DSMetadata ret = new DSMetadata();
-        ret.setName(name)
-           .setType(type);
-        addValueResult(ret.getMap());
-        return ret;
+        return -1;
     }
 
     @Override
-    public Iterator<DSMap> getParameters() {
+    public void getColumnMetadata(int idx, DSMap bucket) {
+        bucket.putAll((columns.get(idx)));
+    }
+
+    @Override
+    public int getParameterCount() {
         if (parameters != null) {
-            ArrayList<DSMap> tmp = new ArrayList<DSMap>(parameters.size());
-            tmp.addAll(parameters);
-            return tmp.iterator();
+            return parameters.size();
         }
-        return null;
+        return -1;
+    }
+
+    @Override
+    public void getParameterMetadata(int idx, DSMap bucket) {
+        bucket.putAll(parameters.get(idx));
     }
 
     /**
@@ -213,18 +232,6 @@ public abstract class DSAbstractAction implements ActionSpec, DSIObject {
     @Override
     public ResultType getResultType() {
         return result;
-    }
-
-    @Override
-    public Iterator<DSMap> getValueMetadata() {
-        return valueResults.iterator();
-    }
-
-    public DSMap getValueResult(int idx) {
-        if ((valueResults == null) || valueResults.isEmpty()) {
-            return null;
-        }
-        return valueResults.get(idx);
     }
 
     /**

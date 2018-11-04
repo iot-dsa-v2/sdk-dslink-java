@@ -45,7 +45,7 @@ public abstract class StreamableLogNode extends DSNode {
         };
         act.addParameter("Filter", DSValueType.STRING, "Optional regex filter");
         act.setResultType(ResultType.STREAM_TABLE);
-        act.addValueResult("Log", DSValueType.STRING).setEditor("textarea");
+        act.addColumnMetadata("Log", DSValueType.STRING).setEditor("textarea");
         return act;
     }
 

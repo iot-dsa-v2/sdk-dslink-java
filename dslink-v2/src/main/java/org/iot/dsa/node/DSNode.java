@@ -977,9 +977,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      *
      * @param topic      Can not be null.
      * @param subscriber Can not be null.
+     * @param args       Optional.
      */
-    public void subscribe(DSTopic topic, DSISubscriber subscriber) {
-        subscribe(topic, null, subscriber);
+    public void subscribe(DSTopic topic, DSISubscriber subscriber, DSMap args) {
+        subscribe(topic, null, subscriber, args);
     }
 
     /**
@@ -989,8 +990,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param topic      Can not be null.
      * @param child      Can be null, and cannot be a child node.
      * @param subscriber Can not be null.
+     * @param args       Optional.
      */
-    public void subscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
+    public void subscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber, DSMap args) {
         if (child != null) {
             if (child.isNode()) {
                 throw new IllegalArgumentException("Must subscribe nodes directly");

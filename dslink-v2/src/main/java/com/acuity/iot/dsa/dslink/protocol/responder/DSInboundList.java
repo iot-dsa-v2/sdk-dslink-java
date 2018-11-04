@@ -179,7 +179,7 @@ public class DSInboundList extends DSInboundRequest
                 }
                 if (info.isNode()) {
                     node = info.getNode();
-                    node.subscribe(DSNode.INFO_TOPIC, null, this);
+                    node.subscribe(DSNode.INFO_TOPIC, null, this, null);
                 }
                 response = this;
             }
@@ -490,20 +490,14 @@ public class DSInboundList extends DSInboundRequest
         e = cacheMap.remove("$params");
         if (e == null) {
             DSList list = new DSList();
-            Iterator<DSMap> params = action.getParameters();
-            if (params != null) {
-                DSMap param;
-                while (params.hasNext()) {
-                    param = params.next();
-                    if (dsAction != null) {
-                        dsAction.prepareParameter(info, param);
-                    }
-                    if (param.hasParent()) {
-                        param = param.copy();
-                    }
-                    fixRangeTypes(param);
-                    list.add(param);
+            for (int i = 0, len = action.getParameterCount(); i < len; i++) {
+                DSMap param = new DSMap();
+                action.getParameterMetadata(i, param);
+                if (dsAction != null) {
+                    dsAction.prepareParameter(info, param);
                 }
+                fixRangeTypes(param);
+                list.add(param);
             }
             encode("$params", list, writer);
         } else {
@@ -513,22 +507,13 @@ public class DSInboundList extends DSInboundRequest
             e = cacheMap.remove("$columns");
             if (e != null) {
                 encode("$columns", e, writer);
-            } else {
+            } else if (action.getColumnCount() > 0) {
                 DSList list = new DSList();
-                Iterator<DSMap> cols = action.getValueMetadata();
-                if (cols != null) {
-                    DSMap param;
-                    while (cols.hasNext()) {
-                        param = cols.next();
-                        if (dsAction != null) {
-                            dsAction.prepareParameter(info, param);
-                        }
-                        if (param.hasParent()) {
-                            param = param.copy();
-                        }
-                        fixRangeTypes(param);
-                        list.add(param);
-                    }
+                for (int i = 0, len = action.getColumnCount(); i < len; i++) {
+                    DSMap col = new DSMap();
+                    action.getColumnMetadata(i, col);
+                    fixRangeTypes(col);
+                    list.add(col);
                 }
                 encode("$columns", list, writer);
             }
