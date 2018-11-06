@@ -7,8 +7,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
 import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkConfig;
-import org.iot.dsa.io.DSBase64;
+import org.iot.dsa.dslink.DSLinkOptions;
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import org.iot.dsa.io.json.JsonReader;
 import org.iot.dsa.io.json.JsonWriter;
 import org.iot.dsa.node.DSList;
@@ -29,8 +29,6 @@ public class DS1ConnectionInit extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
 
     private static final String DSA_VERSION = "1.1.2";
-    //private static final String[] SUPPORTED_FORMATS = new String[]{"msgpack", "json"};
-    private static final String[] SUPPORTED_FORMATS = new String[]{"json"};
 
     private String BROKER_REQ = "Broker Request";
     private String BROKER_RES = "Broker Response";
@@ -53,8 +51,8 @@ public class DS1ConnectionInit extends DSNode {
     protected void onStarted() {
         this.connection = (DS1LinkConnection) getParent();
         this.link = connection.getLink();
-        this.authToken = link.getConfig().getToken();
-        this.brokerUri = link.getConfig().getBrokerUri();
+        this.authToken = link.getOptions().getToken();
+        this.brokerUri = link.getOptions().getBrokerUri();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -135,8 +133,8 @@ public class DS1ConnectionInit extends DSNode {
     /**
      * Adds dsId and maybe authToken parameters to the query string.
      *
-     * @see DSLinkConfig#getBrokerUri()
-     * @see DSLinkConfig#getToken()
+     * @see DSLinkOptions#getBrokerUri()
+     * @see DSLinkOptions#getToken()
      */
     String makeBrokerUrl() {
         StringBuilder builder = new StringBuilder();
@@ -264,9 +262,10 @@ public class DS1ConnectionInit extends DSNode {
             map.put("linkData", new DSMap());
             map.put("version", DSA_VERSION);
             DSList list = map.putList("formats");
-            for (String format : SUPPORTED_FORMATS) {
-                list.add(format);
+            if (link.getOptions().getMsgpack()) {
+                list.add("msgpack");
             }
+            list.add("json");
             map.put("enableWebSocketCompression", false);
             put(BROKER_REQ, map).setReadOnly(true);
             trace(trace() ? map.toString() : null);

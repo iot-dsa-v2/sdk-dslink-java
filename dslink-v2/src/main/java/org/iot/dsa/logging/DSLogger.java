@@ -10,59 +10,36 @@ import java.util.logging.Logger;
 
 /**
  * Adds an abstraction layer on Java Util Logging for two purposes:
- *
  * <ul>
- *
  * <li>To use the DSA levels.
- *
  * <li>So JUL can be replaced with other logging frameworks if desired.
- *
  * </ul>
  * <p>
  * This has methods that enables conditional logging (most efficient) using ternary statements.
  * <p>
- * <p>
- * <p>
  * Without this class:
- *
  * <pre>
- *
  * {@code
  * if (myLogger.isLoggable(Level.INFO))
  *     myLogger.info(someMessage());
  * }
- *
  * </pre>
  * <p>
  * With this class:
- *
  * <pre>
- *
  * {@code
  * info(info() ? someMessage() : null);
  * }
- *
  * </pre>
- * <p>
- * <p>
  * <p>
  * DSA defines levels differently than JUL, however, all JUL levels will be mapped / formatted
  * for DSA.  Level guidelines:
- *
  * <ul>
- *
  * <li>trace() = JUL finest
- *
- * <li>debug() = JUL finer, finer, config, warn
- *
+ * <li>debug() = JUL finer
  * <li>info()  = JUL info
- *
  * <li>warn()  = JUL warning
- *
  * <li>error() = JUL severe
- *
- * <li>admin() = Custom level &gt; severe
- *
  * </ul>
  *
  * @author Aaron Hansen

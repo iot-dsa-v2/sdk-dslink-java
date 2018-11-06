@@ -28,19 +28,18 @@ public class DSLogHandler extends Handler {
     static final int STATE_OPEN = 1;
     static final int STATE_CLOSE_PENDING = 2;
     static final String lineSeparator;
-    private static Logger root;
-    private static Level rootLevel;
-    private int state = STATE_CLOSED;
+    private StringBuilder builder = new StringBuilder();
+    private LogHandlerThread logHandlerThread;
+    private int maxQueueSize = 2500;
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
-
-    private LogHandlerThread logHandlerThread;
-    private int maxQueueSize = 2500;
     private LinkedList<LogRecord> queue = new LinkedList<LogRecord>();
     private int queueThrottle = (int) (maxQueueSize * .90);
-    private StringBuilder builder = new StringBuilder();
+    private static Logger root;
+    private static Level rootLevel;
+    private int state = STATE_CLOSED;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -238,53 +237,52 @@ public class DSLogHandler extends Handler {
     /**
      * Formats and writes the logging record the underlying stream.
      */
-     static void write(Handler handler, LogRecord record, StringBuilder builder) {
-         if (builder == null) {
-             builder = new StringBuilder();
-         }
-         builder.append('[');
-         // timestamp
-         Calendar calendar = DSTime.getCalendar(record.getMillis());
-         DSTime.encodeForLogs(calendar, builder);
-         builder.append(']');
-         builder.append(' ');
-         // severity
-         toString(record.getLevel(), builder);
-         //builder.append(toString(record.getLevel()));
-         // log name
-         builder.append(" [");
-         builder.append(record.getLoggerName()).append("] ");
-         // class
-         if (record.getSourceClassName() != null) {
-             builder.append(record.getSourceClassName());
-             builder.append(" - ");
-         }
-         // method
-         if (record.getSourceMethodName() != null) {
-             builder.append(record.getSourceMethodName());
-             builder.append(" - ");
-         }
-         // message
-         String msg = record.getMessage();
-         if ((msg != null) && (msg.length() > 0)) {
-             Object[] params = record.getParameters();
-             if (params != null) {
-                 msg = String.format(msg, params);
-             }
-             builder.append(msg);
-         }
-         // exception
-         Throwable thrown = record.getThrown();
-         if (thrown != null) {
-             builder.append(lineSeparator);
-             StringWriter sw = new StringWriter();
-             PrintWriter pw = new PrintWriter(sw);
-             thrown.printStackTrace(pw);
-             pw.close();
-             builder.append(sw.toString());
-         }
-         DSTime.recycle(calendar);
-     }
+    static void write(Handler handler, LogRecord record, StringBuilder builder) {
+        if (builder == null) {
+            builder = new StringBuilder();
+        }
+        builder.append('[');
+        // timestamp
+        Calendar calendar = DSTime.getCalendar(record.getMillis());
+        DSTime.encodeForLogs(calendar, builder);
+        builder.append(']');
+        builder.append(' ');
+        // severity
+        toString(record.getLevel(), builder);
+        // log name
+        builder.append(" [");
+        builder.append(record.getLoggerName()).append("] ");
+        // class
+        if (record.getSourceClassName() != null) {
+            builder.append(record.getSourceClassName());
+            builder.append(" - ");
+        }
+        // method
+        if (record.getSourceMethodName() != null) {
+            builder.append(record.getSourceMethodName());
+            builder.append(" - ");
+        }
+        // message
+        String msg = record.getMessage();
+        if ((msg != null) && (msg.length() > 0)) {
+            Object[] params = record.getParameters();
+            if (params != null) {
+                msg = String.format(msg, params);
+            }
+            builder.append(msg);
+        }
+        // exception
+        Throwable thrown = record.getThrown();
+        if (thrown != null) {
+            builder.append(lineSeparator);
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            thrown.printStackTrace(pw);
+            pw.close();
+            builder.append(sw.toString());
+        }
+        DSTime.recycle(calendar);
+    }
 
     /* Old V2 Format, save for now...
      * Formats and writes the logging record the underlying stream.

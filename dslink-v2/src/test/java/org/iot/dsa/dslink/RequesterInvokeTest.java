@@ -38,7 +38,7 @@ public class RequesterInvokeTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, new DSISubscriber() {
+        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, new DSISubscriber() {
             @Override
             public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
                 success = true;

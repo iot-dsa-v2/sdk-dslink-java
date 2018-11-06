@@ -5,17 +5,47 @@
   "description": "Testing Link",
   "main": "bin/dslink-java-v2-poc",
   "configs": {
-    "handler_class": {
+    "handler_class_old": {
+      "type": "string",
+      "value": "org.iot.dsa.dslink.poc.MainNode"
+    },
+    "main-node": {
+      "help": "Class name of the main node.",
       "type": "string",
       "value": "org.iot.dsa.dslink.poc.MainNode"
     },
     "log": {
-      "desc": "all, trace, debug, warn, info, error, admin, fatal, none",
+      "help": "all, trace, debug, info, warn, error, off",
       "type": "enum",
-      "value": "info"
+      "value": "debug"
+    },
+    "msgpack": {
+      "help": "Whether or not to use msgpack.  Useful for debugging.",
+      "type": "bool",
+      "value": false
+    },
+    "broker": {
+      "help": "Only set if running the link standalone.",
+      "type": "url",
+      "value": null
+    },
+    "key": {
+      "help": "Public/private key pair used by the link.",
+      "type": "path",
+      "value": null
+    },
+    "name": {
+      "help": "Overrides the name above.",
+      "type": "string",
+      "value": null
+    },
+    "nodes": {
+      "help": "Path to the node configuration database file.",
+      "type": "path",
+      "value": null
     },
     "token": {
-      "desc": "Authentication token for the broker.",
+      "help": "Authentication token for the broker.",
       "type": "string",
       "value": null
     }

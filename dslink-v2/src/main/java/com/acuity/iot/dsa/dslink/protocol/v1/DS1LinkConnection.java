@@ -6,7 +6,7 @@ import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.DSLinkConfig;
+import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
@@ -99,7 +99,7 @@ public class DS1LinkConnection extends DSLinkConnection {
     protected DS1ConnectionInit initializeConnection() {
         DS1ConnectionInit init = new DS1ConnectionInit();
         put(CONNECTION_INIT, init).setTransient(true);
-        put(BROKER_URI, getLink().getConfig().getBrokerUri());
+        put(BROKER_URI, getLink().getOptions().getBrokerUri());
         try {
             init.initializeConnection();
             setPathInBroker(init.getResponse().getString("path"));
@@ -121,8 +121,8 @@ public class DS1LinkConnection extends DSLinkConnection {
         }
         DSTransport transport = null;
         try {
-            String type = getLink().getConfig().getConfig(
-                    DSLinkConfig.CFG_WS_TRANSPORT_FACTORY,
+            String type = getLink().getOptions().getConfig(
+                    DSLinkOptions.CFG_WS_TRANSPORT_FACTORY,
                     "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
             factory = (DSTransport.Factory) Class.forName(type).newInstance();
             String format = init.getResponse().getString("format");
@@ -140,8 +140,8 @@ public class DS1LinkConnection extends DSLinkConnection {
         debug(debug() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
         transport.setConnection(this);
-        transport.setReadTimeout(getLink().getConfig().getConfig(
-                DSLinkConfig.CFG_READ_TIMEOUT, 60000));
+        transport.setReadTimeout(getLink().getOptions().getConfig(
+                DSLinkOptions.CFG_READ_TIMEOUT, 60000));
         setTransport(transport);
         debug(debug() ? "Transport type: " + transport.getClass().getName() : null);
         return transport;

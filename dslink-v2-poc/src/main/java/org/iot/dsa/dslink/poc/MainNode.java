@@ -56,8 +56,8 @@ public class MainNode extends DSMainNode implements Runnable {
         declareDefault("Test", DSAction.DEFAULT);
         action = new DSAction();
         action.setResultType(ActionSpec.ResultType.VALUES);
-        action.addValueResult("bool", DSBool.TRUE);
-        action.addValueResult("long", DSLong.valueOf(0));
+        action.addColumnMetadata("bool", DSBool.TRUE);
+        action.addColumnMetadata("long", DSLong.valueOf(0));
         declareDefault("Values Action", action);
         //declareDefault("T./,;'<>?:\"[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
         //notice the missing chars from above, dglux gets funky with the chars: <>?:\"

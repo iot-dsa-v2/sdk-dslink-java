@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import org.iot.dsa.io.DSBase64;
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import org.iot.dsa.util.DSException;
 
 /**
