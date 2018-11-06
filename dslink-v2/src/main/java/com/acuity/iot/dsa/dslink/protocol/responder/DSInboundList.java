@@ -179,7 +179,7 @@ public class DSInboundList extends DSInboundRequest
                 }
                 if (info.isNode()) {
                     node = info.getNode();
-                    node.subscribe(DSNode.INFO_TOPIC, null, this, null);
+                    node.subscribe(DSNode.INFO_TOPIC, null, null, this);
                 }
                 response = this;
             }

@@ -15,9 +15,7 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSInfoTopic;
 import org.iot.dsa.node.event.DSTopic;
-import org.iot.dsa.node.event.DSValueTopic;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -220,13 +218,13 @@ public class DSInboundSubscription extends DSInboundRequest
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
                 node = (DSNode) obj;
-                node.subscribe(DSNode.VALUE_TOPIC, null, this, null);
+                node.subscribe(DSNode.VALUE_TOPIC, null, null, this);
                 onEvent(node, null, DSNode.VALUE_TOPIC);
             } else {
                 DSInfo info = path.getInfo();
                 node = path.getParent();
                 child = info;
-                node.subscribe(DSNode.VALUE_TOPIC, info, this, null);
+                node.subscribe(DSNode.VALUE_TOPIC, info, null, this);
                 onEvent(node, info, DSNode.VALUE_TOPIC);
             }
         }

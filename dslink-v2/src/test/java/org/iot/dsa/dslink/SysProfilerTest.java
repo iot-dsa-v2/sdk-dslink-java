@@ -21,7 +21,7 @@ public class SysProfilerTest {
     @Test
     public void theTest() throws Exception {
         link = new TestLink(new DSMainNode());
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, new DSISubscriber() {
+        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, new DSISubscriber() {
             @Override
             public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
                 success = true;
@@ -33,7 +33,7 @@ public class SysProfilerTest {
             @Override
             public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
             }
-        }, null);
+        });
         success = false;
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
@@ -58,7 +58,7 @@ public class SysProfilerTest {
         final ThreadNode thread = (ThreadNode) threadobj;
         final DSInfo cpuTime = thread.getInfo("CurrentThreadCpuTime");
         Assert.assertTrue(cpuTime != null);
-        thread.subscribe(DSNode.VALUE_TOPIC, cpuTime, new DSISubscriber() {
+        thread.subscribe(DSNode.VALUE_TOPIC, cpuTime, null, new DSISubscriber() {
             @Override
             public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
                 Assert.assertEquals(thread, node);
@@ -74,7 +74,7 @@ public class SysProfilerTest {
             @Override
             public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
             }
-        }, null);
+        });
         synchronized (this) {
             this.wait(6000);
         }
