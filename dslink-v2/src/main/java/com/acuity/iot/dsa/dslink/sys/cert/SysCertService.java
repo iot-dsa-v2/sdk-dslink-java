@@ -173,8 +173,8 @@ public class SysCertService extends DSNode {
             }
         };
         act.setResultType(ResultType.VALUES);
-        act.addValueResult("Result", DSValueType.STRING);
-        act.addValueResult("CSR", DSValueType.STRING).setEditor("textarea");
+        act.addColumnMetadata("Result", DSValueType.STRING);
+        act.addColumnMetadata("CSR", DSValueType.STRING).setEditor("textarea");
         return act;
     }
 
@@ -204,7 +204,7 @@ public class SysCertService extends DSNode {
         act.addParameter("Alias", DSValueType.STRING, null);
         act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
         act.setResultType(ResultType.VALUES);
-        act.addValueResult("Result", DSValueType.STRING);
+        act.addColumnMetadata("Result", DSValueType.STRING);
         return act;
     }
 
@@ -235,7 +235,7 @@ public class SysCertService extends DSNode {
         };
         act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
         act.setResultType(ResultType.VALUES);
-        act.addValueResult("Result", DSValueType.STRING);
+        act.addColumnMetadata("Result", DSValueType.STRING);
         return act;
     }
 
@@ -263,7 +263,7 @@ public class SysCertService extends DSNode {
             }
         };
         act.setResultType(ResultType.VALUES);
-        act.addValueResult("Result", DSValueType.STRING);
+        act.addColumnMetadata("Result", DSValueType.STRING);
         return act;
     }
 
@@ -281,7 +281,7 @@ public class SysCertService extends DSNode {
             }
         };
         act.setResultType(ResultType.VALUES);
-        act.addValueResult("Entry", DSValueType.STRING).setEditor("textarea");
+        act.addColumnMetadata("Entry", DSValueType.STRING).setEditor("textarea");
         return act;
     }
 
@@ -303,7 +303,7 @@ public class SysCertService extends DSNode {
             }
         };
         act.setResultType(ResultType.VALUES);
-        act.addValueResult("Result", DSValueType.STRING);
+        act.addColumnMetadata("Result", DSValueType.STRING);
         return act;
     }
 

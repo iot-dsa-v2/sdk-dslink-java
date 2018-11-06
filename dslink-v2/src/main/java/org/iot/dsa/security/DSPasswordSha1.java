@@ -3,7 +3,7 @@ package org.iot.dsa.security;
 import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.iot.dsa.io.DSBase64;
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIStorable;

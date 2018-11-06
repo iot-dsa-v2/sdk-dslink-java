@@ -3,12 +3,14 @@ package org.iot.dsa.dslink;
 import java.io.File;
 import org.iot.dsa.io.json.JsonWriter;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
  * @author Aaron Hansen
  */
-public class DSLinkConfigTest {
+public class DSLinkOptionsTest {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -34,19 +36,19 @@ public class DSLinkConfigTest {
             created = true;
             new JsonWriter(file).beginMap().endMap().flush().close();
         }
-        DSLinkConfig args = new DSLinkConfig("--broker http://test");
+        DSLinkOptions args = new DSLinkOptions("--broker http://test");
         Assert.assertTrue(args.getBrokerUri().equals("http://test"));
-        args = new DSLinkConfig("-b http://test");
+        args = new DSLinkOptions("--broker=http://test");
         Assert.assertTrue(args.getBrokerUri().equals("http://test"));
-        args = new DSLinkConfig("-b=http://test");
-        Assert.assertTrue(args.getBrokerUri().equals("http://test"));
-        args = new DSLinkConfig("--broker=http://test -h");
+        args = new DSLinkOptions("--broker=http://test -h");
         Assert.assertTrue(args.getBrokerUri().equals("http://test"));
         Assert.assertTrue(args.wasHelpRequested());
-        args = new DSLinkConfig("--log info --token abc");
+        args = new DSLinkOptions("--log info --token abc");
         Assert.assertTrue(args.getToken().equals("abc"));
-        args = new DSLinkConfig("--log=info --token=abc");
+        args = new DSLinkOptions("--log=info --token=abc");
         Assert.assertTrue(args.getToken().equals("abc"));
+        args = new DSLinkOptions("--msgpack false");
+        Assert.assertFalse(args.getMsgpack());
         if (created) {
             file.delete();
         }

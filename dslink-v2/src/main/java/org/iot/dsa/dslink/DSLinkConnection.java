@@ -45,7 +45,7 @@ public abstract class DSLinkConnection extends DSConnection {
         if (connectionId == null) {
             StringBuilder builder = new StringBuilder();
             builder.append(getLink().getLinkName()).append("-");
-            String uri = getLink().getConfig().getBrokerUri();
+            String uri = getLink().getOptions().getBrokerUri();
             if ((uri != null) && !uri.isEmpty()) {
                 int idx = uri.indexOf("://") + 3;
                 if ((idx > 0) && (uri.length() > idx)) {

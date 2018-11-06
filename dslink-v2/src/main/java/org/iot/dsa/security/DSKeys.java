@@ -10,7 +10,7 @@ import java.util.Arrays;
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import org.iot.dsa.io.DSBase64;
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import org.iot.dsa.util.DSException;
 
 /**

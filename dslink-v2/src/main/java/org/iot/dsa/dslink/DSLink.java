@@ -37,12 +37,11 @@ public class DSLink extends DSNode implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
-
-    private DSLinkConfig config;
     private String dsId;
     private DSKeys keys;
     private DSInfo main = getInfo(MAIN);
     private String name;
+    private DSLinkOptions options;
     private Thread runThread;
     private DSInfo sys = getInfo(SYS);
 
@@ -53,7 +52,7 @@ public class DSLink extends DSNode implements Runnable {
     /**
      * Use the load method to create links.
      *
-     * @see #load(DSLinkConfig)
+     * @see #load(DSLinkOptions)
      */
     public DSLink() {
     }
@@ -61,10 +60,6 @@ public class DSLink extends DSNode implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    public DSLinkConfig getConfig() {
-        return config;
-    }
 
     public DSLinkConnection getConnection() {
         return getSys().getConnection();
@@ -105,6 +100,10 @@ public class DSLink extends DSNode implements Runnable {
         return (DSMainNode) main.getNode();
     }
 
+    public DSLinkOptions getOptions() {
+        return options;
+    }
+
     public DSSysNode getSys() {
         return (DSSysNode) sys.getNode();
     }
@@ -114,7 +113,7 @@ public class DSLink extends DSNode implements Runnable {
      *
      * @param config Configuration options
      */
-    public static DSLink load(DSLinkConfig config) {
+    public static DSLink load(DSLinkOptions config) {
         Logger logger = Logger.getLogger("");
         DSLink ret = null;
         File nodes = config.getNodesFile();
@@ -153,12 +152,12 @@ public class DSLink extends DSNode implements Runnable {
     }
 
     /**
-     * This is a convenience for DSLink.load(new DSLinkConfig(args)).run() and should be
+     * This is a convenience for DSLink.load(new DSLinkOptions(args)).run() and should be
      * used as the the main class for any link.  Use DSLink.shutdown() to stop running.
      */
     public static void main(String[] args) {
         try {
-            DSLinkConfig cfg = new DSLinkConfig(args);
+            DSLinkOptions cfg = new DSLinkOptions(args);
             DSLink link = DSLink.load(cfg);
             link.run();
         } catch (Exception x) {
@@ -193,7 +192,7 @@ public class DSLink extends DSNode implements Runnable {
             });
             info(info() ? "Starting nodes" : null);
             start();
-            long stableDelay = config.getConfig(DSLinkConfig.CFG_STABLE_DELAY, 5000l);
+            long stableDelay = options.getConfig(DSLinkOptions.CFG_STABLE_DELAY, 5000l);
             try {
                 Thread.sleep(stableDelay);
             } catch (Exception x) {
@@ -283,8 +282,8 @@ public class DSLink extends DSNode implements Runnable {
      *
      * @return This
      */
-    protected DSLink init(DSLinkConfig config) {
-        this.config = config;
+    protected DSLink init(DSLinkOptions config) {
+        this.options = config;
         DSLogHandler.setRootLevel(config.getLogLevel());
         name = config.getLinkName();
         keys = config.getKeys();

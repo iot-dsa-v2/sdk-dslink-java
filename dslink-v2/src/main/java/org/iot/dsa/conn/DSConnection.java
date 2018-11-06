@@ -1,6 +1,7 @@
 package org.iot.dsa.conn;
 
 import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
@@ -339,6 +340,15 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         private DSConnectionTopic() {
         }
 
+        /**
+         * Returns null.
+         */
+        @Override
+        public DSMap getData() {
+            return null;
+        }
+
+        @Override
         public DSTopic getTopic() {
             return this;
         }

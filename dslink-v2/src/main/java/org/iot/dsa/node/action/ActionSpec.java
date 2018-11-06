@@ -1,6 +1,5 @@
 package org.iot.dsa.node.action;
 
-import java.util.Iterator;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;
 
@@ -12,11 +11,25 @@ import org.iot.dsa.security.DSPermission;
 public interface ActionSpec {
 
     /**
-     * Returns an iterator for each parameter.
-     *
-     * @return Null if there are no parameters.
+     * Returns 0 or less if the result columns are unknown in advance.
      */
-    public Iterator<DSMap> getParameters();
+    public int getColumnCount();
+
+    /**
+     * Adds the metadata for the column at the given index to the bucket.  Only called before the
+     * action invocation.
+     */
+    public void getColumnMetadata(int idx, DSMap bucket);
+
+    /**
+     * Returns 0 or less if there are no parameters.
+     */
+    public int getParameterCount();
+
+    /**
+     * Adds the metadata for the parameter at the given index to the bucket.
+     */
+    public void getParameterMetadata(int idx, DSMap bucket);
 
     /**
      * Minimum permission level required to invoke.
@@ -29,11 +42,6 @@ public interface ActionSpec {
      * What the action returns.
      */
     public ResultType getResultType();
-
-    /**
-     * Return the metadata for each column in a VALUES result type.
-     */
-    public Iterator<DSMap> getValueMetadata();
 
     /**
      * Defines what the action returns.
@@ -94,12 +102,12 @@ public interface ActionSpec {
             return this == STREAM_TABLE;
         }
 
-        public boolean isVoid() {
-            return this == VOID;
-        }
-
         public boolean isValues() {
             return this == VALUES;
+        }
+
+        public boolean isVoid() {
+            return this == VOID;
         }
 
         public String toString() {

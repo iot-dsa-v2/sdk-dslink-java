@@ -3,7 +3,7 @@ package com.acuity.iot.dsa.dslink.test;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkConfig;
+import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSMainNode;
 import org.iot.dsa.node.DSMap;
 
@@ -20,11 +20,11 @@ public class V2TestLink extends DSLink {
     public V2TestLink(DSMainNode MainNode) {
         getSys().getBackupService().setEnabled(false);
         setNodes(MainNode);
-        DSLinkConfig cfg = new DSLinkConfig();
-        cfg.setDslinkJson(new DSMap().put("configs", new DSMap()));
+        DSLinkOptions cfg = new DSLinkOptions();
+        cfg.setDslinkMap(new DSMap().put("configs", new DSMap()));
         cfg.setLinkName("dslink-java-testing");
-        cfg.setConfig(DSLinkConfig.CFG_CONNECTION_TYPE, TestConnection.class.getName());
-        cfg.setConfig(DSLinkConfig.CFG_STABLE_DELAY, 1);
+        cfg.setConfig(DSLinkOptions.CFG_CONNECTION_TYPE, TestConnection.class.getName());
+        cfg.setConfig(DSLinkOptions.CFG_STABLE_DELAY, 1);
         init(cfg);
     }
 
@@ -38,8 +38,8 @@ public class V2TestLink extends DSLink {
         protected DSBinaryTransport makeTransport() {
             TestTransport transport = new TestTransport();
             transport.setConnection(this);
-            transport.setReadTimeout(getLink().getConfig().getConfig(
-                    DSLinkConfig.CFG_READ_TIMEOUT, 60000));
+            transport.setReadTimeout(getLink().getOptions().getConfig(
+                    DSLinkOptions.CFG_READ_TIMEOUT, 60000));
             return transport;
         }
 

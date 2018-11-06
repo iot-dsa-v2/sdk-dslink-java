@@ -29,7 +29,7 @@ public interface ActionInvocation {
     public void close(Exception reason);
 
     /**
-     * The parameters supplied by the requester, or null.
+     * The parameters supplied by the invoker, or null.
      */
     public DSMap getParameters();
 

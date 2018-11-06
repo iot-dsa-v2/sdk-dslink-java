@@ -973,27 +973,29 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
 
     /**
-     * Subscribes to the topic on this node.
+     * Creates a subscription for the given criteria.
      *
-     * @param topic      Can not be null.
+     * @param topic      Use null to subscribe to all topics.
+     * @param args       Optional, should be defined by the topic.
      * @param subscriber Can not be null.
      */
-    public void subscribe(DSTopic topic, DSISubscriber subscriber) {
-        subscribe(topic, null, subscriber);
+    public Subscription subscribe(DSTopic topic, DSIValue args, DSISubscriber subscriber) {
+        return subscribe(topic, null, args, subscriber);
     }
 
     /**
-     * Subscribes to the topic on this node, the child can be null if subscribing to the node
-     * rather than a child.
+     * Creates a subscription for the given criteria.
      *
-     * @param topic      Can not be null.
-     * @param child      Can be null, and cannot be a child node.
+     * @param topic      Use null to subscribe to all topics.
+     * @param child      Can be null to indicate all children.  Child cannot be a DSNode.
+     * @param args       Optional.
      * @param subscriber Can not be null.
      */
-    public void subscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
+    public Subscription subscribe(DSTopic topic, DSInfo child, DSIValue args,
+                                  DSISubscriber subscriber) {
         if (child != null) {
             if (child.isNode()) {
-                throw new IllegalArgumentException("Must subscribe nodes directly");
+                throw new IllegalArgumentException("Must subscribe to nodes directly");
             }
         }
         if (subscriber == null) {
@@ -1003,22 +1005,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             throw new NullPointerException("Null topic");
         }
         boolean firstSubscription;
-        int count = 0;
+        Subscription sub = null;
         synchronized (mutex) {
-            Subscription sub = subscription;
+            sub = subscription;
             firstSubscription = (sub == null);
             Subscription prev = null;
             while (sub != null) {
-                if (sub.equals(child, topic)) {
-                    count++;
-                    if (DSUtil.equal(subscriber, sub.subscriber)) {
-                        return;
-                    }
+                if (sub.equals(topic, child, subscriber)) {
+                    return sub;
                 }
                 prev = sub;
                 sub = sub.next;
             }
-            sub = new Subscription(child, subscriber, topic);
+            sub = new Subscription(topic, child, args, subscriber);
             if (prev == null) {
                 sub.next = subscription;
                 subscription = sub;
@@ -1027,16 +1026,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
         }
         try {
-            onSubscribe(topic, child, subscriber);
+            onSubscribe(sub);
         } catch (Exception x) {
             error(getParent(), x);
-        }
-        if (count == 0) {
-            try {
-                onSubscribed(topic, child);
-            } catch (Exception x) {
-                error(getParent(), x);
-            }
         }
         if (firstSubscription) {
             try {
@@ -1045,6 +1037,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 error(getParent(), x);
             }
         }
+        return sub;
     }
 
     /**
@@ -1055,22 +1048,17 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param subscriber Can not be null.
      */
     public void unsubscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
-        int count = 0;
         Subscription removed = null;
         synchronized (mutex) {
             Subscription sub = subscription;
             Subscription prev = null;
             while (sub != null) {
-                if (sub.equals(child, topic)) {
-                    count++;
-                    if (DSUtil.equal(subscriber, sub.subscriber)) {
-                        count--;
-                        removed = sub;
-                        if (prev == null) {
-                            subscription = subscription.next;
-                        } else {
-                            prev.next = sub.next;
-                        }
+                if (sub.equals(topic, child, subscriber)) {
+                    removed = sub;
+                    if (prev == null) {
+                        subscription = subscription.next;
+                    } else {
+                        prev.next = sub.next;
                     }
                 }
                 prev = sub;
@@ -1079,16 +1067,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
         if (removed != null) {
             try {
-                onUnsubscribe(topic, child, subscriber);
+                onUnsubscribe(removed);
             } catch (Exception x) {
                 error(getParent(), x);
-            }
-            if (count == 0) {
-                try {
-                    onUnsubscribed(topic, child);
-                } catch (Exception x) {
-                    error(getParent(), x);
-                }
             }
             if (subscription == null) {
                 try {
@@ -1159,7 +1140,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
         Subscription sub = subscription;
         while (sub != null) {
-            if (sub.shouldFire(child, event.getTopic())) {
+            if (sub.shouldFire(event.getTopic(), child)) {
                 try {
                     sub.subscriber.onEvent(this, child, event);
                 } catch (Exception x) {
@@ -1279,13 +1260,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Called for every subscription.
-     *
-     * @param topic      Will not be null.
-     * @param child      Can be null.
-     * @param subscriber Will not be null.
      */
-    protected void onSubscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
-        //if qos needed, make it accessible via the subscriber implementing some other interface
+    protected void onSubscribe(Subscription subscription) {
     }
 
     /**
@@ -1293,15 +1269,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * any kind.
      */
     protected void onSubscribed() {
-    }
-
-    /**
-     * Called when the child and topic pair transitions from having no subscriptions to have a
-     * subscription.
-     *
-     * @param child Can be null, which indicates node subscriptions.
-     */
-    protected void onSubscribed(DSTopic topic, DSInfo child) {
     }
 
     /** TODO later
@@ -1334,27 +1301,14 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Called for every unsubscribe.
-     *
-     * @param topic      Will not be null.
-     * @param child      Can be null.
-     * @param subscriber Will not be null.
      */
-    protected void onUnsubscribe(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
+    protected void onUnsubscribe(Subscription subscriptin) {
     }
 
     /**
      * Called when this node transitions to having no subscriptions of any kind.
      */
     protected void onUnsubscribed() {
-    }
-
-    /**
-     * Called when the child and topic pair transitions to having no subscriptions.
-     *
-     * @param topic Can not be null.
-     * @param child Can be null.
-     */
-    protected void onUnsubscribed(DSTopic topic, DSInfo child) {
     }
 
     /**
@@ -1516,39 +1470,74 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
     } //NodeIterator
 
-    private class Subscription {
+    /**
+     * Encapsulates the details of a subscription.
+     */
+    public class Subscription {
 
+        DSIValue args;
         DSInfo child;
         Subscription next;
         DSISubscriber subscriber;
         DSTopic topic;
 
-        Subscription(DSInfo child, DSISubscriber subscriber, DSTopic topic) {
-            this.child = child;
-            this.subscriber = subscriber;
+        Subscription(DSTopic topic, DSInfo child, DSIValue args, DSISubscriber subscriber) {
             this.topic = topic;
+            this.child = child;
+            this.args = args;
+            this.subscriber = subscriber;
         }
 
-        boolean equals(DSInfo child, DSTopic topic) {
+        /**
+         * Any args supplied to the subscription, can be null.
+         */
+        public DSIValue getArgs() {
+            return args;
+        }
+
+        /**
+         * If the subscription specified a specific child, otherwise null.
+         */
+        public DSInfo getChild() {
+            return child;
+        }
+
+        public DSISubscriber getSubscriber() {
+            return subscriber;
+        }
+
+        /**
+         * Can be null if subscribing to all topics.
+         */
+        public DSTopic getTopic() {
+            return topic;
+        }
+
+        boolean equals(DSTopic topic, DSInfo child, DSISubscriber subscriber) {
+            if (!DSUtil.equal(subscriber, this.subscriber)) {
+                return false;
+            }
             if (!DSUtil.equal(topic, this.topic)) {
                 return false;
             }
             return DSUtil.equal(child, this.child);
         }
 
-        boolean shouldFire(DSInfo child, DSTopic topic) {
-            if (!DSUtil.equal(topic, this.topic)) {
-                return false;
+        boolean shouldFire(DSTopic topic, DSInfo child) {
+            if (this.topic != null) {
+                if (!DSUtil.equal(topic, this.topic)) {
+                    return false;
+                }
             }
-            if (topic == VALUE_TOPIC) {
+            if (this.child != null) {
                 return DSUtil.equal(child, this.child);
             }
             return true;
         }
 
         boolean shouldUnsubscribe(DSInfo child) {
-            if (topic == VALUE_TOPIC) {
-                return DSUtil.equal(child, this.child);
+            if (this.child != null) {
+                return DSUtil.equal(this.child, child);
             }
             return false;
         }

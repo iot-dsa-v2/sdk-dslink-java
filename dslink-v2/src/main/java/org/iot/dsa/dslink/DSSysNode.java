@@ -41,7 +41,6 @@ public class DSSysNode extends DSNode {
         declareDefault(STOP, DSAction.DEFAULT);
         declareDefault(CERTIFICATES, new SysCertService());
         declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
-//        declareDefault(PROFILER, new SysProfiler()).setTransient(true);
         declareDefault(LOGGING, new SysLogService());
         declareDefault(BACKUPS, new SysBackupService());
     }
@@ -93,11 +92,11 @@ public class DSSysNode extends DSNode {
     }
 
     void init() {
-        DSLinkConfig config = getLink().getConfig();
+        DSLinkOptions config = getLink().getOptions();
         try {
             String ver = config.getDsaVersion();
             DSLinkConnection conn;
-            String type = config.getConfig(DSLinkConfig.CFG_CONNECTION_TYPE, null);
+            String type = config.getConfig(DSLinkOptions.CFG_CONNECTION_TYPE, null);
             if (type != null) {
                 conn = (DSLinkConnection) Class.forName(type).newInstance();
             } else if (ver.startsWith("1")) {
