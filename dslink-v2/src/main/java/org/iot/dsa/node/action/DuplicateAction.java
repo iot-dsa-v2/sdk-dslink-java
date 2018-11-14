@@ -40,7 +40,7 @@ public class DuplicateAction extends DSAction {
     @Override
     public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
         String newName = invocation.getParameters().get(NEW_NAME, null);
-        target.getParent().add(newName, target.getObject().copy());
+        target.getParent().add(newName, target.get().copy());
         return null;
     }
 

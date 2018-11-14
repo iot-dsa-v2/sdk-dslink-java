@@ -94,7 +94,7 @@ public abstract class DSBaseConnection extends DSNode implements DSIStatus {
 
     @Override
     public DSStatus getStatus() {
-        return (DSStatus) status.getObject();
+        return (DSStatus) status.get();
     }
 
     public String getStatusText() {

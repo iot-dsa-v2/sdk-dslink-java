@@ -36,7 +36,7 @@ public abstract class StreamableLogNode extends DSNode {
 
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                return ((StreamableLogNode) target.getObject()).startLogStream(target, invocation);
+                return ((StreamableLogNode) target.get()).startLogStream(target, invocation);
             }
 
         };

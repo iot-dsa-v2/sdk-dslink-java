@@ -77,7 +77,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
             trace(trace() ? String.format("Updating (sid=%s,qos=%s) %s", sid, qos, path)
                           : null);
             pathMap.remove(subscription.getPath());
-            if (sid != subscription.getSubscriptionId()) {
+            if (sid.equals(subscription.getSubscriptionId())) {
                 sidMap.remove(sid);
                 subscription.setSubscriptionId(sid);
                 sidMap.put(sid, subscription);

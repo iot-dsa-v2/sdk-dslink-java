@@ -110,7 +110,7 @@ public abstract class DSLinkConnection extends DSConnection {
         declareDefault(RECONNECT, new DSAction.Parameterless() {
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                ((DSLinkConnection)target.getObject()).disconnect();
+                ((DSLinkConnection)target.get()).disconnect();
                 return null;
             }
         });

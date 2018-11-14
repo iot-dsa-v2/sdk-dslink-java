@@ -20,7 +20,7 @@ public abstract class MXBeanNode extends DSNode implements Runnable {
     private static DSAction refreshAction = new DSAction.Parameterless() {
         @Override
         public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((MXBeanNode) target.getObject()).refresh();
+            ((MXBeanNode) target.get()).refresh();
             return null;
         }
 

@@ -65,7 +65,7 @@ public class HostnameWhitelist extends DSNode {
 
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                ((HostnameWhitelist) target.getObject()).addHostname(invocation.getParameters());
+                ((HostnameWhitelist) target.get()).addHostname(invocation.getParameters());
                 return null;
             }
 

@@ -15,9 +15,7 @@ public class CertNode extends DSValueNode {
     private static final String VALUE = "value";
     private static final String ALLOW = "Allow";
     private static final String REMOVE = "Remove";
-    private DSInfo allow = getInfo(ALLOW);
     private SysCertService certManager;
-    private DSInfo remove = getInfo(REMOVE);
     private DSInfo value = getInfo(VALUE);
 
     public SysCertService getCertManager() {
@@ -57,7 +55,7 @@ public class CertNode extends DSValueNode {
 
         @Override
         public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((CertNode) target.getObject()).allow();
+            ((CertNode) target.get()).allow();
             return null;
         }
 
@@ -67,7 +65,7 @@ public class CertNode extends DSValueNode {
 
         @Override
         public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((CertNode) target.getObject()).remove();
+            ((CertNode) target.get()).remove();
             return null;
         }
 

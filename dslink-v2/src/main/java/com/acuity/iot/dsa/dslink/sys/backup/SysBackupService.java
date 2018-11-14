@@ -258,7 +258,7 @@ public class SysBackupService extends DSNode implements Runnable {
 
         @Override
         public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((SysBackupService) target.getObject()).save();
+            ((SysBackupService) target.get()).save();
             return null;
         }
 

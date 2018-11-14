@@ -36,11 +36,11 @@ public class DSSysNode extends DSNode {
     private DSInfo profilerToggle;
 
     public SysBackupService getBackupService() {
-        return (SysBackupService) backups.getObject();
+        return (SysBackupService) backups.get();
     }
 
     public DSLinkConnection getConnection() {
-        return (DSLinkConnection) connection.getObject();
+        return (DSLinkConnection) connection.get();
     }
 
     public DSLink getLink() {
@@ -122,7 +122,7 @@ public class DSSysNode extends DSNode {
 
         @Override
         public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((DSSysNode)target.getObject()).getLink().shutdown();
+            ((DSSysNode)target.get()).getLink().shutdown();
             return null;
         }
 
@@ -133,9 +133,9 @@ public class DSSysNode extends DSNode {
         @Override
         public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
             if (profiler == null) {
-                ((DSSysNode)target.getObject()).openProfiler();
+                ((DSSysNode)target.get()).openProfiler();
             } else {
-                ((DSSysNode)target.getObject()).closeProfiler();
+                ((DSSysNode)target.get()).closeProfiler();
             }
             return null;
         }

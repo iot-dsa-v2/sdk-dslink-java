@@ -47,7 +47,7 @@ public interface ApiObject {
     /**
      * True if the object should ignored (not be exposed through the api).
      */
-    public boolean isHidden();
+    public boolean isPrivate();
 
     /**
      * True if the object is a value and cannot be written.

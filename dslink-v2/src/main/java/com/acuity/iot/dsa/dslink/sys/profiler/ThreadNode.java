@@ -35,7 +35,7 @@ public class ThreadNode extends MXBeanNode {
         DSAction act = new DSAction.Parameterless() {
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                return ((ThreadNode) target.getObject()).findDeadlocked(this);
+                return ((ThreadNode) target.get()).findDeadlocked(this);
             }
         };
         act.setResultType(ResultType.VALUES);
@@ -54,7 +54,7 @@ public class ThreadNode extends MXBeanNode {
 
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                return ((ThreadNode) target.getObject())
+                return ((ThreadNode) target.get())
                         .getThreadDump(this, invocation.getParameters());
             }
         };

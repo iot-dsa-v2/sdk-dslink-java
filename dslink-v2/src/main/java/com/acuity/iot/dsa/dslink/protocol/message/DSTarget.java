@@ -162,7 +162,7 @@ public class DSTarget {
             //TODO - need to undo this
             throw new DSInvalidPathException(path);
         }
-        target = targetInfo.getObject();
+        target = targetInfo.get();
     }
 
     ///////////////////////////////////////////////////////////////////////////

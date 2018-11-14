@@ -40,7 +40,6 @@ public abstract class DSAction implements ActionSpec, DSIObject {
     private List<DSMap> columns;
     private boolean immutable = false;
     private List<DSMap> parameters;
-    private DSPermission permission = DSPermission.READ;
     private ResultType result = ResultType.VOID;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -237,7 +236,7 @@ public abstract class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * Execute the action invocation on the given target.
+     * Execute the action invocation for the given target.
      * <p>
      * To report an error, simply throw a runtime exception from this method, or call
      * ActionInvocation.close(Exception).

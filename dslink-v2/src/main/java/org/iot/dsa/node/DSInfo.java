@@ -28,10 +28,10 @@ public class DSInfo implements ApiObject, GroupListener {
     ///////////////////////////////////////////////////////////////////////////
 
     static final int ADMIN = 0;
-    static final int HIDDEN = 1;
+    static final int PRIVATE = 1;
     static final int TRANSIENT = 2;
     static final int READONLY = 3;
-    static final int PERMANENT = 4;
+    static final int DECLARED = 4;
     static final int DEFAULT_ON_COPY = 5;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
     public DSInfo copy() {
@@ -129,9 +129,16 @@ public class DSInfo implements ApiObject, GroupListener {
         return false;
     }
 
+    /**
+     * Returns the target object.
+     */
+    public DSIObject get() {
+        return object;
+    }
+
     @Override
     public DSAction getAction() {
-        return (DSAction) getObject();
+        return (DSAction) get();
     }
 
     @Override
@@ -156,9 +163,7 @@ public class DSInfo implements ApiObject, GroupListener {
         if (isNode()) {
             info = node.getFirstInfo();
             while (info != null) {
-                if (!info.isAction()) {
-                    ret.add(info);
-                }
+                ret.add(info);
                 info = info.next();
             }
         }
@@ -169,14 +174,14 @@ public class DSInfo implements ApiObject, GroupListener {
      * If this is a proxy , this will return the original default instance.
      */
     public DSIObject getDefaultObject() {
-        return getObject();
+        return get();
     }
 
     /**
      * A convenience that casts the object.  Will call DSIValue.toElement on values.
      */
     public DSElement getElement() {
-        DSIObject obj = getObject();
+        DSIObject obj = get();
         if (obj instanceof DSElement) {
             return (DSElement) object;
         }
@@ -208,9 +213,14 @@ public class DSInfo implements ApiObject, GroupListener {
      * A convenience that casts getObject().
      */
     public DSNode getNode() {
-        return (DSNode) getObject();
+        return (DSNode) get();
     }
 
+    /**
+     * User get() instead.
+     *
+     * @deprecated 18-11-14
+     */
     public DSIObject getObject() {
         return object;
     }
@@ -270,17 +280,18 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     /**
+     * True if the info represents a declared default.  If true, the info is not removable or
+     * renamable.
+     */
+    public boolean isDeclared() {
+        return getFlag(DECLARED);
+    }
+
+    /**
      * Whether or not the current value, or the default value is copied.
      */
     public boolean isDefaultOnCopy() {
         return getFlag(DEFAULT_ON_COPY);
-    }
-
-    /**
-     * Whether or not this info represents a declared default.
-     */
-    public boolean isDynamic() {
-        return !getFlag(PERMANENT);
     }
 
     /**
@@ -299,17 +310,9 @@ public class DSInfo implements ApiObject, GroupListener {
             return false;
         }
         if (isNode()) {
-            return getNode().isEqual(arg.getObject());
+            return getNode().isEqual(arg.get());
         }
-        return DSUtil.equal(getObject(), arg.getObject());
-    }
-
-    /**
-     * Whether or not an object is visible to clients.
-     */
-    @Override
-    public boolean isHidden() {
-        return getFlag(HIDDEN);
+        return DSUtil.equal(get(), arg.get());
     }
 
     /**
@@ -327,9 +330,9 @@ public class DSInfo implements ApiObject, GroupListener {
             return false;
         }
         if (isNode()) {
-            return getNode().isIdentical(arg.getObject());
+            return getNode().isIdentical(arg.get());
         }
-        return DSUtil.equal(getObject(), arg.getObject());
+        return DSUtil.equal(get(), arg.get());
     }
 
     /**
@@ -347,6 +350,14 @@ public class DSInfo implements ApiObject, GroupListener {
             return true;
         }
         return object.isNull();
+    }
+
+    /**
+     * Whether or not an object is exposed outside of the process.
+     */
+    @Override
+    public boolean isPrivate() {
+        return getFlag(PRIVATE);
     }
 
     /**
@@ -451,7 +462,7 @@ public class DSInfo implements ApiObject, GroupListener {
      * False by default, set to true if you don't want the child to be sent to clients.
      */
     public DSInfo setHidden(boolean hidden) {
-        setFlag(HIDDEN, hidden);
+        setFlag(PRIVATE, hidden);
         return this;
     }
 
@@ -476,6 +487,10 @@ public class DSInfo implements ApiObject, GroupListener {
         setFlag(TRANSIENT, trans);
         return this;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Package Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * This is only called by DSNode.copy.  Therefore, this will already
@@ -512,10 +527,24 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     /**
+     * Whether or not the info is for a dynamic action.
+     */
+    boolean isDynamic() {
+        return false;
+    }
+
+    /**
      * Quick test for a proxy info.
      */
     boolean isProxy() {
         return false;
+    }
+
+    /**
+     * Whether or not this info represents a declared default.
+     */
+    boolean isRemovable() {
+        return !getFlag(DECLARED);
     }
 
     DSInfo setFlag(int position, boolean on) {
@@ -539,19 +568,19 @@ public class DSInfo implements ApiObject, GroupListener {
         return this;
     }
 
-    DSInfo setPermanent(boolean arg) {
-        setFlag(PERMANENT, arg);
+    DSInfo setDeclared(boolean arg) {
+        setFlag(DECLARED, arg);
         return this;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     private void fireInfoChanged() {
         if ((parent != null) && (parent.isRunning())) {
             parent.fire(DSNodeTopic.METADATA_CHANGED, this);
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
 
 }

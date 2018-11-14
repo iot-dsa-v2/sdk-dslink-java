@@ -9,6 +9,7 @@ import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DeleteAction;
 import org.iot.dsa.node.action.DuplicateAction;
 import org.iot.dsa.node.action.RenameAction;
@@ -172,27 +173,32 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * A child info will accompany the event and the event data will be null.
+     * Topic for subscription.  A child info will accompany the event and the event data will
+     * be null.
      */
     public static final DSNodeTopic CHILD_ADDED = DSNodeTopic.CHILD_ADDED;
 
     /**
-     * A child info will accompany the event and the event data will be null.
+     * Topic for subscription.  A child info will accompany the event and the event data will
+     * be null.
      */
     public static final DSNodeTopic CHILD_REMOVED = DSNodeTopic.CHILD_REMOVED;
 
     /**
-     * A child info will accompany the event and the event data be the old name as a DSString.
+     * Topic for subscription.  A child info will accompany the event and the event data be the
+     * old name as a DSString.
      */
     public static final DSNodeTopic CHILD_RENAMED = DSNodeTopic.CHILD_RENAMED;
 
     /**
-     * A child info will accompany the event and the event data will be null.
+     * Topic for subscription.  A child info will accompany the event and the event data will
+     * be null.
      */
     public static final DSNodeTopic METADATA_CHANGED = DSNodeTopic.METADATA_CHANGED;
 
     /**
-     * A child info may or may not accompany the event and the event data will be null.
+     * Topic for subscription.  A child info may or may not accompany the event and the event data
+     * will be null.
      */
     public static final DSNodeTopic VALUE_CHANGED = DSNodeTopic.VALUE_CHANGED;
 
@@ -281,7 +287,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     public DSNode clear() {
         DSInfo info = getFirstInfo();
         while (info != null) {
-            if (info.isDynamic()) {
+            if (info.isRemovable()) {
                 remove(info);
             }
             info = info.next();
@@ -336,7 +342,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     public DSIObject get(String name) {
         DSInfo info = getInfo(name);
         if (info != null) {
-            return info.getObject();
+            return info.get();
         }
         return null;
     }
@@ -360,14 +366,33 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Should return the info for the named action on the given target.
+     * Should return an info for the dynamic action on the given target.
      *
      * @param target Could be the info for this node, or the info of a non-node value child.
      * @param name   The name of the action.
      * @return DSInfo for the desired action.
+     * @see #actionInfo(String, DSAction)
      */
     public DSInfo getDynamicAction(DSInfo target, String name) {
-        return getDynamicAction(target, name, true);
+        DSInfo info = null;
+        //if ((target != null) && target.isDynamic()) {
+        if (target.isRemovable()) {
+            switch (name) {
+                case DeleteAction.DELETE:
+                    info = actionInfo(name, DeleteAction.INSTANCE);
+                    break;
+                case DuplicateAction.DUPLICATE:
+                    info = actionInfo(name, DuplicateAction.INSTANCE);
+                    break;
+                case RenameAction.RENAME:
+                    info = actionInfo(name, RenameAction.INSTANCE);
+                    break;
+            }
+            if (info != null) {
+                info.getMetadata().setActionGroup("Edit Actions", null);
+            }
+        }
+        return info;
     }
 
     /**
@@ -386,6 +411,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 return;
             } else if (target.getNode() != this) {
                 throw new IllegalArgumentException("DSInfo target is from another node.");
+            }
+            /*
             } else {
                 DSInfo info = getFirstInfo();
                 while (info != null) {
@@ -395,8 +422,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                     info = info.nextAction();
                 }
             }
+            */
         }
-        if (target.isDynamic()) {
+        if (target.isRemovable()) {
             bucket.add(DeleteAction.DELETE);
             bucket.add(RenameAction.RENAME);
             bucket.add(DuplicateAction.DUPLICATE);
@@ -419,7 +447,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (info == null) {
             return null;
         }
-        return info.getObject();
+        return info.get();
     }
 
     /**
@@ -459,14 +487,18 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Returns the info for the child with the given name, or null.
+     * Returns the info for the child or dynamic action with the given name, or null.
      *
      * @return Possibly null.
      */
     public DSInfo getInfo(String name) {
         dsInit();
         if (firstChild == null) {
-            return getDynamicAction(getInfo(), name, false);
+            if (getInfo() == null) {
+                return null;
+            } else {
+                return getDynamicAction(getInfo(), name);
+            }
         }
         synchronized (mutex) {
             if (size >= MAP_THRESHOLD) {
@@ -480,7 +512,11 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 if (ret != null) {
                     return ret;
                 } else {
-                    return getDynamicAction(getInfo(), name, false);
+                    if (getInfo() == null) {
+                        return null;
+                    } else {
+                        return getDynamicAction(getInfo(), name);
+                    }
                 }
             }
         }
@@ -491,7 +527,11 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             info = info.next();
         }
-        return getDynamicAction(getInfo(), name, false);
+        if (getInfo() == null) {
+            return null;
+        } else {
+            return getDynamicAction(getInfo(), name);
+        }
     }
 
     /**
@@ -502,7 +542,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (info == null) {
             return null;
         }
-        return info.getObject();
+        return info.get();
     }
 
     /**
@@ -865,7 +905,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (object instanceof DSGroup) {
             ((DSGroup) object).setParent(this);
         }
-        DSIObject old = info.getObject();
+        DSIObject old = info.get();
         if (isNode(old)) {
             DSNode node = toNode(old);
             node.stop();
@@ -899,8 +939,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @throws IllegalStateException If the info is permanent or not a child of this node.
      */
     public DSNode remove(DSInfo info) {
-        if (!info.isDynamic()) {
+        if (!info.isRemovable()) {
             throw new IllegalStateException("Can not be removed");
+        }
+        if (info.isDynamic()) {
+            //Poor implemented getDynamicActions
+            return this;
         }
         if (info.getParent() != this) {
             throw new IllegalStateException("Not a child of this container");
@@ -908,9 +952,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         synchronized (mutex) {
             if (childMap != null) {
                 childMap.remove(info.getName());
-                if (childMap.size() < MAP_THRESHOLD) {
-                    childMap = null;
-                }
             }
             if (size == 1) {
                 firstChild = null;
@@ -927,8 +968,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             size--;
         }
-        if (info.getObject() instanceof DSNode) {
-            DSNode node = (DSNode) info.getObject();
+        if (info.get() instanceof DSNode) {
+            DSNode node = (DSNode) info.get();
             node.infoInParent = null;
             node.stop();
         }
@@ -1057,12 +1098,14 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             info = info.next();
         }
-        Subscription sub = subscription;
-        while (sub != null) {
-            sub.unsubscribe();
-            sub = sub.next;
+        synchronized (mutex) {
+            Subscription sub = subscription;
+            while (sub != null) {
+                sub.unsubscribe();
+                sub = sub.next;
+            }
+            subscription = null;
         }
-        subscription = null;
         state = DSUtil.setBit(state, STATE_STABLE, false);
         state = DSUtil.setBit(state, STATE_STOPPED, true);
         try {
@@ -1185,6 +1228,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
+     * Use to create DSInfos when overriding getAction(...).
+     */
+    protected DSInfo actionInfo(String name, DSAction target) {
+        return new DynamicInfo(name, target).setParent(this);
+    }
+
+    /**
      * Use this in the declareDefaults method to create a non-removable child.  This is only called
      * on the default instance.  Runtime instances clone the declared defaults found on the default
      * instance.
@@ -1196,7 +1246,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (!isDefaultInstance()) {
             throw new IllegalStateException("Can only called on default instances");
         }
-        return add(name, value).setPermanent(true);
+        return add(name, value).setDeclared(true);
     }
 
     /**
@@ -1211,7 +1261,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (!isDefaultInstance()) {
             throw new IllegalStateException("Can only called on default instances");
         }
-        DSInfo ret = add(name, value).setPermanent(true);
+        DSInfo ret = add(name, value).setDeclared(true);
         ret.getMetadata().setDescription(description);
         return ret;
     }
@@ -1312,13 +1362,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             return ((DSInfo) obj).isNull();
         }
         return false;
-    }
-
-    /**
-     * Use to create DSInfos when overriding getAction(...).
-     */
-    protected DSInfo newInfo(String name, DSIObject target) {
-        return new DSInfo(name, target).setParent(this);
     }
 
     /**
@@ -1459,7 +1502,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             size++;
         }
         info.setParent(this);
-        DSIObject val = info.getObject();
+        DSIObject val = info.get();
         if (val instanceof DSNode) {
             DSNode node = (DSNode) val;
             node.infoInParent = info;
@@ -1505,35 +1548,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 info = info.next();
             }
         }
-    }
-
-    /**
-     * Uses the boolean parameter to prevent stack overflows.
-     */
-    private DSInfo getDynamicAction(DSInfo target, String name, boolean calledByGetAction) {
-        if ((target == null) || target.getObject() == this) {
-            if (calledByGetAction) {
-                return getInfo(name);
-            }
-        }
-        DSInfo info = null;
-        if ((target != null) && target.isDynamic()) {
-            switch (name) {
-                case DeleteAction.DELETE:
-                    info = newInfo(name, DeleteAction.INSTANCE);
-                    break;
-                case DuplicateAction.DUPLICATE:
-                    info = newInfo(name, DuplicateAction.INSTANCE);
-                    break;
-                case RenameAction.RENAME:
-                    info = newInfo(name, RenameAction.INSTANCE);
-                    break;
-            }
-            if (info != null) {
-                info.getMetadata().setActionGroup("Edit Actions", null);
-            }
-        }
-        return info;
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -239,7 +239,7 @@ public class SysCertService extends DSNode {
     }
 
     private String getCertFilePass() {
-        DSPasswordAes128 pass = (DSPasswordAes128) keystorePass.getObject();
+        DSPasswordAes128 pass = (DSPasswordAes128) keystorePass.get();
         return pass.decode();
     }
 
@@ -248,7 +248,7 @@ public class SysCertService extends DSNode {
 
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                String result = ((SysCertService) target.getObject()).deleteKSEntry();
+                String result = ((SysCertService) target.get()).deleteKSEntry();
                 return new DSActionValues(this).addResult(DSString.valueOf(result));
             }
 
@@ -262,7 +262,7 @@ public class SysCertService extends DSNode {
         DSAction act = new DSAction.Parameterless() {
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                String[] results = ((SysCertService) target.getObject()).generateCSR();
+                String[] results = ((SysCertService) target.get()).generateCSR();
                 if (results != null && results.length > 1) {
                     return new DSActionValues(this)
                             .addResult(DSString.valueOf(results[0]))
@@ -283,7 +283,7 @@ public class SysCertService extends DSNode {
 
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                String result = ((SysCertService) target.getObject()).keytoolGenkey();
+                String result = ((SysCertService) target.get()).keytoolGenkey();
                 return new DSActionValues(this).addResult(DSString.valueOf(result));
             }
 
@@ -298,7 +298,7 @@ public class SysCertService extends DSNode {
 
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                String result = ((SysCertService) target.getObject()).getKSEntry();
+                String result = ((SysCertService) target.get()).getKSEntry();
                 return new DSActionValues(this).addResult(DSString.valueOf(result));
             }
 
@@ -310,7 +310,7 @@ public class SysCertService extends DSNode {
 
     private HostnameWhitelist getHostnameWhitelist() {
         if (whitelist == null) {
-            whitelist = (HostnameWhitelist) getInfo(HOSTNAME_WHITELIST).getObject();
+            whitelist = (HostnameWhitelist) getInfo(HOSTNAME_WHITELIST).get();
         }
         return whitelist;
     }
@@ -321,7 +321,7 @@ public class SysCertService extends DSNode {
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
                 DSMap parameters = invocation.getParameters();
-                String result = ((SysCertService) target.getObject()).importCACert(parameters);
+                String result = ((SysCertService) target.get()).importCACert(parameters);
                 return new DSActionValues(this).addResult(DSString.valueOf(result));
             }
 
@@ -339,7 +339,7 @@ public class SysCertService extends DSNode {
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
                 DSMap parameters = invocation.getParameters();
-                String result = ((SysCertService) target.getObject()).importPrimaryCert(parameters);
+                String result = ((SysCertService) target.get()).importPrimaryCert(parameters);
                 return new DSActionValues(this).addResult(DSString.valueOf(result));
             }
 
@@ -360,14 +360,14 @@ public class SysCertService extends DSNode {
 
     private CertCollection getLocalTruststore() {
         if (localTruststore == null) {
-            localTruststore = (CertCollection) getInfo(LOCAL_TRUSTSTORE).getObject();
+            localTruststore = (CertCollection) getInfo(LOCAL_TRUSTSTORE).get();
         }
         return localTruststore;
     }
 
     private CertCollection getQuarantine() {
         if (quarantine == null) {
-            quarantine = (CertCollection) getInfo(QUARANTINE).getObject();
+            quarantine = (CertCollection) getInfo(QUARANTINE).get();
         }
         return quarantine;
     }

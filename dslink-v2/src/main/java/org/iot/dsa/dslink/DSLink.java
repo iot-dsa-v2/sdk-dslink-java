@@ -264,6 +264,9 @@ public class DSLink extends DSNode implements Runnable {
     @Override
     protected String getLogName() {
         String s = getLinkName();
+        if ((s == null) || s.isEmpty()) {
+            return getClass().getSimpleName();
+        }
         if (s.startsWith("dslink-java")) {
             if (s.startsWith("dslink-java-v2-")) {
                 s = s.substring("dslink-java-v2-".length());
@@ -271,7 +274,7 @@ public class DSLink extends DSNode implements Runnable {
                 s = s.substring("dslink-java-".length());
             }
         }
-        if (s.isEmpty()) {
+        if ((s == null) || s.isEmpty()) {
             return getClass().getSimpleName();
         }
         return s;

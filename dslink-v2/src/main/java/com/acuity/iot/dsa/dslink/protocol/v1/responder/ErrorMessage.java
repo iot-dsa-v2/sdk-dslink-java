@@ -17,7 +17,7 @@ import org.iot.dsa.io.DSIWriter;
  */
 class ErrorMessage implements OutboundMessage {
 
-    private static String SERVER_ERROR;
+    private static String SERVER_ERROR = "serverError";
     private String message;
     private Integer rid;
     private String type = SERVER_ERROR;
@@ -38,8 +38,6 @@ class ErrorMessage implements OutboundMessage {
             } else {
                 setType("invalidRequest");
             }
-        } else {
-            setType("serverError");
         }
     }
 

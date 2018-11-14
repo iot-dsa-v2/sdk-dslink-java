@@ -47,7 +47,7 @@ public class SysLogService extends StreamableLogNode {
     @Override
     protected void onChildChanged(DSInfo info) {
         if (info == getLevelInfo()) {
-            DSLevel level = (DSLevel) info.getObject();
+            DSLevel level = (DSLevel) info.get();
             getLoggerObj().setLevel(level.toLevel());
         } else {
             super.onChildChanged(info);
@@ -64,7 +64,7 @@ public class SysLogService extends StreamableLogNode {
 
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                ((SysLogService) target.getObject()).addLog(invocation.getParameters());
+                ((SysLogService) target.get()).addLog(invocation.getParameters());
                 return null;
             }
 

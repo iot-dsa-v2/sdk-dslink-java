@@ -147,7 +147,7 @@ public class DSMetadata {
         if (bucket == null) {
             bucket = new DSMap();
         }
-        DSIObject obj = info.getObject();
+        DSIObject obj = info.get();
         if (obj instanceof DSIMetadata) {
             ((DSIMetadata) obj).getMetadata(bucket);
         }

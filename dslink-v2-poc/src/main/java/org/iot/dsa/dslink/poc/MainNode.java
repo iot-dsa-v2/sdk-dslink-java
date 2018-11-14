@@ -22,6 +22,7 @@ import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSAction.Parameterless;
 import org.iot.dsa.node.action.DSActionValues;
 
 /**
@@ -51,22 +52,38 @@ public class MainNode extends DSMainNode implements Runnable {
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    @Override
     public DSInfo getDynamicAction(DSInfo target, String name) {
         if (target == incrementingInt) {
-            return newInfo(name, new DSAction.Parameterless() {
-                @Override
-                public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                    put(incrementingInt, DSElement.make(0));
-                    return null;
-                }
-            });
+            if (name.equals("Reset")) {
+                return actionInfo(name, new DSAction.Parameterless() {
+                    @Override
+                    public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                        put(incrementingInt, DSElement.make(0));
+                        return null;
+                    }
+                });
+            }
+        } else if (target.get() == this) {
+            if (name.equals("Foobar")) {
+                return actionInfo(name, new Parameterless() {
+                    @Override
+                    public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                        System.out.println("Hi Mom");
+                        return null;
+                    }
+                });
+            }
         }
         return super.getDynamicAction(target, name);
     }
 
+    @Override
     public void getDynamicActions(DSInfo target, Collection<String> bucket) {
         if (target == incrementingInt) {
             bucket.add("Reset");
+        } else if (target.get() == this) {
+            bucket.add("Foobar");
         }
         super.getDynamicActions(target, bucket);
     }

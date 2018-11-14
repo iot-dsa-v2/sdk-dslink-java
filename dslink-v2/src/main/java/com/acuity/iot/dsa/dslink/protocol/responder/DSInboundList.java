@@ -689,7 +689,7 @@ public class DSInboundList extends DSInboundRequest
             ApiObject child;
             while (children.hasNext()) {
                 child = children.next();
-                if (!child.isHidden()) {
+                if (!child.isPrivate()) {
                     encodeChild(child, writer);
                 }
                 if (getResponder().shouldEndMessage()) {
@@ -733,7 +733,6 @@ public class DSInboundList extends DSInboundRequest
     protected static class AddUpdate extends Update {
 
         public ApiObject child;
-        public Update next;
 
         AddUpdate(ApiObject child) {
             this.child = child;
@@ -744,7 +743,6 @@ public class DSInboundList extends DSInboundRequest
     protected static class RemoveUpdate extends Update {
 
         public String name;
-        public Update next;
 
         RemoveUpdate(String name) {
             this.name = name;
