@@ -2,7 +2,7 @@ package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
-import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
+import com.acuity.iot.dsa.dslink.protocol.message.DSTarget;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
@@ -15,7 +15,7 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSTopic;
+import org.iot.dsa.node.event.DSITopic;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -117,7 +117,7 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     @Override
-    public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo info) {
+    public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo info) {
         close();
     }
 
@@ -209,7 +209,7 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     protected void init() {
-        RequestPath path = new RequestPath(getPath(), getLink());
+        DSTarget path = new DSTarget(getPath(), getLink());
         if (path.isResponder()) {
             DSIResponder responder = (DSIResponder) path.getTarget();
             setPath(path.getPath());
@@ -218,14 +218,14 @@ public class DSInboundSubscription extends DSInboundRequest
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
                 node = (DSNode) obj;
-                node.subscribe(DSNode.VALUE_TOPIC, null, null, this);
-                onEvent(node, null, DSNode.VALUE_TOPIC);
+                node.subscribe(DSNode.VALUE_CHANGED, null, null, this);
+                onEvent(node, null, DSNode.VALUE_CHANGED);
             } else {
-                DSInfo info = path.getInfo();
-                node = path.getParent();
+                DSInfo info = path.getTargetInfo();
+                node = path.getNode();
                 child = info;
-                node.subscribe(DSNode.VALUE_TOPIC, info, null, this);
-                onEvent(node, info, DSNode.VALUE_TOPIC);
+                node.subscribe(DSNode.VALUE_CHANGED, info, null, this);
+                onEvent(node, info, DSNode.VALUE_CHANGED);
             }
         }
     }
@@ -316,7 +316,7 @@ public class DSInboundSubscription extends DSInboundRequest
         }
         try {
             if (node != null) {
-                node.unsubscribe(DSNode.VALUE_TOPIC, child, this);
+                node.unsubscribe(DSNode.VALUE_CHANGED, child, this);
             }
         } catch (Exception x) {
             manager.debug(manager.getPath(), x);

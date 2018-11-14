@@ -32,54 +32,15 @@ public class DSSysNode extends DSNode {
 
     private DSInfo backups = getInfo(BACKUPS);
     private DSInfo connection = getInfo(CONNECTION);
-    private DSInfo stop = getInfo(STOP);
-    private DSInfo profilerToggle;
     private DSInfo profiler = null;
+    private DSInfo profilerToggle;
 
-    @Override
-    protected void declareDefaults() {
-        declareDefault(STOP, DSAction.DEFAULT);
-        declareDefault(CERTIFICATES, new SysCertService());
-        declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
-        declareDefault(LOGGING, new SysLogService());
-        declareDefault(BACKUPS, new SysBackupService());
-    }
-    
-    @Override
-    protected void onStable() {
-        profiler = getInfo(PROFILER);
-        if (profiler == null) {
-            profilerToggle = put(OPEN_PROFILER, DSAction.DEFAULT).setTransient(true);
-        } else {
-            profilerToggle = put(CLOSE_PROFILER, DSAction.DEFAULT).setTransient(true);
-        }
-    }
-    
-    private void openProfiler() {
-        profiler = put(PROFILER, new SysProfiler());
-        if (profilerToggle != null) {
-            remove(profilerToggle);
-        }
-        profilerToggle = put(CLOSE_PROFILER, DSAction.DEFAULT).setTransient(true);
-    }
-    
-    private void closeProfiler() {
-        if (profiler != null) {
-            remove(profiler);
-            profiler = null;
-        }
-        if (profilerToggle != null) {
-            remove(profilerToggle);
-        }
-        profilerToggle = put(OPEN_PROFILER, DSAction.DEFAULT).setTransient(true);
+    public SysBackupService getBackupService() {
+        return (SysBackupService) backups.getObject();
     }
 
     public DSLinkConnection getConnection() {
         return (DSLinkConnection) connection.getObject();
-    }
-
-    public SysBackupService getBackupService() {
-        return (SysBackupService) backups.getObject();
     }
 
     public DSLink getLink() {
@@ -87,8 +48,35 @@ public class DSSysNode extends DSNode {
     }
 
     @Override
+    protected void declareDefaults() {
+        declareDefault(STOP, new StopAction());
+        declareDefault(CERTIFICATES, new SysCertService());
+        declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
+        declareDefault(LOGGING, new SysLogService());
+        declareDefault(BACKUPS, new SysBackupService());
+    }
+
+    @Override
     protected String getLogName() {
         return getLogName("sys");
+    }
+
+    @Override
+    protected void onStable() {
+        profiler = getInfo(PROFILER);
+        if (profiler == null) {
+            profilerToggle = put(OPEN_PROFILER, new ToggleAction()).setTransient(true);
+        } else {
+            profilerToggle = put(CLOSE_PROFILER, new ToggleAction()).setTransient(true);
+        }
+    }
+
+    @Override
+    protected void validateParent(DSNode node) {
+        if (node instanceof DSLink) {
+            return;
+        }
+        throw new IllegalArgumentException("Invalid parent: " + node.getClass().getName());
     }
 
     void init() {
@@ -111,28 +99,47 @@ public class DSSysNode extends DSNode {
         }
     }
 
-    @Override
-    public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
-        if (action == stop) {
-            getLink().shutdown();
-        } else if (action == profilerToggle) {
-            if (profiler == null) {
-                openProfiler();
-            } else {
-                closeProfiler();
-            }
-        } else {
-            super.onInvoke(action, invocation);
+    private void closeProfiler() {
+        if (profiler != null) {
+            remove(profiler);
+            profiler = null;
         }
-        return null;
+        if (profilerToggle != null) {
+            remove(profilerToggle);
+        }
+        profilerToggle = put(OPEN_PROFILER, new ToggleAction()).setTransient(true);
     }
 
-    @Override
-    protected void validateParent(DSNode node) {
-        if (node instanceof DSLink) {
-            return;
+    private void openProfiler() {
+        profiler = put(PROFILER, new SysProfiler());
+        if (profilerToggle != null) {
+            remove(profilerToggle);
         }
-        throw new IllegalArgumentException("Invalid parent: " + node.getClass().getName());
+        profilerToggle = put(CLOSE_PROFILER, new ToggleAction()).setTransient(true);
+    }
+
+    private class StopAction extends DSAction.Parameterless {
+
+        @Override
+        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+            ((DSSysNode)target.getObject()).getLink().shutdown();
+            return null;
+        }
+
+    }
+
+    private class ToggleAction extends DSAction.Parameterless {
+
+        @Override
+        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+            if (profiler == null) {
+                ((DSSysNode)target.getObject()).openProfiler();
+            } else {
+                ((DSSysNode)target.getObject()).closeProfiler();
+            }
+            return null;
+        }
+
     }
 
 }

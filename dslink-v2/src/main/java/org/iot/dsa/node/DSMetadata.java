@@ -20,13 +20,21 @@ public class DSMetadata {
     public static final String EDITOR = "editor";
     public static final String ENUM_RANGE = "enumRange";
     public static final String NAME = "name";
-    /** Max numeric value */
+    /**
+     * Max numeric value
+     */
     public static final String MAX = "max";
-    /** Min numeric value */
+    /**
+     * Min numeric value
+     */
     public static final String MIN = "min";
-    /** Text to show in empty textfields. */
+    /**
+     * Text to show in empty textfields.
+     */
     public static final String PLACEHOLDER = "placeholder";
-    /** Number of decimal places. */
+    /**
+     * Number of decimal places.
+     */
     public static final String PRECISION = "precision";
     public static final String TYPE = "type";
     public static final String UNIT = "unit";
@@ -209,8 +217,9 @@ public class DSMetadata {
     /**
      * Use to group similar actions.  If you want to change the display name of the action in
      * it's group, use the optional second parameter.
+     *
      * @param groupName Name of a group of related actions.
-     * @param subTitle Changes the display name of the action in it's group.
+     * @param subTitle  Optional, changes the display name of the action in it's group.
      */
     public DSMetadata setActionGroup(String groupName, String subTitle) {
         map.put(ACTION_GROUP, groupName);

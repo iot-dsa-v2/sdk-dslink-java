@@ -21,7 +21,7 @@ import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionSpec.ResultType;
 import org.iot.dsa.node.action.ActionValues;
-import org.iot.dsa.node.action.DSAbstractAction;
+import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DSActionValues;
 
 public class ThreadNode extends MXBeanNode {
@@ -32,44 +32,30 @@ public class ThreadNode extends MXBeanNode {
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
-        DSAbstractAction act = new DSAbstractAction() {
+        DSAction act = new DSAction.Parameterless() {
             @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                return ((ThreadNode) info.getParent()).findDeadlocked(info);
-            }
-
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                return ((ThreadNode) target.getObject()).findDeadlocked(this);
             }
         };
         act.setResultType(ResultType.VALUES);
         act.addColumnMetadata("Result", DSValueType.STRING);
         declareDefault("Find Deadlocked Threads", act);
-
-        act = new DSAbstractAction() {
+        act = new DSAction.Parameterless() {
             @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                return ((ThreadNode) info.getParent()).findMonitorDeadlocked(info);
-            }
-
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                return ((ThreadNode) target.getParent()).findMonitorDeadlocked(this);
             }
         };
         act.setResultType(ResultType.VALUES);
         act.addColumnMetadata("Result", DSValueType.STRING);
         declareDefault("Find Monitor Deadlocked Threads", act);
-
-        act = new DSAbstractAction() {
-
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
-            }
+        act = new DSAction.Parameterless() {
 
             @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                return ((ThreadNode) info.getParent())
-                        .getThreadDump(info, invocation.getParameters());
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                return ((ThreadNode) target.getObject())
+                        .getThreadDump(this, invocation.getParameters());
             }
         };
         act.addParameter("Dump Locked Monitors", DSValueType.BOOL,
@@ -81,7 +67,7 @@ public class ThreadNode extends MXBeanNode {
         declareDefault("Get Thread Dump", act);
     }
 
-    protected ActionResult getThreadDump(DSInfo info, DSMap parameters) {
+    protected ActionResult getThreadDump(DSAction action, DSMap parameters) {
         boolean lockedMonitors = parameters.getBoolean("Dump Locked Monitors");
         boolean lockedSynchronizers = parameters.getBoolean("Dump Locked Synschronizers");
         ThreadInfo[] threads = mxbean.dumpAllThreads(lockedMonitors, lockedSynchronizers);
@@ -91,21 +77,20 @@ public class ThreadNode extends MXBeanNode {
             dump.append('\n');
             //ProfilerUtils.stackTraceToString(thread.getStackTrace());
         }
-        return new DSActionValues(info.getAction()).addResult(DSString.valueOf(dump.toString()));
+        return new DSActionValues(action).addResult(DSString.valueOf(dump.toString()));
     }
 
-    public ActionResult findDeadlocked(DSInfo actionInfo) {
+    public ActionResult findDeadlocked(DSAction action) {
         long[] ids = mxbean.findDeadlockedThreads();
-        return returnDeadlocked(actionInfo, ids != null ? ids : new long[0]);
+        return returnDeadlocked(action, ids != null ? ids : new long[0]);
     }
 
-    public ActionResult findMonitorDeadlocked(DSInfo actionInfo) {
+    public ActionResult findMonitorDeadlocked(DSAction action) {
         long[] ids = mxbean.findMonitorDeadlockedThreads();
-        return returnDeadlocked(actionInfo, ids != null ? ids : new long[0]);
+        return returnDeadlocked(action, ids != null ? ids : new long[0]);
     }
 
-    private ActionResult returnDeadlocked(DSInfo actionInfo, long[] deadlockedIds) {
-        final DSAbstractAction action = actionInfo.getAction();
+    private ActionResult returnDeadlocked(final DSAction action, long[] deadlockedIds) {
         DSList l = new DSList();
         for (long id : deadlockedIds) {
             l.add(id);

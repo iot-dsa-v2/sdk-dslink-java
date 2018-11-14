@@ -13,7 +13,7 @@ import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSTopic;
+import org.iot.dsa.node.event.DSITopic;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -48,7 +48,7 @@ public class RequesterInvokeTest {
             }
 
             @Override
-            public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
+            public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
             }
         });
         Thread t = new Thread(link, "DSLink Runner");
@@ -93,7 +93,7 @@ public class RequesterInvokeTest {
         }
 
         @Override
-        public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
+        public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation invocation) {
             return null;
         }
 
@@ -105,14 +105,14 @@ public class RequesterInvokeTest {
         public void declareDefaults() {
             declareDefault("anode", new ANode());
             declareDefault("simpleAction", DSAction.DEFAULT);
-            DSAction action = new DSAction();
+            DSAction action = new DSAction.Noop();
             action.addParameter("param", DSValueType.BOOL, "a desc");
             declareDefault("simpleParam", action);
             declareDefault("exception", DSAction.DEFAULT);
         }
 
         @Override
-        public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
+        public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation invocation) {
             String name = action.getName();
             if (name.equals("simpleAction")) {
                 success = true;

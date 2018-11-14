@@ -11,60 +11,66 @@ import org.iot.dsa.node.action.DSAction;
  * @author Daniel Shapiro
  */
 public class CertNode extends DSValueNode {
-    
+
     private static final String VALUE = "value";
     private static final String ALLOW = "Allow";
     private static final String REMOVE = "Remove";
-    
-    private DSInfo value = getInfo(VALUE);
     private DSInfo allow = getInfo(ALLOW);
-    private DSInfo remove = getInfo(REMOVE);
-    
     private SysCertService certManager;
-    
-    @Override
-    protected void declareDefaults() {
-        super.declareDefaults();
-        declareDefault(VALUE, DSString.valueOf("")).setHidden(true).setReadOnly(true);
-        declareDefault(ALLOW, DSAction.DEFAULT);
-        declareDefault(REMOVE, DSAction.DEFAULT);
-    }
-    
-    public CertNode updateValue(String newVal) {
-        put(VALUE, newVal);
-        return this;
+    private DSInfo remove = getInfo(REMOVE);
+    private DSInfo value = getInfo(VALUE);
+
+    public SysCertService getCertManager() {
+        if (certManager == null) {
+            certManager = (SysCertService) getAncestor(SysCertService.class);
+        }
+        return certManager;
     }
 
     @Override
     public DSInfo getValueChild() {
         return value;
     }
-    
+
+    public CertNode updateValue(String newVal) {
+        put(VALUE, newVal);
+        return this;
+    }
+
     @Override
-    public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
-        if (action == remove) {
-            remove();
-        } else if (action == allow) {
-            allow();
-        } else {
-            super.onInvoke(action, invocation);
-        }
-        return null;
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault(VALUE, DSString.valueOf("")).setHidden(true).setReadOnly(true);
+        declareDefault(ALLOW, new AllowAction());
+        declareDefault(REMOVE, new RemoveAction());
     }
-    
-    private void remove() {
-        getParent().remove(getInfo());
-    }
-    
+
     private void allow() {
         getCertManager().allow(getInfo());
     }
-    
-    public SysCertService getCertManager() {
-        if (certManager == null) {
-            certManager = (SysCertService) getAncestor(SysCertService.class);
+
+    private void remove() {
+        getParent().remove(getInfo());
+    }
+
+    private static class AllowAction extends DSAction.Parameterless {
+
+        @Override
+        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+            ((CertNode) target.getObject()).allow();
+            return null;
         }
-        return certManager;
+
+    }
+
+    private static class RemoveAction extends DSAction.Parameterless {
+
+        @Override
+        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+            ((CertNode) target.getObject()).remove();
+            return null;
+        }
+
     }
 
 }

@@ -9,7 +9,7 @@ import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSTopic;
+import org.iot.dsa.node.event.DSITopic;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -31,7 +31,7 @@ public class SysProfilerTest {
             }
 
             @Override
-            public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
+            public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
             }
         });
         success = false;
@@ -58,7 +58,7 @@ public class SysProfilerTest {
         final ThreadNode thread = (ThreadNode) threadobj;
         final DSInfo cpuTime = thread.getInfo("CurrentThreadCpuTime");
         Assert.assertTrue(cpuTime != null);
-        thread.subscribe(DSNode.VALUE_TOPIC, cpuTime, null, new DSISubscriber() {
+        thread.subscribe(DSNode.VALUE_CHANGED, cpuTime, null, new DSISubscriber() {
             @Override
             public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
                 Assert.assertEquals(thread, node);
@@ -72,7 +72,7 @@ public class SysProfilerTest {
             }
 
             @Override
-            public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
+            public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
             }
         });
         synchronized (this) {

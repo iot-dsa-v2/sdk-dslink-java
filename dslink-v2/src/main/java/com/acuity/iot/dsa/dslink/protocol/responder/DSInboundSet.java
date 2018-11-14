@@ -1,6 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
-import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
+import com.acuity.iot.dsa.dslink.protocol.message.DSTarget;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
@@ -35,14 +35,14 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
     @Override
     public void run() {
         try {
-            RequestPath path = new RequestPath(getPath(), getLink());
+            DSTarget path = new DSTarget(getPath(), getLink());
             if (path.isResponder()) {
                 DSIResponder responder = (DSIResponder) path.getTarget();
                 setPath(path.getPath());
                 responder.onSet(this);
             } else {
-                DSNode parent = path.getParent();
-                DSInfo info = path.getInfo();
+                DSNode parent = path.getNode();
+                DSInfo info = path.getTargetInfo();
                 if ((info != null) && info.isReadOnly()) {
                     throw new DSRequestException("Not writable: " + getPath());
                 }

@@ -1,20 +1,17 @@
 package org.iot.dsa.node;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import org.iot.dsa.dslink.responder.ApiObject;
-import org.iot.dsa.node.action.DSAbstractAction;
-import org.iot.dsa.node.event.DSInfoTopic;
+import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.event.DSNodeTopic;
 import org.iot.dsa.util.DSUtil;
 
 /**
- * All node children have corresponding DSInfo instances. DSInfo serves two purposes:
- * <ul>
- * <li>It carries meta-data about the relationship between the parent node and the
- * child.
- * <li>It tracks whether or not the child matches a declared default.
- * </ul>
+ * All objects in the node tree have corresponding DSInfo instances. DSInfo provides information
+ * about the object at a specific path.
  * <p>
- * Important things for developers to know about DSInfo are:
+ * Important things developers should know about DSInfo are:
  * <ul>
  * <li>You can configure state such as transient, readonly and hidden.
  * <li>You can declare fields in the your Java class for default infos to avoid looking up
@@ -56,7 +53,7 @@ public class DSInfo implements ApiObject, GroupListener {
     DSInfo() {
     }
 
-    protected DSInfo(String name, DSIObject object) {
+    public DSInfo(String name, DSIObject object) {
         this.name = name;
         setObject(object);
     }
@@ -67,8 +64,7 @@ public class DSInfo implements ApiObject, GroupListener {
 
     public DSInfo copy() {
         DSInfo ret = new DSInfo();
-        ret.flags = flags;
-        ret.name = name;
+        ret.copyState(this);
         if (isDefaultOnCopy()) {
             DSIObject val = getDefaultObject();
             if (val != null) {
@@ -134,13 +130,39 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     @Override
-    public DSAbstractAction getAction() {
-        return (DSAbstractAction) getObject();
+    public DSAction getAction() {
+        return (DSAction) getObject();
     }
 
     @Override
     public Iterator<ApiObject> getChildren() {
-        return new ApiIterator(getNode().iterator());
+        ArrayList<ApiObject> ret = new ArrayList<>();
+        ArrayList<String> actions = new ArrayList<>();
+        DSInfo info;
+        DSNode node;
+        if (isNode()) {
+            node = getNode();
+            node.getDynamicActions(this, actions);
+        } else {
+            node = getParent();
+            node.getDynamicActions(this, actions);
+        }
+        for (String s : actions) {
+            info = node.getDynamicAction(this, s);
+            if (info != null) {
+                ret.add(info);
+            }
+        }
+        if (isNode()) {
+            info = node.getFirstInfo();
+            while (info != null) {
+                if (!info.isAction()) {
+                    ret.add(info);
+                }
+                info = info.next();
+            }
+        }
+        return ret.iterator();
     }
 
     /**
@@ -215,14 +237,6 @@ public class DSInfo implements ApiObject, GroupListener {
         return (DSIValue) object;
     }
 
-    @Override
-    public boolean hasChildren() {
-        if (isNode()) {
-            return getNode().childCount() > 0;
-        }
-        return false;
-    }
-
     /**
      * True if there is another info after this one.
      */
@@ -247,7 +261,7 @@ public class DSInfo implements ApiObject, GroupListener {
 
     @Override
     public boolean isAction() {
-        return object instanceof DSAbstractAction;
+        return object instanceof DSAction;
     }
 
     @Override
@@ -354,8 +368,11 @@ public class DSInfo implements ApiObject, GroupListener {
         return object instanceof DSIValue;
     }
 
+    /**
+     * Fires a metadata changed event.
+     */
     public void modified(DSGroup map) {
-        //TODO info modified
+        fireInfoChanged();
     }
 
     /**
@@ -465,13 +482,24 @@ public class DSInfo implements ApiObject, GroupListener {
      * be populated with the default value.
      */
     void copy(DSInfo info) {
-        flags = info.flags;
-        name = info.name;
+        copyState(info);
         if (isDefaultOnCopy()) {
             return;
         }
         if (info.object != null) {
             setObject(info.object.copy());
+        }
+    }
+
+    /**
+     * This is only called by DSNode.copy.  Therefore, this will already
+     * be populated with the default value.
+     */
+    void copyState(DSInfo info) {
+        flags = info.flags;
+        name = info.name;
+        if (info.metadata != null) {
+            metadata = info.metadata.copy();
         }
     }
 
@@ -516,45 +544,14 @@ public class DSInfo implements ApiObject, GroupListener {
         return this;
     }
 
-    private boolean equivalent(DSInfo arg) {
-        if (getFlags() != arg.getFlags()) {
-            return false;
-        } else if (!DSUtil.equal(arg.getName(), getName())) {
-            return false;
-        }
-        return DSUtil.equal(getObject(), arg.getObject());
-    }
-
     private void fireInfoChanged() {
         if ((parent != null) && (parent.isRunning())) {
-            parent.fire(DSInfoTopic.Event.METADATA_CHANGED, this);
+            parent.fire(DSNodeTopic.METADATA_CHANGED, this);
         }
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
-
-    class ApiIterator implements Iterator<ApiObject> {
-
-        Iterator<DSInfo> iterator;
-
-        ApiIterator(Iterator<DSInfo> iterator) {
-            this.iterator = iterator;
-        }
-
-        public boolean hasNext() {
-            return iterator.hasNext();
-        }
-
-        public ApiObject next() {
-            return iterator.next();
-        }
-
-        public void remove() {
-            iterator.remove();
-        }
-
-    }
 
 }

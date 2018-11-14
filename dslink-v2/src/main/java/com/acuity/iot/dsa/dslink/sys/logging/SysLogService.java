@@ -14,7 +14,7 @@ import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.DSAbstractAction;
+import org.iot.dsa.node.action.DSAction;
 
 /**
  * @author Daniel Shapiro
@@ -59,17 +59,17 @@ public class SysLogService extends StreamableLogNode {
         put(logName, new LoggerNode());
     }
 
-    private DSAbstractAction getAddLogAction() {
-        DSAbstractAction act = new DSAbstractAction() {
+    private DSAction getAddLogAction() {
+        DSAction act = new DSAction() {
 
             @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                ((SysLogService) info.getParent()).addLog(invocation.getParameters());
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                ((SysLogService) target.getObject()).addLog(invocation.getParameters());
                 return null;
             }
 
             @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
+            public void prepareParameter(DSInfo target, DSMap parameter) {
                 DSMetadata meta = new DSMetadata(parameter);
                 if ("Log".equals(meta.getName())) {
                     DSList range = getLogNames();
@@ -82,6 +82,23 @@ public class SysLogService extends StreamableLogNode {
         DSList range = getLogNames();
         act.addParameter("Log", DSFlexEnum.valueOf(range.getString(0), range), null);
         return act;
+    }
+
+    private DSList getLogNames() {
+        ArrayList<String> list = new ArrayList<String>();
+        Enumeration<String> logNames = LogManager.getLogManager().getLoggerNames();
+        while (logNames.hasMoreElements()) {
+            String name = logNames.nextElement();
+            if (!name.isEmpty()) {
+                list.add(name);
+            }
+        }
+        Collections.sort(list);
+        DSList ret = new DSList();
+        for (String s : list) {
+            ret.add(s);
+        }
+        return ret;
     }
 
     private static Level getRootLevel() {
@@ -100,23 +117,6 @@ public class SysLogService extends StreamableLogNode {
         }
         logger.log(Level.WARNING, "Cannot determine root log level");
         return Level.INFO;
-    }
-
-    private DSList getLogNames() {
-        ArrayList<String> list = new ArrayList<String>();
-        Enumeration<String> logNames = LogManager.getLogManager().getLoggerNames();
-        while (logNames.hasMoreElements()) {
-            String name = logNames.nextElement();
-            if (!name.isEmpty()) {
-                list.add(name);
-            }
-        }
-        Collections.sort(list);
-        DSList ret = new DSList();
-        for (String s : list) {
-            ret.add(s);
-        }
-        return ret;
     }
 
 }

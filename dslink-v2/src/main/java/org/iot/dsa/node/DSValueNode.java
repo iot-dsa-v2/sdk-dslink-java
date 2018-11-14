@@ -10,24 +10,6 @@ package org.iot.dsa.node;
 public abstract class DSValueNode extends DSNode implements DSIValue {
 
     /**
-     * This fires the NODE_CHANGED topic when the value child changes.  Overrides should call
-     * super.onChildChanged.
-     */
-    @Override
-    public void onChildChanged(DSInfo child) {
-        DSInfo info = getValueChild();
-        if (child == info) {
-            DSIValue val = info.getValue();
-            fire(VALUE_TOPIC, null);
-        }
-    }
-
-    @Override
-    public DSValueType getValueType() {
-        return getValueChild().getValue().getValueType();
-    }
-
-    /**
      * Subclasses must store the node value in a child value and provide the info for that child
      * here.  This method will be called often, it would be best to cache the info instance
      * rather then doing a name lookup each time.
@@ -35,13 +17,30 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
     public abstract DSInfo getValueChild();
 
     @Override
-    public DSElement toElement() {
-        return getValueChild().getValue().toElement();
+    public DSValueType getValueType() {
+        return getValueChild().getValue().getValueType();
+    }
+
+    /**
+     * This fires the VALUE_CHANGED topic when the value child changes.  Overrides should call
+     * super.onChildChanged.
+     */
+    @Override
+    public void onChildChanged(DSInfo child) {
+        DSInfo info = getValueChild();
+        if (child == info) {
+            fire(VALUE_CHANGED, null);
+        }
     }
 
     @Override
     public void onSet(DSIValue value) {
         put(getValueChild(), value);
+    }
+
+    @Override
+    public DSElement toElement() {
+        return getValueChild().getValue().toElement();
     }
 
     @Override

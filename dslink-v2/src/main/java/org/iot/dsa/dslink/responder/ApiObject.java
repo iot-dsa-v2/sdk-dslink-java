@@ -18,7 +18,7 @@ public interface ApiObject {
     public ActionSpec getAction();
 
     /**
-     * Iterator of child objects, should only be called if hasChildren() returns true.
+     * Iterator of children of this object.
      */
     public Iterator<ApiObject> getChildren();
 
@@ -33,11 +33,6 @@ public interface ApiObject {
      * Value of the object, should only be called if isValue() returns true.
      */
     public DSIValue getValue();
-
-    /**
-     * True if getChildren() can be called.
-     */
-    public boolean hasChildren();
 
     /**
      * True if the object is an action.

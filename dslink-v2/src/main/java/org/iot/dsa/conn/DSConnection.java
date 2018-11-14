@@ -6,6 +6,7 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.event.DSIEvent;
+import org.iot.dsa.node.event.DSITopic;
 import org.iot.dsa.node.event.DSTopic;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
@@ -349,7 +350,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         }
 
         @Override
-        public DSTopic getTopic() {
+        public DSITopic getTopic() {
             return this;
         }
 
