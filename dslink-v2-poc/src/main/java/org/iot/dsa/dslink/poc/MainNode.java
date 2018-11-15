@@ -1,12 +1,29 @@
 package org.iot.dsa.dslink.poc;
 
+import java.util.Collection;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSMainNode;
 import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundStream;
-import org.iot.dsa.node.*;
-import org.iot.dsa.node.action.*;
+import org.iot.dsa.node.DSBool;
+import org.iot.dsa.node.DSDouble;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSFlexEnum;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSJavaEnum;
+import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSLong;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.action.ActionInvocation;
+import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.ActionSpec;
+import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSAction.Parameterless;
+import org.iot.dsa.node.action.DSActionValues;
 
 /**
  * Link main class and node.
@@ -28,96 +45,52 @@ public class MainNode extends DSMainNode implements Runnable {
     private DSInfo incrementingInt = getInfo("Incrementing Int");
     private DSInfo reset = getInfo("Reset");
     private DSInfo test = getInfo("Test");
-    private DSInfo valuesAction = getInfo("Values Action");
     private DSRuntime.Timer timer;
+    private DSInfo valuesAction = getInfo("Values Action");
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void declareDefaults() {
-        super.declareDefaults();
-        declareDefault("Incrementing Int", DSLong.valueOf(1)).setReadOnly(true)
-                                                             .getMetadata()
-                                                             .setDescription("this is a description")
-                                                             .setUnit("ms");
-        declareDefault("Writable Boolean", DSBool.valueOf(true)).setAdmin(true);
-        declareDefault("Writable Enum",
-                       DSFlexEnum.valueOf("On",
-                                          DSList.valueOf("Off", "On", "Auto", "Has Space")));
-        declareDefault("Java Enum", DSJavaEnum.valueOf(MyEnum.Off));
-        declareDefault("Message", DSString.EMPTY).setReadOnly(true);
-        DSAction action = new DSAction();
-        action.addParameter("Arg",
-                            DSJavaEnum.valueOf(MyEnum.Off),
-                            "My action description");
-        declareDefault("Reset", action);
-        declareDefault("Test", DSAction.DEFAULT);
-        action = new DSAction();
-        action.setResultType(ActionSpec.ResultType.VALUES);
-        action.addColumnMetadata("bool", DSBool.TRUE);
-        action.addColumnMetadata("long", DSLong.valueOf(0));
-        declareDefault("Values Action", action);
-        //declareDefault("T./,;'<>?:\"[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
-        //notice the missing chars from above, dglux gets funky with the chars: <>?:\"
-        declareDefault("T./,;'[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
-        declareDefault("Test_List", new DSAbstractAction() {
-            @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                System.out.println("invoking");
-                ((DSMainNode)info.getParent()).getLink().getConnection().getRequester()
-                                .list(
-                        "/downstream/bogus/path", new ListHandler());
-                return null;
+    public DSInfo getDynamicAction(DSInfo target, String name) {
+        if (target == incrementingInt) {
+            if (name.equals("Reset")) {
+                return actionInfo(name, new DSAction.Parameterless() {
+                    @Override
+                    public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                        put(incrementingInt, DSElement.make(0));
+                        return null;
+                    }
+                });
             }
-
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
+        } else if (target.get() == this) {
+            if (name.equals("Foobar")) {
+                return actionInfo(name, new Parameterless() {
+                    @Override
+                    public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                        System.out.println("Hi Mom");
+                        return null;
+                    }
+                });
             }
-        }).getMetadata().setActionGroup("Tests", "List");
-    }
-
-    private class ListHandler implements OutboundListHandler {
-        OutboundStream stream;
-        @Override
-        public void onInit(String path, OutboundStream stream) {
-            System.out.println("onInit");
-            this.stream = stream;
         }
-
-        @Override
-        public void onInitialized() {
-            System.out.println("list initialized");
-            stream.closeStream();
-        }
-
-        @Override
-        public void onRemove(String name) {
-            System.out.println("list remove " + name);
-        }
-
-        @Override
-        public void onUpdate(String name, DSElement value) {
-            System.out.print(name);
-            System.out.print(": ");
-            System.out.println(String.valueOf(value));
-        }
-
-        @Override
-        public void onClose() {
-            System.out.println("list closed");
-        }
-
-        @Override
-        public void onError(ErrorType type, String msg) {
-            System.out.println("list error " + type + ", " + msg);
-        }
+        return super.getDynamicAction(target, name);
     }
 
     @Override
-    public ActionResult onInvoke(DSInfo actionInfo, ActionInvocation invocation) {
-        if (actionInfo == this.reset) {
+    public void getDynamicActions(DSInfo target, Collection<String> bucket) {
+        if (target == incrementingInt) {
+            bucket.add("Reset");
+        } else if (target.get() == this) {
+            bucket.add("Foobar");
+        }
+        super.getDynamicActions(target, bucket);
+    }
+
+    @Override
+    public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation invocation) {
+        if (action == this.reset) {
             put(incrementingInt, DSElement.make(0));
             DSMap map = invocation.getParameters();
             DSElement arg = null;
@@ -127,62 +100,15 @@ public class MainNode extends DSMainNode implements Runnable {
             }
             clear();
             return null;
-        } else if (actionInfo == this.test) {
-            DSRuntime.run(new Runnable() {
-                @Override
-                public void run() {
-                    onTest();
-                }
-            });
+        } else if (action == this.test) {
+            DSRuntime.run(() -> onTest());
             return null;
-        } else if (actionInfo == this.valuesAction) {
+        } else if (action == this.valuesAction) {
             return new DSActionValues(this.valuesAction.getAction())
                     .addResult(DSBool.TRUE)
                     .addResult(DSLong.valueOf(1234));
         }
-        return super.onInvoke(actionInfo, invocation);
-    }
-
-    /**
-     * Start the update timer.  This only updates when something is interested in this node.
-     */
-    @Override
-    protected synchronized void onSubscribed() {
-        timer = DSRuntime.run(this, System.currentTimeMillis() + 1000l, 1000l);
-    }
-
-    /**
-     * Cancel an active timer if there is one.
-     */
-    @Override
-    protected void onStopped() {
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
-        }
-    }
-
-    /**
-     * Action impl, build a large databases.
-     */
-    private void onTest() {
-        info("Start Test: " + new java.util.Date());
-        info("Test run (1/3) ...");
-        test(false);
-        info("Test run (2/3) ...");
-        test(false);
-        info("Test run (3/3) ...");
-        test(true);
-        info("Test Finished: " + new java.util.Date());
-    }
-
-    /**
-     * Cancel the active timer.
-     */
-    @Override
-    protected synchronized void onUnsubscribed() {
-        timer.cancel();
-        timer = null;
+        return super.invoke(action, target, invocation);
     }
 
     /**
@@ -233,6 +159,78 @@ public class MainNode extends DSMainNode implements Runnable {
         }
     }
 
+    @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault("Incrementing Int", DSLong.valueOf(1)).setReadOnly(true)
+                                                             .getMetadata()
+                                                             .setDescription(
+                                                                     "this is a description")
+                                                             .setUnit("ms");
+        declareDefault("Writable Boolean", DSBool.valueOf(true)).setAdmin(true);
+        declareDefault("Writable Enum",
+                       DSFlexEnum.valueOf("On",
+                                          DSList.valueOf("Off", "On", "Auto", "Has Space")));
+        declareDefault("Java Enum", DSJavaEnum.valueOf(MyEnum.Off));
+        declareDefault("Message", DSString.EMPTY).setReadOnly(true);
+        DSAction action = new DSAction.Noop();
+        action.addParameter("Arg",
+                            DSJavaEnum.valueOf(MyEnum.Off),
+                            "My action description");
+        declareDefault("Reset", action);
+        declareDefault("Test", DSAction.DEFAULT);
+        action = new DSAction.Noop();
+        action.setResultType(ActionSpec.ResultType.VALUES);
+        action.addColumnMetadata("bool", DSBool.TRUE);
+        action.addColumnMetadata("long", DSLong.valueOf(0));
+        declareDefault("Values Action", action);
+        //declareDefault("T./,;'<>?:\"[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
+        //notice the missing chars from above, dglux gets funky with the chars: <>?:\"
+        declareDefault("T./,;'[%]{/}bc", DSString.valueOf("abc")).setTransient(true);
+    }
+
+    /**
+     * Cancel an active timer if there is one.
+     */
+    @Override
+    protected void onStopped() {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
+    /**
+     * Start the update timer.  This only updates when something is interested in this node.
+     */
+    @Override
+    protected synchronized void onSubscribed() {
+        timer = DSRuntime.run(this, System.currentTimeMillis() + 1000l, 1000l);
+    }
+
+    /**
+     * Cancel the active timer.
+     */
+    @Override
+    protected synchronized void onUnsubscribed() {
+        timer.cancel();
+        timer = null;
+    }
+
+    /**
+     * Action impl, build a large databases.
+     */
+    private void onTest() {
+        info("Start Test: " + new java.util.Date());
+        info("Test run (1/3) ...");
+        test(false);
+        info("Test run (2/3) ...");
+        test(false);
+        info("Test run (3/3) ...");
+        test(true);
+        info("Test Finished: " + new java.util.Date());
+    }
+
     private String testFormat(long mem) {
         return (mem / 1000) + "KB";
     }
@@ -274,7 +272,6 @@ public class MainNode extends DSMainNode implements Runnable {
         return mem;
     }
 
-
     private void testTraverse(DSNode node) {
         DSInfo info = node.getFirstInfo();
         while (info != null) {
@@ -285,9 +282,55 @@ public class MainNode extends DSMainNode implements Runnable {
         }
     }
 
+
+    public enum MyEnum {
+        On,
+        Off,
+        Auto
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
+
+    private class ListHandler implements OutboundListHandler {
+
+        OutboundStream stream;
+
+        @Override
+        public void onClose() {
+            System.out.println("list closed");
+        }
+
+        @Override
+        public void onError(ErrorType type, String msg) {
+            System.out.println("list error " + type + ", " + msg);
+        }
+
+        @Override
+        public void onInit(String path, OutboundStream stream) {
+            System.out.println("onInit");
+            this.stream = stream;
+        }
+
+        @Override
+        public void onInitialized() {
+            System.out.println("list initialized");
+            stream.closeStream();
+        }
+
+        @Override
+        public void onRemove(String name) {
+            System.out.println("list remove " + name);
+        }
+
+        @Override
+        public void onUpdate(String name, DSElement value) {
+            System.out.print(name);
+            System.out.print(": ");
+            System.out.println(String.valueOf(value));
+        }
+    }
 
     public static class TestNode extends DSNode {
 
@@ -300,12 +343,6 @@ public class MainNode extends DSMainNode implements Runnable {
             declareDefault("action", DSAction.DEFAULT);
         }
 
-    }
-
-    public enum MyEnum {
-        On,
-        Off,
-        Auto
     }
 
 }

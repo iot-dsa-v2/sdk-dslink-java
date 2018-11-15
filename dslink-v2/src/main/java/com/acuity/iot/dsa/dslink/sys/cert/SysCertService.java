@@ -19,7 +19,7 @@ import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.ActionSpec.ResultType;
-import org.iot.dsa.node.action.DSAbstractAction;
+import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DSActionValues;
 import org.iot.dsa.security.DSPasswordAes128;
 import org.iot.dsa.util.DSException;
@@ -59,59 +59,42 @@ public class SysCertService extends DSNode {
 
     private DSInfo allowClients = getInfo(ALLOW_CLIENTS);
     private DSInfo allowServers = getInfo(ALLOW_SERVERS);
-    private DSInfo verifyHostnames = getInfo(VERIFY_HOSTNAMES);
-    private DSInfo keystorePath = getInfo(CERTFILE);
-    private DSInfo keystorePass = getInfo(CERTFILE_PASS);
-    private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
+    private DSInfo deleteKSEntry = getInfo(DELETE_KS_ENTRY);
     private DSInfo generateCsr = getInfo(GENERATE_CSR);
-    private DSInfo importCaCert = getInfo(IMPORT_CA_CERT);
-    private DSInfo importPrimaryCert = getInfo(IMPORT_PRIMARY_CERT);
     private DSInfo generateSSCert = getInfo(GENERATE_SELF_SIGNED);
     private DSInfo getKSEntry = getInfo(GET_KS_ENTRY);
-    private DSInfo deleteKSEntry = getInfo(DELETE_KS_ENTRY);
-    private CertCollection localTruststore;
-    private CertCollection quarantine;
-    private HostnameWhitelist whitelist;
+    private HostnameVerifier hostnameVerifier = new SysHostnameVerifier();
+    private DSInfo importCaCert = getInfo(IMPORT_CA_CERT);
+    private DSInfo importPrimaryCert = getInfo(IMPORT_PRIMARY_CERT);
     private static SysCertService inst;
-
+    private DSInfo keystorePass = getInfo(CERTFILE_PASS);
+    private DSInfo keystorePath = getInfo(CERTFILE);
+    private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
+    private CertCollection localTruststore;
     private static HostnameVerifier oldHostnameVerifier = HttpsURLConnection
             .getDefaultHostnameVerifier();
-    private HostnameVerifier hostnameVerifier = new SysHostnameVerifier();
+    private CertCollection quarantine;
+    private DSInfo verifyHostnames = getInfo(VERIFY_HOSTNAMES);
+    private HostnameWhitelist whitelist;
 
     public SysCertService() {
     }
 
-    public static SysCertService getInstance() {
-        return inst;
-    }
-
-    public HostnameVerifier getHostnameVerifier() {
-        return hostnameVerifier;
-    }
-
-    private CertCollection getLocalTruststore() {
-        if (localTruststore == null) {
-            localTruststore = (CertCollection) getInfo(LOCAL_TRUSTSTORE).getObject();
+    public void addToQuarantine(X509Certificate cert) {
+        try {
+            getQuarantine().addCertificate(cert);
+        } catch (CertificateEncodingException e) {
+            error("", e);
         }
-        return localTruststore;
     }
 
-    private CertCollection getQuarantine() {
-        if (quarantine == null) {
-            quarantine = (CertCollection) getInfo(QUARANTINE).getObject();
-        }
-        return quarantine;
+    public void allow(DSInfo certInfo) {
+        String name = certInfo.getName();
+        CertNode certNode = (CertNode) certInfo.getNode();
+        String certStr = certNode.toElement().toString();
+        getQuarantine().remove(certInfo);
+        getLocalTruststore().addCertificate(name, certStr);
     }
-
-    private HostnameWhitelist getHostnameWhitelist() {
-        if (whitelist == null) {
-            whitelist = (HostnameWhitelist) getInfo(HOSTNAME_WHITELIST).getObject();
-        }
-        return whitelist;
-    }
-
-    // Methods
-    // -------
 
     /**
      * True if self signed anonymous client certs are allowed.
@@ -125,10 +108,6 @@ public class SysCertService extends DSNode {
      */
     public boolean allowAnonymousServers() {
         return allowServers.getElement().toBoolean();
-    }
-
-    public boolean hostnameVerificationEnabled() {
-        return verifyHostnames.getElement().toBoolean();
     }
 
     @Override
@@ -153,183 +132,23 @@ public class SysCertService extends DSNode {
                 .setTransient(true).setReadOnly(true);
     }
 
-    private DSAbstractAction getGenerateCSRAction() {
-        DSAbstractAction act = new DSAbstractAction() {
+    // Methods
+    // -------
 
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
-            }
-
-            @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                String[] results = ((SysCertService) info.getParent()).generateCSR();
-                if (results != null && results.length > 1) {
-                    return new DSActionValues(info.getAction())
-                            .addResult(DSString.valueOf(results[0]))
-                            .addResult(DSString.valueOf(results[1]));
-                } else {
-                    return null;
-                }
-            }
-        };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
-        act.addColumnMetadata("CSR", DSValueType.STRING).setEditor("textarea");
-        return act;
+    public HostnameVerifier getHostnameVerifier() {
+        return hostnameVerifier;
     }
 
-    private String[] generateCSR() {
-        try {
-            return KeyToolUtil.generateCSR(getKeystorePath(), getCertFilePass());
-        } catch (IOException e) {
-            DSException.throwRuntime(e);
-            return null;
-        }
+    public static SysCertService getInstance() {
+        return inst;
     }
 
-    private DSAbstractAction getImportCACertAction() {
-        DSAbstractAction act = new DSAbstractAction() {
-
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
-            }
-
-            @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                DSMap parameters = invocation.getParameters();
-                String result = ((SysCertService) info.getParent()).importCACert(parameters);
-                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(result));
-            }
-        };
-        act.addParameter("Alias", DSValueType.STRING, null);
-        act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
-        return act;
+    public boolean hostnameVerificationEnabled() {
+        return verifyHostnames.getElement().toBoolean();
     }
 
-    private String importCACert(DSMap parameters) {
-        String alias = parameters.getString("Alias");
-        String certStr = parameters.getString("Certificate");
-        try {
-            return KeyToolUtil.importCACert(getKeystorePath(), certStr, alias, getCertFilePass());
-        } catch (IOException e) {
-            DSException.throwRuntime(e);
-            return null;
-        }
-    }
-
-    private DSAbstractAction getImportPrimaryCertAction() {
-        DSAbstractAction act = new DSAbstractAction() {
-
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
-            }
-
-            @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                DSMap parameters = invocation.getParameters();
-                String result = ((SysCertService) info.getParent()).importPrimaryCert(parameters);
-                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(result));
-            }
-        };
-        act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
-        return act;
-    }
-
-    private String importPrimaryCert(DSMap parameters) {
-        String certStr = parameters.getString("Certificate");
-        try {
-            return KeyToolUtil.importPrimaryCert(getKeystorePath(), certStr, getCertFilePass());
-        } catch (IOException e) {
-            DSException.throwRuntime(e);
-            return null;
-        }
-    }
-
-    private DSAbstractAction getGenerateSelfSignedAction() {
-        DSAbstractAction act = new DSAbstractAction() {
-
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
-            }
-
-            @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                String result = ((SysCertService) info.getParent()).keytoolGenkey();
-                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(result));
-            }
-        };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
-        return act;
-    }
-
-    private DSAbstractAction getGetKSEntryAction() {
-        DSAbstractAction act = new DSAbstractAction() {
-
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
-            }
-
-            @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                String result = ((SysCertService) info.getParent()).getKSEntry();
-                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(result));
-            }
-        };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Entry", DSValueType.STRING).setEditor("textarea");
-        return act;
-    }
-
-    private String getKSEntry() {
-        return KeyToolUtil.getEntry(getKeystorePath(), getCertFilePass());
-    }
-
-    private DSAbstractAction getDeleteKSEntryAction() {
-        DSAbstractAction act = new DSAbstractAction() {
-
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
-            }
-
-            @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                String result = ((SysCertService) info.getParent()).deleteKSEntry();
-                return new DSActionValues(info.getAction()).addResult(DSString.valueOf(result));
-            }
-        };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
-        return act;
-    }
-
-    private String deleteKSEntry() {
-        return KeyToolUtil.deleteEntry(getKeystorePath(), getCertFilePass());
-    }
-
-    private String getCertFilePass() {
-        DSPasswordAes128 pass = (DSPasswordAes128) keystorePass.getObject();
-        return pass.decode();
-    }
-
-    private String getKeystorePath() {
-        return keystorePath.getElement().toString();
-    }
-
-    /**
-     * Executes the java keytool to generate a new self signed cert.
-     */
-    private String keytoolGenkey() {
-        return KeyToolUtil.generateSelfSigned(getKeystorePath(), getCertFilePass());
-    }
-    
-    private boolean isKeytoolAvailable() {
-        String result = KeyToolUtil.help();
-        return result != null && !result.isEmpty();
+    public boolean isInTrustStore(X509Certificate cert) {
+        return getLocalTruststore().containsCertificate(cert);
     }
 
     @Override
@@ -382,7 +201,7 @@ public class SysCertService extends DSNode {
             getKSEntry.setHidden(true);
             deleteKSEntry.setHidden(true);
         }
-        
+
         try {
             System.setProperty("javax.net.ssl.keyStore", keystore);
             System.setProperty("javax.net.ssl.keyStoreType",
@@ -393,37 +212,197 @@ public class SysCertService extends DSNode {
         }
         HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
     }
-    
+
     @Override
     protected void onChildChanged(DSInfo info) {
         if (info == keystorePath) {
             System.setProperty("javax.net.ssl.keyStore", getKeystorePath());
         } else if (info == keystoreType) {
             System.setProperty("javax.net.ssl.keyStoreType",
-                    keystoreType.getElement().toString());
+                               keystoreType.getElement().toString());
         } else if (info == keystorePass) {
             System.setProperty("javax.net.ssl.keyStorePassword", getCertFilePass());
         }
     }
 
-    public boolean isInTrustStore(X509Certificate cert) {
-        return getLocalTruststore().containsCertificate(cert);
+    private String deleteKSEntry() {
+        return KeyToolUtil.deleteEntry(getKeystorePath(), getCertFilePass());
     }
 
-    public void addToQuarantine(X509Certificate cert) {
+    private String[] generateCSR() {
         try {
-            getQuarantine().addCertificate(cert);
-        } catch (CertificateEncodingException e) {
-            error("", e);
+            return KeyToolUtil.generateCSR(getKeystorePath(), getCertFilePass());
+        } catch (IOException e) {
+            DSException.throwRuntime(e);
+            return null;
         }
     }
 
-    public void allow(DSInfo certInfo) {
-        String name = certInfo.getName();
-        CertNode certNode = (CertNode) certInfo.getNode();
-        String certStr = certNode.toElement().toString();
-        getQuarantine().remove(certInfo);
-        getLocalTruststore().addCertificate(name, certStr);
+    private String getCertFilePass() {
+        DSPasswordAes128 pass = (DSPasswordAes128) keystorePass.get();
+        return pass.decode();
+    }
+
+    private DSAction getDeleteKSEntryAction() {
+        DSAction act = new DSAction.Parameterless() {
+
+            @Override
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                String result = ((SysCertService) target.get()).deleteKSEntry();
+                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            }
+
+        };
+        act.setResultType(ResultType.VALUES);
+        act.addColumnMetadata("Result", DSValueType.STRING);
+        return act;
+    }
+
+    private DSAction getGenerateCSRAction() {
+        DSAction act = new DSAction.Parameterless() {
+            @Override
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                String[] results = ((SysCertService) target.get()).generateCSR();
+                if (results != null && results.length > 1) {
+                    return new DSActionValues(this)
+                            .addResult(DSString.valueOf(results[0]))
+                            .addResult(DSString.valueOf(results[1]));
+                } else {
+                    return null;
+                }
+            }
+        };
+        act.setResultType(ResultType.VALUES);
+        act.addColumnMetadata("Result", DSValueType.STRING);
+        act.addColumnMetadata("CSR", DSValueType.STRING).setEditor("textarea");
+        return act;
+    }
+
+    private DSAction getGenerateSelfSignedAction() {
+        DSAction act = new DSAction.Parameterless() {
+
+            @Override
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                String result = ((SysCertService) target.get()).keytoolGenkey();
+                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            }
+
+        };
+        act.setResultType(ResultType.VALUES);
+        act.addColumnMetadata("Result", DSValueType.STRING);
+        return act;
+    }
+
+    private DSAction getGetKSEntryAction() {
+        DSAction act = new DSAction.Parameterless() {
+
+            @Override
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                String result = ((SysCertService) target.get()).getKSEntry();
+                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            }
+
+        };
+        act.setResultType(ResultType.VALUES);
+        act.addColumnMetadata("Entry", DSValueType.STRING).setEditor("textarea");
+        return act;
+    }
+
+    private HostnameWhitelist getHostnameWhitelist() {
+        if (whitelist == null) {
+            whitelist = (HostnameWhitelist) getInfo(HOSTNAME_WHITELIST).get();
+        }
+        return whitelist;
+    }
+
+    private DSAction getImportCACertAction() {
+        DSAction act = new DSAction.Parameterless() {
+
+            @Override
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                DSMap parameters = invocation.getParameters();
+                String result = ((SysCertService) target.get()).importCACert(parameters);
+                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            }
+
+        };
+        act.addParameter("Alias", DSValueType.STRING, null);
+        act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
+        act.setResultType(ResultType.VALUES);
+        act.addColumnMetadata("Result", DSValueType.STRING);
+        return act;
+    }
+
+    private DSAction getImportPrimaryCertAction() {
+        DSAction act = new DSAction.Parameterless() {
+
+            @Override
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                DSMap parameters = invocation.getParameters();
+                String result = ((SysCertService) target.get()).importPrimaryCert(parameters);
+                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            }
+
+        };
+        act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
+        act.setResultType(ResultType.VALUES);
+        act.addColumnMetadata("Result", DSValueType.STRING);
+        return act;
+    }
+
+    private String getKSEntry() {
+        return KeyToolUtil.getEntry(getKeystorePath(), getCertFilePass());
+    }
+
+    private String getKeystorePath() {
+        return keystorePath.getElement().toString();
+    }
+
+    private CertCollection getLocalTruststore() {
+        if (localTruststore == null) {
+            localTruststore = (CertCollection) getInfo(LOCAL_TRUSTSTORE).get();
+        }
+        return localTruststore;
+    }
+
+    private CertCollection getQuarantine() {
+        if (quarantine == null) {
+            quarantine = (CertCollection) getInfo(QUARANTINE).get();
+        }
+        return quarantine;
+    }
+
+    private String importCACert(DSMap parameters) {
+        String alias = parameters.getString("Alias");
+        String certStr = parameters.getString("Certificate");
+        try {
+            return KeyToolUtil.importCACert(getKeystorePath(), certStr, alias, getCertFilePass());
+        } catch (IOException e) {
+            DSException.throwRuntime(e);
+            return null;
+        }
+    }
+
+    private String importPrimaryCert(DSMap parameters) {
+        String certStr = parameters.getString("Certificate");
+        try {
+            return KeyToolUtil.importPrimaryCert(getKeystorePath(), certStr, getCertFilePass());
+        } catch (IOException e) {
+            DSException.throwRuntime(e);
+            return null;
+        }
+    }
+
+    private boolean isKeytoolAvailable() {
+        String result = KeyToolUtil.help();
+        return result != null && !result.isEmpty();
+    }
+
+    /**
+     * Executes the java keytool to generate a new self signed cert.
+     */
+    private String keytoolGenkey() {
+        return KeyToolUtil.generateSelfSigned(getKeystorePath(), getCertFilePass());
     }
 
     private class SysHostnameVerifier implements HostnameVerifier {

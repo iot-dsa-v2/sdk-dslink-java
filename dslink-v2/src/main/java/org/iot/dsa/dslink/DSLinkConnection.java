@@ -107,7 +107,13 @@ public abstract class DSLinkConnection extends DSConnection {
         super.declareDefaults();
         declareDefault(BROKER_URI, DSString.NULL).setTransient(true).setReadOnly(true);
         declareDefault(BROKER_PATH, DSString.NULL).setTransient(true).setReadOnly(true);
-        declareDefault(RECONNECT, DSAction.DEFAULT);
+        declareDefault(RECONNECT, new DSAction.Parameterless() {
+            @Override
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                ((DSLinkConnection)target.get()).disconnect();
+                return null;
+            }
+        });
     }
 
     protected DSSysNode getSys() {
@@ -123,16 +129,6 @@ public abstract class DSLinkConnection extends DSConnection {
         } catch (Exception x) {
             error(getPath(), x);
         }
-    }
-
-    @Override
-    public ActionResult onInvoke(DSInfo info, ActionInvocation arg) {
-        if (info.getName().equals(RECONNECT)) {
-            disconnect();
-        } else {
-            return super.onInvoke(info, arg);
-        }
-        return null;
     }
 
     /**

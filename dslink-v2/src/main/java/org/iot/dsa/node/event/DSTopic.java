@@ -1,22 +1,11 @@
 package org.iot.dsa.node.event;
 
-import org.iot.dsa.node.DSIObject;
-import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSInfo;
-
 /**
- * DSISubscribers subscribe to DSTopics on DSNodes.
- * <p>
- * Topics can be mounted children of a node or simply implied as are the value and info topics
- * implicitly available on every node.
+ * Basic implementation of DSITopic.
  *
- * @see DSIEvent
- * @see DSISubscriber
- * @see org.iot.dsa.node.DSNode#subscribe(DSTopic, DSInfo, DSIValue, DSISubscriber)
- * @see org.iot.dsa.node.DSNode#INFO_TOPIC
- * @see org.iot.dsa.node.DSNode#VALUE_TOPIC
+ * @author Aaron Hansen
  */
-public class DSTopic implements DSIObject {
+public class DSTopic implements DSITopic {
 
     /**
      * Returns this.

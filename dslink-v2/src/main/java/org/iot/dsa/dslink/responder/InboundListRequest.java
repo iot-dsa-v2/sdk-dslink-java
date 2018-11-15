@@ -18,7 +18,7 @@ public interface InboundListRequest extends InboundRequest {
     /**
      * The responder should call this whenever a child is removed.
      */
-    public void childRemoved(ApiObject child);
+    public void childRemoved(String name);
 
     /**  TODO
      * The response should call this whenever the meta-data about the target changes.

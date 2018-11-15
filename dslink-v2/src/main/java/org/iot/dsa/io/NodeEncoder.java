@@ -94,22 +94,22 @@ public class NodeEncoder {
     }
 
     void writeChildren(DSNode arg) {
-        int len = arg.childCount();
-        if (len == 0) {
+        if (arg == null) {
+            out.key("v");
+            out.value((String) null);
+            return;
+        }
+        if (arg.childCount() == 0) {
             return;
         }
         DSIObject obj;
         DSInfo info;
         out.key("v");
-        if (arg == null) {
-            out.value((String) null);
-            return;
-        }
         out.beginList();
         info = arg.getFirstInfo();
         while (info != null) {
             try {
-                obj = info.getObject();
+                obj = info.get();
                 if (info.isTransient()) {
                     ;//skip it
                 } else if (info.equalsDefault()) {  //includes actions
@@ -147,7 +147,7 @@ public class NodeEncoder {
             out.key("i").value(arg.encodeState());
         }
         if (!arg.equalsDefaultType()) {
-            DSIObject obj = arg.getObject();
+            DSIObject obj = arg.get();
             if (obj != null) {
                 out.key("t").value(getToken(obj));
             }
@@ -164,7 +164,7 @@ public class NodeEncoder {
     void writeNode(DSInfo arg) {
         out.beginMap();
         writeInfo(arg);
-        writeChildren((DSNode) arg.getObject());
+        writeChildren((DSNode) arg.get());
         out.endMap();
     }
 

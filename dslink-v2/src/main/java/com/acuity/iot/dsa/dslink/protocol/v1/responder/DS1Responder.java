@@ -62,75 +62,76 @@ public class DS1Responder extends DSResponder {
         try {
             if ((method == null) || method.isEmpty()) {
                 sendInvalidMethod(rid, method);
-            }
-            switch (method.charAt(0)) {
-                case 'c':  //close
-                    if (!method.equals("close")) {
-                        sendInvalidMethod(rid, method);
-                    }
-                    final DSStream req = removeRequest(rid);
-                    if (req != null) {
-                        DSRuntime.run(new Runnable() {
-                            public void run() {
-                                try {
-                                    req.onClose(rid);
-                                } catch (Exception x) {
-                                    debug(getPath(), x);
+            } else {
+                switch (method.charAt(0)) {
+                    case 'c':  //close
+                        if (!method.equals("close")) {
+                            sendInvalidMethod(rid, method);
+                        }
+                        final DSStream req = removeRequest(rid);
+                        if (req != null) {
+                            DSRuntime.run(new Runnable() {
+                                public void run() {
+                                    try {
+                                        req.onClose(rid);
+                                    } catch (Exception x) {
+                                        debug(getPath(), x);
+                                    }
                                 }
-                            }
-                        });
-                    }
-                    break;
-                case 'i':  //invoke
-                    if (!method.equals("invoke")) {
-                        sendInvalidMethod(rid, method);
-                    }
-                    processInvoke(rid, map);
-                    break;
-                case 'l':  //list
-                    if (!method.equals("list")) {
-                        sendInvalidMethod(rid, method);
-                    }
-                    processList(rid, map);
-                    break;
-                case 'r':  //remove
-                    if (method.equals("remove")) {
-                        //Does this even make sense in a link?
-                        error("Remove method called");
-                        sendClose(rid);
-                    } else {
-                        sendInvalidMethod(rid, method);
-                    }
-                    break;
-                case 's':  //set, subscribe
-                    if (method.equals("set")) {
-                        processSet(rid, map);
-                    } else if (method.equals("subscribe")) {
+                            });
+                        }
+                        break;
+                    case 'i':  //invoke
+                        if (!method.equals("invoke")) {
+                            sendInvalidMethod(rid, method);
+                        }
+                        processInvoke(rid, map);
+                        break;
+                    case 'l':  //list
+                        if (!method.equals("list")) {
+                            sendInvalidMethod(rid, method);
+                        }
+                        processList(rid, map);
+                        break;
+                    case 'r':  //remove
+                        if (method.equals("remove")) {
+                            //Does this even make sense in a link?
+                            error("Remove method called");
+                            sendClose(rid);
+                        } else {
+                            sendInvalidMethod(rid, method);
+                        }
+                        break;
+                    case 's':  //set, subscribe
+                        if (method.equals("set")) {
+                            processSet(rid, map);
+                        } else if (method.equals("subscribe")) {
+                            DSRuntime.run(new Runnable() {
+                                @Override
+                                public void run() {
+                                    processSubscribe(rid, map);
+                                }
+                            });
+                            sendClose(rid);
+                        } else {
+                            sendInvalidMethod(rid, method);
+                        }
+                        break;
+                    case 'u':
+                        if (!method.equals("unsubscribe")) {
+                            sendInvalidMethod(rid, method);
+                        }
                         DSRuntime.run(new Runnable() {
                             @Override
                             public void run() {
-                                processSubscribe(rid, map);
+                                processUnsubscribe(rid, map);
                             }
                         });
                         sendClose(rid);
-                    } else {
+                        break;
+                    default:
                         sendInvalidMethod(rid, method);
-                    }
-                    break;
-                case 'u':
-                    if (!method.equals("unsubscribe")) {
-                        sendInvalidMethod(rid, method);
-                    }
-                    DSRuntime.run(new Runnable() {
-                        @Override
-                        public void run() {
-                            processUnsubscribe(rid, map);
-                        }
-                    });
-                    sendClose(rid);
-                    break;
-                default:
-                    sendInvalidMethod(rid, method);
+                }
             }
         } catch (DSProtocolException x) {
             sendError(rid, x);

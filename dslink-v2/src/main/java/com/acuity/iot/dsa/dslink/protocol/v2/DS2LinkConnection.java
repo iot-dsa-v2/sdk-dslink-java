@@ -129,7 +129,9 @@ public class DS2LinkConnection extends DSLinkConnection {
         } else if (uri.startsWith("ds")) {
             transport = new SocketTransport();
         }
-        transport.setConnectionUrl(uri);
+        if (transport != null) {
+            transport.setConnectionUrl(uri);
+        }
         debug(debug() ? "Connection URL = " + uri : null);
         return transport;
     }
@@ -168,7 +170,7 @@ public class DS2LinkConnection extends DSLinkConnection {
     ///////////////////////////////////////////////////////////////////////////
 
     private byte[] getLinkSalt() {
-        if (linkSalt.getObject().isNull()) {
+        if (linkSalt.get().isNull()) {
             byte[] tmp = new byte[32];
             SecureRandom random = new SecureRandom();
             random.nextBytes(tmp);

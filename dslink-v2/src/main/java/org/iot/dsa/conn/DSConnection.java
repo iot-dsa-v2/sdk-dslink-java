@@ -6,6 +6,7 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.event.DSIEvent;
+import org.iot.dsa.node.event.DSITopic;
 import org.iot.dsa.node.event.DSTopic;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
@@ -185,7 +186,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     }
 
     public DSConnectionState getConnectionState() {
-        return (DSConnectionState) state.getObject();
+        return (DSConnectionState) state.get();
     }
 
     public boolean isConnected() {
@@ -287,7 +288,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     }
 
     protected long getTimeInState() {
-        DSDateTime time = (DSDateTime) stateTime.getObject();
+        DSDateTime time = (DSDateTime) stateTime.get();
         return System.currentTimeMillis() - time.timeInMillis();
     }
 
@@ -316,7 +317,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         while (info != null) {
             if (info.is(DSIConnected.class)) {
                 try {
-                    ((DSIConnected) info.getObject()).onChange(this);
+                    ((DSIConnected) info.get()).onChange(this);
                 } catch (Throwable t) {
                     error(error() ? info.getPath(null) : null, t);
                 }
@@ -349,7 +350,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         }
 
         @Override
-        public DSTopic getTopic() {
+        public DSITopic getTopic() {
             return this;
         }
 

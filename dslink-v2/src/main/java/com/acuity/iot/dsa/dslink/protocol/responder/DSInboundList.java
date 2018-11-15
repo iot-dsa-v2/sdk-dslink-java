@@ -2,9 +2,9 @@ package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
+import com.acuity.iot.dsa.dslink.protocol.message.DSTarget;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSIResponder;
@@ -23,11 +23,11 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionSpec;
-import org.iot.dsa.node.action.DSAbstractAction;
+import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSInfoTopic;
-import org.iot.dsa.node.event.DSTopic;
+import org.iot.dsa.node.event.DSITopic;
+import org.iot.dsa.node.event.DSNodeTopic;
 import org.iot.dsa.security.DSPermission;
 
 /**
@@ -64,6 +64,7 @@ public class DSInboundList extends DSInboundRequest
     private OutboundListResponse response;
     private int state = STATE_INIT;
     private boolean stream = true;
+    private DSTarget target;
     private Update updateHead;
     private Update updateTail;
 
@@ -79,14 +80,14 @@ public class DSInboundList extends DSInboundRequest
     @Override
     public void childAdded(ApiObject child) {
         if (!isClosed()) {
-            enqueue(new Update(child, true));
+            enqueue(new AddUpdate(child));
         }
     }
 
     @Override
-    public void childRemoved(ApiObject child) {
+    public void childRemoved(String name) {
         if (!isClosed()) {
-            enqueue(new Update(child, false));
+            enqueue(new RemoveUpdate(name));
         }
     }
 
@@ -127,7 +128,7 @@ public class DSInboundList extends DSInboundRequest
     @Override
     public void onClose() {
         if (node != null) {
-            node.unsubscribe(DSNode.INFO_TOPIC, null, this);
+            node.unsubscribe(null, null, this);
         }
     }
 
@@ -146,40 +147,45 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-        switch ((DSInfoTopic.Event) event) {
+        switch ((DSNodeTopic) event.getTopic()) {
             case CHILD_ADDED:
                 childAdded(child);
                 break;
-            case CHILD_REMOVED:
-                childRemoved(child);
+            case CHILD_RENAMED:
+                childRemoved(event.getData().toString());
+                childAdded(child);
                 break;
-            case METADATA_CHANGED: //TODO
+            case CHILD_REMOVED:
+                childRemoved(child.getName());
+                break;
+            case METADATA_CHANGED:
+                //TODO resend all?
                 break;
             default:
         }
     }
 
     @Override
-    public void onUnsubscribed(DSTopic topic, DSNode node, DSInfo child) {
+    public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
         close();
     }
 
     @Override
     public void run() {
         try {
-            RequestPath path = new RequestPath(getPath(), getLink());
-            if (path.isResponder()) {
-                DSIResponder responder = (DSIResponder) path.getTarget();
-                setPath(path.getPath());
+            target = new DSTarget(getPath(), getLink());
+            if (target.isResponder()) {
+                DSIResponder responder = (DSIResponder) target.getTarget();
+                setPath(target.getPath());
                 response = responder.onList(this);
             } else {
-                info = path.getInfo();
+                info = target.getTargetInfo();
                 if (info == null) {
-                    info = new RootInfo((DSNode) path.getTarget());
+                    info = new RootInfo((DSNode) target.getTarget());
                 }
                 if (info.isNode()) {
                     node = info.getNode();
-                    node.subscribe(DSNode.INFO_TOPIC, null, null, this);
+                    node.subscribe(null, null, null, this);
                 }
                 response = this;
             }
@@ -205,7 +211,9 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public void write(DSSession session, MessageWriter writer) {
-        enqueued = false;
+        synchronized (this) {
+            enqueued = false;
+        }
         if (isClosed()) {
             return;
         }
@@ -357,11 +365,11 @@ public class DSInboundList extends DSInboundRequest
      * Override point for v2.
      */
     protected void encodeUpdate(Update update, MessageWriter writer, StringBuilder buf) {
-        if (update.added) {
-            encodeChild(update.child, writer);
+        if (update instanceof AddUpdate) {
+            encodeChild(((AddUpdate)update).child, writer);
         } else {
             writer.getWriter().beginMap()
-                  .key("name").value(encodeName(update.child.getName(), buf))
+                  .key("name").value(encodeName(((RemoveUpdate)update).name, buf))
                   .key("change").value("remove")
                   .endMap();
         }
@@ -471,9 +479,9 @@ public class DSInboundList extends DSInboundRequest
             info = (DSInfo) object;
         }
         ActionSpec action = object.getAction();
-        DSAbstractAction dsAction = null;
-        if (action instanceof DSAbstractAction) {
-            dsAction = (DSAbstractAction) action;
+        DSAction dsAction = null;
+        if (action instanceof DSAction) {
+            dsAction = (DSAction) action;
         }
         DSElement e = cacheMap.remove("$invokable");
         if (e == null) {
@@ -494,7 +502,7 @@ public class DSInboundList extends DSInboundRequest
                 DSMap param = new DSMap();
                 action.getParameterMetadata(i, param);
                 if (dsAction != null) {
-                    dsAction.prepareParameter(info, param);
+                    dsAction.prepareParameter(target.getParentInfo(), param);
                 }
                 fixRangeTypes(param);
                 list.add(param);
@@ -681,7 +689,7 @@ public class DSInboundList extends DSInboundRequest
             ApiObject child;
             while (children.hasNext()) {
                 child = children.next();
-                if (!child.isHidden()) {
+                if (!child.isPrivate()) {
                     encodeChild(child, writer);
                 }
                 if (getResponder().shouldEndMessage()) {
@@ -697,14 +705,9 @@ public class DSInboundList extends DSInboundRequest
     private void writeInit(MessageWriter writer) {
         ApiObject target = response.getTarget();
         encodeTarget(target, writer);
-        if (target.hasChildren()) {
-            state = STATE_CHILDREN;
-            children = target.getChildren();
-            writeChildren(writer);
-        } else {
-            state = STATE_UPDATES;
-            writeUpdates(writer);
-        }
+        state = STATE_CHILDREN;
+        children = target.getChildren();
+        writeChildren(writer);
     }
 
     private void writeUpdates(MessageWriter writer) {
@@ -727,6 +730,25 @@ public class DSInboundList extends DSInboundRequest
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
+    protected static class AddUpdate extends Update {
+
+        public ApiObject child;
+
+        AddUpdate(ApiObject child) {
+            this.child = child;
+        }
+
+    }
+
+    protected static class RemoveUpdate extends Update {
+
+        public String name;
+
+        RemoveUpdate(String name) {
+            this.name = name;
+        }
+    }
+
     private static class RootInfo extends DSInfo {
 
         RootInfo(DSNode node) {
@@ -736,14 +758,8 @@ public class DSInboundList extends DSInboundRequest
 
     protected static class Update {
 
-        public boolean added;
-        public ApiObject child;
         public Update next;
 
-        Update(ApiObject child, boolean added) {
-            this.child = child;
-            this.added = added;
-        }
     }
 
 }

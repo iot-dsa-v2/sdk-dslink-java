@@ -14,60 +14,17 @@ import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
 
 public abstract class MXBeanNode extends DSNode implements Runnable {
-    
+
     private Timer pollTimer;
 
-    private static DSAction refreshAction = new DSAction() {
+    private static DSAction refreshAction = new DSAction.Parameterless() {
         @Override
-        public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-            ((MXBeanNode) info.getParent()).refresh();
+        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+            ((MXBeanNode) target.get()).refresh();
             return null;
         }
+
     };
-
-    @Override
-    protected void declareDefaults() {
-        super.declareDefaults();
-        declareDefault("Refresh", refreshAction);
-    }
-
-    @Override
-    protected void onStable() {
-        setupMXBean();
-        refresh();
-        setupPolling();
-    }
-
-    private void setupPolling() {
-        pollTimer = DSRuntime.run(this, 0, 5000);
-    }
-    
-    @Override
-    public void run() {
-        if (isTreeSubscribed()) {
-            refresh();
-        }
-    }
-    
-    @Override
-    protected void onStopped() {
-        pollTimer.cancel();
-    }
-
-    private void refresh() {
-        refreshImpl();
-        discover();
-    }
-
-    public abstract void setupMXBean();
-
-    public abstract void refreshImpl();
-
-    public abstract Object getMXBean();
-
-    public abstract Class<? extends Object> getMXInterface();
-
-    public abstract List<String> getOverriden();
 
     public void discover() {
         Object bean = getMXBean();
@@ -89,10 +46,12 @@ public abstract class MXBeanNode extends DSNode implements Runnable {
                         putProp(name,
                                 o != null ? ProfilerUtils.objectToDSIValue(o) : DSString.EMPTY);
                     } catch (Exception e) {
-                        if (bean instanceof MemoryPoolMXBean && (name.startsWith("UsageThreshold") || name.startsWith("CollectionUsageThreshold"))) {
+                        if (bean instanceof MemoryPoolMXBean && (name.startsWith("UsageThreshold")
+                                || name.startsWith("CollectionUsageThreshold"))) {
                             // ignore
                         } else {
-                            debug("Exception when invoking " + clazz.getName() + "." + meth.getName() + " on " + getName() + ": ", e);
+                            debug("Exception when invoking " + clazz.getName() + "." + meth
+                                    .getName() + " on " + getName() + ": ", e);
                         }
                     }
                 }
@@ -100,7 +59,51 @@ public abstract class MXBeanNode extends DSNode implements Runnable {
         }
     }
 
+    public abstract Object getMXBean();
+
+    public abstract Class<? extends Object> getMXInterface();
+
+    public abstract List<String> getOverriden();
+
+    public abstract void refreshImpl();
+
+    @Override
+    public void run() {
+        if (isTreeSubscribed()) {
+            refresh();
+        }
+    }
+
+    public abstract void setupMXBean();
+
+    @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault("Refresh", refreshAction);
+    }
+
+    @Override
+    protected void onStable() {
+        setupMXBean();
+        refresh();
+        setupPolling();
+    }
+
+    @Override
+    protected void onStopped() {
+        pollTimer.cancel();
+    }
+
     protected void putProp(String name, DSIObject obj) {
         put(name, obj).setReadOnly(true).setTransient(true);
+    }
+
+    private void refresh() {
+        refreshImpl();
+        discover();
+    }
+
+    private void setupPolling() {
+        pollTimer = DSRuntime.run(this, 0, 5000);
     }
 }
