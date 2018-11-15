@@ -41,13 +41,12 @@ public class SysBackupService extends DSNode implements Runnable {
 
     private DSInfo enabled = getInfo(ENABLED);
     private DSInfo interval = getInfo(INTERVAL);
-    private DSLink link;
     private DSInfo lastDuration = getInfo(LAST_DURATION);
     private DSInfo lastTime = getInfo(LAST_TIME);
+    private DSLink link;
     private Object lock = new Object();
     private DSInfo maximum = getInfo(MAXIMUM);
     private Timer nextSave;
-    private DSInfo save = getInfo(SAVE);
 
     public boolean isEnabled() {
         return enabled.getElement().toBoolean();
@@ -70,16 +69,6 @@ public class SysBackupService extends DSNode implements Runnable {
                 }
             }
         }
-    }
-
-    @Override
-    public ActionResult onInvoke(DSInfo action, ActionInvocation invocation) {
-        if (action == save) {
-            save();
-        } else {
-            super.onInvoke(action, invocation);
-        }
-        return null;
     }
 
     @Override
@@ -189,7 +178,7 @@ public class SysBackupService extends DSNode implements Runnable {
 
     @Override
     protected void declareDefaults() {
-        declareDefault(SAVE, DSAction.DEFAULT);
+        declareDefault(SAVE, new SaveAction());
         declareDefault(ENABLED, DSBool.TRUE).setTransient(true);
         declareDefault(INTERVAL, DSLong.valueOf(60));
         declareDefault(LAST_TIME, DSDateTime.NULL).setReadOnly(true);
@@ -263,6 +252,16 @@ public class SysBackupService extends DSNode implements Runnable {
         for (int i = 0, len = backups.length - maxBackups; i < len; i++) {
             backups[i].delete();
         }
+    }
+
+    private class SaveAction extends DSAction.Parameterless {
+
+        @Override
+        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+            ((SysBackupService) target.get()).save();
+            return null;
+        }
+
     }
 
 }

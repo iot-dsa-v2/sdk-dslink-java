@@ -18,7 +18,7 @@ import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionSpec.ResultType;
 import org.iot.dsa.node.action.ActionTable;
-import org.iot.dsa.node.action.DSAbstractAction;
+import org.iot.dsa.node.action.DSAction;
 
 /**
  * @author Daniel Shapiro
@@ -31,17 +31,14 @@ public abstract class StreamableLogNode extends DSNode {
 
     public abstract Logger getLoggerObj();
 
-    protected DSAbstractAction getStreamLogAction() {
-        DSAbstractAction act = new DSAbstractAction() {
+    protected DSAction getStreamLogAction() {
+        DSAction act = new DSAction.Parameterless() {
 
             @Override
-            public ActionResult invoke(DSInfo info, ActionInvocation invocation) {
-                return ((StreamableLogNode) info.getParent()).startLogStream(info, invocation);
+            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+                return ((StreamableLogNode) target.get()).startLogStream(target, invocation);
             }
 
-            @Override
-            public void prepareParameter(DSInfo info, DSMap parameter) {
-            }
         };
         act.addParameter("Filter", DSValueType.STRING, "Optional regex filter");
         act.setResultType(ResultType.STREAM_TABLE);

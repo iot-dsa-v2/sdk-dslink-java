@@ -147,7 +147,7 @@ public class NodeDecoder {
                         parent.put(info, obj);
                     }
                 } else if (info != null) {
-                    obj = info.getObject();
+                    obj = info.get();
                 }
                 if (obj == null) { //dynamic, or declareDefaults was modified
                     in.next();
@@ -178,7 +178,7 @@ public class NodeDecoder {
                     parent.put(info, obj);
                 }
             } else if (info != null) {
-                obj = info.getObject();
+                obj = info.get();
             }
         }
         if (info != null) {

@@ -14,8 +14,8 @@ import org.iot.dsa.util.DSException;
  */
 public class SocketTransport extends StreamBinaryTransport {
 
-    private InputStream in;
-    private OutputStream out;
+    //private InputStream in;
+    //private OutputStream out;
     private Socket socket;
 
     /////////////////////////////////////////////////////////////////
@@ -24,6 +24,7 @@ public class SocketTransport extends StreamBinaryTransport {
 
     @Override
     protected void doClose() {
+        /*
         try {
             if (in != null) {
                 in.close();
@@ -38,6 +39,7 @@ public class SocketTransport extends StreamBinaryTransport {
         } catch (Exception x) {
             trace(getConnection().getConnectionId(), x);
         }
+        */
         try {
             if (socket != null) {
                 socket.close();
@@ -45,8 +47,8 @@ public class SocketTransport extends StreamBinaryTransport {
         } catch (Exception x) {
             trace(getConnection().getConnectionId(), x);
         }
-        in = null;
-        out = null;
+        //in = null;
+        //out = null;
         socket = null;
     }
 

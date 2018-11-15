@@ -18,7 +18,7 @@ public interface ApiObject {
     public ActionSpec getAction();
 
     /**
-     * Iterator of child objects, should only be called if hasChildren() returns true.
+     * Iterator of children of this object.
      */
     public Iterator<ApiObject> getChildren();
 
@@ -35,11 +35,6 @@ public interface ApiObject {
     public DSIValue getValue();
 
     /**
-     * True if getChildren() can be called.
-     */
-    public boolean hasChildren();
-
-    /**
      * True if the object is an action.
      */
     public boolean isAction();
@@ -52,7 +47,7 @@ public interface ApiObject {
     /**
      * True if the object should ignored (not be exposed through the api).
      */
-    public boolean isHidden();
+    public boolean isPrivate();
 
     /**
      * True if the object is a value and cannot be written.

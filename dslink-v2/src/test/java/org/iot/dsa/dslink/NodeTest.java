@@ -63,7 +63,7 @@ public class NodeTest {
         private DSInfo second = getInfo("second");
 
         public boolean isSecond() {
-            return ((DSElement) second.getObject()).toBoolean();
+            return ((DSElement) second.get()).toBoolean();
         }
 
         public void setSecond(boolean arg) {

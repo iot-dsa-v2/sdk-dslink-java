@@ -4,8 +4,7 @@ import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.message.RequestPath;
-import java.util.Iterator;
+import com.acuity.iot.dsa.dslink.protocol.message.DSTarget;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.DSPermissionException;
@@ -19,7 +18,7 @@ import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.ActionValues;
-import org.iot.dsa.node.action.DSAbstractAction;
+import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.security.DSPermission;
 import org.iot.dsa.table.DSIRow;
 import org.iot.dsa.table.DSIRowCursor;
@@ -51,7 +50,6 @@ public class DSInboundInvoke extends DSInboundRequest
     private DSMap parameters;
     private DSPermission permission;
     private ActionResult result;
-    private Iterator<DSList> rows;
     private int state = STATE_INIT;
     private boolean stream = true;
     private Update updateHead;
@@ -154,13 +152,13 @@ public class DSInboundInvoke extends DSInboundRequest
      */
     public void run() {
         try {
-            RequestPath path = new RequestPath(getPath(), getLink());
+            DSTarget path = new DSTarget(getPath(), getLink());
             if (path.isResponder()) {
                 DSIResponder responder = (DSIResponder) path.getTarget();
                 setPath(path.getPath());
                 result = responder.onInvoke(this);
             }
-            DSInfo info = path.getInfo(); //action must be child of a node
+            DSInfo info = path.getTargetInfo();
             if (!info.isAction()) {
                 throw new DSRequestException("Not an action " + path.getPath());
             }
@@ -177,13 +175,7 @@ public class DSInboundInvoke extends DSInboundRequest
                     throw new DSPermissionException("Read permission required");
                 }
             }
-            DSAbstractAction action = info.getAction();
-            //todo
-            /*
-            If action is table action wrap dsicursor
-            If action is values action...
-            */
-            result = action.invoke(info, this);
+            path.getNode().invoke(info, path.getParentInfo(), this);
         } catch (Exception x) {
             error(getPath(), x);
             close(x);

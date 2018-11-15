@@ -5,19 +5,19 @@
   "description": "Testing Link",
   "main": "bin/dslink-java-v2-poc",
   "configs": {
-    "handler_class_old": {
-      "type": "string",
-      "value": "org.iot.dsa.dslink.poc.MainNode"
-    },
     "main-node": {
       "help": "Class name of the main node.",
       "type": "string",
       "value": "org.iot.dsa.dslink.poc.MainNode"
     },
+    "stableDelay": {
+      "type": "number",
+      "value": 1000
+    },
     "log": {
       "help": "all, trace, debug, info, warn, error, off",
       "type": "enum",
-      "value": "debug"
+      "value": "info"
     },
     "msgpack": {
       "help": "Whether or not to use msgpack.  Useful for debugging.",

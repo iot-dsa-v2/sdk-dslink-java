@@ -23,8 +23,8 @@ class DSInfoProxy extends DSInfo {
         this.defaultInfo = defaultInfo;
         this.flags = defaultInfo.flags;
         this.name = defaultInfo.name;
-        if (defaultInfo.getObject() != null) {
-            setObject(defaultInfo.getObject().copy());
+        if (defaultInfo.get() != null) {
+            setObject(defaultInfo.get().copy());
         }
     }
 
@@ -90,7 +90,7 @@ class DSInfoProxy extends DSInfo {
 
     @Override
     public DSIObject getDefaultObject() {
-        return defaultInfo.getObject();
+        return defaultInfo.get();
     }
 
     @Override

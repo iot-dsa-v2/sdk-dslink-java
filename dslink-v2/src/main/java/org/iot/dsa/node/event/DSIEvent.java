@@ -2,7 +2,6 @@ package org.iot.dsa.node.event;
 
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 
 /**
@@ -13,19 +12,18 @@ import org.iot.dsa.node.DSNode;
  * are the same instance such as the VALUE_TOPIC available on all nodes.
  *
  * @author Aaron Hansen
- * @see DSNode#subscribe(DSTopic, DSInfo, DSIValue, DSISubscriber)
- * @see DSISubscriber#onEvent(DSNode, DSInfo, DSIEvent)
- * @see DSNode#INFO_TOPIC
- * @see DSNode#VALUE_TOPIC
+ * @see DSNode#subscribe(DSITopic, DSInfo, DSIValue, DSISubscriber)
+ * @see DSITopic
+ * @see DSISubscriber
  */
 public interface DSIEvent {
 
     /**
      * Possibly null, can be used to provide more data about an event.  The topic should document
-     * whether or not it provides any data.
+     * whether or not it provides any data and what that data is.
      */
-    public DSMap getData();
+    public DSIValue getData();
 
-    public DSTopic getTopic();
+    public DSITopic getTopic();
 
 }

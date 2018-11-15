@@ -9,32 +9,33 @@ import java.util.ArrayList;
  *
  * @author Aaron Hansen
  */
-public class DSPath {
+public class DSPath extends DSValue {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int caseDiff = ('a' - 'A');
+    public static final DSPath NULL = new DSPath("null");
     private static final Charset utf8 = DSString.UTF8;
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private String[] pathElements;
     private String path;
+    private String[] pathElements;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSPath(String path) {
+    private DSPath(String path) {
         this.path = path;
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Methods in alphabetical order
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -190,70 +191,6 @@ public class DSPath {
     }
 
     /**
-     * Encodes a name.
-     *
-     * @param name The raw un-encoded name.
-     * @param buf  When to put the encoded name.  Characters will be put into the buf no matter
-     *             what.
-     * @param v1   True if for v1.
-     * @return True if the name was modified in any way.
-     */
-    private static boolean encodeName(String name, StringBuilder buf, boolean v1) {
-        if (name == null) {
-            return false;
-        }
-        boolean modified = false;
-        int pathLength = name.length();
-        CharArrayWriter charArrayWriter = null;
-        char c;
-        boolean encode = false;
-        for (int i = 0; i < pathLength; ) {
-            c = name.charAt(i);
-            encode = v1 ? shouldEncodeV1(c) : shouldEncode(c);
-            if (!encode) {
-                buf.append(c);
-                i++;
-            } else {
-                if (charArrayWriter == null) {
-                    charArrayWriter = new CharArrayWriter();
-                }
-                do {
-                    charArrayWriter.write(c);
-                    if (c >= 0xD800 && c <= 0xDBFF) {
-                        if ((i + 1) < name.length()) {
-                            int d = (int) name.charAt(i + 1);
-                            if (d >= 0xDC00 && d <= 0xDFFF) {
-                                charArrayWriter.write(d);
-                                i++;
-                            }
-                        }
-                    }
-                    i++;
-                } while (i < pathLength && shouldEncode((c = name.charAt(i))));
-                charArrayWriter.flush();
-                String str = new String(charArrayWriter.toCharArray());
-                byte[] bytes = str.getBytes(utf8);
-                for (int j = 0, blen = bytes.length; j < blen; j++) {
-                    buf.append('%');
-                    char ch = Character.forDigit((bytes[j] >> 4) & 0xF, 16);
-                    if (Character.isLetter(ch)) {
-                        ch -= caseDiff;
-                    }
-                    buf.append(ch);
-                    ch = Character.forDigit(bytes[j] & 0xF, 16);
-                    if (Character.isLetter(ch)) {
-                        ch -= caseDiff;
-                    }
-                    buf.append(ch);
-                }
-                charArrayWriter.reset();
-                modified = true;
-            }
-        }
-        return modified;
-    }
-
-    /**
      * Creates a properly encoded path from the given names.
      *
      * @param leadingSlash Whether or not to prepend a slash to the path.
@@ -344,6 +281,148 @@ public class DSPath {
         return pathElements;
     }
 
+    @Override
+    public DSValueType getValueType() {
+        return DSValueType.STRING;
+    }
+
+    @Override
+    public boolean isEqual(Object obj) {
+        return false;
+    }
+
+    @Override
+    public boolean isNull() {
+        return this == NULL;
+    }
+
+    /**
+     * Splits the path, but does not decode any names.  The difference between this and
+     * String.split() is that String.split() will return an empty string at index 0 if the path
+     * starts with /.
+     *
+     * @return Never null, but could be an empty array.
+     */
+    public static String[] splitPath(String path) {
+        if ((path == null) || path.isEmpty() || path.equals("/")) {
+            return new String[0];
+        }
+        int startIdx = 0;
+        int endIdx = path.length();
+        boolean mod = false;
+        if (path.charAt(0) == '/') {
+            startIdx++;
+            mod = true;
+        }
+        if (path.charAt(endIdx - 1) == '/') {
+            endIdx--;
+            mod = true;
+        }
+        if (mod) {
+            if (startIdx >= endIdx) {
+                return new String[0];
+            }
+            path = path.substring(startIdx, endIdx);
+        }
+        return path.split("/");
+    }
+
+    @Override
+    public DSString toElement() {
+        if (this == NULL) {
+            return DSString.NULL;
+        }
+        return DSString.valueOf(path);
+    }
+
+    @Override
+    public String toString() {
+        return path;
+    }
+
+    @Override
+    public DSPath valueOf(DSElement element) {
+        if (element.isNull()) {
+            return NULL;
+        }
+        return new DSPath(element.toString());
+    }
+
+    public static DSPath valueOf(String path) {
+        if (path == null) {
+            return NULL;
+        }
+        return new DSPath(path);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Encodes a name.
+     *
+     * @param name The raw un-encoded name.
+     * @param buf  When to put the encoded name.  Characters will be put into the buf no matter
+     *             what.
+     * @param v1   True if for v1.
+     * @return True if the name was modified in any way.
+     */
+    private static boolean encodeName(String name, StringBuilder buf, boolean v1) {
+        if (name == null) {
+            return false;
+        }
+        boolean modified = false;
+        int pathLength = name.length();
+        CharArrayWriter charArrayWriter = null;
+        char c;
+        boolean encode = false;
+        for (int i = 0; i < pathLength; ) {
+            c = name.charAt(i);
+            encode = v1 ? shouldEncodeV1(c) : shouldEncode(c);
+            if (!encode) {
+                buf.append(c);
+                i++;
+            } else {
+                if (charArrayWriter == null) {
+                    charArrayWriter = new CharArrayWriter();
+                }
+                do {
+                    charArrayWriter.write(c);
+                    if (c >= 0xD800 && c <= 0xDBFF) {
+                        if ((i + 1) < name.length()) {
+                            int d = (int) name.charAt(i + 1);
+                            if (d >= 0xDC00 && d <= 0xDFFF) {
+                                charArrayWriter.write(d);
+                                i++;
+                            }
+                        }
+                    }
+                    i++;
+                } while (i < pathLength && shouldEncode((c = name.charAt(i))));
+                charArrayWriter.flush();
+                String str = new String(charArrayWriter.toCharArray());
+                byte[] bytes = str.getBytes(utf8);
+                for (int j = 0, blen = bytes.length; j < blen; j++) {
+                    buf.append('%');
+                    char ch = Character.forDigit((bytes[j] >> 4) & 0xF, 16);
+                    if (Character.isLetter(ch)) {
+                        ch -= caseDiff;
+                    }
+                    buf.append(ch);
+                    ch = Character.forDigit(bytes[j] & 0xF, 16);
+                    if (Character.isLetter(ch)) {
+                        ch -= caseDiff;
+                    }
+                    buf.append(ch);
+                }
+                charArrayWriter.reset();
+                modified = true;
+            }
+        }
+        return modified;
+    }
+
     /**
      * Returns true for characters that should be encoded.
      */
@@ -382,35 +461,12 @@ public class DSPath {
         }
     }
 
-    /**
-     * Splits the path, but does not decode any names.  The difference between this and
-     * String.split() is that String.split() will return an empty string at index 0 if the path
-     * starts with /.
-     *
-     * @return Never null, but could be an empty array.
-     */
-    public static String[] splitPath(String path) {
-        if ((path == null) || path.isEmpty() || path.equals("/")) {
-            return new String[0];
-        }
-        int startIdx = 0;
-        int endIdx = path.length();
-        boolean mod = false;
-        if (path.charAt(0) == '/') {
-            startIdx++;
-            mod = true;
-        }
-        if (path.charAt(endIdx - 1) == '/') {
-            endIdx--;
-            mod = true;
-        }
-        if (mod) {
-            if (startIdx >= endIdx) {
-                return new String[0];
-            }
-            path = path.substring(startIdx, endIdx);
-        }
-        return path.split("/");
+    ///////////////////////////////////////////////////////////////////////////
+    // Initialization
+    ///////////////////////////////////////////////////////////////////////////
+
+    static {
+        DSRegistry.registerDecoder(DSPath.class, NULL);
     }
 
 }

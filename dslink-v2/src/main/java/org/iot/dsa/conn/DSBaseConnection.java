@@ -24,6 +24,7 @@ public abstract class DSBaseConnection extends DSNode implements DSIStatus {
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    protected static final String ENABLED = "Enabled";
     protected static final String LAST_OK = "Last Ok";
     protected static final String LAST_FAIL = "Last Fail";
     protected static final String STATUS = "Status";
@@ -94,18 +95,11 @@ public abstract class DSBaseConnection extends DSNode implements DSIStatus {
 
     @Override
     public DSStatus getStatus() {
-        return (DSStatus) status.getObject();
+        return (DSStatus) status.get();
     }
 
     public String getStatusText() {
         return statusText.getElement().toString();
-    }
-
-    /**
-     * Checks the status for the fault flag.
-     */
-    protected boolean isConfigOk() {
-        return !getStatus().isFault();
     }
 
     /**
@@ -124,9 +118,19 @@ public abstract class DSBaseConnection extends DSNode implements DSIStatus {
         return isRunning() && isConfigOk() && isEnabled();
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Protected Methods
-    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Looks for child named after the ENABLED constant and if found, calls canConnect to update
+     * the state of the connection.
+     * <p>
+     * {@inheritDoc}
+     */
+    @Override
+    protected void onChildChanged(DSInfo child) {
+        if (ENABLED.equals(child.getName())) {
+            canConnect();
+        }
+        super.onChildChanged(child);
+    }
 
     /**
      * Checks config, deals with any errors and returns whether or not this is operational.
@@ -151,6 +155,10 @@ public abstract class DSBaseConnection extends DSNode implements DSIStatus {
         }
         return false;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Validate configuration, then call configOk, configFault, or just throw an exception.
@@ -196,6 +204,13 @@ public abstract class DSBaseConnection extends DSNode implements DSIStatus {
     @Override
     protected String getLogName() {
         return getLogName("connection");
+    }
+
+    /**
+     * Checks the status for the fault flag.
+     */
+    protected boolean isConfigOk() {
+        return !getStatus().isFault();
     }
 
 

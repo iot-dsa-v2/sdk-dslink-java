@@ -26,7 +26,7 @@ public class DSLinkOptions {
     public static final String CFG_KEY_FILE = "key";
     //public static final String CFG_LOG_FILE = "log-file";
     public static final String CFG_LOG_LEVEL = "log";
-    public static final String CFG_MAIN_NODE = "mainNode";
+    public static final String CFG_MAIN_NODE = "main-node";
     public static final String CFG_MSGPACK = "msgpack";
     public static final String CFG_NAME = "name";
     public static final String CFG_NODE_FILE = "nodes";
