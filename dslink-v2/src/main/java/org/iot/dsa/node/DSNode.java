@@ -1228,7 +1228,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Use to create DSInfos when overriding getAction(...).
+     * Use to create DSInfos when overriding getDynamicAction(s).
      */
     protected DSInfo actionInfo(String name, DSAction target) {
         return new DynamicInfo(name, target).setParent(this);

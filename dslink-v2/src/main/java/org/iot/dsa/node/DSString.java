@@ -68,6 +68,13 @@ public class DSString extends DSElement implements Comparable<Object> {
         return value.equals(obj.toString());
     }
 
+    /**
+     * Wraps String.format
+     */
+    public static DSString format(String format, Object... args) {
+        return valueOf(String.format(format,args));
+    }
+
     @Override
     public DSElementType getElementType() {
         return DSElementType.STRING;

@@ -5,8 +5,8 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSMap;
 
 /**
- * This is a convenience implementation of ActionValues.  It is for actions that return one or
- * more values (not tables or streams).
+ * This is a convenience implementation of ActionValues.  It is for actions that return a single
+ * row of values.
  *
  * @author Aaron Hansen
  */
