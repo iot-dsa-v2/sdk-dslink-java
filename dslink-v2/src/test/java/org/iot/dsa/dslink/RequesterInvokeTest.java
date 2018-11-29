@@ -61,12 +61,12 @@ public class RequesterInvokeTest {
         DSIRequester requester = link.getConnection().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/main/simpleAction", null, new SimpleInvokeHandler());
-        res.getResult(1000);
+        res.getUpdate(1000);
         res = (SimpleInvokeHandler) requester.invoke(
                 "/main/simpleParam",
                 new DSMap().put("param", true),
                 new SimpleInvokeHandler());
-        res.getResult(1000);
+        res.getUpdate(1000);
         Assert.assertTrue(success);
         res = (SimpleInvokeHandler) requester.invoke(
                 "/main/exception",
@@ -74,7 +74,7 @@ public class RequesterInvokeTest {
                 new SimpleInvokeHandler());
         success = false;
         try {
-            res.getResult(1000);
+            res.getUpdate(1000);
         } catch (Exception x) {
             success = true;
         }

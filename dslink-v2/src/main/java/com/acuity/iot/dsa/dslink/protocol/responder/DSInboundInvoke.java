@@ -157,25 +157,26 @@ public class DSInboundInvoke extends DSInboundRequest
                 DSIResponder responder = (DSIResponder) path.getTarget();
                 setPath(path.getPath());
                 result = responder.onInvoke(this);
-            }
-            DSInfo info = path.getTargetInfo();
-            if (!info.isAction()) {
-                throw new DSRequestException("Not an action " + path.getPath());
-            }
-            if (info.isAdmin()) {
-                if (!permission.isConfig()) {
-                    throw new DSPermissionException("Config permission required");
-                }
-            } else if (!info.isReadOnly()) {
-                if (DSPermission.WRITE.isGreaterThan(permission)) {
-                    throw new DSPermissionException("Write permission required");
-                }
             } else {
-                if (DSPermission.READ.isGreaterThan(permission)) {
-                    throw new DSPermissionException("Read permission required");
+                DSInfo info = path.getTargetInfo();
+                if (!info.isAction()) {
+                    throw new DSRequestException("Not an action " + path.getPath());
                 }
+                if (info.isAdmin()) {
+                    if (!permission.isConfig()) {
+                        throw new DSPermissionException("Config permission required");
+                    }
+                } else if (!info.isReadOnly()) {
+                    if (DSPermission.WRITE.isGreaterThan(permission)) {
+                        throw new DSPermissionException("Write permission required");
+                    }
+                } else {
+                    if (DSPermission.READ.isGreaterThan(permission)) {
+                        throw new DSPermissionException("Read permission required");
+                    }
+                }
+                result = path.getNode().invoke(info, path.getParentInfo(), this);
             }
-            path.getNode().invoke(info, path.getParentInfo(), this);
         } catch (Exception x) {
             error(getPath(), x);
             close(x);
