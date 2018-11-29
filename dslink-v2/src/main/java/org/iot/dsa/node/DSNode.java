@@ -375,7 +375,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public DSInfo getDynamicAction(DSInfo target, String name) {
         DSInfo info = null;
-        //if ((target != null) && target.isDynamic()) {
         if (target.isRemovable()) {
             switch (name) {
                 case DeleteAction.DELETE:
@@ -389,7 +388,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                     break;
             }
             if (info != null) {
-                info.getMetadata().setActionGroup("Edit Actions", null);
+                info.getMetadata().setActionGroup(DSAction.EDIT_GROUP, null);
             }
         }
         return info;
@@ -412,17 +411,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             } else if (target.getNode() != this) {
                 throw new IllegalArgumentException("DSInfo target is from another node.");
             }
-            /*
-            } else {
-                DSInfo info = getFirstInfo();
-                while (info != null) {
-                    if (info.isAction()) {
-                        bucket.add(info.getName());
-                    }
-                    info = info.nextAction();
-                }
-            }
-            */
         }
         if (target.isRemovable()) {
             bucket.add(DeleteAction.DELETE);
