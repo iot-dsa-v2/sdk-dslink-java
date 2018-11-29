@@ -12,7 +12,7 @@ import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.security.DSPermission;
 
 /**
- * Fully describes an action and leaves the implementation of invoke to subclasses.
+ * Fully describes an action and leaves the invoke implementation to subclasses.
  *
  * <b>Permissions</b>
  * Permissions are determined using info flags.  If the admin flag is set,
@@ -32,6 +32,9 @@ public abstract class DSAction implements ActionSpec, DSIObject {
      * and handling action there.
      */
     public static final DSAction.Noop DEFAULT = new Noop();
+
+    public static final String EDIT_GROUP = "Edit";
+    public static final String NEW_GROUP = "New";
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -239,10 +242,10 @@ public abstract class DSAction implements ActionSpec, DSIObject {
      * Execute the action invocation for the given target.
      * <p>
      * To report an error, simply throw a runtime exception from this method, or call
-     * ActionInvocation.close(Exception).
+     * ActionInvocation.close(Exception) if processing asynchronously.
      *
-     * @param target     The info about the target of the action (ie it's parent).
-     *                   Do not use the outer 'this' to access the node of an inner class.
+     * @param target     The info about the target of the action (ie it's parent).  Be care of
+     *                   using the outer this in anonymous instances.
      * @param invocation Details about the incoming invoke as well as the mechanism to
      *                   send updates over an open stream.
      * @return Can be null if the result type is void.
@@ -322,7 +325,7 @@ public abstract class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * Implements prepareParameter which does nothing.
+     * Implements invoke to simply return null.
      */
     public static class Noop extends Parameterless {
 
@@ -333,7 +336,7 @@ public abstract class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * Implements prepareParameter which does nothing.
+     * Implements prepareParameter to do nothing.
      */
     public abstract static class Parameterless extends DSAction {
 

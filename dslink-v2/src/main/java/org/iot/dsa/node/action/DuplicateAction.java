@@ -16,9 +16,9 @@ public class DuplicateAction extends DSAction {
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    public static final String DUPLICATE = "Duplicate";
     public static final DuplicateAction INSTANCE = new DuplicateAction();
     private static final String NEW_NAME = "New Name";
-    public static final String DUPLICATE = "Duplicate";
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields

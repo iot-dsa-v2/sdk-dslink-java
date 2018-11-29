@@ -5,7 +5,7 @@ subprojects {
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.47.0'
+    version '0.48.0'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -47,5 +47,5 @@ if (JavaVersion.current().isJava8Compatible()) {
 }
 
 wrapper {
-    gradleVersion = '4.10.2'
+    gradleVersion = '5.0'
 }
