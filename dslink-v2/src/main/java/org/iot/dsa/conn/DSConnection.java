@@ -311,7 +311,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
                 } catch (Throwable t) {
                     error(error() ? info.getPath(null) : null, t);
                 }
-            } else if (info.isNode() && !info.is(DSConnectionOld.class)) {
+            } else if (info.isNode() && !info.is(DSConnection.class)) {
                 notifyConnectedDescendants(info.getNode(), conn);
             }
             info = info.next();
