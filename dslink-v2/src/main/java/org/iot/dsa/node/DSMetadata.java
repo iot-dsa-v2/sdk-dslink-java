@@ -12,7 +12,7 @@ public class DSMetadata {
     ///////////////////////////////////////////////////////////////////////////
 
     public static final String ACTION_GROUP = "actionGroup";
-    public static final String ACTION_GROUP_SUBTITLE = "actionGroupSubTitle";
+    public static final String ACTION_GROUP_DISPLAY = "actionGroupSubTitle";
     public static final String BOOLEAN_RANGE = "booleanRange";
     public static final String DESCRIPTION = "description";
     public static final String DEFAULT = "default";
@@ -218,13 +218,13 @@ public class DSMetadata {
      * Use to group similar actions.  If you want to change the display name of the action in
      * it's group, use the optional second parameter.
      *
-     * @param groupName Name of a group of related actions.
-     * @param subTitle  Optional, changes the display name of the action in it's group.
+     * @param groupName   Name of a group of related actions.
+     * @param displayName Optional, changes the display name of the action in it's group.
      */
-    public DSMetadata setActionGroup(String groupName, String subTitle) {
+    public DSMetadata setActionGroup(String groupName, String displayName) {
         map.put(ACTION_GROUP, groupName);
-        if (subTitle != null) {
-            map.put(ACTION_GROUP_SUBTITLE, subTitle);
+        if (displayName != null) {
+            map.put(ACTION_GROUP_DISPLAY, displayName);
         }
         return this;
     }

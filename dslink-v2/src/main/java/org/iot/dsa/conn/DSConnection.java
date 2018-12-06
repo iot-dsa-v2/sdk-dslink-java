@@ -12,25 +12,22 @@ import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
 /**
- * Useful for representing long lived connections.  Maintains the connection lifecycle, and
- * provides callbacks for subclasses.
+ * Represents connection with a lifecycle (connecting, connected, disconnecting, disconnected).
+ * These connections do not have to have a long lived pipes such as a sockets, they could simply
+ * represent http sessions, or other abstract constructs.
  * <p>
- *
- * <b>Running</b><br>
- * The run method manages calling connect, disconnect and ping.  The subclass is responsible
- * having a thread call this method.
- * <p>
- *
- * <b>Pinging</b><br>
- * Ping is only called by the run method.  It is only called if the time since the last OK or
- * last ping (whichever is later) exceeds the ping interval.  Implementations should call connOk
- * whenever there are successful communications to avoid unnecessary pings.
- * <p>
- *
- * <b>DSIConnected</b><br>
- * DSConnection will notifies subtree instances of DSIConnected when the connection
- * state changes.  DSIConnected instances are responsible for notifying their own descendants
- * of any state changes.
+ * Subclasses must:<br>
+ * <ul>
+ * <li> Implement doConnect, doDisconnect and doPing.
+ * <li> Maybe add a property to make the ping interval configurable.
+ * <li> Call connOk() after a successful communication.
+ * <li> Call connDown(String) after a connection failure.  This does not need to be called for
+ * higher level errors such as malformed sql statements being submitted over a connection.  In
+ * those kinds of scenarios, just call connOk and let the ping loop determine if the connection
+ * has been lost.
+ * <li> Override checkConfig() and throw an exception if misconfigured.
+ * <li> Have a thread call the run() method.
+ * </ul>
  *
  * @author Aaron Hansen
  */
@@ -82,10 +79,10 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
             }
             disconnect();
         } else if (!getConnectionState().isDisconnected()) {
-            put(status, getStatus().add(DSStatus.DOWN));
             put(state, DSConnectionState.DISCONNECTED);
             put(stateTime, DSDateTime.currentTime());
-            notifyDescendants(this);
+            notifyConnectedDescendants(this, this);
+            super.connDown(reason);
             try {
                 onDisconnected();
             } catch (Exception x) {
@@ -112,19 +109,10 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         }
         lastOkMillis = now;
         if (!isConnected()) {
-            DSStatus sts = getStatus();
-            if (sts.isDown()) {
-                put(status, getStatus().remove(DSStatus.DOWN));
-            }
-            if (sts.isFault()) {
-                put(status, getStatus().remove(DSStatus.FAULT));
-            }
-            if (!getStatusText().isEmpty()) {
-                put(statusText, DSString.EMPTY);
-            }
             put(state, DSConnectionState.CONNECTED);
             put(stateTime, DSDateTime.valueOf(now));
-            notifyDescendants(this);
+            notifyConnectedDescendants(this, this);
+            super.connOk();
             try {
                 onConnected();
             } catch (Exception x) {
@@ -145,7 +133,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         debug(debug() ? "Connect" : null);
         put(state, DSConnectionState.CONNECTING);
         put(stateTime, DSDateTime.currentTime());
-        notifyDescendants(this);
+        notifyConnectedDescendants(this, this);
         if (canConnect()) {
             try {
                 doConnect();
@@ -156,6 +144,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         } else {
             put(state, DSConnectionState.DISCONNECTED);
             put(stateTime, DSDateTime.currentTime());
+            notifyConnectedDescendants(this, this);
         }
     }
 
@@ -167,16 +156,17 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         debug(debug() ? "Disconnect" : null);
         put(state, DSConnectionState.DISCONNECTING);
         put(stateTime, DSDateTime.currentTime());
-        notifyDescendants(this);
+        notifyConnectedDescendants(this, this);
         try {
             doDisconnect();
         } catch (Throwable x) {
             error(getPath(), x);
         }
-        put(status, getStatus().add(DSStatus.DOWN));
         put(state, DSConnectionState.DISCONNECTED);
         put(stateTime, DSDateTime.currentTime());
-        notifyDescendants(this);
+        notifyConnectedDescendants(this, this);
+        myStatus = myStatus.add(DSStatus.DOWN);
+        updateStatus(myStatus, null);
         try {
             onDisconnected();
         } catch (Exception x) {
@@ -312,17 +302,17 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
      * Calls DSIConnected.onChange on implementations in the subtree.  Stops at instances of
      * DSIConnected and DSConnection.
      */
-    private void notifyDescendants(DSNode node) {
+    private void notifyConnectedDescendants(DSNode node, DSConnection conn) {
         DSInfo info = node.getFirstInfo();
         while (info != null) {
             if (info.is(DSIConnected.class)) {
                 try {
-                    ((DSIConnected) info.get()).onChange(this);
+                    ((DSIConnected) info.get()).onConnectionChange(conn);
                 } catch (Throwable t) {
                     error(error() ? info.getPath(null) : null, t);
                 }
-            } else if (info.isNode() && !info.is(DSConnection.class)) {
-                notifyDescendants(info.getNode());
+            } else if (info.isNode() && !info.is(DSConnectionOld.class)) {
+                notifyConnectedDescendants(info.getNode(), conn);
             }
             info = info.next();
         }

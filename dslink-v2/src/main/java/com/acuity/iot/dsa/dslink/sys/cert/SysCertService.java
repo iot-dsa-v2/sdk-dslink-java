@@ -194,12 +194,12 @@ public class SysCertService extends DSNode {
                     error("Existing keystore not found and new one could not be generated");
                 }
             }
-            generateCsr.setHidden(true);
-            importCaCert.setHidden(true);
-            importPrimaryCert.setHidden(true);
-            generateSSCert.setHidden(true);
-            getKSEntry.setHidden(true);
-            deleteKSEntry.setHidden(true);
+            generateCsr.setPrivate(true);
+            importCaCert.setPrivate(true);
+            importPrimaryCert.setPrivate(true);
+            generateSSCert.setPrivate(true);
+            getKSEntry.setPrivate(true);
+            deleteKSEntry.setPrivate(true);
         }
 
         try {

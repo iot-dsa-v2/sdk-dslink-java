@@ -89,13 +89,13 @@ public class MainNode extends DSMainNode implements Runnable {
     }
 
     @Override
-    public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation invocation) {
+    public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
         if (action == this.reset) {
             put(incrementingInt, DSElement.make(0));
-            DSMap map = invocation.getParameters();
+            DSMap map = request.getParameters();
             DSElement arg = null;
             if (map != null) {
-                arg = invocation.getParameters().get("Arg");
+                arg = request.getParameters().get("Arg");
                 put("Message", arg);
             }
             clear();
@@ -108,7 +108,7 @@ public class MainNode extends DSMainNode implements Runnable {
                     .addResult(DSBool.TRUE)
                     .addResult(DSLong.valueOf(1234));
         }
-        return super.invoke(action, target, invocation);
+        return super.invoke(action, target, request);
     }
 
     /**

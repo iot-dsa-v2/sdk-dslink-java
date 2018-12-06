@@ -38,7 +38,7 @@ public class CertNode extends DSValueNode {
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
-        declareDefault(VALUE, DSString.valueOf("")).setHidden(true).setReadOnly(true);
+        declareDefault(VALUE, DSString.valueOf("")).setPrivate(true).setReadOnly(true);
         declareDefault(ALLOW, new AllowAction());
         declareDefault(REMOVE, new RemoveAction());
     }

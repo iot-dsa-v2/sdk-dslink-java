@@ -93,7 +93,7 @@ public class RequesterInvokeTest {
         }
 
         @Override
-        public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation invocation) {
+        public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
             return null;
         }
 
@@ -112,12 +112,12 @@ public class RequesterInvokeTest {
         }
 
         @Override
-        public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation invocation) {
+        public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
             String name = action.getName();
             if (name.equals("simpleAction")) {
                 success = true;
             } else if (name.equals("simpleParam")) {
-                DSMap params = invocation.getParameters();
+                DSMap params = request.getParameters();
                 success = params.get("param", false);
             } else if (name.equals("exception")) {
                 throw new IllegalStateException("my message");

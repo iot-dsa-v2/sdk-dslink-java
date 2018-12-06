@@ -239,6 +239,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public DSInfo add(String name, DSIObject object) {
         validateChild(object);
+        if ((name == null) || name.isEmpty()) {
+            throw new NullPointerException("Illegal name: " + name);
+        }
         DSNode argAsNode = null;
         boolean argIsNode = isNode(object);
         if (argIsNode) {
@@ -366,7 +369,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Should return an info for the dynamic action on the given target.
+     * Should return an info for the dynamic action on the given target.  Overrides should
+     * call super to for the default edit actions.  The override is free to modify what the
+     * default implementation returns.
      *
      * @param target Could be the info for this node, or the info of a non-node value child.
      * @param name   The name of the action.
@@ -395,9 +400,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Adds all action names for the given target to the bucket.  The default implementation adds
-     * edit items (delete, rename, duplicate) and if the target is this node, all child infos are
-     * scanned for actions. Can be overridden to add actions to child values.
+     * Adds all action names for the given target to the bucket.  Overrides should call super
+     * for the default edit actions (such as delete, rename, and duplicate).  The override
+     * is free to modify the default implementation returns.
      *
      * @param target Could be the info for this node, or the info of a non-node value child.
      * @param bucket Where to add action names.  Actions for this node must have unique names among
@@ -592,18 +597,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Override point.  By default routes the invocation to the action.
+     * Override point.  By default routes the request to the action.
      *
-     * @param action     Info for the action being invoked.
-     * @param target     Info for the target (parent) of the action.
-     * @param invocation Details about the incoming invoke as well as the mechanism to send updates
-     *                   over an open stream.
+     * @param action  Info for the action being invoked.
+     * @param target  Info for the target (parent) of the action.  Could be this node,
+     *                or the info of a child that is a non-node value.
+     * @param request Details about the incoming invoke as well as the mechanism to send updates
+     *                over an open stream.
      * @return It is okay to return null if the action result type is void.
-     * @throws IllegalStateException If the nothing handles an incoming invocation.
+     * @throws IllegalStateException If the nothing handles an incoming request.
      * @see org.iot.dsa.node.action.DSAction#invoke(DSInfo, ActionInvocation)
      */
-    public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation invocation) {
-        return action.getAction().invoke(target, invocation);
+    public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
+        return action.getAction().invoke(target, request);
     }
 
     /**
@@ -931,7 +937,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             throw new IllegalStateException("Can not be removed");
         }
         if (info.isDynamic()) {
-            //Poor implemented getDynamicActions
             return this;
         }
         if (info.getParent() != this) {
