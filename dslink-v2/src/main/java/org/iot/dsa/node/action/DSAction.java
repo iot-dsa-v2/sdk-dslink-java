@@ -260,7 +260,9 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
     }
 
     /**
-     * Execute the action invocation for the given target.
+     * Execute the action invocation for the given target.  It is safe to use the calling thread
+     * for long lived operations.  If the return type is void, perform the full operation on the
+     * calling thread so that errors will be properly reported.
      * <p>
      * To report an error, simply throw a runtime exception from this method, or call
      * ActionInvocation.close(Exception) when processing asynchronously.

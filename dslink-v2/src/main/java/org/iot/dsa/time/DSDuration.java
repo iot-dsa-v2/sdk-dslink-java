@@ -20,6 +20,7 @@ public class DSDuration extends DSValue {
     /////////////////////////////////////////////////////////////////
 
     public static DSDuration NULL = new DSDuration();
+    public static DSDuration DEFAULT = new DSDuration();
 
     /////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -184,8 +185,7 @@ public class DSDuration extends DSValue {
 
     @Override
     public int hashCode() {
-        int ret = millis + seconds + minutes + hours + days + months + years;
-        return negative ? -ret : ret;
+        return toString().hashCode();
     }
 
     /**

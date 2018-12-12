@@ -597,7 +597,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Override point.  By default routes the request to the action.
+     * Override point.  It is safe to use the calling thread for long lived operations.  By
+     * default, this routes the request to the action's invoke method.
      *
      * @param action  Info for the action being invoked.
      * @param target  Info for the target (parent) of the action.  Could be this node,

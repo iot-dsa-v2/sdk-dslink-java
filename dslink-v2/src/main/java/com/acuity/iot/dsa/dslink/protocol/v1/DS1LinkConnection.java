@@ -93,7 +93,6 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     @Override
     protected void checkConfig() {
-        configOk();
     }
 
     protected DS1ConnectionInit initializeConnection() {

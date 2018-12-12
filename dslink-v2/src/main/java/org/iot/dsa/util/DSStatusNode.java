@@ -55,6 +55,13 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
         return statusText.getElement().toString();
     }
 
+    /**
+     * True if the status is good.
+     */
+    public boolean isOperational() {
+        return getStatus().isGood();
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
