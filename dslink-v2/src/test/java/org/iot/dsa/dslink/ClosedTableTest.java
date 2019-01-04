@@ -44,17 +44,10 @@ public class ClosedTableTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, new DSISubscriber() {
-            @Override
-            public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-                success = true;
-                synchronized (ClosedTableTest.this) {
-                    ClosedTableTest.this.notifyAll();
-                }
-            }
-
-            @Override
-            public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
+        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, (node, child, event)-> {
+            success = true;
+            synchronized (ClosedTableTest.this) {
+                ClosedTableTest.this.notifyAll();
             }
         });
         Thread t = new Thread(link, "DSLink Runner");
@@ -142,7 +135,7 @@ public class ClosedTableTest {
     public static class MyMain extends DSMainNode {
 
         @Override
-        public DSInfo getDynamicAction(DSInfo target, String name) {
+        public DSInfo getVirtualAction(DSInfo target, String name) {
             return actionInfo(name, new DSAction.Parameterless() {
                 @Override
                 public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
@@ -156,7 +149,7 @@ public class ClosedTableTest {
         }
 
         @Override
-        public void getDynamicActions(DSInfo target, Collection<String> bucket) {
+        public void getVirtualActions(DSInfo target, Collection<String> bucket) {
             bucket.add("getTable");
         }
 

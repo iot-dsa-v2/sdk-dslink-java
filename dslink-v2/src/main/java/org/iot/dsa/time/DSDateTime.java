@@ -116,6 +116,170 @@ public class DSDateTime extends DSValue {
         return this == NULL;
     }
 
+    public DSDateTime nextDay() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addDays(1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime nextHour() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addHours(1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime nextMonth() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addMonths(1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime nextWeek() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addWeeks(1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime nextYear() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addYears(1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime prevDay() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addDays(-1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime prevHour() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addHours(-1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime prevMonth() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addMonths(-1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime prevWeek() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addWeeks(-1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime prevYear() {
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.addYears(-1, cal);
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime startOfDay() {
+        long cur = timeInMillis();
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.alignDay(cal);
+        long neu = cal.getTimeInMillis();
+        if (cur == neu) {
+            DSTime.recycle(cal);
+            return this;
+        }
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime startOfHour() {
+        long cur = timeInMillis();
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.alignHour(cal);
+        long neu = cal.getTimeInMillis();
+        if (cur == neu) {
+            DSTime.recycle(cal);
+            return this;
+        }
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime startOfMinute() {
+        long cur = timeInMillis();
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.alignMinute(cal);
+        long neu = cal.getTimeInMillis();
+        if (cur == neu) {
+            DSTime.recycle(cal);
+            return this;
+        }
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime startOfMonth() {
+        long cur = timeInMillis();
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.alignMonth(cal);
+        long neu = cal.getTimeInMillis();
+        if (cur == neu) {
+            DSTime.recycle(cal);
+            return this;
+        }
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime startOfWeek() {
+        long cur = timeInMillis();
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.alignWeek(cal);
+        long neu = cal.getTimeInMillis();
+        if (cur == neu) {
+            DSTime.recycle(cal);
+            return this;
+        }
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
+    public DSDateTime startOfYear() {
+        long cur = timeInMillis();
+        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
+        DSTime.alignYear(cal);
+        long neu = cal.getTimeInMillis();
+        if (cur == neu) {
+            DSTime.recycle(cal);
+            return this;
+        }
+        DSDateTime ret = DSDateTime.valueOf(cal);
+        DSTime.recycle(cal);
+        return ret;
+    }
+
     /**
      * The Java time represented by this object.
      */
@@ -262,6 +426,13 @@ public class DSDateTime extends DSValue {
         DSDateTime ret = new DSDateTime(cal.getTimeInMillis(), tz);
         DSTime.recycle(cal);
         return ret;
+    }
+
+    /**
+     * Creates a DSDateTime for the given calendar.
+     */
+    public static DSDateTime valueOf(Calendar calendar) {
+        return new DSDateTime(calendar.getTimeInMillis(), calendar.getTimeZone());
     }
 
     /**

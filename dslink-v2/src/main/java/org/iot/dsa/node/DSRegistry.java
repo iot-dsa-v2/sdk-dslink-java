@@ -1,6 +1,5 @@
 package org.iot.dsa.node;
 
-
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -10,9 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DSRegistry {
 
-    // Constants
-    // ---------
-
     // Fields
     // ------
 
@@ -20,9 +16,6 @@ public class DSRegistry {
             new ConcurrentHashMap<Class, DSIValue>();
     private static ConcurrentHashMap<Class, DSNode> defaultMap =
             new ConcurrentHashMap<Class, DSNode>();
-
-    // Constructors
-    // ------------
 
     // Public Methods
     // --------------
@@ -68,8 +61,5 @@ public class DSRegistry {
     static DSNode removeDefault(Class clazz) {
         return defaultMap.remove(clazz);
     }
-
-    // Inner Classes
-    // -------------
 
 }

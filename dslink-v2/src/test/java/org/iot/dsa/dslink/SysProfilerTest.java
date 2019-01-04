@@ -7,9 +7,6 @@ import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.event.DSIEvent;
-import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSITopic;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -21,17 +18,10 @@ public class SysProfilerTest {
     @Test
     public void theTest() throws Exception {
         link = new TestLink(new DSMainNode());
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, new DSISubscriber() {
-            @Override
-            public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-                success = true;
-                synchronized (SysProfilerTest.this) {
-                    SysProfilerTest.this.notifyAll();
-                }
-            }
-
-            @Override
-            public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
+        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, (node, child, event) -> {
+            success = true;
+            synchronized (SysProfilerTest.this) {
+                SysProfilerTest.this.notifyAll();
             }
         });
         success = false;
@@ -58,21 +48,14 @@ public class SysProfilerTest {
         final ThreadNode thread = (ThreadNode) threadobj;
         final DSInfo cpuTime = thread.getInfo("CurrentThreadCpuTime");
         Assert.assertTrue(cpuTime != null);
-        thread.subscribe(DSNode.VALUE_CHANGED, cpuTime, null, new DSISubscriber() {
-            @Override
-            public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-                Assert.assertEquals(thread, node);
-                Assert.assertEquals(cpuTime, child);
-                Assert.assertTrue(child.isValue());
-                Assert.assertTrue(child.getValue().toElement().isNumber());
-                success = true;
-                synchronized (SysProfilerTest.this) {
-                    SysProfilerTest.this.notifyAll();
-                }
-            }
-
-            @Override
-            public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
+        thread.subscribe(DSNode.VALUE_CHANGED, cpuTime, null, (node, child, event) -> {
+            Assert.assertEquals(thread, node);
+            Assert.assertEquals(cpuTime, child);
+            Assert.assertTrue(child.isValue());
+            Assert.assertTrue(child.getValue().toElement().isNumber());
+            success = true;
+            synchronized (SysProfilerTest.this) {
+                SysProfilerTest.this.notifyAll();
             }
         });
         synchronized (this) {

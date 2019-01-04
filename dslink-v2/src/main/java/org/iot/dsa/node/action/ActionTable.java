@@ -1,5 +1,6 @@
 package org.iot.dsa.node.action;
 
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.table.DSIRowCursor;
 
 /**
@@ -9,4 +10,10 @@ import org.iot.dsa.table.DSIRowCursor;
  */
 public interface ActionTable extends ActionValues, DSIRowCursor {
 
+    /**
+     * Metadata for the entire table, null by default.
+     */
+    public default DSMap getMetadata() {
+        return null;
+    }
 }

@@ -15,6 +15,7 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.node.event.DSITopic;
 import org.iot.dsa.time.DSTime;
 
@@ -40,6 +41,7 @@ public class DSInboundSubscription extends DSInboundRequest
     private boolean open = true;
     private int qos = 0;
     private Integer sid;
+    private DSISubscription subscription;
     private Update updateHead;
     private Update updateTail;
 
@@ -117,7 +119,8 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     @Override
-    public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo info) {
+    public void onClosed(DSISubscription subscription) {
+        this.subscription = null;
         close();
     }
 
@@ -218,13 +221,13 @@ public class DSInboundSubscription extends DSInboundRequest
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
                 node = (DSNode) obj;
-                node.subscribe(DSNode.VALUE_CHANGED, null, null, this);
+                this.subscription = node.subscribe(DSNode.VALUE_CHANGED, null, null, this);
                 onEvent(node, null, DSNode.VALUE_CHANGED);
             } else {
                 DSInfo info = path.getTargetInfo();
                 node = path.getNode();
                 child = info;
-                node.subscribe(DSNode.VALUE_CHANGED, info, null, this);
+                this.subscription = node.subscribe(DSNode.VALUE_CHANGED, info, null, this);
                 onEvent(node, info, DSNode.VALUE_CHANGED);
             }
         }
@@ -308,15 +311,16 @@ public class DSInboundSubscription extends DSInboundRequest
             open = false;
         }
         try {
-            if (closeHandler != null) {
-                closeHandler.onClose(getSubscriptionId());
+            if (subscription != null) {
+                subscription.close();
+                subscription = null;
             }
         } catch (Exception x) {
             manager.debug(manager.getPath(), x);
         }
         try {
-            if (node != null) {
-                node.unsubscribe(DSNode.VALUE_CHANGED, child, this);
+            if (closeHandler != null) {
+                closeHandler.onClose(getSubscriptionId());
             }
         } catch (Exception x) {
             manager.debug(manager.getPath(), x);

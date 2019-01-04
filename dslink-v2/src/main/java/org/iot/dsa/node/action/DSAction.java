@@ -12,16 +12,11 @@ import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.security.DSPermission;
 
 /**
- * Fully describes an action and leaves the invoke implementation to subclasses.
- *
- * <b>Permissions</b>
- * Permissions are determined using info flags.  If the admin flag is set,
- * the action requires admin level permissions. If the action is readonly, then only read
- * permissions are required.  Otherwise the action will require write permissions.
+ * Actions allow you to expose functionality much more complex than simple reads and writes.
  *
  * @author Aaron Hansen
  */
-public abstract class DSAction implements ActionSpec, DSIObject {
+public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -40,6 +35,8 @@ public abstract class DSAction implements ActionSpec, DSIObject {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private String actionGroup;
+    private String actionGroupDisplay;
     private List<DSMap> columns;
     private boolean immutable = false;
     private List<DSMap> parameters;
@@ -197,6 +194,20 @@ public abstract class DSAction implements ActionSpec, DSIObject {
         return this;
     }
 
+    /**
+     * Possibly null.
+     */
+    public String getActionGroup() {
+        return actionGroup;
+    }
+
+    /**
+     * Display name in the group menu, usually null.
+     */
+    public String getActionGroupDisplay() {
+        return actionGroupDisplay;
+    }
+
     @Override
     public int getColumnCount() {
         if (columns != null) {
@@ -208,6 +219,16 @@ public abstract class DSAction implements ActionSpec, DSIObject {
     @Override
     public void getColumnMetadata(int idx, DSMap bucket) {
         bucket.putAll((columns.get(idx)));
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        if (actionGroup != null) {
+            bucket.put(DSMetadata.ACTION_GROUP, actionGroup);
+            if (actionGroupDisplay != null) {
+                bucket.put(DSMetadata.ACTION_GROUP_DISPLAY, actionGroupDisplay);
+            }
+        }
     }
 
     @Override
@@ -239,19 +260,20 @@ public abstract class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * Execute the action invocation for the given target.
+     * Execute the action invocation for the given target.  It is safe to use the calling thread
+     * for long lived operations.  If the return type is void, perform the full operation on the
+     * calling thread so that errors will be properly reported.
      * <p>
      * To report an error, simply throw a runtime exception from this method, or call
-     * ActionInvocation.close(Exception) if processing asynchronously.
+     * ActionInvocation.close(Exception) when processing asynchronously.
      *
-     * @param target     The info about the target of the action (ie it's parent).  Be care of
-     *                   using the outer this in anonymous instances.
-     * @param invocation Details about the incoming invoke as well as the mechanism to
-     *                   send updates over an open stream.
+     * @param target  The info about the target of the action (its parent).
+     * @param request Details about the incoming invoke as well as the mechanism to
+     *                send async updates over an open stream.
      * @return Can be null if the result type is void.
-     * @throws RuntimeException Throw a runtime exception to report an error.
+     * @throws RuntimeException Throw a runtime exception to report an error and close the stream.
      */
-    public abstract ActionResult invoke(DSInfo target, ActionInvocation invocation);
+    public abstract ActionResult invoke(DSInfo target, ActionInvocation request);
 
     /**
      * Defaults to the equals method.
@@ -270,13 +292,31 @@ public abstract class DSAction implements ActionSpec, DSIObject {
     }
 
     /**
-     * Called for each parameter as it is being sent to the requester.
-     * As an example, it allows you to use current values as defaults.
+     * Called for each parameter as it is being sent to the requester. The intent is for
+     * updating the default value to represent the current state of the target.  If you do not
+     * need to prepare parameters, the inner class Parameterless implements this method to
+     * do nothing.
      *
-     * @param target    The info about the target of the action (parent).
+     * @param target    The info about the target of the action (its parent).
      * @param parameter Map representing a single parameter.
      */
     public abstract void prepareParameter(DSInfo target, DSMap parameter);
+
+    /**
+     * Sets the action group, which is null by default.
+     */
+    public DSAction setActionGroup(String name) {
+        this.actionGroup = name;
+        return this;
+    }
+
+    /**
+     * Display name in the group menu, usually null.  Not used if the group is null.
+     */
+    public DSAction setActionGroupDisplay(String name) {
+        this.actionGroupDisplay = name;
+        return this;
+    }
 
     /**
      * Prevents further modification of parameters or return type.  Will throw an

@@ -1,12 +1,15 @@
 package org.iot.dsa.node;
 
-class DynamicInfo extends DSInfo {
+/**
+ * Used to create temporary info's for virtual actions in DSNode.
+ */
+class VirtualInfo extends DSInfo {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DynamicInfo(String name, DSIObject obj) {
+    public VirtualInfo(String name, DSIObject obj) {
         super(name, obj);
     }
 
@@ -15,7 +18,7 @@ class DynamicInfo extends DSInfo {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    boolean isDynamic() {
+    boolean isVirtual() {
         return true;
     }
 
