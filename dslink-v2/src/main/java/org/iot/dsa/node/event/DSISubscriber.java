@@ -17,22 +17,19 @@ import org.iot.dsa.node.DSNode;
 public interface DSISubscriber {
 
     /**
+     * Called no matter how the unsubscribe happens, whether explicitly or if the node
+     * closes it itself.  Does nothing by default.
+     */
+    public default void onClosed(DSISubscription subscription) {
+    }
+
+    /**
      * Subscription callback.
      *
-     * @param node  Required, node subscribed to.
+     * @param node  Required, the node firing the event.
      * @param child Optional, if the event concerns a child.
      * @param event Required, the actual event.
      */
     public void onEvent(DSNode node, DSInfo child, DSIEvent event);
-
-    /**
-     * Called no matter how the unsubscribe happens, whether explicitly or if the node
-     * unsubscribes itself.
-     *
-     * @param topic The topic that was passed to DSNode.subscribe.
-     * @param node  Node that was passed to DSNode.subscribe, never null.
-     * @param child The child that was passed to DSNode.subscribe, may be null.
-     */
-    public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child);
 
 }

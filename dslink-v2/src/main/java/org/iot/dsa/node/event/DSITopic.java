@@ -17,4 +17,21 @@ import org.iot.dsa.node.DSInfo;
  */
 public interface DSITopic extends DSIObject {
 
+    /**
+     * Returns toString()
+     */
+    public default String getTopicName() {
+        return toString();
+    }
+
+    /**
+     * Returns true if arg == this, or this.equals(arg).
+     */
+    public default boolean matches(DSITopic arg) {
+        if (arg == this) {
+            return true;
+        }
+        return equals(arg);
+    }
+
 }

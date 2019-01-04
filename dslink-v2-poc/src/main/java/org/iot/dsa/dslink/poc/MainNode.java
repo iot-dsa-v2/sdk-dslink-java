@@ -53,7 +53,7 @@ public class MainNode extends DSMainNode implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public DSInfo getDynamicAction(DSInfo target, String name) {
+    public DSInfo getVirtualAction(DSInfo target, String name) {
         if (target == incrementingInt) {
             if (name.equals("Reset")) {
                 return actionInfo(name, new DSAction.Parameterless() {
@@ -75,17 +75,17 @@ public class MainNode extends DSMainNode implements Runnable {
                 });
             }
         }
-        return super.getDynamicAction(target, name);
+        return super.getVirtualAction(target, name);
     }
 
     @Override
-    public void getDynamicActions(DSInfo target, Collection<String> bucket) {
+    public void getVirtualActions(DSInfo target, Collection<String> bucket) {
         if (target == incrementingInt) {
             bucket.add("Reset");
         } else if (target.get() == this) {
             bucket.add("Foobar");
         }
-        super.getDynamicActions(target, bucket);
+        super.getVirtualActions(target, bucket);
     }
 
     @Override

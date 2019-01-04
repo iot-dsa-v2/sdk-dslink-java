@@ -1,6 +1,10 @@
 package org.iot.dsa.time;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 
 /**
  * Misc time utility functions.
@@ -778,6 +782,17 @@ public class DSTime {
     public static Calendar getCalendar(long timestamp) {
         Calendar cal = getCalendar();
         cal.setTimeInMillis(timestamp);
+        return cal;
+    }
+
+    /**
+     * Attempts to reuse a calendar instance and sets the time in millis to the argument and the
+     * timezone too.
+     */
+    public static Calendar getCalendar(long timestamp, TimeZone timeZone) {
+        Calendar cal = getCalendar();
+        cal.setTimeInMillis(timestamp);
+        cal.setTimeZone(timeZone);
         return cal;
     }
 

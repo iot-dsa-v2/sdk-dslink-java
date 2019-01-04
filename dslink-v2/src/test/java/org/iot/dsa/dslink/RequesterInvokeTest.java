@@ -11,9 +11,6 @@ import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.node.event.DSIEvent;
-import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSITopic;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -38,6 +35,13 @@ public class RequesterInvokeTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
+        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, (node, child, event) -> {
+            success = true;
+            synchronized (RequesterInvokeTest.this) {
+                RequesterInvokeTest.this.notifyAll();
+            }
+        });
+        /*
         link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, new DSISubscriber() {
             @Override
             public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
@@ -48,9 +52,10 @@ public class RequesterInvokeTest {
             }
 
             @Override
-            public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
+            public void onClosed(DSITopic topic, DSNode node, DSInfo child) {
             }
         });
+        */
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         synchronized (this) {

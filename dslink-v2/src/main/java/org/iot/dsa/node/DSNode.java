@@ -16,6 +16,7 @@ import org.iot.dsa.node.action.RenameAction;
 import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.node.event.DSITopic;
 import org.iot.dsa.node.event.DSNodeTopic;
 import org.iot.dsa.util.DSException;
@@ -369,62 +370,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Should return an info for the dynamic action on the given target.  Overrides should
-     * call super to for the default edit actions.  The override is free to modify what the
-     * default implementation returns.
-     *
-     * @param target Could be the info for this node, or the info of a non-node value child.
-     * @param name   The name of the action.
-     * @return DSInfo for the desired action.
-     * @see #actionInfo(String, DSAction)
-     */
-    public DSInfo getDynamicAction(DSInfo target, String name) {
-        DSInfo info = null;
-        if (target.isRemovable()) {
-            switch (name) {
-                case DeleteAction.DELETE:
-                    info = actionInfo(name, DeleteAction.INSTANCE);
-                    break;
-                case DuplicateAction.DUPLICATE:
-                    info = actionInfo(name, DuplicateAction.INSTANCE);
-                    break;
-                case RenameAction.RENAME:
-                    info = actionInfo(name, RenameAction.INSTANCE);
-                    break;
-            }
-            if (info != null) {
-                info.getMetadata().setActionGroup(DSAction.EDIT_GROUP, null);
-            }
-        }
-        return info;
-    }
-
-    /**
-     * Adds all action names for the given target to the bucket.  Overrides should call super
-     * for the default edit actions (such as delete, rename, and duplicate).  The override
-     * is free to modify the default implementation returns.
-     *
-     * @param target Could be the info for this node, or the info of a non-node value child.
-     * @param bucket Where to add action names.  Actions for this node must have unique names among
-     *               all children of the node.
-     */
-    public void getDynamicActions(DSInfo target, Collection<String> bucket) {
-        if (target.isNode()) {
-            if (target.getParent() == this) {
-                target.getNode().getDynamicActions(target, bucket);
-                return;
-            } else if (target.getNode() != this) {
-                throw new IllegalArgumentException("DSInfo target is from another node.");
-            }
-        }
-        if (target.isRemovable()) {
-            bucket.add(DeleteAction.DELETE);
-            bucket.add(RenameAction.RENAME);
-            bucket.add(DuplicateAction.DUPLICATE);
-        }
-    }
-
-    /**
      * A convenience for (DSElement) get(name).
      */
     public DSElement getElement(String name) {
@@ -490,7 +435,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             if (getInfo() == null) {
                 return null;
             } else {
-                return getDynamicAction(getInfo(), name);
+                return getVirtualAction(getInfo(), name);
             }
         }
         synchronized (mutex) {
@@ -508,7 +453,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                     if (getInfo() == null) {
                         return null;
                     } else {
-                        return getDynamicAction(getInfo(), name);
+                        return getVirtualAction(getInfo(), name);
                     }
                 }
             }
@@ -523,7 +468,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (getInfo() == null) {
             return null;
         } else {
-            return getDynamicAction(getInfo(), name);
+            return getVirtualAction(getInfo(), name);
         }
     }
 
@@ -594,6 +539,62 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public DSIValue getValue(String name) {
         return (DSIValue) get(name);
+    }
+
+    /**
+     * Should return an info for the dynamic action on the given target.  Overrides should
+     * call super to for the default edit actions.  The override is free to modify what the
+     * default implementation returns.
+     *
+     * @param target Could be the info for this node, or the info of a non-node value child.
+     * @param name   The name of the action.
+     * @return DSInfo for the desired action.
+     * @see #actionInfo(String, DSAction)
+     */
+    public DSInfo getVirtualAction(DSInfo target, String name) {
+        DSInfo info = null;
+        if (target.isRemovable()) {
+            switch (name) {
+                case DeleteAction.DELETE:
+                    info = actionInfo(name, DeleteAction.INSTANCE);
+                    break;
+                case DuplicateAction.DUPLICATE:
+                    info = actionInfo(name, DuplicateAction.INSTANCE);
+                    break;
+                case RenameAction.RENAME:
+                    info = actionInfo(name, RenameAction.INSTANCE);
+                    break;
+            }
+            if (info != null) {
+                info.getMetadata().setActionGroup(DSAction.EDIT_GROUP, null);
+            }
+        }
+        return info;
+    }
+
+    /**
+     * Adds all action names for the given target to the bucket.  Overrides should call super
+     * for the default edit actions (such as delete, rename, and duplicate).  The override
+     * is free to modify the default implementation returns.
+     *
+     * @param target Could be the info for this node, or the info of a non-node value child.
+     * @param bucket Where to add action names.  Actions for this node must have unique names among
+     *               all children of the node.
+     */
+    public void getVirtualActions(DSInfo target, Collection<String> bucket) {
+        if (target.isNode()) {
+            if (target.getParent() == this) {
+                target.getNode().getVirtualActions(target, bucket);
+                return;
+            } else if (target.getNode() != this) {
+                throw new IllegalArgumentException("DSInfo target is from another node.");
+            }
+        }
+        if (target.isRemovable()) {
+            bucket.add(DeleteAction.DELETE);
+            bucket.add(RenameAction.RENAME);
+            bucket.add(DuplicateAction.DUPLICATE);
+        }
     }
 
     /**
@@ -937,7 +938,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (!info.isRemovable()) {
             throw new IllegalStateException("Can not be removed");
         }
-        if (info.isDynamic()) {
+        if (info.isVirtual()) {
             return this;
         }
         if (info.getParent() != this) {
@@ -976,8 +977,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             fire(CHILD_REMOVED, info);
             Subscription sub = subscription;
             while (sub != null) {
-                if (sub.shouldUnsubscribe(info)) {
-                    unsubscribe(sub.topic, info, sub.subscriber);
+                if (sub.matches(info)) {
+                    sub.close();
                 }
                 sub = sub.next;
             }
@@ -1095,7 +1096,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         synchronized (mutex) {
             Subscription sub = subscription;
             while (sub != null) {
-                sub.unsubscribe();
+                sub.close();
                 sub = sub.next;
             }
             subscription = null;
@@ -1117,20 +1118,21 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param args       Optional, should be defined by the topic.
      * @param subscriber Can not be null.
      */
-    public Subscription subscribe(DSITopic topic, DSIValue args, DSISubscriber subscriber) {
+    public DSISubscription subscribe(DSITopic topic, DSIValue args, DSISubscriber subscriber) {
         return subscribe(topic, null, args, subscriber);
     }
 
     /**
-     * Creates a subscription for the given criteria.
+     * Creates a subscription for the given criteria if a matches subscription doesn't already
+     * exist.  Subscribers are matched using the == operator.
      *
      * @param topic      Use null to subscribe to all topics.
      * @param child      Can be null to indicate all children.  Child cannot be a DSNode.
      * @param args       Optional.
      * @param subscriber Can not be null.
      */
-    public Subscription subscribe(DSITopic topic, DSInfo child, DSIValue args,
-                                  DSISubscriber subscriber) {
+    public DSISubscription subscribe(DSITopic topic, DSInfo child, DSIValue args,
+                                     DSISubscriber subscriber) {
         if (child != null) {
             if (child.isNode()) {
                 throw new IllegalArgumentException("Must subscribe to nodes directly");
@@ -1146,7 +1148,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             firstSubscription = (sub == null);
             Subscription prev = null;
             while (sub != null) {
-                if (sub.equals(topic, child, subscriber)) {
+                if (sub.matches(subscriber, topic, child, args)) {
                     return sub;
                 }
                 prev = sub;
@@ -1175,48 +1177,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         return sub;
     }
 
-    /**
-     * Unsubscribes the tuple.
-     *
-     * @param topic      Can not be null.
-     * @param child      Can be null.
-     * @param subscriber Can not be null.
-     */
-    public void unsubscribe(DSITopic topic, DSInfo child, DSISubscriber subscriber) {
-        Subscription removed = null;
-        synchronized (mutex) {
-            Subscription sub = subscription;
-            Subscription prev = null;
-            while (sub != null) {
-                if (sub.equals(topic, child, subscriber)) {
-                    removed = sub;
-                    if (prev == null) {
-                        subscription = subscription.next;
-                    } else {
-                        prev.next = sub.next;
-                    }
-                }
-                prev = sub;
-                sub = sub.next;
-            }
-        }
-        if (removed != null) {
-            try {
-                onUnsubscribe(removed);
-            } catch (Exception x) {
-                error(getParent(), x);
-            }
-            if (subscription == null) {
-                try {
-                    onUnsubscribed();
-                } catch (Exception x) {
-                    error(getParent(), x);
-                }
-            }
-            removed.unsubscribe();
-        }
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
@@ -1225,7 +1185,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Use to create DSInfos when overriding getDynamicAction(s).
      */
     protected DSInfo actionInfo(String name, DSAction target) {
-        return new DynamicInfo(name, target).setParent(this);
+        return new VirtualInfo(name, target).setParent(this);
     }
 
     /**
@@ -1282,7 +1242,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
         Subscription sub = subscription;
         while (sub != null) {
-            if (sub.shouldFire(event.getTopic(), child)) {
+            if (sub.matches(event.getTopic(), child)) {
                 try {
                     sub.subscriber.onEvent(this, child, event);
                 } catch (Exception x) {
@@ -1444,7 +1404,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     /**
      * Called for every unsubscribe.
      */
-    protected void onUnsubscribe(Subscription subscriptin) {
+    protected void onUnsubscribe(Subscription subscription) {
     }
 
     /**
@@ -1545,6 +1505,44 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    private void remove(Subscription toRemove) {
+        Subscription removed = null;
+        synchronized (mutex) {
+            Subscription sub = subscription;
+            Subscription prev = null;
+            while (sub != null) {
+                if (sub == toRemove) {
+                    removed = sub;
+                    if (prev == null) {
+                        subscription = subscription.next;
+                    } else {
+                        prev.next = sub.next;
+                    }
+                }
+                prev = sub;
+                sub = sub.next;
+            }
+        }
+        if (removed != null) {
+            try {
+                onUnsubscribe(removed);
+            } catch (Exception x) {
+                error(getParent(), x);
+            }
+            if (subscription == null) {
+                try {
+                    onUnsubscribed();
+                } catch (Exception x) {
+                    error(getParent(), x);
+                }
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
@@ -1615,11 +1613,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     /**
      * Encapsulates the details of a subscription.
      */
-    public class Subscription {
+    private class Subscription implements DSISubscription {
 
         DSIValue args;
         DSInfo child;
         Subscription next;
+        boolean open = true;
         DSISubscriber subscriber;
         DSITopic topic;
 
@@ -1630,44 +1629,55 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             this.subscriber = subscriber;
         }
 
-        /**
-         * Any args supplied to the subscription, can be null.
-         */
-        public DSIValue getArgs() {
-            return args;
+        @Override
+        public void close() {
+            synchronized (this) {
+                if (!open) {
+                    return;
+                }
+                open = false;
+            }
+            remove(this);
+            try {
+                subscriber.onClosed(this);
+            } catch (Exception x) {
+                error(getPath(), x);
+            }
         }
 
-        /**
-         * If the subscription specified a specific child, otherwise null.
-         */
+        @Override
         public DSInfo getChild() {
             return child;
         }
 
+        @Override
+        public DSNode getNode() {
+            return DSNode.this;
+        }
+
+        @Override
+        public DSIValue getParameters() {
+            return args;
+        }
+
+        @Override
         public DSISubscriber getSubscriber() {
             return subscriber;
         }
 
-        /**
-         * Can be null if subscribing to all topics.
-         */
+        @Override
         public DSITopic getTopic() {
             return topic;
         }
 
-        boolean equals(DSITopic topic, DSInfo child, DSISubscriber subscriber) {
-            if (!DSUtil.equal(subscriber, this.subscriber)) {
-                return false;
-            }
-            if (!DSUtil.equal(topic, this.topic)) {
-                return false;
-            }
-            return DSUtil.equal(child, this.child);
+        @Override
+        public boolean isOpen() {
+            return open;
         }
 
-        boolean shouldFire(DSITopic topic, DSInfo child) {
+        public boolean matches(DSITopic topic, DSInfo child) {
             if (this.topic != null) {
-                if (!DSUtil.equal(topic, this.topic)) {
+                if (!this.topic.matches(topic)) {
                     return false;
                 }
             }
@@ -1677,19 +1687,29 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             return true;
         }
 
-        boolean shouldUnsubscribe(DSInfo child) {
+        boolean matches(DSISubscriber subscriber, DSITopic topic, DSInfo child, DSIValue args) {
+            if (!DSUtil.equal(subscriber, this.subscriber)) {
+                return false;
+            }
+            if (!DSUtil.equal(args, this.args)) {
+                return false;
+            }
+            if (this.topic != null) {
+                if (topic == null) {
+                    return false;
+                }
+                if (!this.topic.matches(topic)) {
+                    return false;
+                }
+            }
+            return DSUtil.equal(child, this.child);
+        }
+
+        boolean matches(DSInfo child) {
             if (this.child != null) {
                 return DSUtil.equal(this.child, child);
             }
             return false;
-        }
-
-        void unsubscribe() {
-            try {
-                subscriber.onUnsubscribed(topic, DSNode.this, child);
-            } catch (Exception x) {
-                error(getPath(), x);
-            }
         }
 
     } //Subscription

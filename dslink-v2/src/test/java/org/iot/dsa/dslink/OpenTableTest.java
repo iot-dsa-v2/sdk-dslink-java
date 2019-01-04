@@ -10,16 +10,12 @@ import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
-import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.node.event.DSIEvent;
-import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSITopic;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -44,6 +40,13 @@ public class OpenTableTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
+        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, (node, child, event) -> {
+            success = true;
+            synchronized (OpenTableTest.this) {
+                OpenTableTest.this.notifyAll();
+            }
+        });
+        /*
         link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, new DSISubscriber() {
             @Override
             public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
@@ -54,9 +57,10 @@ public class OpenTableTest {
             }
 
             @Override
-            public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
+            public void onClosed(DSITopic topic, DSNode node, DSInfo child) {
             }
         });
+        */
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         synchronized (this) {
@@ -100,7 +104,7 @@ public class OpenTableTest {
     public static class MyMain extends DSMainNode {
 
         @Override
-        public DSInfo getDynamicAction(DSInfo target, String name) {
+        public DSInfo getVirtualAction(DSInfo target, String name) {
             return actionInfo(name, new DSAction.Parameterless() {
                 @Override
                 public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
@@ -114,7 +118,7 @@ public class OpenTableTest {
         }
 
         @Override
-        public void getDynamicActions(DSInfo target, Collection<String> bucket) {
+        public void getVirtualActions(DSInfo target, Collection<String> bucket) {
             bucket.add("getTable");
         }
 

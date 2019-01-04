@@ -26,7 +26,7 @@ import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.event.DSIEvent;
 import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSITopic;
+import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.node.event.DSNodeTopic;
 import org.iot.dsa.security.DSPermission;
 
@@ -64,6 +64,7 @@ public class DSInboundList extends DSInboundRequest
     private OutboundListResponse response;
     private int state = STATE_INIT;
     private boolean stream = true;
+    private DSISubscription subscription;
     private DSTarget target;
     private Update updateHead;
     private Update updateTail;
@@ -127,8 +128,9 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public void onClose() {
-        if (node != null) {
-            node.unsubscribe(null, null, this);
+        if (subscription != null) {
+            subscription.close();
+            subscription = null;
         }
     }
 
@@ -143,6 +145,12 @@ public class DSInboundList extends DSInboundRequest
             updateHead = updateTail = null;
         }
         doClose();
+    }
+
+    @Override
+    public void onClosed(DSISubscription subscription) {
+        subscription = null;
+        close();
     }
 
     @Override
@@ -166,11 +174,6 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void onUnsubscribed(DSITopic topic, DSNode node, DSInfo child) {
-        close();
-    }
-
-    @Override
     public void run() {
         try {
             target = new DSTarget(getPath(), getLink());
@@ -185,7 +188,7 @@ public class DSInboundList extends DSInboundRequest
                 }
                 if (info.isNode()) {
                     node = info.getNode();
-                    node.subscribe(null, null, null, this);
+                    this.subscription = node.subscribe(null, null, null, this);
                 }
                 response = this;
             }
@@ -366,10 +369,10 @@ public class DSInboundList extends DSInboundRequest
      */
     protected void encodeUpdate(Update update, MessageWriter writer, StringBuilder buf) {
         if (update instanceof AddUpdate) {
-            encodeChild(((AddUpdate)update).child, writer);
+            encodeChild(((AddUpdate) update).child, writer);
         } else {
             writer.getWriter().beginMap()
-                  .key("name").value(encodeName(((RemoveUpdate)update).name, buf))
+                  .key("name").value(encodeName(((RemoveUpdate) update).name, buf))
                   .key("change").value("remove")
                   .endMap();
         }

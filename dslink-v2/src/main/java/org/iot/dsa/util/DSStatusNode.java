@@ -115,6 +115,11 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
     @Override
     protected void onChildChanged(DSInfo child) {
         if (child == status) {
+            try {
+                onStatusChanged();
+            } catch (Exception x) {
+                error(getPath(), x);
+            }
             notifyStatusDescendants();
         }
         super.onChildChanged(child);
@@ -124,6 +129,13 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
     protected void onStarted() {
         statusParent = null;
         super.onStarted();
+    }
+
+    /**
+     * Override point, called by onChildChanged before children are notified.  Does nothing by
+     * default.
+     */
+    protected void onStatusChanged() {
     }
 
     /**

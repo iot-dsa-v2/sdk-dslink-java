@@ -93,6 +93,22 @@ public class DSTimeRange extends DSValue implements DSIMetadata {
         bucket.put(DSMetadata.EDITOR, DSMetadata.STR_EDITOR_PASSWORD);
     }
 
+    public DSDateTime getEnd() {
+        return to;
+    }
+
+    public DSDateTime getFrom() {
+        return from;
+    }
+
+    public DSDateTime getStart() {
+        return from;
+    }
+
+    public DSDateTime getTo() {
+        return to;
+    }
+
     /**
      * String.
      */
