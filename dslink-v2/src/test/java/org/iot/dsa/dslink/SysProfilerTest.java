@@ -24,17 +24,6 @@ public class SysProfilerTest {
                 SysProfilerTest.this.notifyAll();
             }
         });
-        /*
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, new DSISubscriber() {
-            @Override
-            public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-                success = true;
-                synchronized (SysProfilerTest.this) {
-                    SysProfilerTest.this.notifyAll();
-                }
-            }
-        });
-        */
         success = false;
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
@@ -69,21 +58,6 @@ public class SysProfilerTest {
                 SysProfilerTest.this.notifyAll();
             }
         });
-        /*
-        thread.subscribe(DSNode.VALUE_CHANGED, cpuTime, null, new DSISubscriber() {
-            @Override
-            public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-                Assert.assertEquals(thread, node);
-                Assert.assertEquals(cpuTime, child);
-                Assert.assertTrue(child.isValue());
-                Assert.assertTrue(child.getValue().toElement().isNumber());
-                success = true;
-                synchronized (SysProfilerTest.this) {
-                    SysProfilerTest.this.notifyAll();
-                }
-            }
-        });
-        */
         synchronized (this) {
             this.wait(6000);
         }

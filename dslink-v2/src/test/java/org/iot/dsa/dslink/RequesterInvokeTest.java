@@ -41,21 +41,6 @@ public class RequesterInvokeTest {
                 RequesterInvokeTest.this.notifyAll();
             }
         });
-        /*
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, new DSISubscriber() {
-            @Override
-            public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-                success = true;
-                synchronized (RequesterInvokeTest.this) {
-                    RequesterInvokeTest.this.notifyAll();
-                }
-            }
-
-            @Override
-            public void onClosed(DSITopic topic, DSNode node, DSInfo child) {
-            }
-        });
-        */
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         synchronized (this) {

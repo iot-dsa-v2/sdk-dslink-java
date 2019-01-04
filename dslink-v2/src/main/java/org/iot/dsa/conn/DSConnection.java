@@ -43,12 +43,12 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     /**
      * The topic to subscribe to for connected events.
      */
-    public static final DSConnectionTopic CONNECTED = new DSConnectionTopic();
+    public static final DSConnectionTopic CONNECTED = new DSConnectionTopic("CONNECTED");
 
     /**
      * The topic to subscribe to for disconnected events.
      */
-    public static final DSConnectionTopic DISCONNECTED = new DSConnectionTopic();
+    public static final DSConnectionTopic DISCONNECTED = new DSConnectionTopic("DISCONNECTED");
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -327,8 +327,11 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
      */
     public static class DSConnectionTopic extends DSTopic implements DSIEvent {
 
+        String name;
+
         // Prevent instantiation
-        private DSConnectionTopic() {
+        private DSConnectionTopic(String name) {
+            this.name = name;
         }
 
         /**
@@ -342,6 +345,11 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         @Override
         public DSITopic getTopic() {
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return name;
         }
 
     }

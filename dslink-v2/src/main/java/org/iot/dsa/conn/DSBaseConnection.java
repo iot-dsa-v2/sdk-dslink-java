@@ -9,7 +9,7 @@ import org.iot.dsa.util.DSException;
 
 /**
  * Basic representation of a connection, which is subclassed by DSConnection for longer lived
- * connections.  DSConnection should be subclassed but this can be:
+ * connections.  DSConnection should really be subclassed but this can if desired.
  * <p>
  * Subclasses must:<br>
  * <ul>

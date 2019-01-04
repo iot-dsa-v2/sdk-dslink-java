@@ -51,17 +51,6 @@ public class ActionValuesTest {
                 ActionValuesTest.this.notifyAll();
             }
         });
-        /*
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, new DSISubscriber() {
-            @Override
-            public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-                success = true;
-                synchronized (ActionValuesTest.this) {
-                    ActionValuesTest.this.notifyAll();
-                }
-            }
-        });
-        */
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         synchronized (this) {

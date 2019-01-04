@@ -356,11 +356,15 @@ public class DSInboundInvoke extends DSInboundRequest
     private void writeColumns(MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         if (result instanceof ActionTable) {
+            DSMap tableMeta = ((ActionTable) result).getMetadata();
+            if (tableMeta == null) {
+                tableMeta = new DSMap();
+            }
             ActionSpec action = result.getAction();
             out.key("meta")
                .beginMap()
                .key("mode").value(action.getResultType().isStream() ? "stream" : "append")
-               .key("meta").beginMap().endMap()
+               .key("meta").value(tableMeta)
                .endMap();
             out.key("columns").beginList();
             ActionTable tbl = (ActionTable) result;

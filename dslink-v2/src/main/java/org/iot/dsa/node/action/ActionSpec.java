@@ -11,23 +11,23 @@ import org.iot.dsa.security.DSPermission;
 public interface ActionSpec {
 
     /**
-     * Returns 0 or less if the result columns are unknown in advance.
+     * Return 0 or less if the result columns are unknown in advance.
      */
     public int getColumnCount();
 
     /**
-     * Adds the metadata for the column at the given index to the bucket.  Only called before the
+     * Add the metadata for the column at the given index to the bucket.  Only called before the
      * action invocation.
      */
     public void getColumnMetadata(int idx, DSMap bucket);
 
     /**
-     * Returns 0 or less if there are no parameters.
+     * Return 0 or less if there are no parameters.
      */
     public int getParameterCount();
 
     /**
-     * Adds the metadata for the parameter at the given index to the bucket.
+     * Add the metadata for the parameter at the given index to the bucket.
      */
     public void getParameterMetadata(int idx, DSMap bucket);
 
