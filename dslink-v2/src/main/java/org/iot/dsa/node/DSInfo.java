@@ -149,13 +149,13 @@ public class DSInfo implements ApiObject, GroupListener {
         DSNode node;
         if (isNode()) {
             node = getNode();
-            node.getDynamicActions(this, actions);
+            node.getVirtualActions(this, actions);
         } else {
             node = getParent();
-            node.getDynamicActions(this, actions);
+            node.getVirtualActions(this, actions);
         }
         for (String s : actions) {
-            info = node.getDynamicAction(this, s);
+            info = node.getVirtualAction(this, s);
             if (info != null) {
                 ret.add(info);
             }
@@ -459,16 +459,25 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     /**
-     * False by default, set to true if you don't want the child to be sent to clients.
+     * False by default, set to true to reset the target to it's default when the encapsulated node
+     * is copied.
      */
-    public DSInfo setHidden(boolean hidden) {
-        setFlag(PRIVATE, hidden);
+    public DSInfo setDefaultOnCopy(boolean defaultOnCopy) {
+        setFlag(DEFAULT_ON_COPY, defaultOnCopy);
         return this;
     }
 
     public DSInfo setMetadata(DSMap map) {
         map.setParent(this);
         metadata = map;
+        return this;
+    }
+
+    /**
+     * False by default, set to true if you don't want the child to be sent to clients.
+     */
+    public DSInfo setPrivate(boolean hidden) {
+        setFlag(PRIVATE, hidden);
         return this;
     }
 
@@ -529,7 +538,7 @@ public class DSInfo implements ApiObject, GroupListener {
     /**
      * Whether or not the info is for a dynamic action.
      */
-    boolean isDynamic() {
+    boolean isVirtual() {
         return false;
     }
 

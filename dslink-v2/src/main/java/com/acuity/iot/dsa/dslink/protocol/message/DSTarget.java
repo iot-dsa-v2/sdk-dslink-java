@@ -156,7 +156,7 @@ public class DSTarget {
             node = (DSNode) target;
             targetInfo = node.getInfo(names[nameIndex]);
         } else {
-            targetInfo = node.getDynamicAction(targetInfo, names[nameIndex]);
+            targetInfo = node.getVirtualAction(targetInfo, names[nameIndex]);
         }
         if (targetInfo == null) {
             //TODO - need to undo this

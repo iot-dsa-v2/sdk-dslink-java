@@ -132,7 +132,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     }
 
     @Override
-    public void onChange(DSConnection connection) {
+    public void onConnectionChange(DSConnection connection) {
         switch (connection.getConnectionState()) {
             case CONNECTED:
                 onConnected();

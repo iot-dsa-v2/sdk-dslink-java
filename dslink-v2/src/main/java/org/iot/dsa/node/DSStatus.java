@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <li>remoteDisabled    = Bad, the remote system is reporting disabled.
  * <li>unknown           = Bad, the status is unknown within DSA.
  * <li>remoteUnknown     = Bad, the remote system is reporting the status is unknown.
+ * <li>start             = Good, indicates the beginning of history collection in trends.
  * </ul>
  *
  * @author Aaron Hansen
@@ -61,6 +62,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * Good, the remote system is reporting the value is overridden.
      */
     public static final int REMOTE_OVERRIDE = 0x00000002; //"remoteOverride"
+
     /**
      * Uncertain, the value hasn't updated in a reasonable amount of time (usually
      * configurable) within DSA.
@@ -111,6 +113,11 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
      * Bad, the remote system is reporting unknown.
      */
     public static final int REMOTE_UNKNOWN = 0x00200000; //"remoteUnknown"
+    /**
+     * Good, used to indicate the start of history collection.
+     */
+    public static final int START = 0x01000000; //"start"
+
     //The string for each unique status.
     public static final String OK_STR = "ok";
     public static final String OVERRIDE_STR = "override";
@@ -127,11 +134,12 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     public static final String REMOTE_DISABLED_STR = "remoteDisabled";
     public static final String UNKNOWN_STR = "unknown";
     public static final String REMOTE_UNKNOWN_STR = "remoteUnknown";
+    public static final String START_STR = "start";
+
     //The instance for each unique status.
     public static final DSStatus ok = new DSStatus(0);
     private int bits;
-    private static ConcurrentHashMap<Integer, DSStatus> intCache =
-            new ConcurrentHashMap<Integer, DSStatus>();
+    private static ConcurrentHashMap<Integer, DSStatus> intCache = new ConcurrentHashMap<>();
     public static final DSStatus override = valueOf(OVERRIDE);
     public static final DSStatus remoteOverride = valueOf(REMOTE_OVERRIDE);
     public static final DSStatus stale = valueOf(STALE);
@@ -146,6 +154,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     public static final DSStatus remoteDisabled = valueOf(REMOTE_DISABLED);
     public static final DSStatus unknown = valueOf(UNKNOWN);
     public static final DSStatus remoteUnknown = valueOf(REMOTE_UNKNOWN);
+    public static final DSStatus start = valueOf(STALE);
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -470,6 +479,14 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         return (STALE & bits) != 0;
     }
 
+    public boolean isStart() {
+        return isStart(bits);
+    }
+
+    public static boolean isStart(int bits) {
+        return (START & bits) != 0;
+    }
+
     /**
      * If true, any associate object / value might be bad.
      */
@@ -578,6 +595,9 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         if (isRemoteUnknown()) {
             append(buf, REMOTE_UNKNOWN_STR);
         }
+        if (isStart()) {
+            append(buf, START_STR);
+        }
         return buf.toString();
     }
 
@@ -669,7 +689,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
 
     static {
         DSRegistry.registerDecoder(DSStatus.class, ok);
-        stringCache.put("disconnected", DOWN); //DSAv1
+        stringCache.put("disconnected", DOWN); //DSA version 1
         stringCache.put(OK_STR, OK);
         stringCache.put(OVERRIDE_STR, OVERRIDE);
         stringCache.put(REMOTE_OVERRIDE_STR, REMOTE_OVERRIDE);
@@ -685,6 +705,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         stringCache.put(REMOTE_DISABLED_STR, REMOTE_DISABLED);
         stringCache.put(UNKNOWN_STR, UNKNOWN);
         stringCache.put(REMOTE_UNKNOWN_STR, REMOTE_UNKNOWN);
+        stringCache.put(START_STR, START);
     }
 
 }
