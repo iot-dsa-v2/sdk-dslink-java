@@ -3,7 +3,7 @@ package org.iot.dsa.dslink;
 import com.acuity.iot.dsa.dslink.sys.logging.DSLevel;
 import java.io.File;
 import java.util.logging.Level;
-import org.iot.dsa.io.json.JsonReader;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSKeys;
 
@@ -194,9 +194,7 @@ public class DSLinkOptions {
             if (!file.exists()) {
                 throw new IllegalStateException("Does not exist: " + file.getAbsolutePath());
             }
-            JsonReader in = new JsonReader(file);
-            dslinkMap = in.getMap();
-            in.close();
+            dslinkMap = Json.read(file).toMap();
         }
         return dslinkMap;
     }
@@ -390,9 +388,7 @@ public class DSLinkOptions {
         if (!file.exists()) {
             throw new IllegalStateException("Does not exist: " + file.getAbsolutePath());
         }
-        JsonReader in = new JsonReader(file);
-        this.dslinkMap = in.getMap();
-        in.close();
+        this.dslinkMap = Json.read(file).toMap();
         return this;
     }
 

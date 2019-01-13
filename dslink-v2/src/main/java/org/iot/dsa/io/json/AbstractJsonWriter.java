@@ -51,14 +51,6 @@ public abstract class AbstractJsonWriter extends AbstractWriter
         return super.value(arg);
     }
 
-    // Protected Methods
-    // -----------------
-
-    @Override
-    protected void writeSeparator() throws IOException {
-        append(',');
-    }
-
     /**
      * Two spaces per level.
      */
@@ -72,6 +64,9 @@ public abstract class AbstractJsonWriter extends AbstractWriter
             DSException.throwRuntime(x);
         }
     }
+
+    // Protected Methods
+    // -----------------
 
     @Override
     protected void write(boolean arg) throws IOException {
@@ -146,6 +141,11 @@ public abstract class AbstractJsonWriter extends AbstractWriter
     @Override
     protected void writeNull() throws IOException {
         append(C_NULL, 0, 4);
+    }
+
+    @Override
+    protected void writeSeparator() throws IOException {
+        append(',');
     }
 
     @Override

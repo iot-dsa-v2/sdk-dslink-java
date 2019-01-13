@@ -4,10 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.NodeEncoder;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSFloat;
 import org.iot.dsa.node.DSIObject;
@@ -101,7 +102,7 @@ public class SerializationTest {
 
     private DSNode decode(byte[] bytes) throws Exception {
         ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-        JsonReader reader = new JsonReader(bin, "UTF-8");
+        DSIReader reader = Json.reader(bin);
         DSNode ret = NodeDecoder.decode(reader);
         reader.close();
         return ret;
@@ -109,7 +110,7 @@ public class SerializationTest {
 
     private byte[] encode(DSNode node) throws Exception {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        JsonWriter writer = new JsonWriter(bos);
+        DSIWriter writer = Json.writer(bos);
         NodeEncoder.encode(writer, node);
         writer.close();
         return bos.toByteArray();

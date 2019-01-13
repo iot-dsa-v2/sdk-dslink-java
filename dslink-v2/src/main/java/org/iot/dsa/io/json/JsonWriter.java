@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.node.DSString;
 
 /**
  * Json implementation of DSWriter intended for OutputStreams and Writers.  While JsonAppender can
@@ -118,11 +119,10 @@ public class JsonWriter extends AbstractJsonWriter {
             if (arg == null) {
                 throw new NullPointerException();
             }
-            this.out = new FileWriter(arg);
+            return setOutput(new FileOutputStream(arg));
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
-        return reset();
     }
 
     /**
@@ -136,11 +136,10 @@ public class JsonWriter extends AbstractJsonWriter {
             }
             zout = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
             zout.putNextEntry(new ZipEntry(zipFileName));
-            this.out = new OutputStreamWriter(zout);
+            return setOutput(zout);
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
-        return reset();
     }
 
     /**
@@ -150,7 +149,7 @@ public class JsonWriter extends AbstractJsonWriter {
         if (arg == null) {
             throw new NullPointerException();
         }
-        this.out = new OutputStreamWriter(arg);
+        this.out = new OutputStreamWriter(arg, DSString.UTF8);
         return reset();
     }
 
@@ -167,11 +166,10 @@ public class JsonWriter extends AbstractJsonWriter {
             }
             zout = new ZipOutputStream(out);
             zout.putNextEntry(new ZipEntry(zipFileName));
-            this.out = new OutputStreamWriter(zout);
+            return setOutput(zout);
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
-        return reset();
     }
 
     /**

@@ -1,10 +1,8 @@
 package org.iot.dsa.dslink;
 
 import java.io.File;
-import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.json.Json;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
@@ -34,7 +32,7 @@ public class DSLinkOptionsTest {
         boolean created = false;
         if (!file.exists()) {
             created = true;
-            new JsonWriter(file).beginMap().endMap().flush().close();
+            Json.writer(file).beginMap().endMap().flush().close();
         }
         DSLinkOptions args = new DSLinkOptions("--broker http://test");
         Assert.assertTrue(args.getBrokerUri().equals("http://test"));

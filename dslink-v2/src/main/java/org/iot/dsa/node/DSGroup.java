@@ -1,6 +1,6 @@
 package org.iot.dsa.node;
 
-import org.iot.dsa.io.json.JsonAppender;
+import org.iot.dsa.io.json.Json;
 
 /**
  * An collection of elements.
@@ -76,7 +76,7 @@ public abstract class DSGroup extends DSElement {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        new JsonAppender(buf).value(this).close();
+        Json.writer(buf).value(this).close();
         return buf.toString();
     }
 
@@ -91,7 +91,7 @@ public abstract class DSGroup extends DSElement {
                 return;
             }
             if (p instanceof DSGroup) {
-                p = ((DSGroup)p).parent;
+                p = ((DSGroup) p).parent;
             } else {
                 p = null;
             }

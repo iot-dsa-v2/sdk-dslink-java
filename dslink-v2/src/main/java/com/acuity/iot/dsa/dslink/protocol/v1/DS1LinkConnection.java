@@ -6,12 +6,11 @@ import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -80,7 +79,7 @@ public class DS1LinkConnection extends DSLinkConnection {
     }
 
     public void updateSalt(String salt) {
-        if ((salt == null) || salt.equals("1234"))  {
+        if ((salt == null) || salt.equals("1234")) {
             connectionInit = null;
         } else {
             connectionInit.updateSalt(salt);
@@ -93,6 +92,27 @@ public class DS1LinkConnection extends DSLinkConnection {
 
     @Override
     protected void checkConfig() {
+    }
+
+    @Override
+    protected void doConnect() {
+        try {
+            DS1ConnectionInit init = connectionInit;
+            //Don't reuse the connection init if there is connection problem.
+            connectionInit = null;
+            if (init == null) {
+                init = initializeConnection();
+            }
+            makeTransport(init);
+            put(TRANSPORT, getTransport()).setTransient(true);
+            getTransport().open();
+            connectionInit = init;
+            info(getConnectionId() + " connected");
+            connOk();
+        } catch (Exception x) {
+            connDown(DSException.makeMessage(x));
+            connectionInit = null;
+        }
     }
 
     protected DS1ConnectionInit initializeConnection() {
@@ -147,27 +167,6 @@ public class DS1LinkConnection extends DSLinkConnection {
     }
 
     @Override
-    protected void doConnect() {
-        try {
-            DS1ConnectionInit init = connectionInit;
-            //Don't reuse the connection init if there is connection problem.
-            connectionInit = null;
-            if (init == null) {
-                init = initializeConnection();
-            }
-            makeTransport(init);
-            put(TRANSPORT, getTransport()).setTransient(true);
-            getTransport().open();
-            connectionInit = init;
-            info(getConnectionId() + " connected");
-            connOk();
-        } catch (Exception x) {
-            connDown(DSException.makeMessage(x));
-            connectionInit = null;
-        }
-    }
-
-    @Override
     protected void onDisconnected() {
         super.onDisconnected();
         reader = null;
@@ -192,8 +191,8 @@ public class DS1LinkConnection extends DSLinkConnection {
             };
         } else if (transport instanceof DSTextTransport) {
             DSTextTransport trans = (DSTextTransport) transport;
-            reader = new JsonReader(trans.getReader());
-            writer = new JsonWriter(trans.getWriter());
+            reader = Json.reader(trans.getReader());
+            writer = Json.writer(trans.getWriter());
         } else {
             throw new IllegalStateException(
                     "Unexpected transport type: " + transport.getClass().getName());

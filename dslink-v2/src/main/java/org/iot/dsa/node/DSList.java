@@ -375,6 +375,29 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
     }
 
     /**
+     * Scans the collection and returns the first index that equal the arg.
+     *
+     * @return -1 if not found.
+     */
+    public int indexOf(String obj) {
+        boolean isNull = (obj == null);
+        DSElement tmp;
+        int len = size();
+        for (int i = 0; i < len; i++) {
+            tmp = get(i);
+            if (isNull && tmp.isNull()) {
+                return i;
+            }
+            if (tmp.isString()) {
+                if (tmp.toString().equals(obj)) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
      * Returns true.
      */
     public boolean isList() {

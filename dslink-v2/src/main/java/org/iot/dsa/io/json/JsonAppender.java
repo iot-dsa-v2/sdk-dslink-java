@@ -6,12 +6,12 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * Json implementation of DSWriter intended for Appendables such as StringBuilders. This can be used
- * for OutputStreams and Writers as well, but DSWriter will be faster. <p>The same instance can be
+ * for OutputStreams and Writers as well, but JsonWriter will be faster. <p>The same instance can be
  * reused with the setOutput methods.</p> <p>This class is not thread safe.</p>
  *
  * @author Aaron Hansen
  */
-public class JsonAppender extends AbstractJsonWriter {
+class JsonAppender extends AbstractJsonWriter {
 
     // Constants
     // ---------

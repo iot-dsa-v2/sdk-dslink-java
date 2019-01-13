@@ -1,9 +1,11 @@
 package org.iot.dsa.io.json;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import org.iot.dsa.io.AbstractReader;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.node.DSBytes;
+import org.iot.dsa.node.DSElement;
 
 /**
  * Json implementation of DSReader.  The same instance can be re-used with the setInput methods.
@@ -38,6 +40,13 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
 
     public JsonReader(File file) {
         setInput(file);
+    }
+
+    /**
+     * Creates a reader for UTF-8.
+     */
+    public JsonReader(InputStream in) {
+        setInput(in, "UTF-8");
     }
 
     public JsonReader(InputStream in, String charset) {
