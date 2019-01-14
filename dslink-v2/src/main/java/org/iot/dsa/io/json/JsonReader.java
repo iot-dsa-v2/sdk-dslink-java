@@ -6,6 +6,7 @@ import org.iot.dsa.io.AbstractReader;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSString;
 
 /**
  * Json implementation of DSReader.  The same instance can be re-used with the setInput methods.
@@ -196,11 +197,7 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
      */
     public JsonReader setInput(File file) {
         try {
-            if (in instanceof JsonInput) {
-                ((JsonInput) in).setInput(new BufferedInputStream(new FileInputStream(file)));
-            } else {
-                in = new JsonInput(new BufferedInputStream(new FileInputStream(file)));
-            }
+            setInput(new FileInputStream(file), "UTF-8");
         } catch (Exception x) {
             throw new IllegalStateException(x);
         }

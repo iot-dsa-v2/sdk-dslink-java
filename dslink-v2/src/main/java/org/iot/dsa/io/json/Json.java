@@ -15,7 +15,7 @@ import org.iot.dsa.node.DSString;
 import org.iot.dsa.util.DSException;
 
 /**
- * Convenience routines for JSON.
+ * Convenience routines for JSON.  All routines use UTF-8 encoding.
  */
 public class Json {
 
@@ -42,7 +42,7 @@ public class Json {
     }
 
     /**
-     * Returns the first element in the file.  Uses UTF-8.
+     * Returns the first element in the file.
      */
     public static DSElement read(File file) {
         JsonReader in = null;
@@ -64,7 +64,7 @@ public class Json {
     }
 
     /**
-     * Returns the first element in the stream and optionally closes it.  Uses UTF-8.
+     * Returns the first element in the stream and optionally closes it.
      */
     public static DSElement read(InputStream input, boolean close) {
         JsonReader in = null;
@@ -129,21 +129,21 @@ public class Json {
     }
 
     /**
-     * Returns a JSON reader.
+     * It is the callers responsibility to determine the charset.
      */
     public static DSIReader reader(Reader in) {
         return new JsonReader(in);
     }
 
     /**
-     * Write the data to the file without pretty print.  Uses UTF-8.
+     * Write the data to the file without pretty print.
      */
     public static void write(DSElement data, File file) {
         write(data, file, false);
     }
 
     /**
-     * Write the data to the file (over-writes), pretty printing is optional.  Uses UTF-8.
+     * Overwrites the file, pretty printing is optional.
      */
     public static void write(DSElement data, File file, boolean prettyPrint) {
         try {
@@ -154,7 +154,7 @@ public class Json {
     }
 
     /**
-     * Write the data to the file, pretty printing is optional.  Uses UTF-8.
+     * Write the data to the file, pretty printing is optional.
      *
      * @return The OutputStream argument.
      */
@@ -163,11 +163,13 @@ public class Json {
     }
 
     /**
-     * Write the data to the file, pretty printing is optional.  Uses UTF-8.
+     * Write the data to the file, pretty printing is optional.
      *
      * @return The OutputStream argument.
      */
-    public static OutputStream write(DSElement data, OutputStream out, boolean close,
+    public static OutputStream write(DSElement data,
+                                     OutputStream out,
+                                     boolean close,
                                      boolean prettyPrint) {
         JsonWriter writer = null;
         try {
@@ -214,6 +216,9 @@ public class Json {
 
     /**
      * Returns a JSON writer.
+     *
+     * @param out           The file to overwrite.
+     * @param innerFileName The name of the json file inside the zip.
      */
     public static DSIWriter zipWriter(File out, String innerFileName) {
         return new JsonWriter(out, innerFileName);
