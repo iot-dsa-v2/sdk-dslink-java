@@ -53,17 +53,6 @@ public class DSBool extends DSElement implements Comparable<DSIValue>, DSIBoolea
         return false;
     }
 
-
-    @Override
-    public boolean isBoolean() {
-        return true;
-    }
-
-    @Override
-    public boolean isNull() {
-        return this == NULL;
-    }
-
     @Override
     public DSElementType getElementType() {
         return DSElementType.BOOLEAN;
@@ -80,6 +69,16 @@ public class DSBool extends DSElement implements Comparable<DSIValue>, DSIBoolea
             return Boolean.TRUE.hashCode();
         }
         return Boolean.FALSE.hashCode();
+    }
+
+    @Override
+    public boolean isBoolean() {
+        return true;
+    }
+
+    @Override
+    public boolean isNull() {
+        return this == NULL;
     }
 
     @Override
@@ -154,11 +153,14 @@ public class DSBool extends DSElement implements Comparable<DSIValue>, DSIBoolea
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
-        if (arg instanceof DSBool) {
-            return (DSBool) arg;
-        }
-        if (arg instanceof DSString) {
-            return valueOf(arg.toString());
+        switch (arg.getElementType()) {
+            case BOOLEAN:
+                return valueOf(arg.toBoolean());
+            case DOUBLE:
+            case LONG:
+                return valueOf(arg.toInt() != 0);
+            case STRING:
+                return valueOf(arg.toString());
         }
         throw new IllegalArgumentException("Cannot decoding boolean: " + arg);
     }

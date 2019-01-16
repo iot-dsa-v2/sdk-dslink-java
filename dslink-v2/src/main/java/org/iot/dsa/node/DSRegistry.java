@@ -29,6 +29,16 @@ public class DSRegistry {
         return decoderMap.get(clazz);
     }
 
+    /**
+     * DSIValues must provide an instance for decoding.
+     *
+     * @param clazz    The type the instance is for.
+     * @param instance An instance to use for decoding.
+     */
+    public static void registerDecoder(Class clazz, DSIValue instance) {
+        decoderMap.put(clazz, instance);
+    }
+
     static DSNode getDefault(Class clazz) {
         return defaultMap.get(clazz);
     }
@@ -42,16 +52,6 @@ public class DSRegistry {
      */
     static void registerDefault(Class clazz, DSNode instance) {
         defaultMap.put(clazz, instance);
-    }
-
-    /**
-     * DSIValues must provide an instance for decoding.
-     *
-     * @param clazz    The type the instance is for.
-     * @param instance An instance to use for decoding.
-     */
-    public static void registerDecoder(Class clazz, DSIValue instance) {
-        decoderMap.put(clazz, instance);
     }
 
     /**

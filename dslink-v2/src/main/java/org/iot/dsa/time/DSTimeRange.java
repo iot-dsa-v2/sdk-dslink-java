@@ -10,8 +10,8 @@ import org.iot.dsa.node.DSValue;
 import org.iot.dsa.node.DSValueType;
 
 /**
- * Two timestamps representing a time range.  The start and/or end can be null (DSDateTime.NULL)
- * to represent a wildcard.
+ * Two timestamps representing a time range.  The start is inclusive and the end is exclusive.
+ * If either is null, that represents a wildcard.
  *
  * @author Aaron Hansen
  */
@@ -88,17 +88,17 @@ public class DSTimeRange extends DSValue implements DSIMetadata {
         return false;
     }
 
-    @Override
-    public void getMetadata(DSMap bucket) {
-        bucket.put(DSMetadata.EDITOR, DSMetadata.STR_EDITOR_PASSWORD);
-    }
-
     public DSDateTime getEnd() {
         return to;
     }
 
     public DSDateTime getFrom() {
         return from;
+    }
+
+    @Override
+    public void getMetadata(DSMap bucket) {
+        bucket.put(DSMetadata.EDITOR, DSMetadata.STR_EDITOR_DATE_RANGE);
     }
 
     public DSDateTime getStart() {
@@ -141,10 +141,14 @@ public class DSTimeRange extends DSValue implements DSIMetadata {
     }
 
     /**
-     * ISO 8601 standard format of "yyyy-mm-ddThh:mm:ss.mmm[+/-]hh:mm".
+     * Two ISO 8601 standard formats of "yyyy-mm-ddThh:mm:ss.mmm[+/-]hh:mm" separated with
+     * a forward slash.
      */
     @Override
     public String toString() {
+        if (isNull()) {
+            return "null";
+        }
         if (string == null) {
             string = from.toString() + '/' + to.toString();
         }

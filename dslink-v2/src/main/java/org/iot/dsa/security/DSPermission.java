@@ -21,6 +21,15 @@ public enum DSPermission {
         this.level = level;
     }
 
+    public static DSPermission forString(String str) {
+        for (DSPermission p : DSPermission.values()) {
+            if (p.toString().equalsIgnoreCase(str)) {
+                return p;
+            }
+        }
+        throw new IllegalArgumentException("Unknown permission: " + str);
+    }
+
     public int getLevel() {
         return level;
     }
@@ -36,25 +45,16 @@ public enum DSPermission {
         return level >= arg.getLevel();
     }
 
+    public boolean isList() {
+        return this == LIST;
+    }
+
     public boolean isRead() {
         return this == READ;
     }
 
     public boolean isWrite() {
         return this == WRITE;
-    }
-
-    public boolean isList() {
-        return this == LIST;
-    }
-
-    public static DSPermission forString(String str) {
-        for (DSPermission p : DSPermission.values()) {
-            if (p.toString().equalsIgnoreCase(str)) {
-                return p;
-            }
-        }
-        throw new IllegalArgumentException("Unknown permission: " + str);
     }
 
     @Override

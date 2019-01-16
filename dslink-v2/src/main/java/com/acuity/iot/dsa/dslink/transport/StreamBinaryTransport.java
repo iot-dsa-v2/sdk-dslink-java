@@ -56,11 +56,6 @@ public abstract class StreamBinaryTransport extends DSBinaryTransport {
         }
     }
 
-    protected final void close(Throwable reason) {
-        closeException = DSException.makeRuntime(reason);
-        close();
-    }
-
     @Override
     public final DSTransport close() {
         synchronized (this) {
@@ -72,12 +67,6 @@ public abstract class StreamBinaryTransport extends DSBinaryTransport {
         }
         doClose();
         return this;
-    }
-
-    /**
-     * Subclass to perform any cleanup, this does nothing.
-     */
-    protected void doClose() {
     }
 
     @Override
@@ -136,19 +125,6 @@ public abstract class StreamBinaryTransport extends DSBinaryTransport {
     }
 
     /**
-     * Returns true if open, false if closed, throws and exception if closed with an exception.
-     */
-    protected boolean testOpen() {
-        if (!open) {
-            if (closeException != null) {
-                throw closeException;
-            }
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * Handles logging and calls doWrite.
      */
     public void write(byte[] buf, int off, int len, boolean isLast) {
@@ -174,6 +150,30 @@ public abstract class StreamBinaryTransport extends DSBinaryTransport {
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
+    }
+
+    protected final void close(Throwable reason) {
+        closeException = DSException.makeRuntime(reason);
+        close();
+    }
+
+    /**
+     * Subclass to perform any cleanup, this does nothing.
+     */
+    protected void doClose() {
+    }
+
+    /**
+     * Returns true if open, false if closed, throws and exception if closed with an exception.
+     */
+    protected boolean testOpen() {
+        if (!open) {
+            if (closeException != null) {
+                throw closeException;
+            }
+            return false;
+        }
+        return true;
     }
 
     /////////////////////////////////////////////////////////////////

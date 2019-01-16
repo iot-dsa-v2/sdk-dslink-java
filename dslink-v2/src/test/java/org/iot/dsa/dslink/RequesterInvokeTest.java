@@ -35,12 +35,12 @@ public class RequesterInvokeTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, (node, child, event) -> {
+        link.getConnection().subscribe((topic, node, child, data) -> {
             success = true;
             synchronized (RequesterInvokeTest.this) {
                 RequesterInvokeTest.this.notifyAll();
             }
-        });
+        }, DSLinkConnection.CONNECTED, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         synchronized (this) {

@@ -282,6 +282,17 @@ public class RollupTest {
     }
 
     @Test
+    public void testStatus() throws Exception {
+        DSRollup roll = DSRollup.valueFor("sum");
+        RollupFunction func = roll.getFunction();
+        func.update(DSDouble.valueOf(0), DSStatus.FAULT);
+        func.update(DSDouble.valueOf(0), DSStatus.DOWN);
+        Assert.assertTrue(func.getCount() == 2);
+        Assert.assertTrue(DSStatus.isAnyDown(func.getStatus()));
+        Assert.assertTrue(DSStatus.isAnyFault(func.getStatus()));
+    }
+
+    @Test
     public void testSum() {
         Assert.assertEquals(DSRollup.valueOf("SUM"), DSRollup.SUM);
         Assert.assertEquals(DSRollup.valueFor("SUM"), DSRollup.SUM);
@@ -304,17 +315,6 @@ public class RollupTest {
         Assert.assertTrue(func.getValue().toDouble() == 0);
         func.reset();
         Assert.assertTrue(func.getCount() == 0);
-    }
-
-    @Test
-    public void testStatus() throws Exception {
-        DSRollup roll = DSRollup.valueFor("sum");
-        RollupFunction func = roll.getFunction();
-        func.update(DSDouble.valueOf(0), DSStatus.FAULT);
-        func.update(DSDouble.valueOf(0), DSStatus.DOWN);
-        Assert.assertTrue(func.getCount() == 2);
-        Assert.assertTrue(DSStatus.isAnyDown(func.getStatus()));
-        Assert.assertTrue(DSStatus.isAnyFault(func.getStatus()));
     }
 
     @Test

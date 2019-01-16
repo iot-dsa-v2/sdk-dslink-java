@@ -111,27 +111,6 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
      */
     protected abstract void checkConfig();
 
-    /**
-     * Puts the connection into the fault state and optionally sets the message.
-     *
-     * @param msg Optional
-     */
-    private void configFault(String msg) {
-        debug(debug() ? getPath() + ": configFault - " + msg : null);
-        put(lastFail, DSDateTime.currentTime());
-        myStatus = myStatus.remove(DSStatus.FAULT);
-        updateStatus(myStatus, msg);
-    }
-
-    /**
-     * Removes fault state.  Does not clear status text, that will be cleared by connOk.
-     */
-    private void configOk() {
-        debug(debug() ? getPath() + ": configOk " : null);
-        myStatus = myStatus.remove(DSStatus.FAULT);
-        updateStatus(myStatus, null);
-    }
-
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
@@ -157,6 +136,27 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
      */
     protected boolean isConfigOk() {
         return !getStatus().isFault();
+    }
+
+    /**
+     * Puts the connection into the fault state and optionally sets the message.
+     *
+     * @param msg Optional
+     */
+    private void configFault(String msg) {
+        debug(debug() ? getPath() + ": configFault - " + msg : null);
+        put(lastFail, DSDateTime.currentTime());
+        myStatus = myStatus.remove(DSStatus.FAULT);
+        updateStatus(myStatus, msg);
+    }
+
+    /**
+     * Removes fault state.  Does not clear status text, that will be cleared by connOk.
+     */
+    private void configOk() {
+        debug(debug() ? getPath() + ": configOk " : null);
+        myStatus = myStatus.remove(DSStatus.FAULT);
+        updateStatus(myStatus, null);
     }
 
 }

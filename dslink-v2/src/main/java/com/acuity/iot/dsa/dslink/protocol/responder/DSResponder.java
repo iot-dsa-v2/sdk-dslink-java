@@ -32,7 +32,8 @@ public abstract class DSResponder extends DSNode {
     // Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DSResponder() {}
+    public DSResponder() {
+    }
 
     public DSResponder(DSSession session) {
         this.session = session;

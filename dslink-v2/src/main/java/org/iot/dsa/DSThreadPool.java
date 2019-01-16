@@ -24,10 +24,10 @@ class DSThreadPool {
     private int idleThreads = 0;
     private int max = -1;
     private int min = 1;
-    private String threadName;
     private int numThreads = 0;
-    private int totalCreated = 0;
     private LinkedList queue = new LinkedList();
+    private String threadName;
+    private int totalCreated = 0;
 
     /////////////////////////////////////////////////////////////////
     // Constructors
@@ -80,16 +80,16 @@ class DSThreadPool {
     }
 
     /**
-     * The minimum number of threads to keep alive.
+     * The maximum number of threads to keep alive.  If 0 or less, the thread pool is unbounded.
      */
-    public int getMinThreads() {
+    public int getMaxThreads() {
         return min;
     }
 
     /**
-     * The maximum number of threads to keep alive.  If 0 or less, the thread pool is unbounded.
+     * The minimum number of threads to keep alive.
      */
-    public int getMaxThreads() {
+    public int getMinThreads() {
         return min;
     }
 

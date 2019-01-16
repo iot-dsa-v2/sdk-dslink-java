@@ -31,6 +31,40 @@ public class DS1Requester extends DSRequester {
     // Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Called by the parent session to handle response messages.
+     */
+    public void handleResponse(Integer rid, DSMap map) {
+        if (rid == 0) {
+            processUpdates(map);
+        } else {
+            DSOutboundStub stub = getRequest(rid);
+            if (stub != null) {
+                if (isError(map)) {
+                    handleError(stub, map.get("error"));
+                    stub.handleClose();
+                    removeRequest(rid);
+                } else {
+                    stub.handleResponse(map);
+                    if (isStreamClosed(map)) {
+                        stub.handleClose();
+                        removeRequest(rid);
+                    }
+                }
+            } else {
+                if (!isStreamClosed(map)) {
+                    sendClose(rid);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void sendClose(Integer rid) {
+        removeRequest(rid);
+        sendRequest(new CloseMessage(rid, true));
+    }
+
     private void handleError(DSOutboundStub stub, DSElement details) {
         try {
             ErrorType type = ErrorType.internalError;
@@ -68,34 +102,6 @@ public class DS1Requester extends DSRequester {
             stub.handleError(type, msg);
         } catch (Exception x) {
             error(getPath(), x);
-        }
-    }
-
-    /**
-     * Called by the parent session to handle response messages.
-     */
-    public void handleResponse(Integer rid, DSMap map) {
-        if (rid == 0) {
-            processUpdates(map);
-        } else {
-            DSOutboundStub stub = getRequest(rid);
-            if (stub != null) {
-                if (isError(map)) {
-                    handleError(stub, map.get("error"));
-                    stub.handleClose();
-                    removeRequest(rid);
-                } else {
-                    stub.handleResponse(map);
-                    if (isStreamClosed(map)) {
-                        stub.handleClose();
-                        removeRequest(rid);
-                    }
-                }
-            } else {
-                if (!isStreamClosed(map)) {
-                    sendClose(rid);
-                }
-            }
         }
     }
 
@@ -148,12 +154,6 @@ public class DS1Requester extends DSRequester {
             DSElement update = updates.get(i);
             processUpdate(update);
         }
-    }
-
-    @Override
-    public void sendClose(Integer rid) {
-        removeRequest(rid);
-        sendRequest(new CloseMessage(rid, true));
     }
 
 }

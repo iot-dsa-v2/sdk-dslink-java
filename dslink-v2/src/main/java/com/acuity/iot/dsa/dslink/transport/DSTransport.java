@@ -52,12 +52,6 @@ public abstract class DSTransport extends DSNode {
      */
     public abstract DSTransport close();
 
-    @Override
-    protected void declareDefaults() {
-        declareDefault(CONNECTION_URL, DSString.NULL).setReadOnly(true);
-        declareDefault(READ_TIMEOUT, DSLong.valueOf(60000)).setReadOnly(true);
-    }
-
     /**
      * Signifies the end of an incoming message.
      */
@@ -75,12 +69,6 @@ public abstract class DSTransport extends DSNode {
     public String getConnectionUrl() {
         return String.valueOf(get(CONNECTION_URL));
     }
-
-    @Override
-    protected String getLogName() {
-        return getLogName("transport");
-    }
-
 
     public long getReadTimeout() {
         return ((DSLong) get(READ_TIMEOUT)).toLong();
@@ -127,6 +115,17 @@ public abstract class DSTransport extends DSNode {
     public DSTransport setReadTimeout(long millis) {
         put(READ_TIMEOUT, DSLong.valueOf(millis)).setReadOnly(true);
         return this;
+    }
+
+    @Override
+    protected void declareDefaults() {
+        declareDefault(CONNECTION_URL, DSString.NULL).setReadOnly(true);
+        declareDefault(READ_TIMEOUT, DSLong.valueOf(60000)).setReadOnly(true);
+    }
+
+    @Override
+    protected String getLogName() {
+        return getLogName("transport");
     }
 
     /////////////////////////////////////////////////////////////////

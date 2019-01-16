@@ -2,7 +2,6 @@ package org.iot.dsa.rollup;
 
 import org.iot.dsa.node.DSDouble;
 import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSStatus;
 
 /**
  * Computes the average, aka mean, value.

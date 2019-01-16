@@ -122,7 +122,7 @@ public class DSSysNode extends DSNode {
 
         @Override
         public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((DSSysNode)target.get()).getLink().shutdown();
+            ((DSSysNode) target.get()).getLink().shutdown();
             return null;
         }
 
@@ -133,9 +133,9 @@ public class DSSysNode extends DSNode {
         @Override
         public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
             if (profiler == null) {
-                ((DSSysNode)target.get()).openProfiler();
+                ((DSSysNode) target.get()).openProfiler();
             } else {
-                ((DSSysNode)target.get()).closeProfiler();
+                ((DSSysNode) target.get()).closeProfiler();
             }
             return null;
         }

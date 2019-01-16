@@ -16,22 +16,19 @@ public class DSException extends RuntimeException {
     // Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DSException(Throwable inner) {
-        this.inner = inner;
-    }
+    private Throwable inner;
 
     /////////////////////////////////////////////////////////////////
     // Methods - Public and in alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
 
-    @Override
-    public Throwable getCause() {
-        return null;
+    public DSException(Throwable inner) {
+        this.inner = inner;
     }
 
     @Override
-    public String getMessage() {
-        return inner.getMessage();
+    public Throwable getCause() {
+        return null;
     }
 
     @Override
@@ -40,8 +37,18 @@ public class DSException extends RuntimeException {
     }
 
     @Override
+    public String getMessage() {
+        return inner.getMessage();
+    }
+
+    @Override
     public StackTraceElement[] getStackTrace() {
         return inner.getStackTrace();
+    }
+
+    @Override
+    public Throwable initCause(Throwable cause) {
+        return this;
     }
 
     /**
@@ -84,11 +91,6 @@ public class DSException extends RuntimeException {
         inner.printStackTrace(out);
     }
 
-    @Override
-    public Throwable initCause(Throwable cause) {
-        return this;
-    }
-
     /**
      * If the given exception is already a runtime exception, it is rethrown, otherwise
      * it will be thrown wrapped by an instance of this class.
@@ -97,14 +99,12 @@ public class DSException extends RuntimeException {
         throw makeRuntime(x);
     }
 
-    public String toString() {
-        return inner.toString();
-    }
-
     /////////////////////////////////////////////////////////////////
     // Fields - in alphabetical order by field name.
     /////////////////////////////////////////////////////////////////
 
-    private Throwable inner;
+    public String toString() {
+        return inner.toString();
+    }
 
 }

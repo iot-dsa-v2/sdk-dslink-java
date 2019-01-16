@@ -1,8 +1,8 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
-import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.DSTarget;
+import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
@@ -13,10 +13,9 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
-import org.iot.dsa.node.event.DSIEvent;
-import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSISubscription;
-import org.iot.dsa.node.event.DSITopic;
+import org.iot.dsa.node.topic.DSISubscriber;
+import org.iot.dsa.node.topic.DSISubscription;
+import org.iot.dsa.node.topic.DSITopic;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -84,16 +83,16 @@ public class DSInboundSubscription extends DSInboundRequest
         manager.unsubscribe(sid);
     }
 
+    public int getQos() {
+        return qos;
+    }
+
     /**
      * Unique subscription id for this path.
      */
     @Override
     public Integer getSubscriptionId() {
         return sid;
-    }
-
-    public int getQos() {
-        return qos;
     }
 
     /**
@@ -104,7 +103,13 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
+    public void onClosed(DSISubscription subscription) {
+        this.subscription = null;
+        close();
+    }
+
+    @Override
+    public void onEvent(DSITopic topic, DSNode node, DSInfo child, DSIValue data) {
         DSIValue value;
         if (child != null) {
             value = child.getValue();
@@ -118,22 +123,12 @@ public class DSInboundSubscription extends DSInboundRequest
         update(System.currentTimeMillis(), value, status);
     }
 
-    @Override
-    public void onClosed(DSISubscription subscription) {
-        this.subscription = null;
-        close();
-    }
-
     /**
      * For v2 only.
      */
     public DSInboundSubscription setCloseAfterUpdate(boolean closeAfterUpdate) {
         this.closeAfterUpdate = closeAfterUpdate;
         return this;
-    }
-
-    public void setSubscriptionId(Integer id) {
-        sid = id;
     }
 
     public void setQos(Integer val) {
@@ -143,6 +138,10 @@ public class DSInboundSubscription extends DSInboundRequest
             }
             qos = val;
         }
+    }
+
+    public void setSubscriptionId(Integer id) {
+        sid = id;
     }
 
     @Override
@@ -221,14 +220,14 @@ public class DSInboundSubscription extends DSInboundRequest
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
                 node = (DSNode) obj;
-                this.subscription = node.subscribe(DSNode.VALUE_CHANGED, null, null, this);
-                onEvent(node, null, DSNode.VALUE_CHANGED);
+                this.subscription = node.subscribe(this);
+                onEvent(DSNode.VALUE_CHANGED_TOPIC, node, null, null);
             } else {
                 DSInfo info = path.getTargetInfo();
                 node = path.getNode();
                 child = info;
-                this.subscription = node.subscribe(DSNode.VALUE_CHANGED, info, null, this);
-                onEvent(node, info, DSNode.VALUE_CHANGED);
+                this.subscription = node.subscribe(this);
+                onEvent(DSNode.VALUE_CHANGED_TOPIC, node, info, null);
             }
         }
     }

@@ -11,16 +11,12 @@ import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
-import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionValues;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.node.event.DSIEvent;
-import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSITopic;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -45,12 +41,12 @@ public class ActionValuesTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, (node, child, event)-> {
+        link.getConnection().subscribe((topic, node, child, data) -> {
             success = true;
             synchronized (ActionValuesTest.this) {
                 ActionValuesTest.this.notifyAll();
             }
-        });
+        }, DSLinkConnection.CONNECTED, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         synchronized (this) {

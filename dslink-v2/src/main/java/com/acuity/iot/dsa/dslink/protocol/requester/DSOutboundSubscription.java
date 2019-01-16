@@ -120,33 +120,6 @@ class DSOutboundSubscription {
         }
     }
 
-    private boolean contains(DSOutboundSubscribeStub stub) {
-        if (stub == first) {
-            return true;
-        }
-        return predecessor(stub) != last;
-    }
-
-    /**
-     * Null if the arg is the first in the list, last if stub is not contained.
-     */
-    private DSOutboundSubscribeStub predecessor(DSOutboundSubscribeStub stub) {
-        if (first == null) {
-            return null;
-        }
-        if (stub == first) {
-            return null;
-        }
-        DSOutboundSubscribeStub cur = first;
-        while (cur.getNext() != null) {
-            if (cur.getNext() == stub) {
-                return cur;
-            }
-            cur = cur.getNext();
-        }
-        return cur;
-    }
-
     void remove(DSOutboundSubscribeStub stub) {
         DSOutboundSubscribeStub pred = predecessor(stub);
         if (pred == last) { //not contained
@@ -218,6 +191,33 @@ class DSOutboundSubscription {
             cur.update(lastTs, lastValue, lastStatus);
             cur = cur.getNext();
         }
+    }
+
+    private boolean contains(DSOutboundSubscribeStub stub) {
+        if (stub == first) {
+            return true;
+        }
+        return predecessor(stub) != last;
+    }
+
+    /**
+     * Null if the arg is the first in the list, last if stub is not contained.
+     */
+    private DSOutboundSubscribeStub predecessor(DSOutboundSubscribeStub stub) {
+        if (first == null) {
+            return null;
+        }
+        if (stub == first) {
+            return null;
+        }
+        DSOutboundSubscribeStub cur = first;
+        while (cur.getNext() != null) {
+            if (cur.getNext() == stub) {
+                return cur;
+            }
+            cur = cur.getNext();
+        }
+        return cur;
     }
 
     ///////////////////////////////////////////////////////////////////////////

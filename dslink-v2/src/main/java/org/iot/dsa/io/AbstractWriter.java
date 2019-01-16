@@ -148,13 +148,6 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
         return this;
     }
 
-    /**
-     * Current depth in the tree, will be needed by writeNewLineIndent.
-     */
-    protected int getDepth() {
-        return depth;
-    }
-
     @Override
     public AbstractWriter key(CharSequence arg) {
         try {
@@ -410,6 +403,13 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
             throw new RuntimeException(x);
         }
         return this;
+    }
+
+    /**
+     * Current depth in the tree, will be needed by writeNewLineIndent.
+     */
+    protected int getDepth() {
+        return depth;
     }
 
     /**

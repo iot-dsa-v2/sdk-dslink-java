@@ -17,11 +17,17 @@ public class CertCollection extends DSNode {
         String name = certToName(cert);
         addCertificate(name, encodeCertificate(cert));
     }
-    
+
     public void addCertificate(String name, String cert) {
         put(name, new CertNode().updateValue(cert));
     }
-    
+
+    public static String certToName(X509Certificate cert) {
+        return DSTime.encodeForFiles(DSTime.getCalendar(System.currentTimeMillis()),
+                                     new StringBuilder(cert.getIssuerX500Principal().getName()))
+                     .toString();
+    }
+
     public boolean containsCertificate(X509Certificate cert) {
         DSIObject obj = get(certToName(cert));
         String certStr;
@@ -31,14 +37,12 @@ public class CertCollection extends DSNode {
             warn(e);
             return false;
         }
-        return obj != null && obj instanceof CertNode && certStr.equals(((CertNode) obj).toElement().toString());
+        return obj != null && obj instanceof CertNode && certStr
+                .equals(((CertNode) obj).toElement().toString());
     }
-    
-    public static String certToName(X509Certificate cert) {
-    	return DSTime.encodeForFiles(DSTime.getCalendar(System.currentTimeMillis()), new StringBuilder(cert.getIssuerX500Principal().getName())).toString();
-    }
-    
-    public static String encodeCertificate(X509Certificate cert) throws CertificateEncodingException {
+
+    public static String encodeCertificate(X509Certificate cert)
+            throws CertificateEncodingException {
         Encoder encoder = Base64.getEncoder();
         return encoder.encodeToString(cert.getEncoded());
     }

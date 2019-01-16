@@ -46,10 +46,9 @@ public class DSTime {
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
-
+    private static final Map<String, TimeZone> timezones = new HashMap<String, TimeZone>();
     private static Calendar calendarCache1;
     private static Calendar calendarCache2;
-    private static final Map<String, TimeZone> timezones = new HashMap<String, TimeZone>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -421,23 +420,6 @@ public class DSTime {
     }
 
     /**
-     * Converts the characters into an int.
-     */
-    private static int convertDigits(char tens, char ones) {
-        return (toDigit(tens) * 10) + toDigit(ones);
-    }
-
-    /**
-     * Converts the characters into an int.
-     */
-    private static int convertDigits(char thousands, char hundreds, char tens, char ones) {
-        return toDigit(thousands) * 1000 +
-                toDigit(hundreds) * 100 +
-                toDigit(tens) * 10 +
-                toDigit(ones);
-    }
-
-    /**
      * This is a convenience that uses reuses and recycles a calendar instance to get the time in
      * millis.
      */
@@ -800,6 +782,14 @@ public class DSTime {
         return millis * NANOS_IN_MS;
     }
 
+    public static long nanoTimeToSystemTimeMillis(long nanoTime) {
+        long nowNanos = System.nanoTime();
+        long nowMillis = System.currentTimeMillis();
+        long nanosTillTime = nanoTime - nowNanos;
+        long millisTillTime = nanosTillTime / NANOS_IN_MS;
+        return nowMillis + millisTillTime;
+    }
+
     public static long nanosToMillis(long nanos) {
         return nanos / NANOS_IN_MS;
     }
@@ -815,6 +805,23 @@ public class DSTime {
                 calendarCache2 = cal;
             }
         }
+    }
+
+    /**
+     * Converts the characters into an int.
+     */
+    private static int convertDigits(char tens, char ones) {
+        return (toDigit(tens) * 10) + toDigit(ones);
+    }
+
+    /**
+     * Converts the characters into an int.
+     */
+    private static int convertDigits(char thousands, char hundreds, char tens, char ones) {
+        return toDigit(thousands) * 1000 +
+                toDigit(hundreds) * 100 +
+                toDigit(tens) * 10 +
+                toDigit(ones);
     }
 
     /**
@@ -836,14 +843,6 @@ public class DSTime {
         if (c1 != c2) {
             throw new IllegalStateException();
         }
-    }
-    
-    public static long nanoTimeToSystemTimeMillis(long nanoTime) {
-        long nowNanos = System.nanoTime();
-        long nowMillis = System.currentTimeMillis();
-        long nanosTillTime = nanoTime - nowNanos;
-        long millisTillTime = nanosTillTime / NANOS_IN_MS;
-        return nowMillis + millisTillTime;
     }
 
 }

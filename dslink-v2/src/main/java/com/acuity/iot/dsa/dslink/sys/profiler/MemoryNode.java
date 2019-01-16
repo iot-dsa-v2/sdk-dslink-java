@@ -8,16 +8,7 @@ import java.util.List;
 public class MemoryNode extends MXBeanNode {
 
     private MemoryMXBean mxbean;
-
-    @Override
-    public void setupMXBean() {
-        mxbean = ManagementFactory.getMemoryMXBean();
-    }
-
-    @Override
-    public void refreshImpl() {
-        // TODO Auto-generated method stub
-    }
+    private static List<String> overriden = new ArrayList<String>();
 
     @Override
     public Object getMXBean() {
@@ -29,11 +20,19 @@ public class MemoryNode extends MXBeanNode {
         return MemoryMXBean.class;
     }
 
-    private static List<String> overriden = new ArrayList<String>();
-
     @Override
     public List<String> getOverriden() {
         return overriden;
+    }
+
+    @Override
+    public void refreshImpl() {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void setupMXBean() {
+        mxbean = ManagementFactory.getMemoryMXBean();
     }
 
 }

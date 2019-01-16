@@ -1,12 +1,14 @@
 package org.iot.dsa.io.json;
 
-import java.io.*;
-import java.nio.charset.Charset;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import org.iot.dsa.io.AbstractReader;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.node.DSBytes;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSString;
 
 /**
  * Json implementation of DSReader.  The same instance can be re-used with the setInput methods.

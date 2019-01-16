@@ -111,6 +111,14 @@ public class DSBase64 {
     }
 
     /**
+     * Encodes to a URL safe base64 string.  Replaces / with _ and + with -.
+     */
+    public static String encodeUrl(byte[] bytes) {
+        String enc = encode(bytes);
+        return enc.replace('+', '-').replace('/', '_');
+    }
+
+    /**
      * Encodes a buffer into a base 64 string.
      *
      * @param bytes   The bytes to encode.
@@ -170,14 +178,6 @@ public class DSBase64 {
             }
         }
         return buf.toString();
-    }
-
-    /**
-     * Encodes to a URL safe base64 string.  Replaces / with _ and + with -.
-     */
-    public static String encodeUrl(byte[] bytes) {
-        String enc = encode(bytes);
-        return enc.replace('+', '-').replace('/', '_');
     }
 
     ///////////////////////////////////////////////////////////////////////////

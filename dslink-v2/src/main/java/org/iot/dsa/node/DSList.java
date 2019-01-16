@@ -562,7 +562,10 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
 
     @Override
     public DSList valueOf(DSElement element) {
-        return element.toList();
+        if (element.isList()) {
+            return element.toList();
+        }
+        return new DSList().add(element);
     }
 
     public static DSList valueOf(DSElement... values) {

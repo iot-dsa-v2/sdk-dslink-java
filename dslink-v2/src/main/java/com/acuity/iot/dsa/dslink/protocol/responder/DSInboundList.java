@@ -24,10 +24,9 @@ import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.node.event.DSIEvent;
-import org.iot.dsa.node.event.DSISubscriber;
-import org.iot.dsa.node.event.DSISubscription;
-import org.iot.dsa.node.event.DSNodeTopic;
+import org.iot.dsa.node.topic.DSISubscriber;
+import org.iot.dsa.node.topic.DSISubscription;
+import org.iot.dsa.node.topic.DSITopic;
 import org.iot.dsa.security.DSPermission;
 
 /**
@@ -154,22 +153,18 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSNode node, DSInfo child, DSIEvent event) {
-        switch ((DSNodeTopic) event.getTopic()) {
-            case CHILD_ADDED:
+    public void onEvent(DSITopic topic, DSNode node, DSInfo child, DSIValue data) {
+        switch (topic.getTopicId()) {
+            case DSNode.CHILD_ADDED:
                 childAdded(child);
                 break;
-            case CHILD_RENAMED:
-                childRemoved(event.getData().toString());
+            case DSNode.CHILD_RENAMED:
+                childRemoved(data.toString());
                 childAdded(child);
                 break;
-            case CHILD_REMOVED:
+            case DSNode.CHILD_REMOVED:
                 childRemoved(child.getName());
                 break;
-            case METADATA_CHANGED:
-                //TODO resend all?
-                break;
-            default:
         }
     }
 
@@ -188,7 +183,7 @@ public class DSInboundList extends DSInboundRequest
                 }
                 if (info.isNode()) {
                     node = info.getNode();
-                    this.subscription = node.subscribe(null, null, null, this);
+                    this.subscription = node.subscribe(this);
                 }
                 response = this;
             }

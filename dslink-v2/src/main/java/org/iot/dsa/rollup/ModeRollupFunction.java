@@ -3,7 +3,6 @@ package org.iot.dsa.rollup;
 import java.util.TreeMap;
 import org.iot.dsa.node.DSDouble;
 import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSStatus;
 
 /**
  * The most common value in the the rollup.

@@ -1,11 +1,11 @@
 package org.iot.dsa.security;
 
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import java.security.Key;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
-import com.acuity.iot.dsa.dslink.io.DSBase64;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIStorable;
@@ -29,13 +29,12 @@ public class DSPasswordAes128 extends DSValue implements DSIMetadata, DSIPasswor
     // Constants
     // ---------
 
+    public static final DSPasswordAes128 NULL = new DSPasswordAes128(DSString.NULL);
     private static Cipher cipher;
     private static Key key;
-    public static final DSPasswordAes128 NULL = new DSPasswordAes128(DSString.NULL);
 
     // Fields
     // ------
-
     private DSString value; //base64 encoded
 
     // Constructors
@@ -158,16 +157,16 @@ public class DSPasswordAes128 extends DSValue implements DSIMetadata, DSIPasswor
     }
 
     @Override
-    public DSString store() {
-        return toElement();
-    }
-
-    @Override
     public DSPasswordAes128 restore(DSElement element) {
         if (element.isNull()) {
             return NULL;
         }
         return new DSPasswordAes128(element.toString());
+    }
+
+    @Override
+    public DSString store() {
+        return toElement();
     }
 
     /**

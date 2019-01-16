@@ -108,8 +108,8 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
     }
 
     /**
-     * A convenience which calls addParameter with the same arguments, and also sets the
-     * metadata with the given value as the default.
+     * A convenience which calls addParameter with the same arguments, but also sets the default
+     * value of the parameter to the given as well.
      *
      * @param name        Must not be null.
      * @param value       Must not be null.
@@ -145,7 +145,8 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
 
     /**
      * Creates a DSMetadata, calls setName and setType on it, adds the internal map to
-     * the parameter list and returns the metadata instance for further configuration.
+     * the parameter list and returns the metadata instance for further configuration.  Does
+     * not set the default value of the parameter.
      *
      * @param name        Must not be null.
      * @param value       Must not be null.
@@ -157,17 +158,19 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
             throw new IllegalStateException("Action is immutable");
         }
         DSMetadata ret = new DSMetadata();
+        if (value instanceof DSIMetadata) {
+            ((DSIMetadata) ret).getMetadata(ret.getMap());
+        }
         ret.setName(name)
            .setType(value)
-           .setDefault(value)
            .setDescription(description);
         addParameter(ret.getMap());
         return ret;
     }
 
     /**
-     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to
-     * the parameter list and returns the metadata instance for further configuration.
+     * Does not capture metadata if the value implements DSIMetadata, it is safer to use
+     * the version of this method that takes a value (it does not set the default value).
      *
      * @param name        Must not be null.
      * @param type        Must not be null.

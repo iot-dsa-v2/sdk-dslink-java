@@ -57,15 +57,15 @@ public interface DSIReader extends Closeable {
     public DSElement getElement();
 
     /**
-     * Returns the value when last() == LONG.
-     */
-    public long getLong();
-
-    /**
      * This should only be called when last() == BEGIN_LIST and it will decodeKeys the entire
      * list.  Call next rather than this method to get the list in pieces.
      */
     public DSList getList();
+
+    /**
+     * Returns the value when last() == LONG.
+     */
+    public long getLong();
 
     /**
      * This should only be called when last() == BEGIN_MAP and it will decodeKeys the entire map.

@@ -1,7 +1,5 @@
 package com.acuity.iot.dsa.dslink.transport;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URI;
 import javax.net.ssl.SSLSocketFactory;
@@ -21,36 +19,6 @@ public class SocketTransport extends StreamBinaryTransport {
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void doClose() {
-        /*
-        try {
-            if (in != null) {
-                in.close();
-            }
-        } catch (Exception x) {
-            trace(getConnection().getConnectionId(), x);
-        }
-        try {
-            if (out != null) {
-                out.close();
-            }
-        } catch (Exception x) {
-            trace(getConnection().getConnectionId(), x);
-        }
-        */
-        try {
-            if (socket != null) {
-                socket.close();
-            }
-        } catch (Exception x) {
-            trace(getConnection().getConnectionId(), x);
-        }
-        //in = null;
-        //out = null;
-        socket = null;
-    }
 
     @Override
     public DSTransport open() {
@@ -83,6 +51,36 @@ public class SocketTransport extends StreamBinaryTransport {
             DSException.throwRuntime(x);
         }
         return this;
+    }
+
+    @Override
+    protected void doClose() {
+        /*
+        try {
+            if (in != null) {
+                in.close();
+            }
+        } catch (Exception x) {
+            trace(getConnection().getConnectionId(), x);
+        }
+        try {
+            if (out != null) {
+                out.close();
+            }
+        } catch (Exception x) {
+            trace(getConnection().getConnectionId(), x);
+        }
+        */
+        try {
+            if (socket != null) {
+                socket.close();
+            }
+        } catch (Exception x) {
+            trace(getConnection().getConnectionId(), x);
+        }
+        //in = null;
+        //out = null;
+        socket = null;
     }
 
 }

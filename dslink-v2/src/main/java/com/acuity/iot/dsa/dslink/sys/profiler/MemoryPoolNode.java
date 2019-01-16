@@ -7,23 +7,13 @@ import java.util.List;
 public class MemoryPoolNode extends MXBeanNode {
 
     private MemoryPoolMXBean mxbean;
+    private static List<String> overriden = new ArrayList<String>();
 
     public MemoryPoolNode() {
     }
 
     public MemoryPoolNode(MemoryPoolMXBean mxbean) {
         this.mxbean = mxbean;
-    }
-
-    @Override
-    public void setupMXBean() {
-        if (mxbean == null) {
-            getParent().remove(getInfo());
-        }
-    }
-
-    @Override
-    public void refreshImpl() {
     }
 
     @Override
@@ -36,11 +26,20 @@ public class MemoryPoolNode extends MXBeanNode {
         return MemoryPoolMXBean.class;
     }
 
-    private static List<String> overriden = new ArrayList<String>();
-
     @Override
     public List<String> getOverriden() {
         return overriden;
+    }
+
+    @Override
+    public void refreshImpl() {
+    }
+
+    @Override
+    public void setupMXBean() {
+        if (mxbean == null) {
+            getParent().remove(getInfo());
+        }
     }
 
 }

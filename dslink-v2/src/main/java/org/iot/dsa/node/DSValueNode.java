@@ -29,7 +29,7 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
     public void onChildChanged(DSInfo child) {
         DSInfo info = getValueChild();
         if (child == info) {
-            fire(VALUE_CHANGED, null);
+            fire(VALUE_CHANGED_TOPIC, child, null);
         }
     }
 

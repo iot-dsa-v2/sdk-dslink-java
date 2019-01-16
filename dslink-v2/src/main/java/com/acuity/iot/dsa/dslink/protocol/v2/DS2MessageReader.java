@@ -178,46 +178,6 @@ public class DS2MessageReader extends DS2Message {
     // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Returns a char buffer with the given capacity, ready for writing (putting).  Attempts to
-     * reuse the same char buffer.
-     */
-    private CharBuffer getCharBuffer(int size) {
-        if ((charBuffer == null) || (charBuffer.capacity() < size)) {
-            int tmp = 1024;
-            while (tmp < size) {
-                tmp += 1024;
-            }
-            charBuffer = CharBuffer.allocate(tmp);
-        } else {
-            charBuffer.clear();
-        }
-        return charBuffer;
-    }
-
-    /**
-     * Called by readString(), returns a bytebuffer for the given capacity ready for writing
-     * (putting).  Attempts to reuse the same buffer as much as possible.
-     */
-    private ByteBuffer getStringBuffer(int len) {
-        if (strBuffer == null) {
-            int tmp = 1024;
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
-        } else if (strBuffer.capacity() < len) {
-            int tmp = strBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
-        } else {
-            strBuffer.clear();
-        }
-        return strBuffer;
-    }
-
     void init(int requestId,
               int method,
               DSByteBuffer body,
@@ -269,6 +229,46 @@ public class DS2MessageReader extends DS2Message {
             }
             headers.put(code, val);
         }
+    }
+
+    /**
+     * Returns a char buffer with the given capacity, ready for writing (putting).  Attempts to
+     * reuse the same char buffer.
+     */
+    private CharBuffer getCharBuffer(int size) {
+        if ((charBuffer == null) || (charBuffer.capacity() < size)) {
+            int tmp = 1024;
+            while (tmp < size) {
+                tmp += 1024;
+            }
+            charBuffer = CharBuffer.allocate(tmp);
+        } else {
+            charBuffer.clear();
+        }
+        return charBuffer;
+    }
+
+    /**
+     * Called by readString(), returns a bytebuffer for the given capacity ready for writing
+     * (putting).  Attempts to reuse the same buffer as much as possible.
+     */
+    private ByteBuffer getStringBuffer(int len) {
+        if (strBuffer == null) {
+            int tmp = 1024;
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            strBuffer = ByteBuffer.allocate(tmp);
+        } else if (strBuffer.capacity() < len) {
+            int tmp = strBuffer.capacity();
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            strBuffer = ByteBuffer.allocate(tmp);
+        } else {
+            strBuffer.clear();
+        }
+        return strBuffer;
     }
 
     /**
