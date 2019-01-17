@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSFlexEnum;
-import org.iot.dsa.node.DSISetAction;
+import org.iot.dsa.node.action.DSISetAction;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;

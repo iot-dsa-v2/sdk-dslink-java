@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSISetAction;
 import org.iot.dsa.util.DSUtil;
 
 /**

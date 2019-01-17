@@ -1,11 +1,12 @@
-package org.iot.dsa.node;
+package org.iot.dsa.node.action;
 
-import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.DSIValue;
 
 /**
- * Only for use on DSIValues.  Replaces protocol write/set with a virtual action and the value
- * will be marked readonly in the protocol.  If the info of the value is marked readonly,
- * this action will not be available.
+ * If setting a value is more complex than one of the primitive editors, this can be used
+ * to create a custom set action. Only for use on DSIValues.  Replaces protocol level write/set
+ * with a virtual action and the value will be marked readonly in the protocol.  If the info of
+ * the value is marked readonly, this action will not be available.
  *
  * @author Aaron Hansen
  */
@@ -33,7 +34,7 @@ public interface DSISetAction extends DSIValue {
      * The name for the set action, "set" by default.
      */
     public default String getSetActionName() {
-        return "Set";
+        return SET;
     }
 
 }
