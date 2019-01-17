@@ -159,7 +159,7 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
         }
         DSMetadata ret = new DSMetadata();
         if (value instanceof DSIMetadata) {
-            ((DSIMetadata) ret).getMetadata(ret.getMap());
+            ((DSIMetadata) value).getMetadata(ret.getMap());
         }
         ret.setName(name)
            .setType(value)

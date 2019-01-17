@@ -10,6 +10,7 @@ import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSISetAction;
 import org.iot.dsa.node.action.DeleteAction;
 import org.iot.dsa.node.action.DuplicateAction;
 import org.iot.dsa.node.action.RenameAction;
