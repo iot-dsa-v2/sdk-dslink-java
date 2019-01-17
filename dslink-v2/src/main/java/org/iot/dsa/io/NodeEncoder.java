@@ -1,9 +1,10 @@
 package org.iot.dsa.io;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import org.iot.dsa.io.json.AbstractJsonWriter;
-import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIStorable;
@@ -64,7 +65,7 @@ public class NodeEncoder {
      */
     public static byte[] encode(DSNode node) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        JsonWriter writer = new JsonWriter(bos);
+        DSIWriter writer = Json.writer(bos);
         NodeEncoder.encode(writer, node);
         writer.close();
         return bos.toByteArray();
@@ -76,7 +77,7 @@ public class NodeEncoder {
      * @param node What to encode.
      */
     public static void print(DSNode node) {
-        JsonWriter writer = new JsonWriter(System.out );
+        DSIWriter writer = Json.writer((OutputStream) System.out);
         NodeEncoder.encode(writer, node);
         System.out.flush();
     }

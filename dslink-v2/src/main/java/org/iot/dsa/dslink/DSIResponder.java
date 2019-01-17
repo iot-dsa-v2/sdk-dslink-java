@@ -1,6 +1,11 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.dslink.responder.*;
+import org.iot.dsa.dslink.responder.InboundInvokeRequest;
+import org.iot.dsa.dslink.responder.InboundListRequest;
+import org.iot.dsa.dslink.responder.InboundSetRequest;
+import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
+import org.iot.dsa.dslink.responder.OutboundListResponse;
+import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 import org.iot.dsa.node.action.ActionResult;
 
 /**
@@ -41,6 +46,14 @@ public interface DSIResponder {
     public OutboundListResponse onList(InboundListRequest request);
 
     /**
+     * The implementation should do no processing of it on the calling thread. Simply throw a
+     * descriptive exception to report an error with the request.
+     *
+     * @param request The details of the request.
+     */
+    public void onSet(InboundSetRequest request);
+
+    /**
      * The implementation should quickly create an object for responding to the request, but do no
      * processing of it on the calling thread. Simply throw a descriptive exception to report an
      * error with the request.
@@ -49,14 +62,5 @@ public interface DSIResponder {
      * @return Who to notify when the subscription is closed.
      */
     public SubscriptionCloseHandler onSubscribe(InboundSubscribeRequest request);
-
-
-    /**
-     * The implementation should do no processing of it on the calling thread. Simply throw a
-     * descriptive exception to report an error with the request.
-     *
-     * @param request The details of the request.
-     */
-    public void onSet(InboundSetRequest request);
 
 }

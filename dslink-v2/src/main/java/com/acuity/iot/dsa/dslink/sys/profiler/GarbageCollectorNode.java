@@ -8,25 +8,13 @@ import org.iot.dsa.node.DSString;
 public class GarbageCollectorNode extends MXBeanNode {
 
     private GarbageCollectorMXBean mxbean;
+    private static List<String> overriden = new ArrayList<String>();
 
     public GarbageCollectorNode() {
     }
 
     public GarbageCollectorNode(GarbageCollectorMXBean mxbean) {
         this.mxbean = mxbean;
-    }
-
-    @Override
-    public void setupMXBean() {
-        if (mxbean == null) {
-            getParent().remove(getInfo());
-        }
-    }
-
-    @Override
-    public void refreshImpl() {
-        putProp("CollectionTime",
-                DSString.valueOf(ProfilerUtils.millisToString(mxbean.getCollectionTime())));
     }
 
     @Override
@@ -39,15 +27,26 @@ public class GarbageCollectorNode extends MXBeanNode {
         return GarbageCollectorMXBean.class;
     }
 
-    private static List<String> overriden = new ArrayList<String>();
-
-    static {
-        overriden.add("CollectionTime");
-    }
-
     @Override
     public List<String> getOverriden() {
         return overriden;
+    }
+
+    @Override
+    public void refreshImpl() {
+        putProp("CollectionTime",
+                DSString.valueOf(ProfilerUtils.millisToString(mxbean.getCollectionTime())));
+    }
+
+    @Override
+    public void setupMXBean() {
+        if (mxbean == null) {
+            getParent().remove(getInfo());
+        }
+    }
+
+    static {
+        overriden.add("CollectionTime");
     }
 
 }

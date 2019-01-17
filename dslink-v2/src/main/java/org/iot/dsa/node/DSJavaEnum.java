@@ -115,19 +115,19 @@ public class DSJavaEnum extends DSValue implements DSIEnum, DSIMetadata, DSIStor
         return DSString.valueOf(value.name() + ':' + value.getClass().getName());
     }
 
-    /**
-     * The Java enum.
-     */
-    public Enum toEnum() {
-        return value;
-    }
-
     @Override
     public DSElement toElement() {
         if (isNull()) {
             return DSString.NULL;
         }
         return DSString.valueOf(value.name());
+    }
+
+    /**
+     * The Java enum.
+     */
+    public Enum toEnum() {
+        return value;
     }
 
     @Override

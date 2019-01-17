@@ -1,6 +1,11 @@
 package org.iot.dsa.io.json;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import org.iot.dsa.io.AbstractReader;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.node.DSBytes;
@@ -38,6 +43,13 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
 
     public JsonReader(File file) {
         setInput(file);
+    }
+
+    /**
+     * Creates a reader for UTF-8.
+     */
+    public JsonReader(InputStream in) {
+        setInput(in, "UTF-8");
     }
 
     public JsonReader(InputStream in, String charset) {
@@ -187,11 +199,7 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
      */
     public JsonReader setInput(File file) {
         try {
-            if (in instanceof JsonInput) {
-                ((JsonInput) in).setInput(new BufferedInputStream(new FileInputStream(file)));
-            } else {
-                in = new JsonInput(new BufferedInputStream(new FileInputStream(file)));
-            }
+            setInput(new FileInputStream(file), "UTF-8");
         } catch (Exception x) {
             throw new IllegalStateException(x);
         }

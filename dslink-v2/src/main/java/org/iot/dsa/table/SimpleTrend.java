@@ -34,7 +34,7 @@ public class SimpleTrend extends AbstractTable {
         appendCol("Timestamp", DSDateTime.NULL.getValueType());
         DSMetadata ret = appendCol("Value", val.getValueType());
         if (val instanceof DSIMetadata) {
-            ((DSIMetadata)val).getMetadata(ret.getMap());
+            ((DSIMetadata) val).getMetadata(ret.getMap());
         }
         appendCol("Status", DSStatus.ok.getValueType());
         return ret;

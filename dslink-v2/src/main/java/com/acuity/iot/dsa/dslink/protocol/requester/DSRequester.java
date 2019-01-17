@@ -37,7 +37,8 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSRequester() {}
+    public DSRequester() {
+    }
 
     public DSRequester(DSSession session) {
         this.session = session;

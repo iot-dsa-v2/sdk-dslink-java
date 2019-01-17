@@ -35,7 +35,8 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     // Methods - Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DS2Responder() {}
+    public DS2Responder() {
+    }
 
     public DS2Responder(DS2Session session) {
         super(session);
@@ -45,18 +46,8 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
 
-    @Override
-    protected DSInboundSubscriptions getSubscriptions() {
-        return subscriptions;
-    }
-
     public DSBinaryTransport getTransport() {
         return (DSBinaryTransport) getConnection().getTransport();
-    }
-
-    @Override
-    public boolean isV1() {
-        return false;
     }
 
     /**
@@ -84,6 +75,26 @@ public class DS2Responder extends DSResponder implements MessageConstants {
             default:
                 throw new IllegalArgumentException("Unexpected method: " + reader.getMethod());
         }
+    }
+
+    @Override
+    public boolean isV1() {
+        return false;
+    }
+
+    @Override
+    public void sendClose(int rid) {
+        sendResponse(new CloseMessage(rid));
+    }
+
+    @Override
+    public void sendError(DSInboundRequest req, Throwable reason) {
+        sendResponse(new ErrorMessage(req, reason));
+    }
+
+    @Override
+    protected DSInboundSubscriptions getSubscriptions() {
+        return subscriptions;
     }
 
     /**
@@ -185,16 +196,6 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         if (msg.getHeader(HDR_NO_STREAM) != null) {
             sub.setCloseAfterUpdate(true);
         }
-    }
-
-    @Override
-    public void sendClose(int rid) {
-        sendResponse(new CloseMessage(rid));
-    }
-
-    @Override
-    public void sendError(DSInboundRequest req, Throwable reason) {
-        sendResponse(new ErrorMessage(req, reason));
     }
 
 

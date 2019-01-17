@@ -3,7 +3,6 @@ package org.iot.dsa.rollup;
 import java.util.Arrays;
 import org.iot.dsa.node.DSDouble;
 import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSStatus;
 
 /**
  * The median (middle) double value.

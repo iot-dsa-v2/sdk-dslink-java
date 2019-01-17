@@ -1,10 +1,10 @@
 package org.iot.dsa.node;
 
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import com.acuity.iot.dsa.dslink.io.DSBase64;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -450,17 +450,30 @@ public class DSBytes extends DSElement {
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
-        if (arg instanceof DSBytes) {
-            return (DSBytes) arg;
+        switch (arg.getElementType()) {
+            case BOOLEAN:
+                return valueOf(new byte[]{(byte) (arg.toBoolean() ? 1 : 0)});
+            case BYTES:
+                return (DSBytes) arg;
+            case DOUBLE: {
+                byte[] b = new byte[8];
+                writeDouble(arg.toDouble(), b, 0, true);
+                return valueOf(b);
+            }
+            case LONG: {
+                byte[] b = new byte[8];
+                writeLong(arg.toLong(), b, 0, true);
+                return valueOf(b);
+            }
+            case STRING:
+                return valueOf(arg.toString());
         }
-        if (arg instanceof DSString) {
-            return valueOf(arg.toString());
-        }
-        throw new IllegalArgumentException("Cannot decode: " + arg);
+        throw new IllegalArgumentException("Cannot decoding boolean: " + arg);
     }
 
     /**
-     * Decodes a base64 encoded byte array.
+     * Decodes a base64 encoded byte array.  If that throws an exception, returns the bytes
+     * representing String.getBytes(UTF).
      */
     public static DSBytes valueOf(String arg) {
         if (arg == null) {
@@ -473,7 +486,11 @@ public class DSBytes extends DSElement {
         if (arg.startsWith(PREFIX)) {
             arg = arg.substring(PREFIX.length());
         }
-        return new DSBytes(DSBase64.decode(arg));
+        try {
+            return new DSBytes(DSBase64.decode(arg));
+        } catch (Exception x) {
+            return valueOf(arg.getBytes(DSString.UTF8));
+        }
     }
 
     /**

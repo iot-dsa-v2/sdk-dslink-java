@@ -1,16 +1,32 @@
 package org.iot.dsa.security;
 
-import java.io.*;
+import com.acuity.iot.dsa.dslink.io.DSBase64;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
-import java.security.*;
+import java.security.AlgorithmParameters;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
-import java.security.spec.*;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import java.security.spec.ECPrivateKeySpec;
+import java.security.spec.ECPublicKeySpec;
 import java.util.Arrays;
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import com.acuity.iot.dsa.dslink.io.DSBase64;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -111,6 +127,48 @@ public class DSKeys {
         return null;
     }
 
+    /**
+     * Encodes the key pair which can be then decoded with decodeKeys().
+     */
+    public String encodeKeys() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(DSBase64.encodeUrl(encodePublic()));
+        builder.append(" ");
+        builder.append(DSBase64.encodeUrl(toUnsignedByteArray(getPrivateKey().getS())));
+        return builder.toString();
+    }
+
+    /**
+     * X9.63 encoding of the public key.
+     */
+    public byte[] encodePublic() {
+        ECPublicKey publicKey = getPublicKey();
+        byte[] x = toUnsignedByteArray(publicKey.getW().getAffineX());
+        byte[] y = toUnsignedByteArray(publicKey.getW().getAffineY());
+        byte[] ret = new byte[x.length + y.length + 1]; //32 + 32 + 1
+        ret[0] = 0x04;
+        System.arraycopy(x, 0, ret, 1, x.length);
+        System.arraycopy(y, 0, ret, x.length + 1, y.length);
+        return ret;
+    }
+
+    /**
+     * Base64 encoding (no padding and url safe) of the SHA256 hash of the public key. This is used
+     * to generate the DSID of a link.
+     *
+     * @throws DSException wrapping any security related exceptions.
+     */
+    public String encodePublicHashDsId() {
+        String ret = null;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            ret = DSBase64.encodeUrl(md.digest(encodePublic()));
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
+        return ret;
+    }
+
     public static byte[] generateHmacSHA256Signature(byte[] data, byte[] secretKeyBytes) {
         byte[] ret = null;
         try {
@@ -152,45 +210,10 @@ public class DSKeys {
     }
 
     /**
-     * Encodes the key pair which can be then decoded with decodeKeys().
+     * The public and private keys.
      */
-    public String encodeKeys() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(DSBase64.encodeUrl(encodePublic()));
-        builder.append(" ");
-        builder.append(DSBase64.encodeUrl(toUnsignedByteArray(getPrivateKey().getS())));
-        return builder.toString();
-    }
-
-    /**
-     * Base64 encoding (no padding and url safe) of the SHA256 hash of the public key. This is used
-     * to generate the DSID of a link.
-     *
-     * @throws DSException wrapping any security related exceptions.
-     */
-    public String encodePublicHashDsId() {
-        String ret = null;
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            ret = DSBase64.encodeUrl(md.digest(encodePublic()));
-        } catch (Exception x) {
-            DSException.throwRuntime(x);
-        }
-        return ret;
-    }
-
-    /**
-     * X9.63 encoding of the public key.
-     */
-    public byte[] encodePublic() {
-        ECPublicKey publicKey = getPublicKey();
-        byte[] x = toUnsignedByteArray(publicKey.getW().getAffineX());
-        byte[] y = toUnsignedByteArray(publicKey.getW().getAffineY());
-        byte[] ret = new byte[x.length + y.length + 1]; //32 + 32 + 1
-        ret[0] = 0x04;
-        System.arraycopy(x, 0, ret, 1, x.length);
-        System.arraycopy(y, 0, ret, x.length + 1, y.length);
-        return ret;
+    public KeyPair getKeys() {
+        return keyPair;
     }
 
     /**
@@ -205,13 +228,6 @@ public class DSKeys {
             DSException.throwRuntime(x);
         }
         return null;
-    }
-
-    /**
-     * The public and private keys.
-     */
-    public KeyPair getKeys() {
-        return keyPair;
     }
 
     /**
@@ -274,17 +290,6 @@ public class DSKeys {
     }
 
     /**
-     * A convenience that creates a signer and signs the given bytes.
-     *
-     * @return DSBase64 encoding of the signature.
-     */
-    public String sign(byte[] buf, int off, int len) {
-        Signer signer = newSigner();
-        signer.update(buf, off, len);
-        return signer.getSignatureBase64();
-    }
-
-    /**
      * Decodes a key pair that was encoded by the store method.
      *
      * @param file File containing the serialized keys.
@@ -334,6 +339,17 @@ public class DSKeys {
     }
 
     /**
+     * A convenience that creates a signer and signs the given bytes.
+     *
+     * @return DSBase64 encoding of the signature.
+     */
+    public String sign(byte[] buf, int off, int len) {
+        Signer signer = newSigner();
+        signer.update(buf, off, len);
+        return signer.getSignatureBase64();
+    }
+
+    /**
      * Write the bytes from the string encoding to the given file.
      *
      * @param file Will be created or overwritten.
@@ -373,6 +389,15 @@ public class DSKeys {
     }
 
     /**
+     * A convenience that creates a verifier and validates the signature for the given bytes.
+     */
+    public boolean verify(byte[] buf, int off, int len, String signature) {
+        Verifier verifier = newVerifier();
+        verifier.update(buf, off, len);
+        return verifier.validate(signature);
+    }
+
+    /**
      * Will drop the first byte if it is zero and the length of the encoding is 33 bytes.
      */
     private static byte[] toUnsignedByteArray(BigInteger arg) {
@@ -383,15 +408,6 @@ public class DSKeys {
             bytes = tmp;
         }
         return bytes;
-    }
-
-    /**
-     * A convenience that creates a verifier and validates the signature for the given bytes.
-     */
-    public boolean verify(byte[] buf, int off, int len, String signature) {
-        Verifier verifier = newVerifier();
-        verifier.update(buf, off, len);
-        return verifier.validate(signature);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -479,6 +495,9 @@ public class DSKeys {
      */
     public static class Verifier {
 
+        private PublicKey publicKey;
+        private Signature signature;
+
         public Verifier(PublicKey publicKey) {
             this.publicKey = publicKey;
             this.signature = newSignature();
@@ -542,9 +561,6 @@ public class DSKeys {
         public boolean validate(String base64signature) {
             return validate(DSBase64.decode(base64signature));
         }
-
-        private PublicKey publicKey;
-        private Signature signature;
     }
 
     ///////////////////////////////////////////////////////////////////////////

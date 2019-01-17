@@ -541,7 +541,10 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
 
     @Override
     public DSMap valueOf(DSElement element) {
-        return element.toMap();
+        if (element.isMap()) {
+            return element.toMap();
+        }
+        return new DSMap().put("val", element);
     }
 
     // Private Methods

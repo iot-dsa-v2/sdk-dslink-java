@@ -1,9 +1,9 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.Signature;
-import com.acuity.iot.dsa.dslink.io.DSBase64;
 import org.iot.dsa.security.DSKeys;
 import org.iot.dsa.util.DSException;
 import org.testng.Assert;

@@ -3,7 +3,7 @@
 
 * [Documentation](https://github.com/iot-dsa-v2/sdk-dslink-java-v2/wiki)
 * [Javadoc](https://jitpack.io/com/github/iot-dsa-v2/sdk-dslink-java-v2/dslink-v2/master-SNAPSHOT/javadoc/)
-* JDK 1.6+
+* JDK 1.8+
 
 
 ## Overview

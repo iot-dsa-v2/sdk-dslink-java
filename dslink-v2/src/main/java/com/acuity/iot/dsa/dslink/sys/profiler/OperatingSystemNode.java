@@ -8,17 +8,7 @@ import java.util.List;
 public class OperatingSystemNode extends MXBeanNode {
 
     private OperatingSystemMXBean mxbean;
-
-    @Override
-    public void setupMXBean() {
-        mxbean = ManagementFactory.getOperatingSystemMXBean();
-    }
-
-    @Override
-    public void refreshImpl() {
-        // TODO Auto-generated method stub
-
-    }
+    private static List<String> overriden = new ArrayList<String>();
 
     @Override
     public Object getMXBean() {
@@ -30,11 +20,20 @@ public class OperatingSystemNode extends MXBeanNode {
         return OperatingSystemMXBean.class;
     }
 
-    private static List<String> overriden = new ArrayList<String>();
-
     @Override
     public List<String> getOverriden() {
         return overriden;
+    }
+
+    @Override
+    public void refreshImpl() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void setupMXBean() {
+        mxbean = ManagementFactory.getOperatingSystemMXBean();
     }
 
 }

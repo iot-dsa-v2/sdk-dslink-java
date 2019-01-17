@@ -62,14 +62,14 @@ public class MetadataTest {
     public static class MyNode extends DSNode {
 
         @Override
-        protected void declareDefaults() {
-            declareDefault("foobar", DSLong.valueOf(5)).getMetadata().setUnit("ms");
-        }
-
-        @Override
         public void getMetadata(DSInfo info, DSMap bucket) {
             DSList list = metadata.getEnumRange();
             list.add("ghi");
+        }
+
+        @Override
+        protected void declareDefaults() {
+            declareDefault("foobar", DSLong.valueOf(5)).getMetadata().setUnit("ms");
         }
     }
 

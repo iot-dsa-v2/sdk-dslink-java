@@ -2,7 +2,6 @@ package org.iot.dsa.rollup;
 
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSStatus;
 
 /**
  * Logically ORs values.

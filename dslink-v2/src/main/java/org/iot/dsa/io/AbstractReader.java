@@ -19,8 +19,8 @@ public abstract class AbstractReader implements DSIReader {
     private Token last = Token.ROOT;
     protected boolean valBoolean;
     protected byte[] valBytes;
-    protected double valReal;
     protected long valLong;
+    protected double valReal;
     protected String valString;
 
     // Public Methods
@@ -222,6 +222,12 @@ public abstract class AbstractReader implements DSIReader {
     @Override
     public abstract Token next();
 
+    @Override
+    public AbstractReader reset() {
+        last = Token.ROOT;
+        return this;
+    }
+
     protected Token setBeginList() {
         return last = Token.BEGIN_LIST;
     }
@@ -230,16 +236,16 @@ public abstract class AbstractReader implements DSIReader {
         return last = Token.BEGIN_MAP;
     }
 
+    protected Token setEndInput() {
+        return last = Token.END_INPUT;
+    }
+
     protected Token setEndList() {
         return last = Token.END_LIST;
     }
 
     protected Token setEndMap() {
         return last = Token.END_MAP;
-    }
-
-    protected Token setEndInput() {
-        return last = Token.END_INPUT;
     }
 
     protected Token setNextValue(boolean arg) {
@@ -272,12 +278,6 @@ public abstract class AbstractReader implements DSIReader {
 
     protected Token setNextValueNull() {
         return last = Token.NULL;
-    }
-
-    @Override
-    public AbstractReader reset() {
-        last = Token.ROOT;
-        return this;
     }
 
 

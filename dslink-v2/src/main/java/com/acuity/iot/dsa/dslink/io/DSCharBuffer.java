@@ -80,20 +80,6 @@ public class DSCharBuffer {
         return timeout;
     }
 
-    /**
-     * Increases the childCount of the buffer to at least the given.
-     */
-    private void growBuffer(int minSize) {
-        int size = buffer.length;
-        while (size < minSize) {
-            size *= 2;
-        }
-        char[] tmp = new char[size];
-        System.arraycopy(buffer, offset, tmp, 0, length);
-        buffer = tmp;
-        offset = 0;
-    }
-
     public boolean isOpen() {
         return open;
     }
@@ -271,6 +257,20 @@ public class DSCharBuffer {
     public DSCharBuffer setTimeout(long timeout) {
         this.timeout = timeout;
         return this;
+    }
+
+    /**
+     * Increases the childCount of the buffer to at least the given.
+     */
+    private void growBuffer(int minSize) {
+        int size = buffer.length;
+        while (size < minSize) {
+            size *= 2;
+        }
+        char[] tmp = new char[size];
+        System.arraycopy(buffer, offset, tmp, 0, length);
+        buffer = tmp;
+        offset = 0;
     }
 
 }

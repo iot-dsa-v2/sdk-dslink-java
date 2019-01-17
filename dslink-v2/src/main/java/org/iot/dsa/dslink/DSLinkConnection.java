@@ -110,14 +110,10 @@ public abstract class DSLinkConnection extends DSConnection {
         declareDefault(RECONNECT, new DSAction.Parameterless() {
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                ((DSLinkConnection)target.get()).disconnect();
+                ((DSLinkConnection) target.get()).disconnect();
                 return null;
             }
         });
-    }
-
-    protected DSSysNode getSys() {
-        return (DSSysNode) getParent();
     }
 
     @Override
@@ -129,6 +125,10 @@ public abstract class DSLinkConnection extends DSConnection {
         } catch (Exception x) {
             error(getPath(), x);
         }
+    }
+
+    protected DSSysNode getSys() {
+        return (DSSysNode) getParent();
     }
 
     /**

@@ -14,8 +14,8 @@ import java.io.InputStream;
 import java.security.SecureRandom;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSInfo;
@@ -108,6 +108,21 @@ public class DS2LinkConnection extends DSLinkConnection {
     protected void checkConfig() {
     }
 
+    @Override
+    protected void doConnect() {
+        try {
+            transport = makeTransport();
+            put(TRANSPORT, transport);
+            transport.setConnection(this);
+            transport.open();
+            performHandshake();
+            connOk();
+        } catch (Exception x) {
+            error(getPath(), x);
+            connDown(DSException.makeMessage(x));
+        }
+    }
+
     /**
      * Looks at the connection initialization response to determine the type of transport then
      * instantiates the correct type fom the config.
@@ -134,21 +149,6 @@ public class DS2LinkConnection extends DSLinkConnection {
         }
         debug(debug() ? "Connection URL = " + uri : null);
         return transport;
-    }
-
-    @Override
-    protected void doConnect() {
-        try {
-            transport = makeTransport();
-            put(TRANSPORT, transport);
-            transport.setConnection(this);
-            transport.open();
-            performHandshake();
-            connOk();
-        } catch (Exception x) {
-            error(getPath(), x);
-            connDown(DSException.makeMessage(x));
-        }
     }
 
     @Override

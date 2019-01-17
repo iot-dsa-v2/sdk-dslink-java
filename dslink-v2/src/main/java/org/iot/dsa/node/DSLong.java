@@ -141,21 +141,24 @@ public class DSLong extends DSElement implements Comparable<DSINumber>, DSIMetad
         return String.valueOf(value);
     }
 
-    /**
-     * Returns this.
-     */
     @Override
     public DSLong valueOf(DSElement arg) {
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
-        if (arg instanceof DSINumber) {
-            return valueOf(arg.toLong());
+        switch (arg.getElementType()) {
+            case BOOLEAN:
+                return DSLong.valueOf(arg.toBoolean() ? 1 : 0);
+            case LONG:
+                if (arg instanceof DSLong) {
+                    return (DSLong) arg;
+                }
+            case DOUBLE:
+                return DSLong.valueOf(arg.toLong());
+            case STRING:
+                return valueOf(arg.toString());
         }
-        if (arg instanceof DSString) {
-            return valueOf(arg.toString());
-        }
-        throw new IllegalArgumentException("Can not decode long: " + arg);
+        throw new IllegalArgumentException("Cannot decoding boolean: " + arg);
     }
 
     /**

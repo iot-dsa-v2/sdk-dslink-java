@@ -34,26 +34,15 @@ public class DSNull extends DSElement {
     }
 
     /**
-     * Returns this.
-     */
-    @Override
-    public DSNull valueOf(DSElement arg) {
-        return this;
-    }
-
-    /**
-     * Returns this.
-     */
-    @Override
-    public DSNull toElement() {
-        return this;
-    }
-
-    /**
      * True of the arg == this.
      */
     public boolean equals(Object arg) {
         return arg == this;
+    }
+
+    @Override
+    public DSElementType getElementType() {
+        return DSElementType.NULL;
     }
 
     @Override
@@ -68,13 +57,24 @@ public class DSNull extends DSElement {
         return true;
     }
 
+    /**
+     * Returns this.
+     */
     @Override
-    public DSElementType getElementType() {
-        return DSElementType.NULL;
+    public DSNull toElement() {
+        return this;
     }
 
     public String toString() {
         return "null";
+    }
+
+    /**
+     * Returns this.
+     */
+    @Override
+    public DSNull valueOf(DSElement arg) {
+        return this;
     }
 
     // Initialization

@@ -1,17 +1,25 @@
 package org.iot.dsa.io.json;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.Flushable;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
  * Json implementation of DSWriter intended for Appendables such as StringBuilders. This can be used
- * for OutputStreams and Writers as well, but DSWriter will be faster. <p>The same instance can be
+ * for OutputStreams and Writers as well, but JsonWriter will be faster. <p>The same instance can be
  * reused with the setOutput methods.</p> <p>This class is not thread safe.</p>
  *
  * @author Aaron Hansen
  */
-public class JsonAppender extends AbstractJsonWriter {
+class JsonAppender extends AbstractJsonWriter {
 
     // Constants
     // ---------

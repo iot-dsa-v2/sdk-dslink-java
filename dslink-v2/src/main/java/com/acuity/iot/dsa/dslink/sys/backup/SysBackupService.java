@@ -13,8 +13,9 @@ import java.util.zip.ZipOutputStream;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.DSRuntime.Timer;
 import org.iot.dsa.dslink.DSLink;
+import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.NodeEncoder;
-import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
@@ -137,12 +138,12 @@ public class SysBackupService extends DSNode implements Runnable {
             long time = System.currentTimeMillis();
             put(lastTime, DSDateTime.valueOf(time));
             info("Saving node database " + nodes.getAbsolutePath());
-            JsonWriter writer = null;
+            DSIWriter writer = null;
             if (name.endsWith(".zip")) {
                 String tmp = name.substring(0, name.lastIndexOf(".zip"));
-                writer = new JsonWriter(nodes, tmp + ".json");
+                writer = Json.zipWriter(nodes, tmp + ".json");
             } else {
-                writer = new JsonWriter(nodes);
+                writer = Json.writer(nodes);
             }
             NodeEncoder.encode(writer, getLink());
             writer.close();

@@ -104,13 +104,13 @@ public class DSDouble extends DSElement implements Comparable<DSINumber>, DSINum
     }
 
     @Override
-    public boolean isNumber() {
-        return true;
+    public boolean isNull() {
+        return this == NULL;
     }
 
     @Override
-    public boolean isNull() {
-        return this == NULL;
+    public boolean isNumber() {
+        return true;
     }
 
     @Override
@@ -171,19 +171,19 @@ public class DSDouble extends DSElement implements Comparable<DSINumber>, DSINum
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
-        if (arg == this) {
-            return this;
+        switch (arg.getElementType()) {
+            case BOOLEAN:
+                return DSDouble.valueOf(arg.toBoolean() ? 1 : 0);
+            case DOUBLE:
+                if (arg instanceof DSDouble) {
+                    return (DSDouble) arg;
+                }
+            case LONG:
+                return DSDouble.valueOf(arg.toDouble());
+            case STRING:
+                return valueOf(arg.toString());
         }
-        if (arg instanceof DSINumber) {
-            if (arg instanceof DSDouble) {
-                return (DSDouble) arg;
-            }
-            return valueOf(arg.toDouble());
-        }
-        if (arg instanceof DSString) {
-            return valueOf(arg.toString());
-        }
-        throw new IllegalArgumentException("Cannot decoding double: " + arg);
+        throw new IllegalArgumentException("Cannot decoding boolean: " + arg);
     }
 
     /**

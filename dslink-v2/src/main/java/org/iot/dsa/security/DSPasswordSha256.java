@@ -1,9 +1,9 @@
 package org.iot.dsa.security;
 
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import com.acuity.iot.dsa.dslink.io.DSBase64;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIStorable;
@@ -86,18 +86,6 @@ public class DSPasswordSha256 extends DSValue implements DSIMetadata, DSIPasswor
         return DSValueType.STRING;
     }
 
-    /**
-     * SHA-256 hash of the bytes.
-     */
-    static byte[] hash(byte[] arg) {
-        byte[] hash = null;
-        synchronized (digest) {
-            hash = digest.digest(arg);
-            digest.reset();
-        }
-        return hash;
-    }
-
     @Override
     public int hashCode() {
         return value.hashCode();
@@ -144,16 +132,16 @@ public class DSPasswordSha256 extends DSValue implements DSIMetadata, DSIPasswor
     }
 
     @Override
-    public DSString store() {
-        return toElement();
-    }
-
-    @Override
     public DSPasswordSha256 restore(DSElement element) {
         if (element.isNull()) {
             return NULL;
         }
         return new DSPasswordSha256(element.toString());
+    }
+
+    @Override
+    public DSString store() {
+        return toElement();
     }
 
     /**
@@ -200,6 +188,18 @@ public class DSPasswordSha256 extends DSValue implements DSIMetadata, DSIPasswor
             return NULL;
         }
         return new DSPasswordSha256(encode(arg));
+    }
+
+    /**
+     * SHA-256 hash of the bytes.
+     */
+    static byte[] hash(byte[] arg) {
+        byte[] hash = null;
+        synchronized (digest) {
+            hash = digest.digest(arg);
+            digest.reset();
+        }
+        return hash;
     }
 
     // Initialization

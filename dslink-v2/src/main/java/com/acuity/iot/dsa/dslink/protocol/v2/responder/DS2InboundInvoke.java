@@ -17,8 +17,8 @@ import org.iot.dsa.security.DSPermission;
  */
 class DS2InboundInvoke extends DSInboundInvoke implements MessageConstants {
 
-    private int seqId = 0;
     MultipartWriter multipart;
+    private int seqId = 0;
 
     DS2InboundInvoke(DSMap parameters, DSPermission permission) {
         super(parameters, permission);

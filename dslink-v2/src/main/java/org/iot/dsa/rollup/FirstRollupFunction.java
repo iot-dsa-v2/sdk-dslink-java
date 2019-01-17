@@ -2,7 +2,6 @@ package org.iot.dsa.rollup;
 
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSNull;
-import org.iot.dsa.node.DSStatus;
 
 /**
  * First value in the rollup.

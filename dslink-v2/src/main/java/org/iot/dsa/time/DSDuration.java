@@ -19,13 +19,12 @@ public class DSDuration extends DSValue {
     // Class Fields
     /////////////////////////////////////////////////////////////////
 
-    public static DSDuration NULL = new DSDuration();
     public static DSDuration DEFAULT = new DSDuration();
+    public static DSDuration NULL = new DSDuration();
 
     /////////////////////////////////////////////////////////////////
     // Instance Fields
     /////////////////////////////////////////////////////////////////
-
     private int days = 0;
     private int hours = 0;
     private int millis = 0;

@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.v1;
 
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,9 +9,7 @@ import java.net.URL;
 import java.security.MessageDigest;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkOptions;
-import com.acuity.iot.dsa.dslink.io.DSBase64;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
@@ -116,18 +115,9 @@ public class DS1ConnectionInit extends DSNode {
     void initializeConnection() throws Exception {
         String uri = makeBrokerUrl();
         debug(debug() ? "Broker URI " + uri : null);
-        JsonReader in = null;
-        try {
-            in = new JsonReader(connect(new URL(uri), 0), "UTF-8");
-            response = in.getMap();
-            put(BROKER_RES, response).setReadOnly(true);
-            trace(trace() ? response : null);
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-
-        }
+        response = Json.read(connect(new URL(uri), 0), true).toMap();
+        put(BROKER_RES, response).setReadOnly(true);
+        trace(trace() ? response : null);
     }
 
     /**
@@ -252,29 +242,21 @@ public class DS1ConnectionInit extends DSNode {
      * Writes the json map representing the connection request.
      */
     void writeConnectionRequest(HttpURLConnection conn) throws Exception {
-        JsonWriter out = null;
-        try {
-            out = new JsonWriter(conn.getOutputStream());
-            DSMap map = new DSMap();
-            map.put("publicKey", DSBase64.encodeUrl(link.getKeys().encodePublic()));
-            map.put("isRequester", link.getMain().isRequester());
-            map.put("isResponder", link.getMain().isResponder());
-            map.put("linkData", new DSMap());
-            map.put("version", DSA_VERSION);
-            DSList list = map.putList("formats");
-            if (link.getOptions().getMsgpack()) {
-                list.add("msgpack");
-            }
-            list.add("json");
-            map.put("enableWebSocketCompression", false);
-            put(BROKER_REQ, map).setReadOnly(true);
-            trace(trace() ? map.toString() : null);
-            out.value(map);
-        } finally {
-            if (out != null) {
-                out.close();
-            }
+        DSMap map = new DSMap();
+        map.put("publicKey", DSBase64.encodeUrl(link.getKeys().encodePublic()));
+        map.put("isRequester", link.getMain().isRequester());
+        map.put("isResponder", link.getMain().isResponder());
+        map.put("linkData", new DSMap());
+        map.put("version", DSA_VERSION);
+        DSList list = map.putList("formats");
+        if (link.getOptions().getMsgpack()) {
+            list.add("msgpack");
         }
+        list.add("json");
+        map.put("enableWebSocketCompression", false);
+        put(BROKER_REQ, map).setReadOnly(true);
+        trace(trace() ? map.toString() : null);
+        Json.write(map, conn.getOutputStream(), true);
     }
 
 }

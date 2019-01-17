@@ -1,9 +1,16 @@
 package org.iot.dsa.io.json;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.node.DSString;
 
 /**
  * Json implementation of DSWriter intended for OutputStreams and Writers.  While JsonAppender can
@@ -71,6 +78,47 @@ public class JsonWriter extends AbstractJsonWriter {
     // --------------
 
     @Override
+    public Appendable append(CharSequence csq) throws IOException {
+        for (int i = 0, len = csq.length(); i < len; i++) {
+            append(csq.charAt(i));
+        }
+        return this;
+    }
+
+    @Override
+    public Appendable append(char ch) throws IOException {
+        if (buflen + 1 >= BUF_SIZE) {
+            flush();
+        }
+        buf[buflen++] = ch;
+        return this;
+    }
+
+    /**
+     * Append the chars and return this. Can be used for custom formatting.
+     */
+    @Override
+    public Appendable append(CharSequence csq, int start, int end) throws IOException {
+        for (int i = start; i < end; i++) {
+            append(csq.charAt(i));
+        }
+        return this;
+    }
+
+    /**
+     * Append the chars and return this. Can be used for custom formatting.
+     */
+    @Override
+    public AbstractJsonWriter append(char[] ch, int off, int len) {
+        if (buflen + len >= BUF_SIZE) {
+            flush();
+        }
+        System.arraycopy(ch, off, buf, buflen, len);
+        buflen += len;
+        return this;
+    }
+
+    @Override
     public void close() {
         try {
             flush();
@@ -118,11 +166,10 @@ public class JsonWriter extends AbstractJsonWriter {
             if (arg == null) {
                 throw new NullPointerException();
             }
-            this.out = new FileWriter(arg);
+            return setOutput(new FileOutputStream(arg));
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
-        return reset();
     }
 
     /**
@@ -136,11 +183,10 @@ public class JsonWriter extends AbstractJsonWriter {
             }
             zout = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
             zout.putNextEntry(new ZipEntry(zipFileName));
-            this.out = new OutputStreamWriter(zout);
+            return setOutput(zout);
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
-        return reset();
     }
 
     /**
@@ -150,7 +196,7 @@ public class JsonWriter extends AbstractJsonWriter {
         if (arg == null) {
             throw new NullPointerException();
         }
-        this.out = new OutputStreamWriter(arg);
+        this.out = new OutputStreamWriter(arg, DSString.UTF8);
         return reset();
     }
 
@@ -167,11 +213,10 @@ public class JsonWriter extends AbstractJsonWriter {
             }
             zout = new ZipOutputStream(out);
             zout.putNextEntry(new ZipEntry(zipFileName));
-            this.out = new OutputStreamWriter(zout);
+            return setOutput(zout);
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
-        return reset();
     }
 
     /**
@@ -180,47 +225,6 @@ public class JsonWriter extends AbstractJsonWriter {
     public JsonWriter setOutput(Writer out) {
         this.out = out;
         return reset();
-    }
-
-    @Override
-    public Appendable append(CharSequence csq) throws IOException {
-        for (int i = 0, len = csq.length(); i < len; i++) {
-            append(csq.charAt(i));
-        }
-        return this;
-    }
-
-    @Override
-    public Appendable append(char ch) throws IOException {
-        if (buflen + 1 >= BUF_SIZE) {
-            flush();
-        }
-        buf[buflen++] = ch;
-        return this;
-    }
-
-    /**
-     * Append the chars and return this. Can be used for custom formatting.
-     */
-    @Override
-    public Appendable append(CharSequence csq, int start, int end) throws IOException {
-        for (int i = start; i < end; i++) {
-            append(csq.charAt(i));
-        }
-        return this;
-    }
-
-    /**
-     * Append the chars and return this. Can be used for custom formatting.
-     */
-    @Override
-    public AbstractJsonWriter append(char[] ch, int off, int len) {
-        if (buflen + len >= BUF_SIZE) {
-            flush();
-        }
-        System.arraycopy(ch, off, buf, buflen, len);
-        buflen += len;
-        return this;
     }
 
 }

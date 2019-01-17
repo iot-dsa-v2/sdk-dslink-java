@@ -5,8 +5,9 @@ import java.net.URL;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.NodeDecoder;
-import org.iot.dsa.io.json.JsonReader;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.logging.DSLogHandler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
@@ -120,7 +121,7 @@ public class DSLink extends DSNode implements Runnable {
         if (nodes.exists()) {
             logger.info("Loading node database " + nodes.getAbsolutePath());
             long time = System.currentTimeMillis();
-            JsonReader reader = new JsonReader(nodes);
+            DSIReader reader = Json.reader(nodes);
             DSNode node = NodeDecoder.decode(reader);
             reader.close();
             if (node instanceof DSLink) {
