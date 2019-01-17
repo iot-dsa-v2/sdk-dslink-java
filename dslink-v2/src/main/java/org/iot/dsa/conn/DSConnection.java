@@ -4,7 +4,7 @@ import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.topic.DSTopic;
+import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
@@ -38,14 +38,26 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     protected static final String STATE_TIME = "State Time";
 
     /**
-     * The topic to subscribe to for connected events.
+     * Event ID.
      */
-    public static final DSTopic CONNECTED = new DSTopic("CONNECTED");
+    public static final String CONNECTED = "CONNECTED";
 
     /**
-     * The topic to subscribe to for disconnected events.
+     * Singleton instance, fired whenever a connection transitions to connected.  There will
+     * not be a child info or data accompanying the event.
      */
-    public static final DSTopic DISCONNECTED = new DSTopic("DISCONNECTED");
+    public static final DSEvent CONNECTED_EVENT = new DSEvent(CONNECTED);
+
+    /**
+     * Event ID.
+     */
+    public static final String DISCONNECTED = "DISCONNECTED";
+
+    /**
+     * Singleton instance, fired whenever a connection transitions to disconnected.  There will
+     * not be a child info or data accompanying the event.
+     */
+    public static final DSEvent DISCONNECTED_EVENT = new DSEvent(DISCONNECTED);
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -85,7 +97,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
             } catch (Exception x) {
                 error(error() ? getPath() : null, x);
             }
-            fire(DISCONNECTED, null, null);
+            fire(DISCONNECTED_EVENT, null, null);
         }
     }
 
@@ -115,7 +127,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
             } catch (Exception x) {
                 error(error() ? getPath() : null, x);
             }
-            fire(CONNECTED, null, null);
+            fire(CONNECTED_EVENT, null, null);
         }
     }
 
@@ -169,7 +181,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         } catch (Exception x) {
             error(error() ? getPath() : null, x);
         }
-        fire(DISCONNECTED, null, null);
+        fire(DISCONNECTED_EVENT, null, null);
     }
 
     public DSConnectionState getConnectionState() {

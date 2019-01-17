@@ -363,7 +363,7 @@ public class DSInfo implements ApiObject, GroupListener {
      * Whether or not an object can be written by a client.
      */
     public boolean isReadOnly() {
-        return getFlag(READONLY);
+        return getFlag(READONLY) || (object instanceof DSISetAction);
     }
 
     /**
@@ -587,7 +587,7 @@ public class DSInfo implements ApiObject, GroupListener {
 
     private void fireInfoChanged() {
         if ((parent != null) && (parent.isRunning())) {
-            parent.fire(DSNode.METADATA_CHANGED_TOPIC, this, null);
+            parent.fire(DSNode.METADATA_CHANGED_EVENT, this, null);
         }
     }
 

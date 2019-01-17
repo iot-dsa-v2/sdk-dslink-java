@@ -1,11 +1,12 @@
-package org.iot.dsa.node.topic;
+package org.iot.dsa.node.event;
 
 import org.iot.dsa.node.DSNode;
 
 /**
- * Represents a subscription to one or more topics on a node.
+ * Represents a subscription to a node.
  *
  * @author Aaron Hansen
+ * @see DSNode#subscribe(DSISubscriber)
  */
 public interface DSISubscription {
 

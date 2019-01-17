@@ -13,11 +13,10 @@ import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DeleteAction;
 import org.iot.dsa.node.action.DuplicateAction;
 import org.iot.dsa.node.action.RenameAction;
-import org.iot.dsa.node.topic.DSISubscriber;
-import org.iot.dsa.node.topic.DSISubscription;
-import org.iot.dsa.node.topic.DSITopic;
-import org.iot.dsa.node.topic.DSTopic;
-import org.iot.dsa.node.topic.EventFilter;
+import org.iot.dsa.node.event.DSEvent;
+import org.iot.dsa.node.event.DSEventFilter;
+import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
@@ -173,39 +172,55 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Topic ID.  A child info will accompany the event and the event data will
-     * be null.
+     * Event ID.
      */
     public static final String CHILD_ADDED = "CHILD_ADDED";
-    public static final DSTopic CHILD_ADDED_TOPIC = new DSTopic(CHILD_ADDED);
 
     /**
-     * Topic ID.  A child info will accompany the event and the event data will
-     * be null.
+     * Singleton instance, fired whenever a child is added. There will be a child info, but
+     * not data.
+     */
+    public static final DSEvent CHILD_ADDED_EVENT = new DSEvent(CHILD_ADDED);
+
+    /**
+     * Event ID.
      */
     public static final String CHILD_REMOVED = "CHILD_REMOVED";
-    public static final DSTopic CHILD_REMOVED_TOPIC = new DSTopic(CHILD_REMOVED);
+
+    public static final DSEvent CHILD_REMOVED_EVENT = new DSEvent(CHILD_REMOVED);
 
     /**
-     * Topic ID.  A child info will accompany the event and the event data be the
-     * old name as a DSString.
+     * Event ID.
      */
     public static final String CHILD_RENAMED = "CHILD_RENAMED";
-    public static final DSTopic CHILD_RENAMED_TOPIC = new DSTopic(CHILD_RENAMED);
 
     /**
-     * Topic ID.  A child info will accompany the event and the event data will
-     * be null.
+     * Singleton instance, fired whenever a child is renamed. There will be a child info, and
+     * the data will be a DSString representing the old name.
+     */
+    public static final DSEvent CHILD_RENAMED_EVENT = new DSEvent(CHILD_RENAMED);
+
+    /**
+     * Event ID.
      */
     public static final String METADATA_CHANGED = "METADATA_CHANGED";
-    public static final DSTopic METADATA_CHANGED_TOPIC = new DSTopic(METADATA_CHANGED);
 
     /**
-     * Topic ID.  A child info may or may not accompany the event and the event data
-     * will be null.
+     * Singleton instance, fired whenever metadata changes. There may be a child info, but no
+     * data accompanying this event.
+     */
+    public static final DSEvent METADATA_CHANGED_EVENT = new DSEvent(METADATA_CHANGED);
+
+    /**
+     * Event ID.
      */
     public static final String VALUE_CHANGED = "VALUE_CHANGED";
-    public static final DSTopic VALUE_CHANGED_TOPIC = new DSTopic(VALUE_CHANGED);
+
+    /**
+     * Singleton instance, fired whenever a child value changes, as well as when nodes that
+     * implement DSIValue change.  There may be a child info, but no data accompanying this event.
+     */
+    public static final DSEvent VALUE_CHANGED_EVENT = new DSEvent(VALUE_CHANGED);
 
     //Prevents infinite loops when initializing default instances.
     static final DSNode defaultDefaultInstance = new DSNode();
@@ -557,6 +572,15 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public DSInfo getVirtualAction(DSInfo target, String name) {
         DSInfo info = null;
+        if (target.is(DSISetAction.class)) {
+            if (target.getFlag(DSInfo.READONLY)) {
+                throw new IllegalStateException("Value is readonly: " + name);
+            }
+            DSISetAction sa = (DSISetAction) target.get();
+            if (name.equals(sa.getSetActionName())) {
+                return actionInfo(sa.getSetActionName(), sa.getSetAction());
+            }
+        }
         if (target.isRemovable()) {
             switch (name) {
                 case DeleteAction.DELETE:
@@ -593,6 +617,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             } else if (target.getNode() != this) {
                 throw new IllegalArgumentException("DSInfo target is from another node.");
             }
+        } else if (target.is(DSISetAction.class)) {
+            bucket.add(((DSISetAction)target.get()).getSetActionName());
         }
         if (target.isRemovable()) {
             bucket.add(DeleteAction.DELETE);
@@ -893,7 +919,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 } catch (Exception x) {
                     error(getPath(), x);
                 }
-                fire(VALUE_CHANGED_TOPIC, info, null);
+                fire(VALUE_CHANGED_EVENT, info, null);
             }
         }
         return this;
@@ -934,8 +960,11 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             size--;
         }
-        if (info.get() instanceof DSNode) {
-            DSNode node = (DSNode) info.get();
+        if (info.isNode()) {
+            DSNode node = info.getNode();
+            if (isRunning()) {
+                notifyRemoved(node);
+            }
             node.infoInParent = null;
             node.stop();
         }
@@ -945,7 +974,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             } catch (Exception x) {
                 error(getPath(), x);
             }
-            fire(CHILD_REMOVED_TOPIC, info, null);
+            fire(CHILD_REMOVED_EVENT, info, null);
         }
         return this;
     }
@@ -990,7 +1019,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             info.setName(newName);
             childMap = null;
         }
-        fire(CHILD_RENAMED_TOPIC, info, DSString.valueOf(old));
+        fire(CHILD_RENAMED_EVENT, info, DSString.valueOf(old));
     }
 
     /**
@@ -1076,15 +1105,15 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
 
     /**
-     * This is a convenience that creates a filter for the given topic and or child.  Only non-null
-     * topics and children are filtered.
+     * This is a convenience that creates a filter for the given event and or child.  Only non-null
+     * events and children are filtered.
      *
      * @param subscriber Required.
-     * @param topic      Optional.
+     * @param event      Optional.
      * @param child      Optional.
      */
-    public DSISubscription subscribe(DSISubscriber subscriber, DSITopic topic, DSInfo child) {
-        subscribe(new EventFilter(subscriber, topic, child));
+    public DSISubscription subscribe(DSISubscriber subscriber, DSEvent event, DSInfo child) {
+        subscribe(new DSEventFilter(subscriber, event, child));
         return null;
     }
 
@@ -1182,18 +1211,18 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     /**
      * Notifies subscribers of the event.
      *
-     * @param topic Must not be null.
+     * @param event Must not be null.
      * @param child Can be null.
      * @param data  Can be null.
      */
-    protected void fire(DSITopic topic, DSInfo child, DSIValue data) {
-        if (topic == null) {
+    protected void fire(DSEvent event, DSInfo child, DSIValue data) {
+        if (event == null) {
             throw new NullPointerException("Null event");
         }
         Subscription sub = subscription;
         while (sub != null) {
             try {
-                sub.getSubscriber().onEvent(topic, this, child, data);
+                sub.getSubscriber().onEvent(event, this, child, data);
             } catch (Exception x) {
                 error(getPath(), x);
             }
@@ -1267,27 +1296,37 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Called when the given child is added and in the stable state.
+     * Called when the given child is added and this is running.
      */
     protected void onChildAdded(DSInfo info) {
     }
 
     /**
-     * Called when the given child is changed and in the stable state.
+     * Called when the given child is changed and this is running.
      */
     protected void onChildChanged(DSInfo info) {
     }
 
     /**
-     * Called when the given child is removed and in the stable state.
+     * Called when the given child is removed and this is running.  This subtree will be notified
+     * via onRemoved before this is call.
+     *
+     * @info The reference to this node as the parent will have already been cleared.
      */
     protected void onChildRemoved(DSInfo info) {
     }
 
     /**
-     * Called when the given info is modified and in the stable state.
+     * Called when the given info is modified and this is running.
      */
     protected void onInfoChanged(DSInfo info) {
+    }
+
+    /**
+     * Called when the node or one of its ancenstors is being removed from the tree.
+     * Called on children first, and called before onStopped.
+     */
+    protected void onRemoved() {
     }
 
     /**
@@ -1415,7 +1454,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             } catch (Exception x) {
                 error(getPath(), x);
             }
-            fire(CHILD_ADDED_TOPIC, info, null);
+            fire(CHILD_ADDED_EVENT, info, null);
         }
     }
 
@@ -1455,6 +1494,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     ///////////////////////////////////////////////////////////////////////////
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    private void notifyRemoved(DSNode node) {
+        DSInfo info = node.getFirstNodeInfo();
+        while (info != null) {
+            notifyRemoved(info.getNode());
+            info = info.nextNode();
+        }
+        try {
+            node.onRemoved();
+        } catch (Exception x) {
+            error(getPath(), x);
+        }
+    }
 
     private void remove(Subscription toRemove) {
         Subscription removed = null;

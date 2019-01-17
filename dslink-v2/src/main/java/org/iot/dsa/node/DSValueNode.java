@@ -22,14 +22,14 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
     }
 
     /**
-     * This fires the VALUE_CHANGED topic when the value child changes.  Overrides should call
+     * This fires the VALUE_CHANGED event when the value child changes.  Overrides should call
      * super.onChildChanged.
      */
     @Override
     public void onChildChanged(DSInfo child) {
         DSInfo info = getValueChild();
         if (child == info) {
-            fire(VALUE_CHANGED_TOPIC, child, null);
+            fire(VALUE_CHANGED_EVENT, child, null);
         }
     }
 

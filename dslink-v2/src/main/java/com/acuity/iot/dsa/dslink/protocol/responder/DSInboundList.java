@@ -24,9 +24,9 @@ import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.node.topic.DSISubscriber;
-import org.iot.dsa.node.topic.DSISubscription;
-import org.iot.dsa.node.topic.DSITopic;
+import org.iot.dsa.node.event.DSISubscriber;
+import org.iot.dsa.node.event.DSISubscription;
+import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.security.DSPermission;
 
 /**
@@ -153,8 +153,8 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSITopic topic, DSNode node, DSInfo child, DSIValue data) {
-        switch (topic.getTopicId()) {
+    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+        switch (event.getEventId()) {
             case DSNode.CHILD_ADDED:
                 childAdded(child);
                 break;

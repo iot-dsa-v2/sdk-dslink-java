@@ -1,15 +1,21 @@
-package org.iot.dsa.node.topic;
+package org.iot.dsa.node.event;
+
+import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSNode;
 
 /**
- * Basic implementation of DSITopic.
+ * DSISubscribers subscribe to DSNodes and can receive a variety of events.
  *
  * @author Aaron Hansen
+ * @see DSISubscriber
+ * @see DSISubscription
+ * @see DSNode#subscribe(DSISubscriber)
  */
-public class DSTopic implements DSITopic {
+public class DSEvent implements DSIObject {
 
     private String id;
 
-    public DSTopic(String id) {
+    public DSEvent(String id) {
         if (id == null) {
             throw new NullPointerException("ID cannot be null");
         }
@@ -20,23 +26,28 @@ public class DSTopic implements DSITopic {
      * Returns this.
      */
     @Override
-    public DSTopic copy() {
+    public DSEvent copy() {
         return this;
     }
 
     /**
-     * True if is a topic IDs match.
+     * True if is a event IDs match.
      */
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof DSITopic) {
-            return ((DSITopic) obj).getTopicId().equals(id);
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof DSEvent) {
+            return ((DSEvent) obj).getEventId().equals(id);
         }
         return false;
     }
 
-    @Override
-    public String getTopicId() {
+    /**
+     *
+     */
+    public String getEventId() {
         return id;
     }
 
@@ -65,7 +76,7 @@ public class DSTopic implements DSITopic {
     }
 
     /**
-     * Returns the topic ID.
+     * Returns the event ID.
      */
     @Override
     public String toString() {

@@ -1,17 +1,17 @@
-package org.iot.dsa.node.topic;
+package org.iot.dsa.node.event;
 
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 
 /**
- * A convenience for filtering events based on topic and/or child info.  If the topic is null, then
- * all topics pass the filter, same with children.  Non-null values are compare using the
+ * A convenience for filtering events based on event and/or child info.  If the event is null, then
+ * all events pass the filter, same with children.  Non-null values are compare using the
  * equals method.
  *
  * @author Aaron Hansen
  */
-public class EventFilter implements DSISubscriber {
+public class DSEventFilter implements DSISubscriber {
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -19,7 +19,7 @@ public class EventFilter implements DSISubscriber {
 
     protected DSInfo child;
     protected DSISubscriber subscriber;
-    protected DSITopic topic;
+    protected DSEvent event;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -28,7 +28,7 @@ public class EventFilter implements DSISubscriber {
     /**
      * @param subscriber Required.
      */
-    public EventFilter(DSISubscriber subscriber) {
+    public DSEventFilter(DSISubscriber subscriber) {
         if (subscriber == null) {
             throw new NullPointerException("Subscriber cannot be null");
         }
@@ -36,15 +36,15 @@ public class EventFilter implements DSISubscriber {
     }
 
     /**
-     * If the topic or child are non-null, then the event values must == them.
+     * If the event or child are non-null, then the event values must == them.
      *
      * @param subscriber Required.
-     * @param topic      Optional.
+     * @param event      Optional.
      * @param child      Optional.
      */
-    public EventFilter(DSISubscriber subscriber, DSITopic topic, DSInfo child) {
+    public DSEventFilter(DSISubscriber subscriber, DSEvent event, DSInfo child) {
         this.subscriber = subscriber;
-        this.topic = topic;
+        this.event = event;
         this.child = child;
     }
 
@@ -53,9 +53,9 @@ public class EventFilter implements DSISubscriber {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onEvent(DSITopic topic, DSNode node, DSInfo child, DSIValue data) {
-        if (this.topic != null) {
-            if (!this.topic.equals(topic)) {
+    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+        if (this.event != null) {
+            if (!this.event.equals(event)) {
                 return;
             }
         }
@@ -67,7 +67,7 @@ public class EventFilter implements DSISubscriber {
                 return;
             }
         }
-        subscriber.onEvent(topic, node, child, data);
+        subscriber.onEvent(event, node, child, data);
     }
 
 }

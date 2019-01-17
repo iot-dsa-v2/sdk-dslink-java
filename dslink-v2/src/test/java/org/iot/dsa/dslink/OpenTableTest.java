@@ -40,12 +40,12 @@ public class OpenTableTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe((topic, node, child, data) -> {
+        link.getConnection().subscribe((event, node, child, data) -> {
             success = true;
             synchronized (OpenTableTest.this) {
                 OpenTableTest.this.notifyAll();
             }
-        }, DSLinkConnection.CONNECTED, null);
+        }, DSLinkConnection.CONNECTED_EVENT, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         synchronized (this) {
