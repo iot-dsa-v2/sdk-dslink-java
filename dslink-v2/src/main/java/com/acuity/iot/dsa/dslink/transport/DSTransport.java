@@ -123,11 +123,6 @@ public abstract class DSTransport extends DSNode {
         declareDefault(READ_TIMEOUT, DSLong.valueOf(60000)).setReadOnly(true);
     }
 
-    @Override
-    protected String getLogName() {
-        return getLogName("transport");
-    }
-
     /////////////////////////////////////////////////////////////////
     // Inner Classes
     /////////////////////////////////////////////////////////////////

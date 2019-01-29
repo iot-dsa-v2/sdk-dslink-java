@@ -6,6 +6,7 @@ import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INVALID
 import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_OK;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.protocol.DSUpstreamConnection;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
@@ -14,7 +15,6 @@ import java.io.InputStream;
 import java.security.SecureRandom;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
-import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.node.DSBytes;
@@ -29,7 +29,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DS2LinkConnection extends DSLinkConnection {
+public class DS2LinkConnection extends DSUpstreamConnection {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -86,7 +86,6 @@ public class DS2LinkConnection extends DSLinkConnection {
         return getSession().getRequester();
     }
 
-    @Override
     public DS2Session getSession() {
         if (session == null) {
             session = new DS2Session(this);

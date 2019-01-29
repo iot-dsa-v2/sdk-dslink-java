@@ -36,10 +36,11 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    protected boolean down = getDefaultStatus().isDown();
+    protected boolean fault = false;
     protected DSInfo lastFail = getInfo(LAST_FAIL);
     protected DSInfo lastOk = getInfo(LAST_OK);
     protected long lastOkMillis;
-    protected DSStatus myStatus = getDefaultStatus();
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -54,8 +55,8 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
     public void connDown(String reason) {
         debug(debug() ? getPath() + ": connDown - " + reason : null);
         put(lastFail, DSDateTime.currentTime());
-        myStatus = myStatus.add(DSStatus.DOWN);
-        updateStatus(myStatus, reason);
+        down = true;
+        updateStatus(reason);
     }
 
 
@@ -69,9 +70,8 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
             put(lastOk, DSDateTime.valueOf(now));
         }
         lastOkMillis = now;
-        myStatus = myStatus.remove(DSStatus.FAULT);
-        myStatus = myStatus.remove(DSStatus.DOWN);
-        updateStatus(myStatus, "");
+        down = false;
+        updateStatus("");
     }
 
     /**
@@ -79,13 +79,6 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
      */
     public long getLastOk() {
         return lastOkMillis;
-    }
-
-    /**
-     * True if running, enabled and config is ok.
-     */
-    public boolean isOperational() {
-        return isRunning() && isConfigOk() && isEnabled();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -99,11 +92,12 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
         try {
             checkConfig();
             configOk();
+            return true;
         } catch (Throwable x) {
             error(error() ? getPath() : null, x);
             configFault(DSException.makeMessage(x));
         }
-        return isOperational();
+        return false;
     }
 
     /**
@@ -126,18 +120,6 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
         return DSStatus.down;
     }
 
-    @Override
-    protected String getLogName() {
-        return getLogName("connection");
-    }
-
-    /**
-     * Checks the status for the fault flag.
-     */
-    protected boolean isConfigOk() {
-        return !getStatus().isFault();
-    }
-
     /**
      * Puts the connection into the fault state and optionally sets the message.
      *
@@ -146,8 +128,8 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
     private void configFault(String msg) {
         debug(debug() ? getPath() + ": configFault - " + msg : null);
         put(lastFail, DSDateTime.currentTime());
-        myStatus = myStatus.remove(DSStatus.FAULT);
-        updateStatus(myStatus, msg);
+        fault = true;
+        updateStatus(msg);
     }
 
     /**
@@ -155,8 +137,8 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
      */
     private void configOk() {
         debug(debug() ? getPath() + ": configOk " : null);
-        myStatus = myStatus.remove(DSStatus.FAULT);
-        updateStatus(myStatus, null);
+        fault = false;
+        updateStatus("");
     }
 
 }

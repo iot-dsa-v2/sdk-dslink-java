@@ -10,7 +10,7 @@ import java.io.InputStream;
 public abstract class DSBinaryTransport extends DSTransport {
 
     /**
-     * For reading raw bytes from the underlying transport.  The DSK does not care about frame
+     * For reading raw bytes from the underlying transport.  The SDK does not care about frame
      * oriented transports.
      */
     public abstract InputStream getInput();

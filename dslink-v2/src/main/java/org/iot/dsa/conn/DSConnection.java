@@ -143,7 +143,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         put(state, DSConnectionState.CONNECTING);
         put(stateTime, DSDateTime.currentTime());
         notifyConnectedDescendants(this, this);
-        if (canConnect()) {
+        if (isEnabled() && canConnect()) {
             try {
                 doConnect();
             } catch (Throwable e) {
@@ -174,8 +174,8 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         put(state, DSConnectionState.DISCONNECTED);
         put(stateTime, DSDateTime.currentTime());
         notifyConnectedDescendants(this, this);
-        myStatus = myStatus.add(DSStatus.DOWN);
-        updateStatus(myStatus, null);
+        down = true;
+        updateStatus(null);
         try {
             onDisconnected();
         } catch (Exception x) {

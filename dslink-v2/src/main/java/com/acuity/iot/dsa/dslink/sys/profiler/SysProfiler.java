@@ -13,11 +13,6 @@ public class SysProfiler extends DSNode {
     private DSNode mpNode;
 
     @Override
-    public String getLogName() {
-        return getLogName("profiler");
-    }
-
-    @Override
     protected void declareDefaults() {
         super.declareDefaults();
         declareDefault("Runtime", new RuntimeNode()).setTransient(true);

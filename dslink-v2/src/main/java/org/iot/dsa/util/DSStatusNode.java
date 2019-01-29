@@ -7,8 +7,8 @@ import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
 
 /**
- * A node that has status.  The primary value of this is it merges the status of the
- * current node with any ancestral StatusNodes, and notifies descendant StatusNodes of
+ * A node that has status.  The primary value of this is that it merges the status of the
+ * current node with ancestral StatusNodes, and notifies descendant StatusNodes of
  * changes.
  * <p>
  * Status is inherited.  If a parent is disabled, then so should be the children.  If a node
@@ -17,10 +17,8 @@ import org.iot.dsa.node.DSString;
  * Subclasses must:<br>
  * <ul>
  * <li>Call updateStatus(DSStatus,String) when the status of this node changes.
+ * <li>Override onStatusChanged to respond to changes in the merged status.
  * </ul>
- *
- * To track changes, subclasses should override onChildChanged to know when the merged
- * status changes.
  *
  * @author Aaron Hansen
  */
@@ -37,7 +35,7 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSStatus lastStatus = getDefaultStatus();
+    private int lastStatus = getDefaultStatus().getBits();
     protected DSInfo status = getInfo(STATUS);
     private DSStatusNode statusParent;
     protected DSInfo statusText = getInfo(STATUS_TEXT);
@@ -55,17 +53,9 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
         return statusText.getElement().toString();
     }
 
-    /**
-     * True if the status is good.
-     */
-    public boolean isOperational() {
-        return getStatus().isGood();
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
-
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
@@ -89,16 +79,17 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
      */
     protected DSStatusNode getStatusParent() {
         if (statusParent == null) {
-            DSNode parent = getParent();
-            while (parent != null) {
-                if (parent instanceof DSStatusNode) {
-                    statusParent = (DSStatusNode) parent;
-                    break;
-                }
-                parent = parent.getParent();
-            }
+            statusParent = (DSStatusNode) getAncestor(DSStatusNode.class);
         }
         return statusParent;
+    }
+
+    /**
+     * Override point.  Return the status bits that originate only from this node.  Do not use
+     * the status property.  Always call super unless you really know what you are doing.
+     */
+    protected int getThisStatus() {
+        return 0;
     }
 
     /**
@@ -143,17 +134,20 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
      * merges with the local status, and notifies descendants.
      */
     protected void onStatusChanged(DSStatusNode parent) {
-        updateStatus(parent, lastStatus);
+        updateStatus(parent);
+    }
+
+    protected void updateStatus() {
+        updateStatus(getStatusParent());
     }
 
     /**
      * Subclasses must call this when the status of just this node changes.
      *
-     * @param currentStatus The status of only this node.
-     * @param text          If null, does not change the status text, anything else will.
+     * @param text If null, does not change the status text, anything else will.
      */
-    protected void updateStatus(DSStatus currentStatus, String text) {
-        updateStatus(getStatusParent(), currentStatus);
+    protected void updateStatus(String text) {
+        updateStatus(getStatusParent());
         if (text != null) {
             if (!DSUtil.equal(text, getStatusText())) {
                 put(statusText, DSString.valueOf(text));
@@ -188,13 +182,16 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
     /**
      * Only notifies children when the merged status changes.
      */
-    private void updateStatus(DSStatusNode parent, DSStatus currentStatus) {
-        lastStatus = currentStatus;
-        DSStatus parentStatus = DSStatus.ok;
+    private void updateStatus(DSStatusNode parent) {
+        int current = getThisStatus();
         if (parent != null) {
-            parentStatus = parent.getStatus();
+            current = parent.getStatus().getBits() | current;
         }
-        DSStatus newStatus = parentStatus.add(currentStatus);
+        if (lastStatus == current) {
+            return;
+        }
+        lastStatus = current;
+        DSStatus newStatus = DSStatus.valueOf(current);
         if (!newStatus.equals(getStatus())) {
             put(status, newStatus);
             notifyStatusDescendants();

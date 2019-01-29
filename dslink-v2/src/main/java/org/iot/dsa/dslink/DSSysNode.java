@@ -57,11 +57,6 @@ public class DSSysNode extends DSNode {
     }
 
     @Override
-    protected String getLogName() {
-        return getLogName("sys");
-    }
-
-    @Override
     protected void onStable() {
         profiler = getInfo(PROFILER);
         if (profiler == null) {

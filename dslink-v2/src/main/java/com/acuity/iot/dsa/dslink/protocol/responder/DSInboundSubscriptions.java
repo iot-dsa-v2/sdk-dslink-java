@@ -155,14 +155,6 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         responder.sendResponse(this);
     }
 
-    @Override
-    protected String getLogName() {
-        if (responder != null) {
-            return responder.getLogName() + ".subscriptions";
-        }
-        return getClass().getName();
-    }
-
     /**
      * Returns a DSInboundSubscription for v1.
      *
