@@ -16,7 +16,9 @@ public interface DSIObject {
      * Equals implementation that doesn't require hashCodes to equal, primarily intended
      * so for comparing nodes.
      */
-    public boolean isEqual(Object obj);
+    public default boolean isEqual(Object obj) {
+        return equals(obj);
+    }
 
     public boolean isNull();
 

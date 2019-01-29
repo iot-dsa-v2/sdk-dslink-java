@@ -50,12 +50,6 @@ public interface ActionInvocation {
     public boolean isOpen();
 
     /**
-     * Only use with stream and open tables.  Should not be called until the initial row iterator is
-     * complete, otherwise the update buffer could grow very large.
-     */
-    public void send(DSList row);
-
-    /**
      * Only use with open tables,  deletes len rows starting at the given index, then inserts the
      * given rows in their place.
      *
@@ -64,5 +58,11 @@ public interface ActionInvocation {
      * @param rows Does not have to match the len.
      */
     public void replace(int idx, int len, DSList... rows);
+
+    /**
+     * Only use with stream and open tables.  Should not be called until the initial row iterator is
+     * complete, otherwise the update buffer could grow very large.
+     */
+    public void send(DSList row);
 
 }

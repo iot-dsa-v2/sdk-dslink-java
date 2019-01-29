@@ -247,27 +247,6 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * This is already synchronized by the subscribe method.
-     */
-    private int getNextSid() {
-        int ret = nextSid;
-        if (++nextSid > MAX_SID) {
-            nextSid = 1;
-        }
-        return ret;
-    }
-
-    private void sendMessage() {
-        synchronized (this) {
-            if (enqueued) {
-                return;
-            }
-            enqueued = true;
-        }
-        requester.sendRequest(this);
-    }
-
-    /**
      * Called by the subscription add method when a subscribe message needs to be sent because
      * it is a new subscription or there change in qos.
      */
@@ -318,6 +297,27 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
                 sidMap.remove(sub.getSid());
             }
         }
+    }
+
+    /**
+     * This is already synchronized by the subscribe method.
+     */
+    private int getNextSid() {
+        int ret = nextSid;
+        if (++nextSid > MAX_SID) {
+            nextSid = 1;
+        }
+        return ret;
+    }
+
+    private void sendMessage() {
+        synchronized (this) {
+            if (enqueued) {
+                return;
+            }
+            enqueued = true;
+        }
+        requester.sendRequest(this);
     }
 
 }

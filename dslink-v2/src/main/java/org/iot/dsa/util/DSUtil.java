@@ -37,6 +37,25 @@ public class DSUtil {
     }
 
     /**
+     * Uses the new way of instantiating classes from class names.  The class must support the
+     * public no arg constructor.
+     *
+     * @param className The class to instantiate.
+     * @return An instance of className.
+     * @throws RuntimeException if there is a problem.
+     */
+    public static Object newInstance(String className) {
+        Object ret = null;
+        try {
+            Class<?> c = Class.forName(className);
+            ret = c.getDeclaredConstructor().newInstance();
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
+        return ret;
+    }
+
+    /**
      * Set or unset a bit at the given index.
      *
      * @param bits  The bitset to modify.

@@ -54,11 +54,6 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
         }
     }
 
-    protected void close(Throwable reason) {
-        closeException = DSException.makeRuntime(reason);
-        close();
-    }
-
     @Override
     public DSTransport close() {
         synchronized (this) {
@@ -70,11 +65,6 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
         }
         return this;
     }
-
-    /**
-     * Called by the write method.
-     */
-    protected abstract void doWrite(byte[] buf, int off, int len, boolean isLast);
 
     @Override
     public void endRecvMessage() {
@@ -130,6 +120,40 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
     }
 
     /**
+     * Handles logging and calls doWrite.
+     */
+    public final void write(byte[] buf, int off, int len, boolean isLast) {
+        if (trace()) {
+            for (int i = off, j = off + len; i < j; i++) {
+                if (traceOutSize > 0) {
+                    traceOut.append(' ');
+                }
+                DSBytes.toHex(buf[i], traceOut);
+                if (++traceOutSize == DEBUG_COLS) {
+                    traceOutSize = 0;
+                    traceOut.append('\n');
+                }
+            }
+        }
+        if (isLast) {
+            messageSize = 0;
+        } else {
+            messageSize += len;
+        }
+        doWrite(buf, off, len, isLast);
+    }
+
+    protected void close(Throwable reason) {
+        closeException = DSException.makeRuntime(reason);
+        close();
+    }
+
+    /**
+     * Called by the write method.
+     */
+    protected abstract void doWrite(byte[] buf, int off, int len, boolean isLast);
+
+    /**
      * Call this for all incoming bytes.
      */
     protected void receive(byte[] bytes, int off, int len) {
@@ -153,30 +177,6 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Handles logging and calls doWrite.
-     */
-    public final void write(byte[] buf, int off, int len, boolean isLast) {
-        if (trace()) {
-            for (int i = off, j = off + len; i < j; i++) {
-                if (traceOutSize > 0) {
-                    traceOut.append(' ');
-                }
-                DSBytes.toHex(buf[i], traceOut);
-                if (++traceOutSize == DEBUG_COLS) {
-                    traceOutSize = 0;
-                    traceOut.append('\n');
-                }
-            }
-        }
-        if (isLast) {
-            messageSize = 0;
-        } else {
-            messageSize += len;
-        }
-        doWrite(buf, off, len, isLast);
     }
 
     /////////////////////////////////////////////////////////////////

@@ -14,7 +14,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.net.ssl.*;
+import javax.net.ssl.ManagerFactoryParameters;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.TrustManagerFactorySpi;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Adds support for self signed SSL.  If anonymous is not allowed
@@ -29,8 +33,8 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     // Fields
     /////////////////////////////////////////////////////////////////
 
-    private static X509TrustManager defaultX509Mgr;
     private static SysCertService certManager;
+    private static X509TrustManager defaultX509Mgr;
     private static TrustManager[] trustManagers;
 
     /////////////////////////////////////////////////////////////////
@@ -92,7 +96,6 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
         }
     }
 
-
     /////////////////////////////////////////////////////////////////
     // Inner Classes - in alphabetical order by class TrustAnon.
     /////////////////////////////////////////////////////////////////
@@ -146,37 +149,6 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
             }
             checkLocally(chain, authType);
         }
-        
-        private void checkLocally(X509Certificate[] chain, String authType) throws CertificateException {
-            Set<X509Certificate> chainAsSet = new HashSet<X509Certificate>();
-            Collections.addAll(chainAsSet, chain);
-            X509Certificate anchorCert;
-            try {
-                if (CertificateVerifier.isSelfSigned(chain[0])) {
-                    anchorCert = chain[0];
-                } else {
-                    PKIXCertPathBuilderResult result = CertificateVerifier.verifyCertificate(chain[0], chainAsSet);
-                    TrustAnchor anchor = result.getTrustAnchor();
-                    anchorCert = anchor.getTrustedCert();
-                }
-                
-                if (anchorCert == null) {
-                    throw new CertificateException();
-                }
-                
-                if (!certManager.isInTrustStore(anchorCert)) {
-                    certManager.addToQuarantine(anchorCert);
-                    throw new CertificateException();
-                }
-                
-            } catch (CertificateVerificationException e1) {
-                throw new CertificateException();
-            } catch (NoSuchAlgorithmException e) {
-                throw new CertificateException();
-            } catch (NoSuchProviderException e) {
-                throw new CertificateException();
-            }
-        }
 
         @Override
         public X509Certificate[] getAcceptedIssuers() {
@@ -184,6 +156,39 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 return defaultX509Mgr.getAcceptedIssuers();
             }
             return new X509Certificate[0];
+        }
+
+        private void checkLocally(X509Certificate[] chain, String authType)
+                throws CertificateException {
+            Set<X509Certificate> chainAsSet = new HashSet<X509Certificate>();
+            Collections.addAll(chainAsSet, chain);
+            X509Certificate anchorCert;
+            try {
+                if (CertificateVerifier.isSelfSigned(chain[0])) {
+                    anchorCert = chain[0];
+                } else {
+                    PKIXCertPathBuilderResult result = CertificateVerifier
+                            .verifyCertificate(chain[0], chainAsSet);
+                    TrustAnchor anchor = result.getTrustAnchor();
+                    anchorCert = anchor.getTrustedCert();
+                }
+
+                if (anchorCert == null) {
+                    throw new CertificateException();
+                }
+
+                if (!certManager.isInTrustStore(anchorCert)) {
+                    certManager.addToQuarantine(anchorCert);
+                    throw new CertificateException();
+                }
+
+            } catch (CertificateVerificationException e1) {
+                throw new CertificateException();
+            } catch (NoSuchAlgorithmException e) {
+                throw new CertificateException();
+            } catch (NoSuchProviderException e) {
+                throw new CertificateException();
+            }
         }
 
     }

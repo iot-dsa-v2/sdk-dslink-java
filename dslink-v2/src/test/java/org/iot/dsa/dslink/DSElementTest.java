@@ -2,8 +2,7 @@ package org.iot.dsa.dslink;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSElementType;
 import org.iot.dsa.node.DSList;
@@ -215,19 +214,15 @@ public class DSElementTest {
         testPrimitiveMap(map.getMap("map"));
         //encode and reconstitute
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        new JsonWriter(out, "UTF-8").value(map).close();
+        Json.write(map, out, true);
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-        map = new JsonReader(in, "UTF-8").getElement().toMap();
+        map = Json.read(in, true).toMap();
         testPrimitiveMap(map.getMap("map"));
         list.add(primitiveMap());
         list.add(primitiveList());
         testList(list);
         Assert.assertTrue(list.get(6).isMap());
         Assert.assertTrue(list.get(7).isList());
-        out = new ByteArrayOutputStream();
-        new JsonWriter(out, "UTF-8").value(map).close();
-        in = new ByteArrayInputStream(out.toByteArray());
-        map = new JsonReader(in, "UTF-8").getElement().toMap();
         testPrimitiveList(list.get(7).toList());
     }
 

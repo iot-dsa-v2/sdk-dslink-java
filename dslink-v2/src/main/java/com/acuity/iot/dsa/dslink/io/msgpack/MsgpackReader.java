@@ -23,12 +23,12 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
     // Fields
     // ---------
 
-    private byte[] bytes;
     private ByteBuffer byteBuffer;
+    private byte[] bytes;
     private CharBuffer charBuffer;
     private CharsetDecoder decoder = DSString.UTF8.newDecoder();
-    private InputStream in;
     private Frame frame;
+    private InputStream in;
     private boolean wasValue = true;
 
     // Constructors
@@ -51,42 +51,6 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
         } catch (Exception x) {
             throw new RuntimeException(x);
         }
-    }
-
-    /**
-     * Returns a byte buffer wrapping the given bytes and ready for reading (getting).  Attempts to
-     * reuse the same buffer.
-     */
-    private ByteBuffer getByteBuffer(byte[] bytes, int off, int len) {
-        if ((byteBuffer == null) || (byteBuffer.capacity() < len)) {
-            int tmp = 1024;
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            byteBuffer = ByteBuffer.allocate(tmp);
-        } else {
-            byteBuffer.clear();
-        }
-        byteBuffer.put(bytes, 0, len);
-        byteBuffer.flip();
-        return byteBuffer;
-    }
-
-    /**
-     * Returns a char buffer with the given capacity, ready for writing (putting).  Attempts to
-     * reuse the same char buffer.
-     */
-    private CharBuffer getCharBuffer(int size) {
-        if ((charBuffer == null) || (charBuffer.length() < size)) {
-            int tmp = 1024;
-            while (tmp < size) {
-                tmp += 1024;
-            }
-            charBuffer = CharBuffer.allocate(tmp);
-        } else {
-            charBuffer.clear();
-        }
-        return charBuffer;
     }
 
     public static final boolean isFixInt(byte b) {
@@ -184,6 +148,65 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
         throw new IllegalStateException("Unknown type: " + b);
     }
 
+    public String readUTF(int len) throws IOException {
+        byte[] bytes = readBytes(len);
+        ByteBuffer byteBuf = getByteBuffer(bytes, 0, len);
+        CharBuffer charBuf = getCharBuffer(len);
+        decoder.decode(byteBuf, charBuf, false);
+        charBuf.flip();
+        return charBuf.toString();
+    }
+
+    @Override
+    public MsgpackReader reset() {
+        super.reset();
+        return this;
+    }
+
+    /**
+     * Sets the input source, resets to ROOT, and returns this.
+     */
+    public MsgpackReader setInput(InputStream inputStream) {
+        this.in = inputStream;
+        return reset();
+    }
+
+    /**
+     * Returns a byte buffer wrapping the given bytes and ready for reading (getting).  Attempts to
+     * reuse the same buffer.
+     */
+    private ByteBuffer getByteBuffer(byte[] bytes, int off, int len) {
+        if ((byteBuffer == null) || (byteBuffer.capacity() < len)) {
+            int tmp = 1024;
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            byteBuffer = ByteBuffer.allocate(tmp);
+        } else {
+            byteBuffer.clear();
+        }
+        byteBuffer.put(bytes, 0, len);
+        byteBuffer.flip();
+        return byteBuffer;
+    }
+
+    /**
+     * Returns a char buffer with the given capacity, ready for writing (putting).  Attempts to
+     * reuse the same char buffer.
+     */
+    private CharBuffer getCharBuffer(int size) {
+        if ((charBuffer == null) || (charBuffer.length() < size)) {
+            int tmp = 1024;
+            while (tmp < size) {
+                tmp += 1024;
+            }
+            charBuffer = CharBuffer.allocate(tmp);
+        } else {
+            charBuffer.clear();
+        }
+        return charBuffer;
+    }
+
     /**
      * Reads bytes into an array that is guaranteed to be at least the given size but will probably
      * be longer.
@@ -200,20 +223,6 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
             throw new IOException("Unexpected end of input");
         }
         return bytes;
-    }
-
-    @Override
-    public MsgpackReader reset() {
-        super.reset();
-        return this;
-    }
-
-    /**
-     * Sets the input source, resets to ROOT, and returns this.
-     */
-    public MsgpackReader setInput(InputStream inputStream) {
-        this.in = inputStream;
-        return reset();
     }
 
     private Token readBytes(byte b) throws IOException {
@@ -321,23 +330,14 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
         return last();
     }
 
-    public String readUTF(int len) throws IOException {
-        byte[] bytes = readBytes(len);
-        ByteBuffer byteBuf = getByteBuffer(bytes, 0, len);
-        CharBuffer charBuf = getCharBuffer(len);
-        decoder.decode(byteBuf, charBuf, false);
-        charBuf.flip();
-        return charBuf.toString();
-    }
-
     // Inner Classes
     // -------------
 
     private class Frame {
 
         boolean map = true;
-        int size;
         Frame parent;
+        int size;
 
         Frame(int size, boolean map) {
             this.map = map;

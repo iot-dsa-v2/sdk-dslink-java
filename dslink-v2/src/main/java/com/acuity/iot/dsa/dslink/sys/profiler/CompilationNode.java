@@ -9,17 +9,7 @@ import org.iot.dsa.node.DSString;
 public class CompilationNode extends MXBeanNode {
 
     private CompilationMXBean mxbean;
-
-    @Override
-    public void setupMXBean() {
-        mxbean = ManagementFactory.getCompilationMXBean();
-    }
-
-    @Override
-    public void refreshImpl() {
-        putProp("TotalCompilationTime",
-                DSString.valueOf(ProfilerUtils.millisToString(mxbean.getTotalCompilationTime())));
-    }
+    private static List<String> overriden = new ArrayList<String>();
 
     @Override
     public Object getMXBean() {
@@ -31,15 +21,24 @@ public class CompilationNode extends MXBeanNode {
         return CompilationMXBean.class;
     }
 
-    private static List<String> overriden = new ArrayList<String>();
-
-    static {
-        overriden.add("TotalCompilationTime");
-    }
-
     @Override
     public List<String> getOverriden() {
         return overriden;
+    }
+
+    @Override
+    public void refreshImpl() {
+        putProp("TotalCompilationTime",
+                DSString.valueOf(ProfilerUtils.millisToString(mxbean.getTotalCompilationTime())));
+    }
+
+    @Override
+    public void setupMXBean() {
+        mxbean = ManagementFactory.getCompilationMXBean();
+    }
+
+    static {
+        overriden.add("TotalCompilationTime");
     }
 
 }

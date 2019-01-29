@@ -10,15 +10,14 @@ import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSISetAction;
 import org.iot.dsa.node.action.DeleteAction;
 import org.iot.dsa.node.action.DuplicateAction;
 import org.iot.dsa.node.action.RenameAction;
 import org.iot.dsa.node.event.DSEvent;
-import org.iot.dsa.node.event.DSIEvent;
+import org.iot.dsa.node.event.DSEventFilter;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
-import org.iot.dsa.node.event.DSITopic;
-import org.iot.dsa.node.event.DSNodeTopic;
 import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
@@ -174,34 +173,55 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Topic for subscription.  A child info will accompany the event and the event data will
-     * be null.
+     * Event ID.
      */
-    public static final DSNodeTopic CHILD_ADDED = DSNodeTopic.CHILD_ADDED;
+    public static final String CHILD_ADDED = "CHILD_ADDED";
 
     /**
-     * Topic for subscription.  A child info will accompany the event and the event data will
-     * be null.
+     * Singleton instance, fired whenever a child is added. There will be a child info, but
+     * not data.
      */
-    public static final DSNodeTopic CHILD_REMOVED = DSNodeTopic.CHILD_REMOVED;
+    public static final DSEvent CHILD_ADDED_EVENT = new DSEvent(CHILD_ADDED);
 
     /**
-     * Topic for subscription.  A child info will accompany the event and the event data be the
-     * old name as a DSString.
+     * Event ID.
      */
-    public static final DSNodeTopic CHILD_RENAMED = DSNodeTopic.CHILD_RENAMED;
+    public static final String CHILD_REMOVED = "CHILD_REMOVED";
+
+    public static final DSEvent CHILD_REMOVED_EVENT = new DSEvent(CHILD_REMOVED);
 
     /**
-     * Topic for subscription.  A child info will accompany the event and the event data will
-     * be null.
+     * Event ID.
      */
-    public static final DSNodeTopic METADATA_CHANGED = DSNodeTopic.METADATA_CHANGED;
+    public static final String CHILD_RENAMED = "CHILD_RENAMED";
 
     /**
-     * Topic for subscription.  A child info may or may not accompany the event and the event data
-     * will be null.
+     * Singleton instance, fired whenever a child is renamed. There will be a child info, and
+     * the data will be a DSString representing the old name.
      */
-    public static final DSNodeTopic VALUE_CHANGED = DSNodeTopic.VALUE_CHANGED;
+    public static final DSEvent CHILD_RENAMED_EVENT = new DSEvent(CHILD_RENAMED);
+
+    /**
+     * Event ID.
+     */
+    public static final String METADATA_CHANGED = "METADATA_CHANGED";
+
+    /**
+     * Singleton instance, fired whenever metadata changes. There may be a child info, but no
+     * data accompanying this event.
+     */
+    public static final DSEvent METADATA_CHANGED_EVENT = new DSEvent(METADATA_CHANGED);
+
+    /**
+     * Event ID.
+     */
+    public static final String VALUE_CHANGED = "VALUE_CHANGED";
+
+    /**
+     * Singleton instance, fired whenever a child value changes, as well as when nodes that
+     * implement DSIValue change.  There may be a child info, but no data accompanying this event.
+     */
+    public static final DSEvent VALUE_CHANGED_EVENT = new DSEvent(VALUE_CHANGED);
 
     //Prevents infinite loops when initializing default instances.
     static final DSNode defaultDefaultInstance = new DSNode();
@@ -553,6 +573,15 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public DSInfo getVirtualAction(DSInfo target, String name) {
         DSInfo info = null;
+        if (target.is(DSISetAction.class)) {
+            DSISetAction sa = (DSISetAction) target.get();
+            if (name.equals(sa.getSetActionName())) {
+                if (target.getFlag(DSInfo.READONLY)) {
+                    throw new IllegalStateException("Value is readonly: " + name);
+                }
+                return actionInfo(sa.getSetActionName(), sa.getSetAction());
+            }
+        }
         if (target.isRemovable()) {
             switch (name) {
                 case DeleteAction.DELETE:
@@ -588,6 +617,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 return;
             } else if (target.getNode() != this) {
                 throw new IllegalArgumentException("DSInfo target is from another node.");
+            }
+        } else if (target.is(DSISetAction.class)) {
+            if (!target.getFlag(DSInfo.READONLY)) {
+                bucket.add(((DSISetAction) target.get()).getSetActionName());
             }
         }
         if (target.isRemovable()) {
@@ -713,39 +746,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public boolean isSubscribed() {
         return subscription != null;
-    }
-
-    /**
-     * True if there are any subscriptions with the matching child and topic.
-     *
-     * @param child Can be null.
-     * @param topic Can be null.
-     */
-    public boolean isSubscribed(DSInfo child, DSITopic topic) {
-        Subscription sub = subscription;
-        while (sub != null) {
-            if (DSUtil.equal(topic, sub.topic)) {
-                if (DSUtil.equal(child, sub.child)) {
-                    return true;
-                }
-            }
-            sub = sub.next;
-        }
-        return false;
-    }
-
-    /**
-     * True if there any subscriptions for the given topic.
-     */
-    public boolean isSubscribed(DSITopic topic) {
-        Subscription sub = subscription;
-        while (sub != null) {
-            if (sub.topic == topic) {
-                return true;
-            }
-            sub = sub.next;
-        }
-        return false;
     }
 
     /**
@@ -922,7 +922,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 } catch (Exception x) {
                     error(getPath(), x);
                 }
-                fire(VALUE_CHANGED, info);
+                fire(VALUE_CHANGED_EVENT, info, null);
             }
         }
         return this;
@@ -963,8 +963,11 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             size--;
         }
-        if (info.get() instanceof DSNode) {
-            DSNode node = (DSNode) info.get();
+        if (info.isNode()) {
+            DSNode node = info.getNode();
+            if (isRunning()) {
+                notifyRemoved(node);
+            }
             node.infoInParent = null;
             node.stop();
         }
@@ -974,14 +977,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             } catch (Exception x) {
                 error(getPath(), x);
             }
-            fire(CHILD_REMOVED, info);
-            Subscription sub = subscription;
-            while (sub != null) {
-                if (sub.matches(info)) {
-                    sub.close();
-                }
-                sub = sub.next;
-            }
+            fire(CHILD_REMOVED_EVENT, info, null);
         }
         return this;
     }
@@ -1026,7 +1022,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             info.setName(newName);
             childMap = null;
         }
-        fire(new DSEvent(CHILD_RENAMED, DSString.valueOf(old)), info);
+        fire(CHILD_RENAMED_EVENT, info, DSString.valueOf(old));
     }
 
     /**
@@ -1112,55 +1108,39 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
 
     /**
-     * Creates a subscription for the given criteria.
+     * This is a convenience that creates a filter for the given event and or child.  Only non-null
+     * events and children are filtered.
      *
-     * @param topic      Use null to subscribe to all topics.
-     * @param args       Optional, should be defined by the topic.
-     * @param subscriber Can not be null.
+     * @param subscriber Required.
+     * @param event      Optional.
+     * @param child      Optional.
      */
-    public DSISubscription subscribe(DSITopic topic, DSIValue args, DSISubscriber subscriber) {
-        return subscribe(topic, null, args, subscriber);
+    public DSISubscription subscribe(DSISubscriber subscriber, DSEvent event, DSInfo child) {
+        return subscribe(new DSEventFilter(subscriber, event, child));
     }
 
     /**
-     * Creates a subscription for the given criteria if a matches subscription doesn't already
-     * exist.  Subscribers are matched using the == operator.
+     * Only creates a subscription if not already subscribed.
      *
-     * @param topic      Use null to subscribe to all topics.
-     * @param child      Can be null to indicate all children.  Child cannot be a DSNode.
-     * @param args       Optional.
-     * @param subscriber Can not be null.
+     * @param subscriber Required.
      */
-    public DSISubscription subscribe(DSITopic topic, DSInfo child, DSIValue args,
-                                     DSISubscriber subscriber) {
-        if (child != null) {
-            if (child.isNode()) {
-                throw new IllegalArgumentException("Must subscribe to nodes directly");
-            }
-        }
+    public DSISubscription subscribe(DSISubscriber subscriber) {
         if (subscriber == null) {
             throw new NullPointerException("Null subscriber");
         }
-        boolean firstSubscription;
+        boolean firstSubscription = subscription == null;
         Subscription sub = null;
         synchronized (mutex) {
             sub = subscription;
-            firstSubscription = (sub == null);
-            Subscription prev = null;
             while (sub != null) {
-                if (sub.matches(subscriber, topic, child, args)) {
+                if (sub == subscriber) {
                     return sub;
                 }
-                prev = sub;
                 sub = sub.next;
             }
-            sub = new Subscription(topic, child, args, subscriber);
-            if (prev == null) {
-                sub.next = subscription;
-                subscription = sub;
-            } else {
-                prev.next = sub;
-            }
+            sub = new Subscription(subscriber);
+            sub.next = subscription;
+            subscription = sub;
         }
         try {
             onSubscribe(sub);
@@ -1235,19 +1215,18 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      *
      * @param event Must not be null.
      * @param child Can be null.
+     * @param data  Can be null.
      */
-    protected void fire(DSIEvent event, DSInfo child) {
+    protected void fire(DSEvent event, DSInfo child, DSIValue data) {
         if (event == null) {
             throw new NullPointerException("Null event");
         }
         Subscription sub = subscription;
         while (sub != null) {
-            if (sub.matches(event.getTopic(), child)) {
-                try {
-                    sub.subscriber.onEvent(this, child, event);
-                } catch (Exception x) {
-                    error(getPath(), x);
-                }
+            try {
+                sub.getSubscriber().onEvent(event, this, child, data);
+            } catch (Exception x) {
+                error(getPath(), x);
             }
             sub = sub.next;
         }
@@ -1258,30 +1237,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     @Override
     protected String getLogName() {
-        DSNode parent = getParent();
-        if (parent != null) {
-            return parent.getLogName();
+        if (getParent() != null) {
+            return getParent().getLogger().getName() + '.' + getName().replace('.','_');
         }
         return super.getLogName();
-    }
-
-    /**
-     * Convenience that appends the given string to the ancestral log name with an interleaving
-     * period.
-     */
-    protected String getLogName(String name) {
-        String s = null;
-        DSNode parent = getParent();
-        if (parent != null) {
-            s = parent.getLogName();
-        }
-        if (s == null) {
-            return name;
-        }
-        if (name.startsWith(".") || s.endsWith(".")) {
-            return s + name;
-        }
-        return s + '.' + name;
     }
 
     /**
@@ -1319,27 +1278,37 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Called when the given child is added and in the stable state.
+     * Called when the given child is added and this is running.
      */
     protected void onChildAdded(DSInfo info) {
     }
 
     /**
-     * Called when the given child is changed and in the stable state.
+     * Called when the given child is changed and this is running.
      */
     protected void onChildChanged(DSInfo info) {
     }
 
     /**
-     * Called when the given child is removed and in the stable state.
+     * Called when the given child is removed and this is running.  This subtree will be notified
+     * via onRemoved before this is call.
+     *
+     * @param info The reference to this node as the parent will have already been cleared.
      */
     protected void onChildRemoved(DSInfo info) {
     }
 
     /**
-     * Called when the given info is modified and in the stable state.
+     * Called when the given info is modified and this is running.
      */
     protected void onInfoChanged(DSInfo info) {
+    }
+
+    /**
+     * Called when the node or one of its ancestors is being removed from the tree.
+     * Called on children first, and called before onStopped.
+     */
+    protected void onRemoved() {
     }
 
     /**
@@ -1467,7 +1436,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             } catch (Exception x) {
                 error(getPath(), x);
             }
-            fire(CHILD_ADDED, info);
+            fire(CHILD_ADDED_EVENT, info, null);
         }
     }
 
@@ -1507,6 +1476,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     ///////////////////////////////////////////////////////////////////////////
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    private void notifyRemoved(DSNode node) {
+        DSInfo info = node.getFirstNodeInfo();
+        while (info != null) {
+            notifyRemoved(info.getNode());
+            info = info.nextNode();
+        }
+        try {
+            node.onRemoved();
+        } catch (Exception x) {
+            error(getPath(), x);
+        }
+    }
 
     private void remove(Subscription toRemove) {
         Subscription removed = null;
@@ -1615,17 +1597,11 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     private class Subscription implements DSISubscription {
 
-        DSIValue args;
-        DSInfo child;
         Subscription next;
         boolean open = true;
         DSISubscriber subscriber;
-        DSITopic topic;
 
-        Subscription(DSITopic topic, DSInfo child, DSIValue args, DSISubscriber subscriber) {
-            this.topic = topic;
-            this.child = child;
-            this.args = args;
+        Subscription(DSISubscriber subscriber) {
             this.subscriber = subscriber;
         }
 
@@ -1646,18 +1622,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
 
         @Override
-        public DSInfo getChild() {
-            return child;
-        }
-
-        @Override
         public DSNode getNode() {
             return DSNode.this;
-        }
-
-        @Override
-        public DSIValue getParameters() {
-            return args;
         }
 
         @Override
@@ -1666,50 +1632,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
 
         @Override
-        public DSITopic getTopic() {
-            return topic;
-        }
-
-        @Override
         public boolean isOpen() {
             return open;
-        }
-
-        public boolean matches(DSITopic topic, DSInfo child) {
-            if (this.topic != null) {
-                if (!this.topic.matches(topic)) {
-                    return false;
-                }
-            }
-            if (this.child != null) {
-                return DSUtil.equal(child, this.child);
-            }
-            return true;
-        }
-
-        boolean matches(DSISubscriber subscriber, DSITopic topic, DSInfo child, DSIValue args) {
-            if (!DSUtil.equal(subscriber, this.subscriber)) {
-                return false;
-            }
-            if (!DSUtil.equal(args, this.args)) {
-                return false;
-            }
-            if (this.topic != null) {
-                if (topic == null) {
-                    return false;
-                }
-                if (!this.topic.matches(topic)) {
-                    return false;
-                }
-            }
-            return DSUtil.equal(child, this.child);
-        }
-
-        boolean matches(DSInfo child) {
-            if (this.child != null) {
-                return DSUtil.equal(this.child, child);
-            }
-            return false;
         }
 
     } //Subscription

@@ -34,7 +34,11 @@ public abstract class DSEnabledNode extends DSStatusNode implements DSIStatus {
      * @return Default implementation returns true.
      */
     public boolean isEnabled() {
-        return !getStatus().isDisabled();
+        return enabled.getElement().toBoolean();
+    }
+
+    public void setEnabled(boolean enabled) {
+        put(this.enabled, DSBool.valueOf(enabled));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -47,6 +51,17 @@ public abstract class DSEnabledNode extends DSStatusNode implements DSIStatus {
         declareDefault(ENABLED, DSBool.TRUE);
     }
 
+    @Override
+    protected int getThisStatus() {
+        int ret = super.getThisStatus();
+        if (isEnabled()) {
+            ret = ret & ~DSStatus.DISABLED;
+        } else {
+            ret = ret | DSStatus.DISABLED;
+        }
+        return ret;
+    }
+
     /**
      * Traps changes to the enabled property and updates the status accordingly.  Overrides
      * should call the super implemenation.
@@ -55,12 +70,12 @@ public abstract class DSEnabledNode extends DSStatusNode implements DSIStatus {
     protected void onChildChanged(DSInfo child) {
         if (child == enabled) {
             if (child.getElement().toBoolean()) {
-                updateStatus(DSStatus.ok, null);
+                updateStatus(null);
             } else {
-                updateStatus(DSStatus.disabled, null);
             }
         }
         super.onChildChanged(child);
     }
+
 
 }

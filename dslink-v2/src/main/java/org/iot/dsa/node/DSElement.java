@@ -60,16 +60,16 @@ public abstract class DSElement extends DSValue {
     }
 
     /**
-     * Whether or not the object represents an int.
+     * Whether or not the object represents a list or map.
      */
-    public boolean isInt() {
+    public boolean isGroup() {
         return false;
     }
 
     /**
-     * Whether or not the object represents a list or map.
+     * Whether or not the object represents an int.
      */
-    public boolean isGroup() {
+    public boolean isInt() {
         return false;
     }
 
@@ -272,7 +272,7 @@ public abstract class DSElement extends DSValue {
     }
 
     /**
-     * Returns the argument.
+     * Elements must convert the argument to their type.
      */
     @Override
     public DSIValue valueOf(DSElement arg) {

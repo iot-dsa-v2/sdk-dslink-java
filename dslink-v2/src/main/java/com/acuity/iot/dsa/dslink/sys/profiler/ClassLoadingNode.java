@@ -8,15 +8,7 @@ import java.util.List;
 public class ClassLoadingNode extends MXBeanNode {
 
     private ClassLoadingMXBean mxbean;
-
-    @Override
-    public void setupMXBean() {
-        mxbean = ManagementFactory.getClassLoadingMXBean();
-    }
-
-    @Override
-    public void refreshImpl() {
-    }
+    private static List<String> overriden = new ArrayList<String>();
 
     @Override
     public Object getMXBean() {
@@ -28,11 +20,18 @@ public class ClassLoadingNode extends MXBeanNode {
         return ClassLoadingMXBean.class;
     }
 
-    private static List<String> overriden = new ArrayList<String>();
-
     @Override
     public List<String> getOverriden() {
         return overriden;
+    }
+
+    @Override
+    public void refreshImpl() {
+    }
+
+    @Override
+    public void setupMXBean() {
+        mxbean = ManagementFactory.getClassLoadingMXBean();
     }
 
 }

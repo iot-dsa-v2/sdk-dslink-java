@@ -33,15 +33,6 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
         return link;
     }
 
-    @Override
-    protected String getLogName() {
-        String pre = "";
-        if (responder != null) {
-            pre = responder.getLogName();
-        }
-        return pre + "." + getClass().getSimpleName();
-    }
-
     public String getPath() {
         return path;
     }
@@ -68,6 +59,11 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
         return this;
     }
 
+    public DSInboundRequest setRequestId(Integer requestId) {
+        this.requestId = requestId;
+        return this;
+    }
+
     public DSInboundRequest setResponder(DSResponder responder) {
         this.responder = responder;
         return this;
@@ -75,11 +71,6 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
 
     public DSInboundRequest setSession(DSSession session) {
         this.session = session;
-        return this;
-    }
-
-    public DSInboundRequest setRequestId(Integer requestId) {
-        this.requestId = requestId;
         return this;
     }
 

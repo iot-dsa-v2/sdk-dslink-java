@@ -2,7 +2,6 @@ package org.iot.dsa.rollup;
 
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSLong;
-import org.iot.dsa.node.DSStatus;
 
 /**
  * The number of values in the rollup.

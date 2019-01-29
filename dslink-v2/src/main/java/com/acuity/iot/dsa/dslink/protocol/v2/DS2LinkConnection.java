@@ -6,6 +6,7 @@ import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INVALID
 import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_OK;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.protocol.DSUpstreamConnection;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
@@ -15,7 +16,6 @@ import java.security.SecureRandom;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkOptions;
-import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSInfo;
@@ -29,7 +29,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DS2LinkConnection extends DSLinkConnection {
+public class DS2LinkConnection extends DSUpstreamConnection {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -86,7 +86,6 @@ public class DS2LinkConnection extends DSLinkConnection {
         return getSession().getRequester();
     }
 
-    @Override
     public DS2Session getSession() {
         if (session == null) {
             session = new DS2Session(this);
@@ -106,6 +105,21 @@ public class DS2LinkConnection extends DSLinkConnection {
 
     @Override
     protected void checkConfig() {
+    }
+
+    @Override
+    protected void doConnect() {
+        try {
+            transport = makeTransport();
+            put(TRANSPORT, transport);
+            transport.setConnection(this);
+            transport.open();
+            performHandshake();
+            connOk();
+        } catch (Exception x) {
+            error(getPath(), x);
+            connDown(DSException.makeMessage(x));
+        }
     }
 
     /**
@@ -134,21 +148,6 @@ public class DS2LinkConnection extends DSLinkConnection {
         }
         debug(debug() ? "Connection URL = " + uri : null);
         return transport;
-    }
-
-    @Override
-    protected void doConnect() {
-        try {
-            transport = makeTransport();
-            put(TRANSPORT, transport);
-            transport.setConnection(this);
-            transport.open();
-            performHandshake();
-            connOk();
-        } catch (Exception x) {
-            error(getPath(), x);
-            connDown(DSException.makeMessage(x));
-        }
     }
 
     @Override

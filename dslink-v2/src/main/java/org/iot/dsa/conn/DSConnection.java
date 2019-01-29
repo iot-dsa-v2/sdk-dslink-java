@@ -1,13 +1,10 @@
 package org.iot.dsa.conn;
 
 import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.event.DSIEvent;
-import org.iot.dsa.node.event.DSITopic;
-import org.iot.dsa.node.event.DSTopic;
+import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
@@ -41,14 +38,26 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     protected static final String STATE_TIME = "State Time";
 
     /**
-     * The topic to subscribe to for connected events.
+     * Event ID.
      */
-    public static final DSConnectionTopic CONNECTED = new DSConnectionTopic("CONNECTED");
+    public static final String CONNECTED = "CONNECTED";
 
     /**
-     * The topic to subscribe to for disconnected events.
+     * Singleton instance, fired whenever a connection transitions to connected.  There will
+     * not be a child info or data accompanying the event.
      */
-    public static final DSConnectionTopic DISCONNECTED = new DSConnectionTopic("DISCONNECTED");
+    public static final DSEvent CONNECTED_EVENT = new DSEvent(CONNECTED);
+
+    /**
+     * Event ID.
+     */
+    public static final String DISCONNECTED = "DISCONNECTED";
+
+    /**
+     * Singleton instance, fired whenever a connection transitions to disconnected.  There will
+     * not be a child info or data accompanying the event.
+     */
+    public static final DSEvent DISCONNECTED_EVENT = new DSEvent(DISCONNECTED);
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -88,7 +97,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
             } catch (Exception x) {
                 error(error() ? getPath() : null, x);
             }
-            fire(DISCONNECTED, null);
+            fire(DISCONNECTED_EVENT, null, null);
         }
     }
 
@@ -118,7 +127,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
             } catch (Exception x) {
                 error(error() ? getPath() : null, x);
             }
-            fire(CONNECTED, null);
+            fire(CONNECTED_EVENT, null, null);
         }
     }
 
@@ -134,7 +143,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         put(state, DSConnectionState.CONNECTING);
         put(stateTime, DSDateTime.currentTime());
         notifyConnectedDescendants(this, this);
-        if (canConnect()) {
+        if (isEnabled() && canConnect()) {
             try {
                 doConnect();
             } catch (Throwable e) {
@@ -165,14 +174,14 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         put(state, DSConnectionState.DISCONNECTED);
         put(stateTime, DSDateTime.currentTime());
         notifyConnectedDescendants(this, this);
-        myStatus = myStatus.add(DSStatus.DOWN);
-        updateStatus(myStatus, null);
+        down = true;
+        updateStatus(null);
         try {
             onDisconnected();
         } catch (Exception x) {
             error(error() ? getPath() : null, x);
         }
-        fire(DISCONNECTED, null);
+        fire(DISCONNECTED_EVENT, null, null);
     }
 
     public DSConnectionState getConnectionState() {
@@ -316,42 +325,6 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
             }
             info = info.next();
         }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Used to notify subscribers of connected and disconnected events.
-     */
-    public static class DSConnectionTopic extends DSTopic implements DSIEvent {
-
-        String name;
-
-        // Prevent instantiation
-        private DSConnectionTopic(String name) {
-            this.name = name;
-        }
-
-        /**
-         * Returns null.
-         */
-        @Override
-        public DSMap getData() {
-            return null;
-        }
-
-        @Override
-        public DSITopic getTopic() {
-            return this;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-
     }
 
 }

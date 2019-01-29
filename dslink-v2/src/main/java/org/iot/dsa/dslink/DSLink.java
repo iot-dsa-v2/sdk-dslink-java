@@ -5,13 +5,15 @@ import java.net.URL;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.NodeDecoder;
-import org.iot.dsa.io.json.JsonReader;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.logging.DSLogHandler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.security.DSKeys;
 import org.iot.dsa.util.DSException;
+import org.iot.dsa.util.DSUtil;
 
 /**
  * The root node of a DSLink node tree with two children: main and sys.  Main is the root
@@ -33,6 +35,7 @@ public class DSLink extends DSNode implements Runnable {
 
     static final String MAIN = "main";
     static final String SYS = "sys";
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -120,29 +123,25 @@ public class DSLink extends DSNode implements Runnable {
         if (nodes.exists()) {
             logger.info("Loading node database " + nodes.getAbsolutePath());
             long time = System.currentTimeMillis();
-            JsonReader reader = new JsonReader(nodes);
-            DSNode node = NodeDecoder.decode(reader);
+            DSIReader reader = Json.reader(nodes);
+            ret = (DSLink) NodeDecoder.decode(reader);
             reader.close();
-            if (node instanceof DSLink) {
-                ret = (DSLink) node;
-            } else {
-                ret = new DSLink();
-                ret.setNodes((DSMainNode) node);
-            }
             ret.init(config);
             time = System.currentTimeMillis() - time;
             ret.info("Node database loaded: " + time + "ms");
         } else {
-            ret = new DSLink();
+            String type = config.getConfig("linkType", null);
+            if (type == null) {
+                ret = new DSLink();
+            } else {
+                ret = (DSLink) DSUtil.newInstance(type);
+            }
             ret.init(config);
             ret.info("Creating new database...");
-            String type = config.getMainType();
-            if (type == null) {
-                throw new IllegalStateException("Config missing the main node type");
-            }
+            type = config.getMainType();
             ret.debug("Main type: " + type);
             try {
-                DSNode node = (DSNode) Class.forName(type).newInstance();
+                DSNode node = (DSNode) DSUtil.newInstance(type);
                 ret.put(MAIN, node);
             } catch (Exception x) {
                 DSException.throwRuntime(x);
@@ -261,6 +260,7 @@ public class DSLink extends DSNode implements Runnable {
         declareDefault(SYS, new DSSysNode()).setAdmin(true);
     }
 
+    /*
     @Override
     protected String getLogName() {
         String s = getLinkName();
@@ -273,12 +273,15 @@ public class DSLink extends DSNode implements Runnable {
             } else if (s.startsWith("dslink-java-")) {
                 s = s.substring("dslink-java-".length());
             }
+        } else if (s.equals("dsbroker-java")) {
+            s = "broker";
         }
         if ((s == null) || s.isEmpty()) {
             return getClass().getSimpleName();
         }
         return s;
     }
+    */
 
     /**
      * Configures a link instance including creating the appropriate connection.

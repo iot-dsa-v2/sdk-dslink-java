@@ -1,8 +1,7 @@
 package org.iot.dsa.node;
 
 /**
- * These are the primitive types in the DSA protocol.  Not all primitive types translate to the JSON
- * type system, unlike DSElementType which does.
+ * These are the primitive types of DSA.  A different set of types than elements.
  *
  * @author Aaron Hansen
  */

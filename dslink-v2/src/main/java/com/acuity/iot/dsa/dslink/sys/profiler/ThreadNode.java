@@ -26,8 +26,77 @@ import org.iot.dsa.node.action.DSActionValues;
 
 public class ThreadNode extends MXBeanNode {
 
-    private ThreadMXBean mxbean;
     private Map<Long, ThreadInfoNode> infoNodes = new HashMap<Long, ThreadInfoNode>();
+    private ThreadMXBean mxbean;
+    private static List<String> overriden = new ArrayList<String>();
+
+    public ActionResult findDeadlocked(DSAction action) {
+        long[] ids = mxbean.findDeadlockedThreads();
+        return returnDeadlocked(action, ids != null ? ids : new long[0]);
+    }
+
+    public ActionResult findMonitorDeadlocked(DSAction action) {
+        long[] ids = mxbean.findMonitorDeadlockedThreads();
+        return returnDeadlocked(action, ids != null ? ids : new long[0]);
+    }
+
+    @Override
+    public Object getMXBean() {
+        return mxbean;
+    }
+
+    @Override
+    public Class<? extends Object> getMXInterface() {
+        return ThreadMXBean.class;
+    }
+
+    @Override
+    public List<String> getOverriden() {
+        return overriden;
+    }
+
+    @Override
+    public void refreshImpl() {
+        long[] ids = mxbean.getAllThreadIds();
+        DSList l = new DSList();
+        for (long id : ids) {
+            l.add(id);
+        }
+        putProp("AllThreadIds", l);
+        ThreadInfo[] infos = mxbean.getThreadInfo(ids, false, false);
+        Set<Long> prevIds = new HashSet<Long>(infoNodes.keySet());
+        for (ThreadInfo info : infos) {
+            long id = info.getThreadId();
+            prevIds.remove(id);
+            ThreadInfoNode infoNode = infoNodes.get(id);
+            if (infoNode == null) {
+                DSInfo dsinfo = put(
+                        info.getThreadName() + " #" + id,
+                        new ThreadInfoNode(id)).setTransient(true);
+                infoNode = (ThreadInfoNode) dsinfo.getNode();
+                infoNodes.put(id, infoNode);
+            }
+            infoNode.update(info, mxbean.getThreadCpuTime(id), mxbean.getThreadUserTime(id));
+        }
+        for (long id : prevIds) {
+            ThreadInfoNode infoNode = infoNodes.get(id);
+            ThreadInfo info = mxbean.getThreadInfo(id);
+            if (infoNode != null && info != null) {
+                infoNode.update(info, mxbean.getThreadCpuTime(id), mxbean.getThreadUserTime(id));
+            } else {
+                ThreadInfoNode removed = infoNodes.remove(id);
+                if (removed != null) {
+                    remove(removed.getInfo());
+                }
+            }
+
+        }
+    }
+
+    @Override
+    public void setupMXBean() {
+        mxbean = ManagementFactory.getThreadMXBean();
+    }
 
     @Override
     protected void declareDefaults() {
@@ -80,16 +149,6 @@ public class ThreadNode extends MXBeanNode {
         return new DSActionValues(action).addResult(DSString.valueOf(dump.toString()));
     }
 
-    public ActionResult findDeadlocked(DSAction action) {
-        long[] ids = mxbean.findDeadlockedThreads();
-        return returnDeadlocked(action, ids != null ? ids : new long[0]);
-    }
-
-    public ActionResult findMonitorDeadlocked(DSAction action) {
-        long[] ids = mxbean.findMonitorDeadlockedThreads();
-        return returnDeadlocked(action, ids != null ? ids : new long[0]);
-    }
-
     private ActionResult returnDeadlocked(final DSAction action, long[] deadlockedIds) {
         DSList l = new DSList();
         for (long id : deadlockedIds) {
@@ -97,10 +156,6 @@ public class ThreadNode extends MXBeanNode {
         }
         final List<DSIValue> values = Collections.singletonList((DSIValue) l);
         return new ActionValues() {
-
-            @Override
-            public void onClose() {
-            }
 
             @Override
             public ActionSpec getAction() {
@@ -121,71 +176,15 @@ public class ThreadNode extends MXBeanNode {
             public DSIValue getValue(int idx) {
                 return values.get(idx);
             }
+
+            @Override
+            public void onClose() {
+            }
         };
     }
 
-    @Override
-    public void setupMXBean() {
-        mxbean = ManagementFactory.getThreadMXBean();
-    }
-
-    @Override
-    public void refreshImpl() {
-        long[] ids = mxbean.getAllThreadIds();
-        DSList l = new DSList();
-        for (long id : ids) {
-            l.add(id);
-        }
-        putProp("AllThreadIds", l);
-        ThreadInfo[] infos = mxbean.getThreadInfo(ids, false, false);
-        Set<Long> prevIds = new HashSet<Long>(infoNodes.keySet());
-        for (ThreadInfo info : infos) {
-            long id = info.getThreadId();
-            prevIds.remove(id);
-            ThreadInfoNode infoNode = infoNodes.get(id);
-            if (infoNode == null) {
-                DSInfo dsinfo = put(
-                        info.getThreadName() + " #" + id,
-                        new ThreadInfoNode(id)).setTransient(true);
-                infoNode = (ThreadInfoNode) dsinfo.getNode();
-                infoNodes.put(id, infoNode);
-            }
-            infoNode.update(info, mxbean.getThreadCpuTime(id), mxbean.getThreadUserTime(id));
-        }
-        for (long id : prevIds) {
-            ThreadInfoNode infoNode = infoNodes.get(id);
-            ThreadInfo info = mxbean.getThreadInfo(id);
-            if (infoNode != null && info != null) {
-                infoNode.update(info, mxbean.getThreadCpuTime(id), mxbean.getThreadUserTime(id));
-            } else {
-                ThreadInfoNode removed = infoNodes.remove(id);
-                if (removed != null) {
-                    remove(removed.getInfo());
-                }
-            }
-
-        }
-    }
-
-    @Override
-    public Object getMXBean() {
-        return mxbean;
-    }
-
-    @Override
-    public Class<? extends Object> getMXInterface() {
-        return ThreadMXBean.class;
-    }
-
-    private static List<String> overriden = new ArrayList<String>();
-
     static {
         overriden.add("AllThreadIds");
-    }
-
-    @Override
-    public List<String> getOverriden() {
-        return overriden;
     }
 
 }

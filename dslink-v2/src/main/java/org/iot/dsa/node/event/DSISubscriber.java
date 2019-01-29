@@ -5,14 +5,13 @@ import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 
 /**
- * DSISubscribers subscribe to DSTopics on DSNodes.
+ * DSISubscribers subscribe to DSEvents on DSNodes.
  * <p>
- * The two most important topics are built into every node, they are: DSValueTopic and DSInfoTopic.
+ * The two most important events are built into every node, they are: DSValueEvent and DSInfoEvent.
  *
  * @author Aaron Hansen
- * @see DSIEvent
- * @see DSITopic
- * @see DSNode#subscribe(DSITopic, DSInfo, DSIValue, DSISubscriber)
+ * @see DSEvent
+ * @see DSNode#subscribe(DSISubscriber)
  */
 public interface DSISubscriber {
 
@@ -26,10 +25,11 @@ public interface DSISubscriber {
     /**
      * Subscription callback.
      *
+     * @param event Required, the event of the event.
      * @param node  Required, the node firing the event.
      * @param child Optional, if the event concerns a child.
-     * @param event Required, the actual event.
+     * @param data  Optional, if the event supplies any data.
      */
-    public void onEvent(DSNode node, DSInfo child, DSIEvent event);
+    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data);
 
 }

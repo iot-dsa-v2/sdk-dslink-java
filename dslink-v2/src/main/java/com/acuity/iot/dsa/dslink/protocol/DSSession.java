@@ -38,20 +38,20 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private final Object outgoingMutex = new Object();
     private int ackRcvd = -1;
-    private int ackToSend = -1;
     private int ackRequired = 0;
+    private int ackToSend = -1;
     private boolean connected = false;
     private DSLinkConnection connection;
     private long lastTimeRecv;
     private long lastTimeSend;
     private int messageId = 0;
     private int nextMessage = 1;
-    private final Object outgoingMutex = new Object();
     private ConcurrentLinkedQueue<OutboundMessage> outgoingRequests = new ConcurrentLinkedQueue<OutboundMessage>();
     private ConcurrentLinkedQueue<OutboundMessage> outgoingResponses = new ConcurrentLinkedQueue<OutboundMessage>();
-    private DSInfo requesterAllowed = getInfo(REQUESTER_ALLOWED);
     private ReadThread readThread;
+    private DSInfo requesterAllowed = getInfo(REQUESTER_ALLOWED);
     private WriteThread writeThread;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -192,11 +192,6 @@ public abstract class DSSession extends DSNode implements DSIConnected {
      */
     protected abstract void doSendMessage() throws Exception;
 
-    @Override
-    protected String getLogName() {
-        return getLogName("session");
-    }
-
     protected int getMissingAcks() {
         if (ackRequired > 0) {
             return ackRequired - ackRcvd - 1;
@@ -286,8 +281,9 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         outgoingResponses.clear();
         notifyOutgoing();
         try {
-            if (Thread.currentThread() != readThread) {
-                readThread.join();
+            Thread thread = readThread;
+            if ((thread != null) && (Thread.currentThread() != thread)) {
+                thread.join();
             }
         } catch (Exception x) {
             debug(getPath(), x);
@@ -306,8 +302,9 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         connected = false;
         notifyOutgoing();
         try {
-            if (Thread.currentThread() != writeThread) {
-                writeThread.join();
+            Thread thread = writeThread;
+            if ((thread != null) && (Thread.currentThread() != thread)) {
+                thread.join();
             }
         } catch (Exception x) {
             debug(getPath(), x);

@@ -1,6 +1,10 @@
 package org.iot.dsa.io.json;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.zip.ZipInputStream;
 
 /**
@@ -11,9 +15,8 @@ import java.util.zip.ZipInputStream;
 class JsonInput implements JsonReader.Input {
 
     private static final int BUF_SIZE = 8192;
-
-    private Reader in;
     private char[] buf = new char[BUF_SIZE];
+    private Reader in;
     private int len;
     private int next;
 
@@ -40,14 +43,6 @@ class JsonInput implements JsonReader.Input {
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
-    }
-
-    private void fill() throws IOException {
-        if (in == null) {
-            return;
-        }
-        len = in.read(buf, 0, buf.length);
-        next = 0;
     }
 
     public int read() {
@@ -83,7 +78,7 @@ class JsonInput implements JsonReader.Input {
                     (zip[1] == 0x4b) &&
                     (zip[2] == 0x03) &&
                     (zip[3] == 0x04)) {
-                ZipInputStream unzip = new ZipInputStream(new BufferedInputStream(in));
+                ZipInputStream unzip = new ZipInputStream(in);
                 unzip.getNextEntry();
                 in = unzip;
             }
@@ -107,6 +102,14 @@ class JsonInput implements JsonReader.Input {
         if (next > 0) {
             --next;
         }
+    }
+
+    private void fill() throws IOException {
+        if (in == null) {
+            return;
+        }
+        len = in.read(buf, 0, buf.length);
+        next = 0;
     }
 
 

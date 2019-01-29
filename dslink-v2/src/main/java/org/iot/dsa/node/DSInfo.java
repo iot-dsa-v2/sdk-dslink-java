@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.node.event.DSNodeTopic;
+import org.iot.dsa.node.action.DSISetAction;
 import org.iot.dsa.util.DSUtil;
 
 /**
@@ -364,7 +364,7 @@ public class DSInfo implements ApiObject, GroupListener {
      * Whether or not an object can be written by a client.
      */
     public boolean isReadOnly() {
-        return getFlag(READONLY);
+        return getFlag(READONLY) || (object instanceof DSISetAction);
     }
 
     /**
@@ -588,7 +588,7 @@ public class DSInfo implements ApiObject, GroupListener {
 
     private void fireInfoChanged() {
         if ((parent != null) && (parent.isRunning())) {
-            parent.fire(DSNodeTopic.METADATA_CHANGED, this);
+            parent.fire(DSNode.METADATA_CHANGED_EVENT, this, null);
         }
     }
 

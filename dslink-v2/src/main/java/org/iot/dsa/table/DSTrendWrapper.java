@@ -30,6 +30,20 @@ public class DSTrendWrapper implements DSITrend {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
+    public int getColumnCount() {
+        return inner.getColumnCount();
+    }
+
+    public DSITrend getInner() {
+        return inner;
+    }
+
+    @Override
+    public void getMetadata(int index, DSMap bucket) {
+        inner.getMetadata(index, bucket);
+    }
+
+    @Override
     public int getStatus() {
         return inner.getStatus();
     }
@@ -54,6 +68,11 @@ public class DSTrendWrapper implements DSITrend {
     }
 
     @Override
+    public DSIValue getValue(int index) {
+        return inner.getValue(index);
+    }
+
+    @Override
     public int getValueColumn() {
         return inner.getValueColumn();
     }
@@ -61,25 +80,6 @@ public class DSTrendWrapper implements DSITrend {
     @Override
     public boolean next() {
         return false;
-    }
-
-    @Override
-    public int getColumnCount() {
-        return inner.getColumnCount();
-    }
-
-    public DSITrend getInner() {
-        return inner;
-    }
-
-    @Override
-    public void getMetadata(int index, DSMap bucket) {
-        inner.getMetadata(index, bucket);
-    }
-
-    @Override
-    public DSIValue getValue(int index) {
-        return inner.getValue(index);
     }
 
 }

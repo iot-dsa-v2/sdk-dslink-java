@@ -4,8 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.io.json.JsonReader;
-import org.iot.dsa.io.json.JsonWriter;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
 import org.testng.Assert;
@@ -31,7 +30,7 @@ public class JsonTest {
     @Test
     public void theTest() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DSIWriter out = new JsonWriter(baos);
+        DSIWriter out = Json.writer(baos);
         out.beginList();
         {
             out.beginMap()
@@ -62,11 +61,10 @@ public class JsonTest {
         out.endList();
         out.close();
         byte[] encoded = baos.toByteArray();
-        DSIReader parser = new JsonReader(new ByteArrayInputStream(encoded),
-                                          "UTF-8");
+        DSIReader parser = Json.reader(new ByteArrayInputStream(encoded));
         DSList decoded = parser.getElement().toList();
         parser.close();
-        parser = new JsonReader(new ByteArrayInputStream(encoded), "UTF-8");
+        parser = Json.reader(new ByteArrayInputStream(encoded));
         DSElement tmp = parser.getElement();
         parser.close();
         Assert.assertTrue(decoded.equals(tmp));

@@ -86,7 +86,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
                 subscription.setQos(qos);
             }
             enqueue(subscription);
-        } else  {
+        } else {
             trace(trace() ? String.format("Subscribing (sid=%s,qos=%s) %s", sid, qos, path)
                           : null);
             subscription = makeSubscription(sid, path, qos);
@@ -153,14 +153,6 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
             enqueued = true;
         }
         responder.sendResponse(this);
-    }
-
-    @Override
-    protected String getLogName() {
-        if (responder != null) {
-            return responder.getLogName() + ".subscriptions";
-        }
-        return getClass().getName();
     }
 
     /**

@@ -7,25 +7,13 @@ import java.util.List;
 public class MemoryManagerNode extends MXBeanNode {
 
     private MemoryManagerMXBean mxbean;
+    private static List<String> overriden = new ArrayList<String>();
 
     public MemoryManagerNode() {
     }
 
     public MemoryManagerNode(MemoryManagerMXBean mxbean) {
         this.mxbean = mxbean;
-    }
-
-    @Override
-    public void setupMXBean() {
-        if (mxbean == null) {
-            getParent().remove(getInfo());
-        }
-    }
-
-    @Override
-    public void refreshImpl() {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -38,11 +26,22 @@ public class MemoryManagerNode extends MXBeanNode {
         return MemoryManagerMXBean.class;
     }
 
-    private static List<String> overriden = new ArrayList<String>();
-
     @Override
     public List<String> getOverriden() {
         return overriden;
+    }
+
+    @Override
+    public void refreshImpl() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void setupMXBean() {
+        if (mxbean == null) {
+            getParent().remove(getInfo());
+        }
     }
 
 }

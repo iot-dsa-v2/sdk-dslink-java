@@ -40,12 +40,12 @@ public class StreamTableTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe(DSLinkConnection.CONNECTED, null, (node, child, event) -> {
+        link.getConnection().subscribe((event, node, child, data) -> {
             success = true;
             synchronized (StreamTableTest.this) {
                 StreamTableTest.this.notifyAll();
             }
-        });
+        }, DSLinkConnection.CONNECTED_EVENT, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         synchronized (this) {

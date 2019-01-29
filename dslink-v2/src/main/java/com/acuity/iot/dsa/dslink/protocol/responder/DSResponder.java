@@ -32,7 +32,8 @@ public abstract class DSResponder extends DSNode {
     // Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DSResponder() {}
+    public DSResponder() {
+    }
 
     public DSResponder(DSSession session) {
         this.session = session;
@@ -113,11 +114,6 @@ public abstract class DSResponder extends DSNode {
     /////////////////////////////////////////////////////////////////
     // Protected Methods
     /////////////////////////////////////////////////////////////////
-
-    @Override
-    protected String getLogName() {
-        return getLogName("responder");
-    }
 
     protected abstract DSInboundSubscriptions getSubscriptions();
 

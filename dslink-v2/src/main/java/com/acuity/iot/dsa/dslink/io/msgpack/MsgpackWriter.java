@@ -21,8 +21,8 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
 
     protected DSByteBuffer byteBuffer = new DSByteBuffer();
     private CharBuffer charBuffer;
-    private Frame frame;
     private CharsetEncoder encoder = DSString.UTF8.newEncoder();
+    private Frame frame;
     private ByteBuffer strBuffer;
 
     // Constructors
@@ -54,55 +54,6 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     }
 
     /**
-     * Used by writeString(), returns the string wrapped in a charbuffer that is ready for reading
-     * (getting).  Attempts to reuse the same buffer as much as possible.
-     */
-    private CharBuffer getCharBuffer(CharSequence arg) {
-        int len = arg.length();
-        if (charBuffer == null) {
-            int tmp = 1024;
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            charBuffer = CharBuffer.allocate(tmp);
-        } else if (charBuffer.capacity() < len) {
-            int tmp = charBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            charBuffer = CharBuffer.allocate(tmp);
-        } else {
-            charBuffer.clear();
-        }
-        charBuffer.append(arg);
-        charBuffer.flip();
-        return charBuffer;
-    }
-
-    /**
-     * Called by writeString(), returns a bytebuffer for the given capacity ready for writing
-     * (putting).  Attempts to reuse the same buffer as much as possible.
-     */
-    private ByteBuffer getStringBuffer(int len) {
-        if (strBuffer == null) {
-            int tmp = 1024;
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
-        } else if (strBuffer.capacity() < len) {
-            int tmp = strBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
-        } else {
-            strBuffer.clear();
-        }
-        return strBuffer;
-    }
-
-    /**
      * Returns the number of bytes in the outgoing byte buffer.
      */
     public int length() {
@@ -120,11 +71,45 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     }
 
     @Override
-    protected void writeSeparator() throws IOException {
+    public void writeNewLineIndent() {
     }
 
-    @Override
-    public void writeNewLineIndent() {
+    /**
+     * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
+     */
+    public void writeTo(ByteBuffer out) {
+        byteBuffer.sendTo(out);
+    }
+
+    /**
+     * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
+     */
+    public void writeTo(DSBinaryTransport out) {
+        byteBuffer.sendTo(out, (frame == null));
+    }
+
+    /**
+     * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
+     *
+     * @throws DSException if there is an IOException.
+     */
+    public void writeTo(OutputStream out) {
+        try {
+            byteBuffer.sendTo(out);
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
+    }
+
+    /**
+     * Writes the UTF8 bytes to the underlying buffer.
+     */
+    public void writeUTF8(CharSequence arg) {
+        CharBuffer chars = getCharBuffer(arg);
+        ByteBuffer strBuffer = getStringBuffer(chars.position() * (int) encoder.maxBytesPerChar());
+        encoder.encode(chars, strBuffer, false);
+        byteBuffer.put(strBuffer);
+        encoder.reset();
     }
 
     @Override
@@ -296,6 +281,67 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         byteBuffer.put(NULL);
     }
 
+    @Override
+    protected void writeSeparator() throws IOException {
+    }
+
+    @Override
+    protected void writeValue(CharSequence arg) throws IOException {
+        if (frame != null) {
+            frame.increment();
+        }
+        writeString(arg);
+    }
+
+    /**
+     * Used by writeString(), returns the string wrapped in a charbuffer that is ready for reading
+     * (getting).  Attempts to reuse the same buffer as much as possible.
+     */
+    private CharBuffer getCharBuffer(CharSequence arg) {
+        int len = arg.length();
+        if (charBuffer == null) {
+            int tmp = 1024;
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            charBuffer = CharBuffer.allocate(tmp);
+        } else if (charBuffer.capacity() < len) {
+            int tmp = charBuffer.capacity();
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            charBuffer = CharBuffer.allocate(tmp);
+        } else {
+            charBuffer.clear();
+        }
+        charBuffer.append(arg);
+        charBuffer.flip();
+        return charBuffer;
+    }
+
+    /**
+     * Called by writeString(), returns a bytebuffer for the given capacity ready for writing
+     * (putting).  Attempts to reuse the same buffer as much as possible.
+     */
+    private ByteBuffer getStringBuffer(int len) {
+        if (strBuffer == null) {
+            int tmp = 1024;
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            strBuffer = ByteBuffer.allocate(tmp);
+        } else if (strBuffer.capacity() < len) {
+            int tmp = strBuffer.capacity();
+            while (tmp < len) {
+                tmp += 1024;
+            }
+            strBuffer = ByteBuffer.allocate(tmp);
+        } else {
+            strBuffer.clear();
+        }
+        return strBuffer;
+    }
+
     private void writeString(CharSequence arg) throws IOException {
         CharBuffer chars = getCharBuffer(arg);
         ByteBuffer strBuffer = getStringBuffer(
@@ -316,52 +362,6 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         }
         byteBuffer.put(strBuffer);
         encoder.reset();
-    }
-
-    /**
-     * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
-     */
-    public void writeTo(ByteBuffer out) {
-        byteBuffer.sendTo(out);
-    }
-
-    /**
-     * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
-     */
-    public void writeTo(DSBinaryTransport out) {
-        byteBuffer.sendTo(out, (frame == null));
-    }
-
-    /**
-     * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
-     *
-     * @throws DSException if there is an IOException.
-     */
-    public void writeTo(OutputStream out) {
-        try {
-            byteBuffer.sendTo(out);
-        } catch (Exception x) {
-            DSException.throwRuntime(x);
-        }
-    }
-
-    /**
-     * Writes the UTF8 bytes to the underlying buffer.
-     */
-    public void writeUTF8(CharSequence arg) {
-        CharBuffer chars = getCharBuffer(arg);
-        ByteBuffer strBuffer = getStringBuffer(chars.position() * (int) encoder.maxBytesPerChar());
-        encoder.encode(chars, strBuffer, false);
-        byteBuffer.put(strBuffer);
-        encoder.reset();
-    }
-
-    @Override
-    protected void writeValue(CharSequence arg) throws IOException {
-        if (frame != null) {
-            frame.increment();
-        }
-        writeString(arg);
     }
 
     // Inner Classes

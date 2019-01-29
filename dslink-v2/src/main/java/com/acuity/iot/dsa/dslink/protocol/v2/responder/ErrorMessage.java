@@ -19,8 +19,8 @@ import org.iot.dsa.util.DSException;
  */
 class ErrorMessage implements MessageConstants, OutboundMessage {
 
-    private DSInboundRequest req;
     private Throwable reason;
+    private DSInboundRequest req;
 
     public ErrorMessage(DSInboundRequest req, Throwable reason) {
         this.req = req;

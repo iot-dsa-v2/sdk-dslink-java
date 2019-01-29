@@ -253,6 +253,9 @@ public class DSPath extends DSValue {
             buf.append('/');
             encodeName(nodes.get(i).getName(), buf);
         }
+        if (buf.length() == 0) {
+            buf.append('/');
+        }
         return buf;
     }
 

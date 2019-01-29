@@ -54,20 +54,6 @@ public class DSByteBuffer extends InputStream {
     }
 
     /**
-     * Increases the childCount of the buffer to at least the given.
-     */
-    private void growBuffer(int minSize) {
-        int size = buffer.length;
-        while (size < minSize) {
-            size *= 2;
-        }
-        byte[] tmp = new byte[size];
-        System.arraycopy(buffer, offset, tmp, 0, length);
-        buffer = tmp;
-        offset = 0;
-    }
-
-    /**
      * Number of bytes available for reading.
      */
     public int length() {
@@ -632,6 +618,20 @@ public class DSByteBuffer extends InputStream {
         byte[] ret = new byte[length];
         sendTo(ret, 0, length);
         return ret;
+    }
+
+    /**
+     * Increases the childCount of the buffer to at least the given.
+     */
+    private void growBuffer(int minSize) {
+        int size = buffer.length;
+        while (size < minSize) {
+            size *= 2;
+        }
+        byte[] tmp = new byte[size];
+        System.arraycopy(buffer, offset, tmp, 0, length);
+        buffer = tmp;
+        offset = 0;
     }
 
 }

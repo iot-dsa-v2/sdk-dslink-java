@@ -72,7 +72,7 @@ public class DSString extends DSElement implements Comparable<Object> {
      * Wraps String.format
      */
     public static DSString format(String format, Object... args) {
-        return valueOf(String.format(format,args));
+        return valueOf(String.format(format, args));
     }
 
     @Override
@@ -120,12 +120,18 @@ public class DSString extends DSElement implements Comparable<Object> {
 
     @Override
     public DSString valueOf(DSElement arg) {
+        if (arg.isString()) {
+            return (DSString) arg;
+        }
         return valueOf(arg.toString());
     }
 
     public static DSString valueOf(Object arg) {
         if (arg == null) {
             return NULL;
+        }
+        if (arg instanceof DSElement) {
+            return NULL.valueOf((DSElement) arg);
         }
         String str = arg.toString();
         if (str.isEmpty()) {

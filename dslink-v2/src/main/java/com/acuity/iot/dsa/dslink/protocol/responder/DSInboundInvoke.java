@@ -2,9 +2,9 @@ package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
+import com.acuity.iot.dsa.dslink.protocol.message.DSTarget;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.protocol.message.DSTarget;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.DSPermissionException;
@@ -18,7 +18,6 @@ import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.ActionValues;
-import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.security.DSPermission;
 import org.iot.dsa.table.DSIRow;
 import org.iot.dsa.table.DSIRowCursor;

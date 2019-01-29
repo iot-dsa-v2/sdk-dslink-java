@@ -3,7 +3,7 @@ package org.iot.dsa.io;
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import org.iot.dsa.io.DSIReader.Token;
-import org.iot.dsa.io.json.JsonReader;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIStorable;
@@ -56,7 +56,7 @@ public class NodeDecoder {
      */
     public static DSNode decode(byte[] bytes) {
         ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-        JsonReader reader = new JsonReader(bin, "UTF-8");
+        DSIReader reader = Json.reader(bin);
         DSNode ret = decode(reader);
         reader.close();
         return ret;

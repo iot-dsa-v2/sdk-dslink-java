@@ -5,7 +5,7 @@ package org.iot.dsa.io.json;
  *
  * @author Aaron Hansen
  */
-public interface JsonConstants {
+interface JsonConstants {
 
     // Constants
     // ---------

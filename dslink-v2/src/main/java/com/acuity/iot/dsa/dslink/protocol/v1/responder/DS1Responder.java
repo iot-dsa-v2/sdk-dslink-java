@@ -3,7 +3,12 @@ package com.acuity.iot.dsa.dslink.protocol.v1.responder;
 import com.acuity.iot.dsa.dslink.protocol.DSProtocolException;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
-import com.acuity.iot.dsa.dslink.protocol.responder.*;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundInvoke;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundList;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
+import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v1.CloseMessage;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSElement;
@@ -28,7 +33,8 @@ public class DS1Responder extends DSResponder {
     // Methods - Constructors
     /////////////////////////////////////////////////////////////////
 
-    public DS1Responder() {}
+    public DS1Responder() {
+    }
 
     public DS1Responder(DSSession session) {
         super(session);
@@ -37,22 +43,6 @@ public class DS1Responder extends DSResponder {
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
-
-    /**
-     * Will throw an exception if the request doesn't have the path.
-     */
-    private String getPath(DSMap req) {
-        String path = req.get("path", null);
-        if (path == null) {
-            throw new DSProtocolException("Request missing path");
-        }
-        return path;
-    }
-
-    @Override
-    protected DSInboundSubscriptions getSubscriptions() {
-        return subscriptions;
-    }
 
     /**
      * Process an individual request.
@@ -139,6 +129,34 @@ public class DS1Responder extends DSResponder {
             error(getPath(), x);
             sendError(rid, x);
         }
+    }
+
+    public void sendClose(int rid) {
+        sendResponse(new CloseMessage(rid));
+    }
+
+    public void sendError(int rid, Throwable reason) {
+        sendResponse(new ErrorMessage(rid, reason));
+    }
+
+    public void sendError(DSInboundRequest req, Throwable reason) {
+        sendResponse(new ErrorMessage(req.getRequestId(), reason));
+    }
+
+    @Override
+    protected DSInboundSubscriptions getSubscriptions() {
+        return subscriptions;
+    }
+
+    /**
+     * Will throw an exception if the request doesn't have the path.
+     */
+    private String getPath(DSMap req) {
+        String path = req.get("path", null);
+        if (path == null) {
+            throw new DSProtocolException("Request missing path");
+        }
+        return path;
     }
 
     /**
@@ -229,18 +247,6 @@ public class DS1Responder extends DSResponder {
                 }
             }
         }
-    }
-
-    public void sendClose(int rid) {
-        sendResponse(new CloseMessage(rid));
-    }
-
-    public void sendError(int rid, Throwable reason) {
-        sendResponse(new ErrorMessage(rid, reason));
-    }
-
-    public void sendError(DSInboundRequest req, Throwable reason) {
-        sendResponse(new ErrorMessage(req.getRequestId(), reason));
     }
 
     /**

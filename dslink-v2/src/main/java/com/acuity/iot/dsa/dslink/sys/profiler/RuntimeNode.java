@@ -13,23 +13,22 @@ import org.iot.dsa.node.DSString;
 public class RuntimeNode extends MXBeanNode {
 
     private RuntimeMXBean mxbean;
+    private static List<String> overriden = new ArrayList<String>();
     private DSNode systemNode;
 
     @Override
-    protected void declareDefaults() {
-        super.declareDefaults();
-        declareDefault("SystemProperties", new DSNode());
+    public Object getMXBean() {
+        return mxbean;
     }
 
     @Override
-    protected void onStable() {
-        systemNode = getNode("SystemProperties");
-        super.onStable();
+    public Class<? extends Object> getMXInterface() {
+        return RuntimeMXBean.class;
     }
 
     @Override
-    public void setupMXBean() {
-        mxbean = ManagementFactory.getRuntimeMXBean();
+    public List<String> getOverriden() {
+        return overriden;
     }
 
     @Override
@@ -45,27 +44,26 @@ public class RuntimeNode extends MXBeanNode {
     }
 
     @Override
-    public Object getMXBean() {
-        return mxbean;
+    public void setupMXBean() {
+        mxbean = ManagementFactory.getRuntimeMXBean();
     }
 
     @Override
-    public Class<? extends Object> getMXInterface() {
-        return RuntimeMXBean.class;
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault("SystemProperties", new DSNode());
     }
 
-
-    private static List<String> overriden = new ArrayList<String>();
+    @Override
+    protected void onStable() {
+        systemNode = getNode("SystemProperties");
+        super.onStable();
+    }
 
     static {
         overriden.add("SystemProperties");
         overriden.add("StartTime");
         overriden.add("Uptime");
-    }
-
-    @Override
-    public List<String> getOverriden() {
-        return overriden;
     }
 
 }
