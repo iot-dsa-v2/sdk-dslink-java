@@ -78,7 +78,7 @@ class JsonInput implements JsonReader.Input {
                     (zip[1] == 0x4b) &&
                     (zip[2] == 0x03) &&
                     (zip[3] == 0x04)) {
-                ZipInputStream unzip = new ZipInputStream(new BufferedInputStream(in));
+                ZipInputStream unzip = new ZipInputStream(in);
                 unzip.getNextEntry();
                 in = unzip;
             }

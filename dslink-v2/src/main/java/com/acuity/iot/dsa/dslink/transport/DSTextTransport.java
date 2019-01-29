@@ -10,6 +10,10 @@ import java.io.Writer;
  */
 public abstract class DSTextTransport extends DSTransport {
 
+    /////////////////////////////////////////////////////////////////
+    // Methods - In alphabetical order by method name.
+    /////////////////////////////////////////////////////////////////
+
     public abstract Reader getReader();
 
     public abstract Writer getWriter();

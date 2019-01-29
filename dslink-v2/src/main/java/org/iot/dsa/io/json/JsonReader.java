@@ -1,5 +1,6 @@
 package org.iot.dsa.io.json;
 
+import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -211,6 +212,9 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
      */
     public JsonReader setInput(InputStream inputStream, String charset) {
         try {
+            if (!(inputStream instanceof BufferedInputStream)) {
+                inputStream = new BufferedInputStream(inputStream);
+            }
             if (this.in instanceof JsonInput) {
                 ((JsonInput) this.in).setInput(inputStream, charset);
             } else {

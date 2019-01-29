@@ -220,13 +220,13 @@ public class DSInboundSubscription extends DSInboundRequest
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
                 node = (DSNode) obj;
-                this.subscription = node.subscribe(this);
+                this.subscription = node.subscribe(this, DSNode.VALUE_CHANGED_EVENT, null);
                 onEvent(DSNode.VALUE_CHANGED_EVENT, node, null, null);
             } else {
                 DSInfo info = path.getTargetInfo();
                 node = path.getNode();
                 child = info;
-                this.subscription = node.subscribe(this);
+                this.subscription = node.subscribe(this, DSNode.VALUE_CHANGED_EVENT, info);
                 onEvent(DSNode.VALUE_CHANGED_EVENT, node, info, null);
             }
         }

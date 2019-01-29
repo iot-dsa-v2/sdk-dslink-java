@@ -2,11 +2,11 @@ package com.acuity.iot.dsa.dslink.protocol.v1;
 
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
+import com.acuity.iot.dsa.dslink.protocol.DSUpstreamConnection;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIWriter;
@@ -19,7 +19,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DS1LinkConnection extends DSLinkConnection {
+public class DS1LinkConnection extends DSUpstreamConnection {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -60,7 +60,6 @@ public class DS1LinkConnection extends DSLinkConnection {
         return getSession().getRequester();
     }
 
-    @Override
     public DS1Session getSession() {
         if (session == null) {
             session = new DS1Session(this);

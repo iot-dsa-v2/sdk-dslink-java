@@ -574,11 +574,11 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     public DSInfo getVirtualAction(DSInfo target, String name) {
         DSInfo info = null;
         if (target.is(DSISetAction.class)) {
-            if (target.getFlag(DSInfo.READONLY)) {
-                throw new IllegalStateException("Value is readonly: " + name);
-            }
             DSISetAction sa = (DSISetAction) target.get();
             if (name.equals(sa.getSetActionName())) {
+                if (target.getFlag(DSInfo.READONLY)) {
+                    throw new IllegalStateException("Value is readonly: " + name);
+                }
                 return actionInfo(sa.getSetActionName(), sa.getSetAction());
             }
         }
@@ -619,7 +619,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 throw new IllegalArgumentException("DSInfo target is from another node.");
             }
         } else if (target.is(DSISetAction.class)) {
-            bucket.add(((DSISetAction)target.get()).getSetActionName());
+            if (!target.getFlag(DSInfo.READONLY)) {
+                bucket.add(((DSISetAction) target.get()).getSetActionName());
+            }
         }
         if (target.isRemovable()) {
             bucket.add(DeleteAction.DELETE);
@@ -1114,8 +1116,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param child      Optional.
      */
     public DSISubscription subscribe(DSISubscriber subscriber, DSEvent event, DSInfo child) {
-        subscribe(new DSEventFilter(subscriber, event, child));
-        return null;
+        return subscribe(new DSEventFilter(subscriber, event, child));
     }
 
     /**
@@ -1236,30 +1237,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     @Override
     protected String getLogName() {
-        DSNode parent = getParent();
-        if (parent != null) {
-            return parent.getLogName();
+        if (getParent() != null) {
+            return getParent().getLogger().getName() + '.' + getName().replace('.','_');
         }
         return super.getLogName();
-    }
-
-    /**
-     * Convenience that appends the given string to the ancestral log name with an interleaving
-     * period.
-     */
-    protected String getLogName(String name) {
-        String s = null;
-        DSNode parent = getParent();
-        if (parent != null) {
-            s = parent.getLogName();
-        }
-        if (s == null) {
-            return name;
-        }
-        if (name.startsWith(".") || s.endsWith(".")) {
-            return s + name;
-        }
-        return s + '.' + name;
     }
 
     /**
@@ -1312,7 +1293,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Called when the given child is removed and this is running.  This subtree will be notified
      * via onRemoved before this is call.
      *
-     * @info The reference to this node as the parent will have already been cleared.
+     * @param info The reference to this node as the parent will have already been cleared.
      */
     protected void onChildRemoved(DSInfo info) {
     }
@@ -1324,7 +1305,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Called when the node or one of its ancenstors is being removed from the tree.
+     * Called when the node or one of its ancestors is being removed from the tree.
      * Called on children first, and called before onStopped.
      */
     protected void onRemoved() {

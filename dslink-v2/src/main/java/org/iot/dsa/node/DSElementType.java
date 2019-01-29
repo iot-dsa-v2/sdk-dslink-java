@@ -1,7 +1,7 @@
 package org.iot.dsa.node;
 
 /**
- * The core set of elements that translate directly to a JSON type.
+ * Thre primitives of this SDK.
  *
  * @author Aaron Hansen
  */

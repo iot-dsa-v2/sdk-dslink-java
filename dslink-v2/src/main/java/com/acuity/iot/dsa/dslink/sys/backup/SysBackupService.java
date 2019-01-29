@@ -99,6 +99,7 @@ public class SysBackupService extends DSNode implements Runnable {
         ZipOutputStream zos = null;
         InputStream in = null;
         try {
+            DSLink link = getLink();
             File nodes = getLink().getOptions().getNodesFile();
             String name = nodes.getName();
             if (nodes.exists()) {

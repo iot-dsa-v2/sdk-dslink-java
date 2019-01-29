@@ -170,6 +170,16 @@ public class DSLogger {
     /////////////////////////////////////////////////////////////////
 
     /**
+     * Override point, returns the console logger by default.
+     */
+    protected Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger(getLogName());
+        }
+        return logger;
+    }
+
+    /**
      * Override point, returns the simple class name by default.
      */
     protected String getLogName() {
@@ -179,16 +189,6 @@ public class DSLogger {
     /////////////////////////////////////////////////////////////////
     // Package / Privates Methods
     /////////////////////////////////////////////////////////////////
-
-    /**
-     * Override point, returns the console logger by default.
-     */
-    private Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(getLogName());
-        }
-        return logger;
-    }
 
     private String string(Object obj) {
         if (obj == null) {

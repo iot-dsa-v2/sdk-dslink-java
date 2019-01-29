@@ -12,13 +12,7 @@ import org.iot.dsa.util.DSException;
  */
 public class SocketTransport extends StreamBinaryTransport {
 
-    //private InputStream in;
-    //private OutputStream out;
     private Socket socket;
-
-    /////////////////////////////////////////////////////////////////
-    // Methods - In alphabetical order by method name.
-    /////////////////////////////////////////////////////////////////
 
     @Override
     public DSTransport open() {
@@ -55,31 +49,13 @@ public class SocketTransport extends StreamBinaryTransport {
 
     @Override
     protected void doClose() {
-        /*
-        try {
-            if (in != null) {
-                in.close();
-            }
-        } catch (Exception x) {
-            trace(getConnection().getConnectionId(), x);
-        }
-        try {
-            if (out != null) {
-                out.close();
-            }
-        } catch (Exception x) {
-            trace(getConnection().getConnectionId(), x);
-        }
-        */
         try {
             if (socket != null) {
                 socket.close();
             }
         } catch (Exception x) {
-            trace(getConnection().getConnectionId(), x);
+            trace(getPath(), x);
         }
-        //in = null;
-        //out = null;
         socket = null;
     }
 

@@ -23,6 +23,14 @@ the DSA architecture, please visit
 
 Please read the [developer guide](https://github.com/iot-dsa-v2/sdk-dslink-java-v2/wiki/DSLink-Development-Guide).
 
+## Version Control
+
+TODO
+
+## Dependency Management
+
+TODO
+
 ## Acknowledgements
 
 _Project Tyrus_

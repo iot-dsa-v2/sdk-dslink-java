@@ -115,11 +115,6 @@ public abstract class DSResponder extends DSNode {
     // Protected Methods
     /////////////////////////////////////////////////////////////////
 
-    @Override
-    protected String getLogName() {
-        return getLogName("responder");
-    }
-
     protected abstract DSInboundSubscriptions getSubscriptions();
 
     protected DSStream putRequest(Integer rid, DSStream request) {

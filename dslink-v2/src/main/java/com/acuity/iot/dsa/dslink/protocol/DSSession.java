@@ -37,6 +37,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
+
     private final Object outgoingMutex = new Object();
     private int ackRcvd = -1;
     private int ackRequired = 0;
@@ -191,11 +192,6 @@ public abstract class DSSession extends DSNode implements DSIConnected {
      */
     protected abstract void doSendMessage() throws Exception;
 
-    @Override
-    protected String getLogName() {
-        return getLogName("session");
-    }
-
     protected int getMissingAcks() {
         if (ackRequired > 0) {
             return ackRequired - ackRcvd - 1;
@@ -285,8 +281,9 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         outgoingResponses.clear();
         notifyOutgoing();
         try {
-            if (Thread.currentThread() != readThread) {
-                readThread.join();
+            Thread thread = readThread;
+            if ((thread != null) && (Thread.currentThread() != thread)) {
+                thread.join();
             }
         } catch (Exception x) {
             debug(getPath(), x);
@@ -305,8 +302,9 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         connected = false;
         notifyOutgoing();
         try {
-            if (Thread.currentThread() != writeThread) {
-                writeThread.join();
+            Thread thread = writeThread;
+            if ((thread != null) && (Thread.currentThread() != thread)) {
+                thread.join();
             }
         } catch (Exception x) {
             debug(getPath(), x);
