@@ -132,6 +132,10 @@ public class DSFlexEnum extends DSValue implements DSIEnum, DSIMetadata, DSIStor
         if ((arg == null) || arg.isNull()) {
             return NULL;
         }
+        if (arg.isList()) {
+            DSList list = arg.toList();
+            return valueOf(list.first().toString(), list);
+        }
         return valueOf(arg.toString());
     }
 
