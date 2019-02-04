@@ -11,10 +11,10 @@ import org.iot.dsa.node.DSNode;
 public class DSMainNode extends DSNode {
 
     /**
-     * The parent link or null.
+     * The ancestral DSLink, or null.
      */
     public DSLink getLink() {
-        return (DSLink) getParent();
+        return (DSLink) getAncestor(DSLink.class);
     }
 
     /**
@@ -29,16 +29,6 @@ public class DSMainNode extends DSNode {
      */
     public boolean isResponder() {
         return true;
-    }
-
-    /**
-     * The parent must be a DSLink instance.
-     */
-    public void validateParent(DSNode node) {
-        if (node instanceof DSLink) {
-            return;
-        }
-        throw new IllegalArgumentException("Must be a child of DSLink");
     }
 
 }
