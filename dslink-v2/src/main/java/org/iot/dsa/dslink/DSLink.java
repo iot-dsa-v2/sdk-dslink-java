@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.protocol.DSKeys;
 import java.io.File;
 import java.net.URL;
 import java.util.logging.Handler;
@@ -11,7 +12,6 @@ import org.iot.dsa.io.json.Json;
 import org.iot.dsa.logging.DSLogHandler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.security.DSKeys;
 import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
@@ -36,10 +36,10 @@ public class DSLink extends DSNode implements Runnable {
     static final String MAIN = "main";
     static final String SYS = "sys";
 
-
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
+
     private String dsId;
     private DSKeys keys;
     private DSInfo main = getInfo(MAIN);
@@ -259,29 +259,6 @@ public class DSLink extends DSNode implements Runnable {
         declareDefault(MAIN, new DSNode());
         declareDefault(SYS, new DSSysNode()).setAdmin(true);
     }
-
-    /*
-    @Override
-    protected String getLogName() {
-        String s = getLinkName();
-        if ((s == null) || s.isEmpty()) {
-            return getClass().getSimpleName();
-        }
-        if (s.startsWith("dslink-java")) {
-            if (s.startsWith("dslink-java-v2-")) {
-                s = s.substring("dslink-java-v2-".length());
-            } else if (s.startsWith("dslink-java-")) {
-                s = s.substring("dslink-java-".length());
-            }
-        } else if (s.equals("dsbroker-java")) {
-            s = "broker";
-        }
-        if ((s == null) || s.isEmpty()) {
-            return getClass().getSimpleName();
-        }
-        return s;
-    }
-    */
 
     /**
      * Configures a link instance including creating the appropriate connection.

@@ -5,7 +5,7 @@ import java.io.File;
 import java.util.logging.Level;
 import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.security.DSKeys;
+import com.acuity.iot.dsa.dslink.protocol.DSKeys;
 
 /**
  * Configuration options for starting a link.  The base configuration is the file dslink.json.

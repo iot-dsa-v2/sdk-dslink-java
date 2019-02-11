@@ -60,14 +60,6 @@ public class DSEvent implements DSIObject {
     }
 
     /**
-     * Only tests instance equality.
-     */
-    @Override
-    public boolean isEqual(Object obj) {
-        return obj == this;
-    }
-
-    /**
      * False
      */
     @Override

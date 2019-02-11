@@ -36,7 +36,7 @@ public class DSEventFilter implements DSISubscriber {
     }
 
     /**
-     * If the event or child are non-null, then the event values must == them.
+     * If the event or child are non-null, then the event values must equals() them.
      *
      * @param subscriber Required.
      * @param event      Optional.

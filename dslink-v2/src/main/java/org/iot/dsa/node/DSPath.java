@@ -290,7 +290,7 @@ public class DSPath extends DSValue {
     }
 
     @Override
-    public boolean isEqual(Object obj) {
+    public boolean equals(Object obj) {
         return false;
     }
 

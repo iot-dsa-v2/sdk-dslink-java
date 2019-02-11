@@ -358,6 +358,33 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         return ret;
     }
 
+    @Override
+    public boolean equals(Object arg) {
+        if (arg == this) {
+            return true;
+        }
+        if (!isNode(arg)) {
+            return false;
+        }
+        DSNode argNode = toNode(arg);
+        if (argNode.childCount() != childCount()) {
+            return false;
+        }
+        DSInfo myInfo = getFirstInfo();
+        DSInfo argInfo = argNode.getFirstInfo();
+        while (true) {
+            if (!DSUtil.equal(myInfo, argInfo)) {
+                return false;
+            }
+            if (myInfo == null) {
+                break;
+            }
+            myInfo = myInfo.next();
+            argInfo = argInfo.next();
+        }
+        return true;
+    }
+
     /**
      * Returns the child value with the given name, or null.
      *
@@ -630,6 +657,17 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
     }
 
+    @Override
+    public int hashCode() {
+        int ret = 1;
+        DSInfo info = getFirstInfo();
+        while (info != null) {
+            ret = (31 * ret) + info.hashCode();
+            info = info.next;
+        }
+        return ret;
+    }
+
     /**
      * Override point.  It is safe to use the calling thread for long lived operations.  By
      * default, this routes the request to the action's invoke method.
@@ -645,64 +683,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
         return action.getAction().invoke(target, request);
-    }
-
-    /**
-     * True if the argument is a node with the same children, although their order can be
-     * different.
-     */
-    @Override
-    public boolean isEqual(Object arg) {
-        if (arg == this) {
-            return true;
-        }
-        if (!isNode(arg)) {
-            return false;
-        }
-        DSNode argNode = toNode(arg);
-        if (argNode.childCount() != childCount()) {
-            return false;
-        }
-        DSInfo mine = getFirstInfo();
-        while (mine != null) {
-            if (!mine.isEqual(argNode.getInfo(mine.getName()))) {
-                return false;
-            }
-            mine = mine.next();
-        }
-        return true;
-    }
-
-    /**
-     * True if the argument is a node with the same children in the exact same order.
-     */
-    public boolean isIdentical(Object arg) {
-        if (arg == this) {
-            return true;
-        }
-        if (!isNode(arg)) {
-            return false;
-        }
-        DSNode argNode = toNode(arg);
-        if (argNode.childCount() != childCount()) {
-            return false;
-        }
-        DSInfo mine = getFirstInfo();
-        DSInfo argInfo = argNode.getFirstInfo();
-        while (mine != null) {
-            if (argInfo == null) {
-                return false;
-            }
-            if (!mine.isIdentical(argInfo)) {
-                return false;
-            }
-            mine = mine.next();
-            argInfo = argInfo.next();
-        }
-        if (argInfo != null) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -1238,7 +1218,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     @Override
     protected String getLogName() {
         if (getParent() != null) {
-            return getParent().getLogger().getName() + '.' + getName().replace('.','_');
+            return getParent().getLogger().getName() + '.' + getName().replace('.', '_');
         }
         return super.getLogName();
     }

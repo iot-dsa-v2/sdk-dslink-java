@@ -1,4 +1,4 @@
-package org.iot.dsa.security;
+package com.acuity.iot.dsa.dslink.protocol;
 
 import com.acuity.iot.dsa.dslink.io.DSBase64;
 import java.io.ByteArrayOutputStream;

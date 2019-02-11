@@ -20,7 +20,7 @@ import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.security.DSKeys;
+import com.acuity.iot.dsa.dslink.protocol.DSKeys;
 import org.iot.dsa.util.DSException;
 
 /**

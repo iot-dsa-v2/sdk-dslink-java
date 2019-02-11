@@ -87,11 +87,6 @@ public class DSPasswordSha1 extends DSValue implements DSIMetadata, DSIPassword,
     }
 
     @Override
-    public boolean isEqual(Object obj) {
-        return equals(obj);
-    }
-
-    @Override
     public boolean isNull() {
         return this == NULL;
     }

@@ -282,7 +282,7 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
      * Defaults to the equals method.
      */
     @Override
-    public boolean isEqual(Object obj) {
+    public boolean equals(Object obj) {
         return equals(obj);
     }
 

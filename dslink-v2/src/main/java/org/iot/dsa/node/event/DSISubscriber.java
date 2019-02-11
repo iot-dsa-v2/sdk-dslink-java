@@ -16,8 +16,8 @@ import org.iot.dsa.node.DSNode;
 public interface DSISubscriber {
 
     /**
-     * Called no matter how the unsubscribe happens, whether explicitly or if the node
-     * closes it itself.  Does nothing by default.
+     * Called no matter how the unsubscribe happens, whether by the subscriber or the
+     * the subscribee. Does nothing by default.
      */
     public default void onClosed(DSISubscription subscription) {
     }

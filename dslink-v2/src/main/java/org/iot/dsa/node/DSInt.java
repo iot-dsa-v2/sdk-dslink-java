@@ -89,11 +89,6 @@ public class DSInt extends DSValue implements Comparable<DSINumber>, DSIMetadata
     }
 
     @Override
-    public boolean isEqual(Object obj) {
-        return equals(obj);
-    }
-
-    @Override
     public boolean isFloat() {
         return false;
     }

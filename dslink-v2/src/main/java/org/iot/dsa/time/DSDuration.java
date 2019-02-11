@@ -187,14 +187,6 @@ public class DSDuration extends DSValue {
         return toString().hashCode();
     }
 
-    /**
-     * Defaults to the equals method.
-     */
-    @Override
-    public boolean isEqual(Object obj) {
-        return equals(obj);
-    }
-
     public boolean isNegative() {
         return negative;
     }
