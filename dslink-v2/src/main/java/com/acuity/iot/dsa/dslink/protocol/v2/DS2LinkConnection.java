@@ -6,6 +6,8 @@ import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INVALID
 import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_OK;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.protocol.DSKeys;
+import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
 import com.acuity.iot.dsa.dslink.protocol.DSUpstreamConnection;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
@@ -14,13 +16,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
 import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSString;
-import com.acuity.iot.dsa.dslink.protocol.DSKeys;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -79,6 +79,11 @@ public class DS2LinkConnection extends DSUpstreamConnection {
                 .setTransient(true).setReadOnly(true).setAdmin(true);
         declareDefault(LINK_SALT, DSBytes.NULL)
                 .setTransient(true).setReadOnly(true).setAdmin(true);
+    }
+
+    @Override
+    public DSRootLink getLink() {
+        return (DSRootLink) super.getLink();
     }
 
     @Override
@@ -245,7 +250,7 @@ public class DS2LinkConnection extends DSUpstreamConnection {
     }
 
     private void sendF0() {
-        DSLink link = getLink();
+        DSRootLink link = getLink();
         String dsId = link.getDsId();
         DSKeys dsKeys = link.getKeys();
         DS2MessageWriter writer = new DS2MessageWriter();

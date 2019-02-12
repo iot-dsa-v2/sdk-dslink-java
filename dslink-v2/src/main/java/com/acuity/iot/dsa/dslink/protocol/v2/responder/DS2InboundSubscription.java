@@ -1,6 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.protocol.DSUpstreamConnection;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscription;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
@@ -47,7 +48,8 @@ public class DS2InboundSubscription extends DSInboundSubscription implements Mes
         byteBuffer.replaceShort(start - 2, (short) (end - start), false);
         dsiWriter.reset();
         dsiWriter.value(update.value.toElement());
-        out.write((DSBinaryTransport) getResponder().getTransport());
+        DSUpstreamConnection up = (DSUpstreamConnection) getResponder().getConnection();
+        out.write((DSBinaryTransport) up.getTransport());
     }
 
 }

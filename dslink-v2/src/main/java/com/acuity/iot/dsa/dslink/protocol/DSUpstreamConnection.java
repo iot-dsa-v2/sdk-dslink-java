@@ -1,9 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol;
 
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
-import org.iot.dsa.conn.DSConnection;
-import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.DSSysNode;
 import org.iot.dsa.node.DSInfo;
@@ -51,10 +48,11 @@ public abstract class DSUpstreamConnection extends DSLinkConnection {
      */
     public String getPathInBroker(DSNode node) {
         StringBuilder buf = new StringBuilder();
-        String localPath = DSPath.encodePath(node, buf).toString();
-        buf.setLength(0);
-        return DSPath.concat(getPathInBroker(), localPath, buf).toString();
+        buf.append(getPathInBroker());
+        return DSPath.append(buf, node.getPath()).toString();
     }
+
+    public abstract DSTransport getTransport();
 
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
@@ -75,7 +73,18 @@ public abstract class DSUpstreamConnection extends DSLinkConnection {
     }
 
     protected DSSysNode getSys() {
-        return (DSSysNode) getParent();
+        return DSSysNode.getInstance();
+    }
+
+    @Override
+    protected void doDisconnect() {
+        try {
+            if (getTransport() != null) {
+                getTransport().close();
+            }
+        } catch (Exception x) {
+            error(getPath(), x);
+        }
     }
 
     /**

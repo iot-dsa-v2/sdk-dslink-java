@@ -415,7 +415,7 @@ public class DSKeys {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Signs bytes.  Call the update one or more times.  Call getSignature when finished.  This
+     * Signs bytes.  Call update one or more times.  Call getSignature when finished.  This
      * object is not thread safe, but can be reused by calling reset to being a new signature.
      */
     public class Signer {
@@ -563,8 +563,4 @@ public class DSKeys {
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Initialization
-    ///////////////////////////////////////////////////////////////////////////
-
-} //class
+}

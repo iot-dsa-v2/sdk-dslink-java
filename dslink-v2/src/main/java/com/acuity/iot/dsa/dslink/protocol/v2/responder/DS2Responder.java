@@ -46,10 +46,6 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
 
-    public DSBinaryTransport getTransport() {
-        return (DSBinaryTransport) getConnection().getTransport();
-    }
-
     /**
      * Process an individual request.
      */

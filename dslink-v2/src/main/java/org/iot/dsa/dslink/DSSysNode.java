@@ -1,7 +1,5 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
-import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import com.acuity.iot.dsa.dslink.sys.backup.SysBackupService;
 import com.acuity.iot.dsa.dslink.sys.cert.SysCertService;
 import com.acuity.iot.dsa.dslink.sys.logging.SysLogService;
@@ -12,7 +10,6 @@ import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.util.DSException;
 
 /**
  * The root of the system nodes.
@@ -32,6 +29,7 @@ public class DSSysNode extends DSNode {
 
     private DSInfo backups = getInfo(BACKUPS);
     private DSInfo connection = getInfo(CONNECTION);
+    private static DSSysNode instance;
     private DSInfo profiler = null;
     private DSInfo profilerToggle;
 
@@ -41,6 +39,13 @@ public class DSSysNode extends DSNode {
 
     public DSLinkConnection getConnection() {
         return (DSLinkConnection) connection.get();
+    }
+
+    /**
+     * The first started instance of this type in the process.
+     */
+    public static DSSysNode getInstance() {
+        return instance;
     }
 
     public DSLink getLink() {
@@ -67,31 +72,30 @@ public class DSSysNode extends DSNode {
     }
 
     @Override
+    protected void onStarted() {
+        super.onStarted();
+        if (instance == null) {
+            instance = this;
+        } else {
+            error(String.format("%s - Sys node already registered at %s", instance.getPath(),
+                                getPath()));
+        }
+    }
+
+    @Override
+    protected void onStopped() {
+        super.onStopped();
+        if (instance == this) {
+            instance = null;
+        }
+    }
+
+    @Override
     protected void validateParent(DSNode node) {
         if (node instanceof DSLink) {
             return;
         }
         throw new IllegalArgumentException("Invalid parent: " + node.getClass().getName());
-    }
-
-    void init() {
-        DSLinkOptions config = getLink().getOptions();
-        try {
-            String ver = config.getDsaVersion();
-            DSLinkConnection conn;
-            String type = config.getConfig(DSLinkOptions.CFG_CONNECTION_TYPE, null);
-            if (type != null) {
-                conn = (DSLinkConnection) Class.forName(type).newInstance();
-            } else if (ver.startsWith("1")) {
-                conn = new DS1LinkConnection();
-            } else { //2
-                conn = new DS2LinkConnection();
-            }
-            debug(debug() ? "Connection type: " + conn.getClass().getName() : null);
-            put(connection, conn);
-        } catch (Exception x) {
-            DSException.throwRuntime(x);
-        }
     }
 
     private void closeProfiler() {
