@@ -1,7 +1,11 @@
 package org.iot.dsa.io;
 
+import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.io.DSIReader.Token;
 import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSElement;
@@ -68,13 +72,16 @@ public class NodeDecoder {
      */
     private DSIObject getInstance(String type) {
         DSIObject ret = null;
+        Class clazz = null;
         try {
-            Class clazz = null;
             int idx = type.indexOf('=');
             if (idx > 0) {
                 String token = type.substring(0, idx);
                 String name = type.substring(++idx);
                 clazz = Class.forName(name);
+                if (clazz == DSLink.class) {
+                    clazz = DSRootLink.class;
+                }
                 tokenMap.put(token, clazz);
             } else {
                 clazz = tokenMap.get(type);
@@ -83,6 +90,12 @@ public class NodeDecoder {
             if (ret == null) {
                 ret = (DSIObject) clazz.newInstance();
             }
+        } catch (InstantiationException x) {
+            if (clazz != null) {
+                Logger.getLogger("").log(
+                        Level.SEVERE,"Cannot instantiate " + clazz.getName(), x);
+            }
+            DSException.throwRuntime(x);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }

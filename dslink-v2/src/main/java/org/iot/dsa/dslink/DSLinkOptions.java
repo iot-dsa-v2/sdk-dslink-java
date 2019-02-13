@@ -181,7 +181,7 @@ public class DSLinkOptions {
      */
     public String getDslinkJson() {
         if (dslinkJson == null) {
-            dslinkJson = getConfig(CFG_DSLINK_JSON, "dslink.json");
+            dslinkJson = "dslink.json";
         }
         return dslinkJson;
     }
@@ -191,7 +191,13 @@ public class DSLinkOptions {
      */
     public DSMap getDslinkMap() {
         if (dslinkMap == null) {
-            File file = new File(getHome(), getDslinkJson());
+            File file = null;
+            File home = this.home;
+            if (home != null) {
+                file = new File(home, getDslinkJson());
+            } else {
+                file = new File(getDslinkJson());
+            }
             if (!file.exists()) {
                 throw new IllegalStateException("Does not exist: " + file.getAbsolutePath());
             }
@@ -208,7 +214,7 @@ public class DSLinkOptions {
         buf.append("Options can be specified as key=value or key value. The following are ")
            .append("all optional:\n\n")
            .append(" --broker       Broker URI for the connection handshake.\n")
-           .append(" --dslink-json  Path to the dslink.json file, will be resolved against home.\n")
+           .append(" --dslink-json  Path to the dslink.json file, not related to the home dir.\n")
            .append(" --help|-h      Displays this message.\n")
            .append(" --home         Directory the link should use for file IO.  Default is process dir.\n")
            .append(" --key          Path to the stored keys file.\n")

@@ -6,7 +6,6 @@ import com.acuity.iot.dsa.dslink.sys.logging.SysLogService;
 import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
@@ -29,7 +28,6 @@ public class DSSysNode extends DSNode {
 
     private DSInfo backups = getInfo(BACKUPS);
     private DSInfo connection = getInfo(CONNECTION);
-    private static DSSysNode instance;
     private DSInfo profiler = null;
     private DSInfo profilerToggle;
 
@@ -41,13 +39,6 @@ public class DSSysNode extends DSNode {
         return (DSLinkConnection) connection.get();
     }
 
-    /**
-     * The first started instance of this type in the process.
-     */
-    public static DSSysNode getInstance() {
-        return instance;
-    }
-
     public DSLink getLink() {
         return (DSLink) getParent();
     }
@@ -56,7 +47,6 @@ public class DSSysNode extends DSNode {
     protected void declareDefaults() {
         declareDefault(STOP, new StopAction());
         declareDefault(CERTIFICATES, new SysCertService());
-        declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
         declareDefault(LOGGING, new SysLogService());
         declareDefault(BACKUPS, new SysBackupService());
     }
@@ -68,25 +58,6 @@ public class DSSysNode extends DSNode {
             profilerToggle = put(OPEN_PROFILER, new ToggleAction()).setTransient(true);
         } else {
             profilerToggle = put(CLOSE_PROFILER, new ToggleAction()).setTransient(true);
-        }
-    }
-
-    @Override
-    protected void onStarted() {
-        super.onStarted();
-        if (instance == null) {
-            instance = this;
-        } else {
-            error(String.format("%s - Sys node already registered at %s", instance.getPath(),
-                                getPath()));
-        }
-    }
-
-    @Override
-    protected void onStopped() {
-        super.onStopped();
-        if (instance == this) {
-            instance = null;
         }
     }
 

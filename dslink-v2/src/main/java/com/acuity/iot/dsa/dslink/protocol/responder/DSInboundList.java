@@ -171,7 +171,7 @@ public class DSInboundList extends DSInboundRequest
     @Override
     public void run() {
         try {
-            target = new DSTarget(getPath(), getLink());
+            target = new DSTarget(getPath(), getLink().getRootNode());
             if (target.isResponder()) {
                 DSIResponder responder = (DSIResponder) target.getTarget();
                 setPath(target.getPath());

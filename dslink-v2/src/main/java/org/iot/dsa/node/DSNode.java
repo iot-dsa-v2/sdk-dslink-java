@@ -582,6 +582,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
+     * Ascends the tree to the root node.  Does not cache the result.
+     */
+    public DSNode getRootNode() {
+        DSNode ret = this;
+        DSNode tmp = getParent();
+        while (tmp != null) {
+            ret = tmp;
+            tmp = tmp.getParent();
+        }
+        return ret;
+    }
+
+    /**
      * A convenience for (DSIValue) get(name).
      */
     public DSIValue getValue(String name) {

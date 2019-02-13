@@ -29,7 +29,7 @@ public class DSRootLink extends DSLink {
     private String dsId;
     private DSKeys keys;
     private DSInfo main;
-    private DSInfo sys;
+    private DSInfo sys = getInfo(SYS);
     private DSInfo upstream;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -83,6 +83,12 @@ public class DSRootLink extends DSLink {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault(SYS, new DSSysNode(), "Services common to all links.").setAdmin(true);
+    }
+
+    @Override
     protected DSLink init(DSLinkOptions config) {
         super.init(config);
         keys = config.getKeys();
@@ -94,10 +100,6 @@ public class DSRootLink extends DSLink {
                 DSNode node = (DSNode) DSUtil.newInstance(type);
                 main = put(MAIN, node);
             }
-        }
-        sys = getInfo(SYS);
-        if (sys == null) {
-            sys = put(SYS, new DSSysNode()).setAdmin(true);
         }
         String ver = config.getDsaVersion();
         DSLinkConnection conn;

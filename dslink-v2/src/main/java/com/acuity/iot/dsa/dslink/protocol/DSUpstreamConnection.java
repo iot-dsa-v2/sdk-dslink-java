@@ -72,10 +72,6 @@ public abstract class DSUpstreamConnection extends DSLinkConnection {
         });
     }
 
-    protected DSSysNode getSys() {
-        return DSSysNode.getInstance();
-    }
-
     @Override
     protected void doDisconnect() {
         try {
