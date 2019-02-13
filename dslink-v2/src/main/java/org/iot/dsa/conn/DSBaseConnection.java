@@ -6,10 +6,11 @@ import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSEnabledNode;
 import org.iot.dsa.util.DSException;
+import org.iot.dsa.util.DSUtil;
 
 /**
  * Basic representation of a connection, which is subclassed by DSConnection for longer lived
- * connections.  DSConnection should really be subclassed but this can if desired.
+ * connections.  DSConnection should really be subclassed rather than this.
  * <p>
  * Subclasses must:<br>
  * <ul>
@@ -17,7 +18,7 @@ import org.iot.dsa.util.DSException;
  * <li> Call connOk() after a successful connection.
  * <li> Call connDown(String) after a connection failure.  This does not need to be called for
  * higher level errors such as malformed sql statements being submitted over a connection.  In
- * those kinds of scenarios, just call connOk.
+ * those kinds of scenarios, just call connOk and log an error.
  * <li> Override checkConfig() and throw an exception if misconfigured.
  * </ul>
  *
@@ -118,6 +119,22 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
     @Override
     protected DSStatus getDefaultStatus() {
         return DSStatus.down;
+    }
+
+    @Override
+    protected int getThisStatus() {
+        int ret = super.getThisStatus();
+        if (down) {
+            ret |= DSStatus.DOWN;
+        } else {
+            ret &= ~DSStatus.DOWN;
+        }
+        if (fault) {
+            ret |= DSStatus.FAULT;
+        } else {
+            ret &= ~DSStatus.FAULT;
+        }
+        return ret;
     }
 
     /**

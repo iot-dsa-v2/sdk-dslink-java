@@ -11,19 +11,19 @@ import org.iot.dsa.util.DSException;
 /**
  * Represents connection with a lifecycle (connecting, connected, disconnecting, disconnected).
  * These connections do not have to have a long lived pipes such as a sockets, they could simply
- * represent http sessions, or other abstract constructs.
+ * represent http sessions or other abstract constructs.
  * <p>
  * Subclasses must:<br>
  * <ul>
  * <li> Implement doConnect, doDisconnect and doPing.
- * <li> Maybe add a property to make the ping interval configurable.
+ * <li> Consider adding a property to make the ping interval configurable.
  * <li> Call connOk() after a successful communication.
  * <li> Call connDown(String) after a connection failure.  This does not need to be called for
  * higher level errors such as malformed sql statements being submitted over a connection.  In
  * those kinds of scenarios, just call connOk and let the ping loop determine if the connection
  * has been lost.
  * <li> Override checkConfig() and throw an exception if misconfigured.
- * <li> Have a thread call the run() method.
+ * <li> Have a thread call the run() method to manage reconnection.
  * </ul>
  *
  * @author Aaron Hansen

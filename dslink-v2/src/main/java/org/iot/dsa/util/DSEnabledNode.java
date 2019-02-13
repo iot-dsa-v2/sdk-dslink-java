@@ -69,10 +69,7 @@ public abstract class DSEnabledNode extends DSStatusNode implements DSIStatus {
     @Override
     protected void onChildChanged(DSInfo child) {
         if (child == enabled) {
-            if (child.getElement().toBoolean()) {
-                updateStatus(null);
-            } else {
-            }
+            updateStatus(null);
         }
         super.onChildChanged(child);
     }

@@ -5,7 +5,7 @@ subprojects {
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.52.0a4'
+    version '0.52.0a5'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -45,5 +45,5 @@ allprojects {
 }
 
 wrapper {
-    gradleVersion = '5.0'
+    gradleVersion = '5.2'
 }
