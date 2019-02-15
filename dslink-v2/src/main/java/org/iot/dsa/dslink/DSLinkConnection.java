@@ -1,6 +1,7 @@
 package org.iot.dsa.dslink;
 
 import org.iot.dsa.conn.DSConnection;
+import org.iot.dsa.node.DSNode;
 
 /**
  * Abstract representation of a DSA connection.

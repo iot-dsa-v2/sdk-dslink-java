@@ -12,6 +12,7 @@ import org.iot.dsa.io.json.Json;
 import org.iot.dsa.logging.DSLogHandler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSPath;
 import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
@@ -75,6 +76,20 @@ public abstract class DSLink extends DSNode implements Runnable {
      */
     public abstract DSMainNode getMain();
 
+    /**
+     * The local path of the node appended the link's path in the upstream broker.
+     */
+    public String getPathInBroker(DSNode node) {
+        String pathInBroker = getUpstream().getPathInBroker();
+        String nodePath = node.getPath();
+        if ((pathInBroker == null) || pathInBroker.isEmpty()) {
+            return nodePath;
+        }
+        StringBuilder buf = new StringBuilder(pathInBroker.length() + nodePath.length() + 10);
+        buf.append(pathInBroker);
+        return DSPath.append(buf, nodePath).toString();
+    }
+
     public DSLinkOptions getOptions() {
         return options;
     }
@@ -101,12 +116,12 @@ public abstract class DSLink extends DSNode implements Runnable {
             ret.info("Node database loaded: " + time + "ms");
         } else {
             String type = config.getConfig("linkType", null);
-            ret.info("Creating new node database...");
             if (type == null) {
                 ret = new DSRootLink();
             } else {
                 ret = (DSLink) DSUtil.newInstance(type);
             }
+            ret.info("Creating new node database...");
             ret.init(config);
         }
         return ret;

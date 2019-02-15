@@ -1,11 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol;
 
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
-import org.iot.dsa.dslink.DSLinkConnection;
-import org.iot.dsa.dslink.DSSysNode;
 import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
@@ -16,7 +11,7 @@ import org.iot.dsa.node.action.DSAction;
  *
  * @author Aaron Hansen
  */
-public abstract class DSUpstreamConnection extends DSLinkConnection {
+public abstract class DSBrokerConnection extends DSTransportConnection {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -43,17 +38,6 @@ public abstract class DSUpstreamConnection extends DSLinkConnection {
         return brokerPath.getElement().toString();
     }
 
-    /**
-     * Concatenates the path in broker with the path of the node.
-     */
-    public String getPathInBroker(DSNode node) {
-        StringBuilder buf = new StringBuilder();
-        buf.append(getPathInBroker());
-        return DSPath.append(buf, node.getPath()).toString();
-    }
-
-    public abstract DSTransport getTransport();
-
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
@@ -66,21 +50,10 @@ public abstract class DSUpstreamConnection extends DSLinkConnection {
         declareDefault(RECONNECT, new DSAction.Parameterless() {
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                ((DSUpstreamConnection) target.get()).disconnect();
+                ((DSBrokerConnection) target.get()).disconnect();
                 return null;
             }
         });
-    }
-
-    @Override
-    protected void doDisconnect() {
-        try {
-            if (getTransport() != null) {
-                getTransport().close();
-            }
-        } catch (Exception x) {
-            error(getPath(), x);
-        }
     }
 
     /**

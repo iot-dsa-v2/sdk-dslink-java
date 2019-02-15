@@ -1,9 +1,9 @@
 package com.acuity.iot.dsa.dslink.protocol.v1.requester;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSOutboundStub;
 import com.acuity.iot.dsa.dslink.protocol.requester.DSRequester;
 import com.acuity.iot.dsa.dslink.protocol.v1.CloseMessage;
-import com.acuity.iot.dsa.dslink.protocol.v1.DS1Session;
 import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSList;
@@ -23,7 +23,7 @@ public class DS1Requester extends DSRequester {
     public DS1Requester() {
     }
 
-    public DS1Requester(DS1Session session) {
+    public DS1Requester(DSSession session) {
         super(session);
     }
 

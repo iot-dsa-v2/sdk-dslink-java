@@ -6,9 +6,9 @@ import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INVALID
 import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_OK;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
+import com.acuity.iot.dsa.dslink.protocol.DSBrokerConnection;
 import com.acuity.iot.dsa.dslink.protocol.DSKeys;
 import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
-import com.acuity.iot.dsa.dslink.protocol.DSUpstreamConnection;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
@@ -29,7 +29,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DS2LinkConnection extends DSUpstreamConnection {
+public class DS2LinkConnection extends DSBrokerConnection {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
