@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
 import java.io.File;
 import java.net.URL;
 import java.util.logging.Handler;
@@ -11,7 +12,7 @@ import org.iot.dsa.io.json.Json;
 import org.iot.dsa.logging.DSLogHandler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.security.DSKeys;
+import org.iot.dsa.node.DSPath;
 import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
@@ -27,26 +28,25 @@ import org.iot.dsa.util.DSUtil;
  *
  * @author Aaron Hansen
  */
-public class DSLink extends DSNode implements Runnable {
+public abstract class DSLink extends DSNode implements Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    static final String MAIN = "main";
-    static final String SYS = "sys";
-
+    public static final String DOWNSTREAM = "downstream";
+    public static final String MAIN = "main";
+    public static final String SYS = "sys";
+    public static final String UPSTREAM = "upstream";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
-    private String dsId;
-    private DSKeys keys;
-    private DSInfo main = getInfo(MAIN);
+
+    private DSInfo main;
     private String name;
     private DSLinkOptions options;
     private Thread runThread;
-    private DSInfo sys = getInfo(SYS);
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -64,34 +64,6 @@ public class DSLink extends DSNode implements Runnable {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSLinkConnection getConnection() {
-        return getSys().getConnection();
-    }
-
-    /**
-     * Returns the unique id of the connection.  This is the link name + '-' + the hash of the
-     * public key in base64.
-     *
-     * @return Never null, and url safe.
-     */
-    public String getDsId() {
-        if (dsId == null) {
-            StringBuilder buf = new StringBuilder();
-            buf.append(getLinkName());
-            buf.append('-');
-            buf.append(getKeys().encodePublicHashDsId());
-            dsId = buf.toString();
-        }
-        return dsId;
-    }
-
-    /**
-     * Public / private keys of the link, used to prove identity with brokers.
-     */
-    public DSKeys getKeys() {
-        return keys;
-    }
-
     /**
      * As defined in dslink.json.
      */
@@ -99,17 +71,30 @@ public class DSLink extends DSNode implements Runnable {
         return name;
     }
 
-    public DSMainNode getMain() {
-        return (DSMainNode) main.getNode();
+    /**
+     * The node that encapsulates the primary logic of the link.
+     */
+    public abstract DSMainNode getMain();
+
+    /**
+     * The local path of the node appended the link's path in the upstream broker.
+     */
+    public String getPathInBroker(DSNode node) {
+        String pathInBroker = getUpstream().getPathInBroker();
+        String nodePath = node.getPath();
+        if ((pathInBroker == null) || pathInBroker.isEmpty()) {
+            return nodePath;
+        }
+        StringBuilder buf = new StringBuilder(pathInBroker.length() + nodePath.length() + 10);
+        buf.append(pathInBroker);
+        return DSPath.append(buf, nodePath).toString();
     }
 
     public DSLinkOptions getOptions() {
         return options;
     }
 
-    public DSSysNode getSys() {
-        return (DSSysNode) sys.getNode();
-    }
+    public abstract DSLinkConnection getUpstream();
 
     /**
      * Creates a link by first testing for an existing serialized database.
@@ -132,20 +117,12 @@ public class DSLink extends DSNode implements Runnable {
         } else {
             String type = config.getConfig("linkType", null);
             if (type == null) {
-                ret = new DSLink();
+                ret = new DSRootLink();
             } else {
                 ret = (DSLink) DSUtil.newInstance(type);
             }
+            ret.info("Creating new node database...");
             ret.init(config);
-            ret.info("Creating new database...");
-            type = config.getMainType();
-            ret.debug("Main type: " + type);
-            try {
-                DSNode node = (DSNode) DSUtil.newInstance(type);
-                ret.put(MAIN, node);
-            } catch (Exception x) {
-                DSException.throwRuntime(x);
-            }
         }
         return ret;
     }
@@ -224,11 +201,6 @@ public class DSLink extends DSNode implements Runnable {
         }
     }
 
-    public DSLink setNodes(DSMainNode node) {
-        put(main, node);
-        return this;
-    }
-
     /**
      * Properly shuts down the link when a thread is executing the run method.
      */
@@ -252,39 +224,7 @@ public class DSLink extends DSNode implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Adds the save action, overrides should call super if they want this action.
-     */
-    @Override
-    protected void declareDefaults() {
-        declareDefault(MAIN, new DSNode());
-        declareDefault(SYS, new DSSysNode()).setAdmin(true);
-    }
-
-    /*
-    @Override
-    protected String getLogName() {
-        String s = getLinkName();
-        if ((s == null) || s.isEmpty()) {
-            return getClass().getSimpleName();
-        }
-        if (s.startsWith("dslink-java")) {
-            if (s.startsWith("dslink-java-v2-")) {
-                s = s.substring("dslink-java-v2-".length());
-            } else if (s.startsWith("dslink-java-")) {
-                s = s.substring("dslink-java-".length());
-            }
-        } else if (s.equals("dsbroker-java")) {
-            s = "broker";
-        }
-        if ((s == null) || s.isEmpty()) {
-            return getClass().getSimpleName();
-        }
-        return s;
-    }
-    */
-
-    /**
-     * Configures a link instance including creating the appropriate connection.
+     * Called whether the link is deserialized or created new.
      *
      * @return This
      */
@@ -292,8 +232,6 @@ public class DSLink extends DSNode implements Runnable {
         this.options = config;
         DSLogHandler.setRootLevel(config.getLogLevel());
         name = config.getLinkName();
-        keys = config.getKeys();
-        getSys().init();
         return this;
     }
 
@@ -302,6 +240,11 @@ public class DSLink extends DSNode implements Runnable {
         synchronized (this) {
             notifyAll();
         }
+    }
+
+    protected DSLink setMain(DSMainNode node) {
+        put(MAIN, node);
+        return this;
     }
 
 }

@@ -16,7 +16,7 @@ public interface DSISubscription {
     public void close();
 
     /**
-     * The node subscribed to.
+     * The node being subscribed to.
      */
     public DSNode getNode();
 

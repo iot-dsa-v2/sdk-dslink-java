@@ -90,14 +90,6 @@ public class DSTimezone extends DSValue implements DSISetAction {
         return toString().hashCode();
     }
 
-    /**
-     * Defaults to the equals method.
-     */
-    @Override
-    public boolean isEqual(Object obj) {
-        return equals(obj);
-    }
-
     @Override
     public boolean isNull() {
         return this == NULL;

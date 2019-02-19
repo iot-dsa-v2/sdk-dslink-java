@@ -53,7 +53,7 @@ public class RequesterSubscribeTest {
         Assert.assertTrue(root.isSubscribed());
         //Set the value to 10 and wait for the update
         success = false;
-        DSIRequester requester = link.getConnection().getRequester();
+        DSIRequester requester = link.getUpstream().getRequester();
         requester.set("/main/int", DSInt.valueOf(10), SimpleRequestHandler.DEFAULT);
         synchronized (this) {
             this.wait(5000);
@@ -82,7 +82,7 @@ public class RequesterSubscribeTest {
     }
 
     private void subscribe() {
-        DSIRequester requester = link.getConnection().getRequester();
+        DSIRequester requester = link.getUpstream().getRequester();
         handler = (AbstractSubscribeHandler) requester.subscribe(
                 "/main/int", 0, new AbstractSubscribeHandler() {
                     boolean first = true;

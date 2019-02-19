@@ -40,7 +40,7 @@ public class OpenTableTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe((event, node, child, data) -> {
+        link.getUpstream().subscribe((event, node, child, data) -> {
             success = true;
             synchronized (OpenTableTest.this) {
                 OpenTableTest.this.notifyAll();
@@ -53,7 +53,7 @@ public class OpenTableTest {
         }
         Assert.assertTrue(success);
         success = false;
-        DSIRequester requester = link.getConnection().getRequester();
+        DSIRequester requester = link.getUpstream().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/main/getTable", null, new SimpleInvokeHandler());
         DSList row = res.getUpdate(5000);

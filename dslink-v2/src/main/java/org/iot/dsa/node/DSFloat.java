@@ -85,11 +85,6 @@ public class DSFloat extends DSValue implements Comparable<DSINumber>, DSINumber
     }
 
     @Override
-    public boolean isEqual(Object obj) {
-        return equals(obj);
-    }
-
-    @Override
     public boolean isFloat() {
         return true;
     }

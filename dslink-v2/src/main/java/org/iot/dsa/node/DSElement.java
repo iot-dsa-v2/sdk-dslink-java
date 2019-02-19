@@ -48,7 +48,7 @@ public abstract class DSElement extends DSValue {
     }
 
     @Override
-    public boolean isEqual(Object obj) {
+    public boolean equals(Object obj) {
         return equals(obj);
     }
 

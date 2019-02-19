@@ -19,6 +19,10 @@ import org.iot.dsa.node.DSString;
  * <li>Call updateStatus(DSStatus,String) when the status of this node changes.
  * <li>Override onStatusChanged to respond to changes in the merged status.
  * </ul>
+ * Subclasses should:<br>
+ * <ul>
+ * <li>Override getThisStatus() to get the status flags for just this node.
+ * </ul>
  *
  * @author Aaron Hansen
  */
@@ -85,8 +89,9 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
     }
 
     /**
-     * Override point.  Return the status bits that originate only from this node.  Do not use
-     * the status property.  Always call super unless you really know what you are doing.
+     * Override point.  Return the status bits that originate from only this node.  Do not use
+     * the status property.  You should call super.getThisStatus() to get your initial bits before
+     * applying those unique to your class.
      */
     protected int getThisStatus() {
         return 0;
@@ -137,6 +142,9 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
         updateStatus(parent);
     }
 
+    /**
+     * Updates the status and does not change the status text.
+     */
     protected void updateStatus() {
         updateStatus(getStatusParent());
     }

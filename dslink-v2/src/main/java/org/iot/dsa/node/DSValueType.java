@@ -1,7 +1,7 @@
 package org.iot.dsa.node;
 
 /**
- * These are the primitive types of DSA.  A different set of types than elements.
+ * These are the primitive types of DSA, which are different than the SDK primitives.
  *
  * @author Aaron Hansen
  */

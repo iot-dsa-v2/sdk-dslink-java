@@ -103,14 +103,6 @@ public class DSDateTime extends DSValue {
         return timeInMillis() < dt.timeInMillis();
     }
 
-    /**
-     * Defaults to the equals method.
-     */
-    @Override
-    public boolean isEqual(Object obj) {
-        return equals(obj);
-    }
-
     @Override
     public boolean isNull() {
         return this == NULL;

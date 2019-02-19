@@ -1,18 +1,14 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
-import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
 import com.acuity.iot.dsa.dslink.sys.backup.SysBackupService;
 import com.acuity.iot.dsa.dslink.sys.cert.SysCertService;
 import com.acuity.iot.dsa.dslink.sys.logging.SysLogService;
 import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.util.DSException;
 
 /**
  * The root of the system nodes.
@@ -51,7 +47,6 @@ public class DSSysNode extends DSNode {
     protected void declareDefaults() {
         declareDefault(STOP, new StopAction());
         declareDefault(CERTIFICATES, new SysCertService());
-        declareDefault(CONNECTION, DSNull.NULL).setTransient(true);
         declareDefault(LOGGING, new SysLogService());
         declareDefault(BACKUPS, new SysBackupService());
     }
@@ -72,26 +67,6 @@ public class DSSysNode extends DSNode {
             return;
         }
         throw new IllegalArgumentException("Invalid parent: " + node.getClass().getName());
-    }
-
-    void init() {
-        DSLinkOptions config = getLink().getOptions();
-        try {
-            String ver = config.getDsaVersion();
-            DSLinkConnection conn;
-            String type = config.getConfig(DSLinkOptions.CFG_CONNECTION_TYPE, null);
-            if (type != null) {
-                conn = (DSLinkConnection) Class.forName(type).newInstance();
-            } else if (ver.startsWith("1")) {
-                conn = new DS1LinkConnection();
-            } else { //2
-                conn = new DS2LinkConnection();
-            }
-            debug(debug() ? "Connection type: " + conn.getClass().getName() : null);
-            put(connection, conn);
-        } catch (Exception x) {
-            DSException.throwRuntime(x);
-        }
     }
 
     private void closeProfiler() {

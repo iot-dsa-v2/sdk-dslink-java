@@ -1,25 +1,20 @@
 package org.iot.dsa.node;
 
 /**
- * Super class of anything found in the node tree.
+ * Interface of anything found in the node tree.
  *
  * @author Aaron Hansen
  */
 public interface DSIObject {
 
     /**
-     * Return a copy if it makes sense, but return this otherwise.
+     * Return a copy if it makes sense, otherwise return this.
      */
     public DSIObject copy();
 
     /**
-     * Equals implementation that doesn't require hashCodes to equal, primarily intended
-     * so for comparing nodes.
+     * Whether or not this object represents a null instance.
      */
-    public default boolean isEqual(Object obj) {
-        return equals(obj);
-    }
-
     public boolean isNull();
 
 }
