@@ -196,7 +196,10 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
 
     @Override
     public boolean equals(Object obj) {
-        return isEqual(obj);
+        if (obj instanceof DSStatus) {
+            return hashCode() == obj.hashCode();
+        }
+        return false;
     }
 
     /**
@@ -350,14 +353,6 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
 
     public static boolean isDown(int bits) {
         return (DOWN & bits) != 0;
-    }
-
-    @Override
-    public boolean isEqual(Object obj) {
-        if (obj instanceof DSStatus) {
-            return hashCode() == obj.hashCode();
-        }
-        return false;
     }
 
     public boolean isFault() {

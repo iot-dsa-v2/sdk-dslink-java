@@ -43,7 +43,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     private int ackRequired = 0;
     private int ackToSend = -1;
     private boolean connected = false;
-    private DSLinkConnection connection;
+    private DSTransportConnection connection;
     private long lastTimeRecv;
     private long lastTimeSend;
     private int messageId = 0;
@@ -62,7 +62,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     }
 
     public DSSession(DSLinkConnection connection) {
-        this.connection = connection;
+        this.connection = (DSTransportConnection) connection;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -124,7 +124,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     public abstract DSResponder getResponder();
 
     public DSTransport getTransport() {
-        return getConnection().getTransport();
+        return connection.getTransport();
     }
 
     public boolean isRequesterAllowed() {

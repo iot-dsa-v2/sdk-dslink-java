@@ -68,14 +68,6 @@ public enum LoggerNodeLevel implements DSIEnum, DSIValue {
     }
 
     @Override
-    public boolean isEqual(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        return element.equals(obj);
-    }
-
-    @Override
     public boolean isNull() {
         return false;
     }

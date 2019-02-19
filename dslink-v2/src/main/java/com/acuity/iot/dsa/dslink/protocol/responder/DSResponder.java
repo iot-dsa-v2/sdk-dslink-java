@@ -65,10 +65,6 @@ public abstract class DSResponder extends DSNode {
         return session;
     }
 
-    public DSTransport getTransport() {
-        return getConnection().getTransport();
-    }
-
     /**
      * V2 override point, default returns true.
      */

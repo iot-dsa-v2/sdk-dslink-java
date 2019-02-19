@@ -1,7 +1,7 @@
 package org.iot.dsa.node;
 
 /**
- * Thre primitives of this SDK.
+ * The primitive types of the SDK.
  *
  * @author Aaron Hansen
  */

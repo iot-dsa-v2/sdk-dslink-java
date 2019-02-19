@@ -9,7 +9,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
-import org.iot.dsa.security.DSKeys;
+import com.acuity.iot.dsa.dslink.protocol.DSKeys;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

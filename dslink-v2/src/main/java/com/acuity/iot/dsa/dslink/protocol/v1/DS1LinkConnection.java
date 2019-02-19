@@ -2,7 +2,7 @@ package com.acuity.iot.dsa.dslink.protocol.v1;
 
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
-import com.acuity.iot.dsa.dslink.protocol.DSUpstreamConnection;
+import com.acuity.iot.dsa.dslink.protocol.DSBrokerConnection;
 import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
@@ -19,7 +19,7 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class DS1LinkConnection extends DSUpstreamConnection {
+public class DS1LinkConnection extends DSBrokerConnection {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants

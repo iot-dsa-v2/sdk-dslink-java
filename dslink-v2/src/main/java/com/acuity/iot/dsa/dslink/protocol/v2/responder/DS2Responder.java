@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.protocol.v2.responder;
 
+import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSet;
@@ -8,9 +9,7 @@ import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v2.CloseMessage;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
-import com.acuity.iot.dsa.dslink.protocol.v2.DS2Session;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSElement;
@@ -38,17 +37,13 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     public DS2Responder() {
     }
 
-    public DS2Responder(DS2Session session) {
+    public DS2Responder(DSSession session) {
         super(session);
     }
 
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
-
-    public DSBinaryTransport getTransport() {
-        return (DSBinaryTransport) getConnection().getTransport();
-    }
 
     /**
      * Process an individual request.

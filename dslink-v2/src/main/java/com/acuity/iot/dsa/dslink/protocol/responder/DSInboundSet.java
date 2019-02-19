@@ -35,7 +35,7 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
     @Override
     public void run() {
         try {
-            DSTarget path = new DSTarget(getPath(), getLink());
+            DSTarget path = new DSTarget(getPath(), getLink().getRootNode());
             if (path.isResponder()) {
                 DSIResponder responder = (DSIResponder) path.getTarget();
                 setPath(path.getPath());

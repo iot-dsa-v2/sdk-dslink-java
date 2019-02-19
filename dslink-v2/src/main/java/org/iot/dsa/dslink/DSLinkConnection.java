@@ -1,10 +1,10 @@
 package org.iot.dsa.dslink;
 
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import org.iot.dsa.conn.DSConnection;
+import org.iot.dsa.node.DSNode;
 
 /**
- * Represents an upstream connection to a broker.
+ * Abstract representation of a DSA connection.
  *
  * @author Aaron Hansen
  */
@@ -69,32 +69,8 @@ public abstract class DSLinkConnection extends DSConnection {
 
     public abstract DSIRequester getRequester();
 
-    public abstract DSTransport getTransport();
-
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void doDisconnect() {
-        try {
-            if (getTransport() != null) {
-                getTransport().close();
-            }
-        } catch (Exception x) {
-            error(getPath(), x);
-        }
-    }
-
-    /**
-     * Creates and starts a thread for running the connection lifecycle.
-     */
-    @Override
-    protected void onStable() {
-        super.onStable();
-        Thread t = new Thread(this, "Connection " + getName() + " Runner");
-        t.setDaemon(true);
-        t.start();
-    }
 
 }

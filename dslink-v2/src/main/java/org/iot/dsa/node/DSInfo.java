@@ -88,8 +88,24 @@ public class DSInfo implements ApiObject, GroupListener {
 
     @Override
     public boolean equals(Object arg) {
+        if (arg == this) {
+            return true;
+        }
         if (arg instanceof DSInfo) {
-            return isEqual((DSInfo) arg);
+            DSInfo argInfo = (DSInfo) arg;
+            if (flags != argInfo.flags) {
+                return false;
+            }
+            if (!DSUtil.equal(name, argInfo.name)) {
+                return false;
+            }
+            if (!DSUtil.equal(metadata, argInfo.metadata)) {
+                return false;
+            }
+            if (!DSUtil.equal(object, argInfo.object)) {
+                return false;
+            }
+            return true;
         }
         return false;
     }
@@ -201,6 +217,7 @@ public class DSInfo implements ApiObject, GroupListener {
     public DSMetadata getMetadata() {
         if (metadata == null) {
             metadata = new DSMap();
+            metadata.setParent(this);
         }
         return new DSMetadata(metadata);
     }
@@ -256,11 +273,21 @@ public class DSInfo implements ApiObject, GroupListener {
 
     @Override
     public int hashCode() {
-        return System.identityHashCode(this);
+        int ret = flags;
+        if (name != null) {
+            ret = (31 * ret) + name.hashCode();
+        }
+        if (metadata != null) {
+            ret = (31 * ret) + metadata.hashCode();
+        }
+        if (object != null) {
+            ret = (31 * ret) + object.hashCode();
+        }
+        return ret;
     }
 
     /**
-     * True if the value of the info is an instance of the give class.
+     * True if the value of the info is an instance of the given class.
      */
     public boolean is(Class clazz) {
         if (object == null) {
@@ -292,47 +319,6 @@ public class DSInfo implements ApiObject, GroupListener {
      */
     public boolean isDefaultOnCopy() {
         return getFlag(DEFAULT_ON_COPY);
-    }
-
-    /**
-     * True if the flags and target object are equal (not identical if the target is a node).  Two
-     * nodes are considered equal if they have the same children, although they may be ordered
-     * differently.
-     */
-    public boolean isEqual(DSInfo arg) {
-        if (arg == this) {
-            return true;
-        } else if (arg == null) {
-            return false;
-        } else if (getFlags() != arg.getFlags()) {
-            return false;
-        } else if (!DSUtil.equal(arg.getName(), getName())) {
-            return false;
-        }
-        if (isNode()) {
-            return getNode().isEqual(arg.get());
-        }
-        return DSUtil.equal(get(), arg.get());
-    }
-
-    /**
-     * True if the flags and target object are identical.  Two nodes are identical if their children
-     * are in the same order.
-     */
-    public boolean isIdentical(DSInfo arg) {
-        if (arg == this) {
-            return true;
-        } else if (arg == null) {
-            return false;
-        } else if (getFlags() != arg.getFlags()) {
-            return false;
-        } else if (!DSUtil.equal(arg.getName(), getName())) {
-            return false;
-        }
-        if (isNode()) {
-            return getNode().isIdentical(arg.get());
-        }
-        return DSUtil.equal(get(), arg.get());
     }
 
     /**
@@ -383,7 +369,9 @@ public class DSInfo implements ApiObject, GroupListener {
      * Fires a metadata changed event.
      */
     public void modified(DSGroup map) {
-        fireInfoChanged();
+        if ((parent != null) && (parent.isRunning())) {
+            parent.fire(DSNode.METADATA_CHANGED_EVENT, this, null);
+        }
     }
 
     /**
@@ -557,7 +545,7 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     DSInfo setFlag(int position, boolean on) {
-        fireInfoChanged();
+        //modified?
         flags = DSUtil.setBit(flags, position, on);
         return this;
     }
@@ -580,16 +568,6 @@ public class DSInfo implements ApiObject, GroupListener {
     DSInfo setDeclared(boolean arg) {
         setFlag(DECLARED, arg);
         return this;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Private Methods
-    ///////////////////////////////////////////////////////////////////////////
-
-    private void fireInfoChanged() {
-        if ((parent != null) && (parent.isRunning())) {
-            parent.fire(DSNode.METADATA_CHANGED_EVENT, this, null);
-        }
     }
 
 }

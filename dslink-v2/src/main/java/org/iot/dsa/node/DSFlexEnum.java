@@ -88,11 +88,6 @@ public class DSFlexEnum extends DSValue implements DSIEnum, DSIMetadata, DSIStor
     }
 
     @Override
-    public boolean isEqual(Object obj) {
-        return equals(obj);
-    }
-
-    @Override
     public boolean isNull() {
         return this == NULL;
     }

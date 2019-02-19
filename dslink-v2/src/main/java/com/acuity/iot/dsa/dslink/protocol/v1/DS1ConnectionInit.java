@@ -1,6 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.v1;
 
 import com.acuity.iot.dsa.dslink.io.DSBase64;
+import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,8 +96,8 @@ public class DS1ConnectionInit extends DSNode {
         return conn.getInputStream();
     }
 
-    DSLink getLink() {
-        return connection.getLink();
+    DSRootLink getLink() {
+        return (DSRootLink) connection.getLink();
     }
 
     /**
@@ -243,7 +244,7 @@ public class DS1ConnectionInit extends DSNode {
      */
     void writeConnectionRequest(HttpURLConnection conn) throws Exception {
         DSMap map = new DSMap();
-        map.put("publicKey", DSBase64.encodeUrl(link.getKeys().encodePublic()));
+        map.put("publicKey", DSBase64.encodeUrl(getLink().getKeys().encodePublic()));
         map.put("isRequester", link.getMain().isRequester());
         map.put("isResponder", link.getMain().isResponder());
         map.put("linkData", new DSMap());

@@ -211,7 +211,7 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     protected void init() {
-        DSTarget path = new DSTarget(getPath(), getLink());
+        DSTarget path = new DSTarget(getPath(), getLink().getRootNode());
         if (path.isResponder()) {
             DSIResponder responder = (DSIResponder) path.getTarget();
             setPath(path.getPath());

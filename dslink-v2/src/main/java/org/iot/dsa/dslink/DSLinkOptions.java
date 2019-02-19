@@ -1,11 +1,11 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.protocol.DSKeys;
 import com.acuity.iot.dsa.dslink.sys.logging.DSLevel;
 import java.io.File;
 import java.util.logging.Level;
 import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.security.DSKeys;
 
 /**
  * Configuration options for starting a link.  The base configuration is the file dslink.json.
@@ -24,6 +24,7 @@ public class DSLinkOptions {
     public static final String CFG_BROKER_URL = "broker";
     public static final String CFG_DSLINK_JSON = "dslink-json";
     public static final String CFG_KEY_FILE = "key";
+    public static final String CFG_HOME = "home";
     //public static final String CFG_LOG_FILE = "log-file";
     public static final String CFG_LOG_LEVEL = "log";
     public static final String CFG_MAIN_NODE = "main-node";
@@ -44,6 +45,7 @@ public class DSLinkOptions {
     private String dslinkJson;
     private DSMap dslinkMap;
     private boolean help = false;
+    private File home;
     private DSKeys keys;
     private String linkName;
     //private File logFile;
@@ -52,7 +54,6 @@ public class DSLinkOptions {
     private Boolean msgpack = null;
     private File nodesFile;
     private String token;
-    private File workingDir = new File(".");
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -68,10 +69,10 @@ public class DSLinkOptions {
     /**
      * Can be use to change the working dir from the default process working dir.
      *
-     * @param workingDir Base directory used to resolve other files.
+     * @param home Base directory used to resolve other files.
      */
-    public DSLinkOptions(File workingDir) {
-        this.workingDir = workingDir;
+    public DSLinkOptions(File home) {
+        this.home = home;
     }
 
     /**
@@ -190,7 +191,13 @@ public class DSLinkOptions {
      */
     public DSMap getDslinkMap() {
         if (dslinkMap == null) {
-            File file = new File(workingDir, getDslinkJson());
+            File file = null;
+            File home = this.home;
+            if (home != null) {
+                file = new File(home, getDslinkJson());
+            } else {
+                file = new File(getDslinkJson());
+            }
             if (!file.exists()) {
                 throw new IllegalStateException("Does not exist: " + file.getAbsolutePath());
             }
@@ -206,9 +213,10 @@ public class DSLinkOptions {
         StringBuilder buf = new StringBuilder();
         buf.append("Options can be specified as key=value or key value. The following are ")
            .append("all optional:\n\n")
-           .append(" --broker       Required, broker URI for the connection handshake.\n")
-           .append(" --dslink-json  Path to the dslink.json file.\n")
+           .append(" --broker       Broker URI for the connection handshake.\n")
+           .append(" --dslink-json  Path to the dslink.json file, not related to the home dir.\n")
            .append(" --help|-h      Displays this message.\n")
+           .append(" --home         Directory the link should use for file IO.  Default is process dir.\n")
            .append(" --key          Path to the stored keys file.\n")
            .append(" --log          Log level (finest,finer,fine,config,info,warning,severe).\n")
            .append(" --log-file     Path to the log file.\n")
@@ -221,12 +229,23 @@ public class DSLinkOptions {
     }
 
     /**
-     * If not set, will attempt to use the getConfig in dslink.json and fall back to '.key' in the
-     * process directory if necessary.  If the file does not exist, new keys will be created.
+     * If not already set, will attempt to use CFG_HOME in dslink.json.  Whether or not the config
+     * is present, home will be resolved against the directory of the process.
+     */
+    public File getHome() {
+        if (home == null) {
+            setHome(getConfig(CFG_HOME, null));
+        }
+        return home;
+    }
+
+    /**
+     * If not set, will attempt to use the config in dslink.json (default is '.key') and resolve
+     * against the home directory.  If the file does not exist, new keys will be created.
      */
     public DSKeys getKeys() {
         if (keys == null) {
-            setKeys(new File(workingDir, getConfig(CFG_KEY_FILE, ".key")));
+            setKeys(new File(getHome(), getConfig(CFG_KEY_FILE, ".key")));
         }
         return keys;
     }
@@ -303,7 +322,7 @@ public class DSLinkOptions {
     public File getNodesFile() {
         if (nodesFile == null) {
             String path = getConfig(CFG_NODE_FILE, "nodes.zip");
-            nodesFile = new File(workingDir, path);
+            nodesFile = new File(getHome(), path);
         }
         return nodesFile;
     }
@@ -382,13 +401,15 @@ public class DSLinkOptions {
     }
 
     /**
-     * Sets the link map by file path.  Will throw a runtime exception if there are IO problems.
+     * Sets the home directory the link should use for file IO.  The path will be resolved
+     * against the directory of the process "."
      */
-    public DSLinkOptions setDslinkMap(File file) {
-        if (!file.exists()) {
-            throw new IllegalStateException("Does not exist: " + file.getAbsolutePath());
+    public DSLinkOptions setHome(String path) {
+        home = new File(".");
+        if ((path != null) && !path.isEmpty()) {
+            home = new File(home, path);
         }
-        this.dslinkMap = Json.read(file).toMap();
+        home = home.getAbsoluteFile();
         return this;
     }
 
@@ -409,7 +430,7 @@ public class DSLinkOptions {
     }
 
     public DSLinkOptions setKeys(String path) {
-        return setKeys(new File(workingDir, path));
+        return setKeys(new File(getHome(), path));
     }
 
     public DSLinkOptions setLinkName(String arg) {
@@ -445,13 +466,9 @@ public class DSLinkOptions {
         return setMsgpack("true".equalsIgnoreCase(str));
     }
 
-    public DSLinkOptions setNodesFile(File file) {
-        nodesFile = file;
-        return this;
-    }
-
     public DSLinkOptions setNodesFile(String path) {
-        return setNodesFile(new File(workingDir, path));
+        nodesFile = new File(getHome(), path);
+        return this;
     }
 
     public DSLinkOptions setToken(String arg) {
@@ -543,7 +560,9 @@ public class DSLinkOptions {
             if (key.equals("--broker")) {
                 setBrokerUri(value);
             } else if (key.equals("--dslink-json")) {
-                setDslinkMap(new File(value));
+                setDslinkJson(value);
+            } else if (key.equals("--home")) {
+                setHome(value);
             } else if (key.equals("--help")) {
                 help = true;
             } else if (key.equals("--key")) {
@@ -557,7 +576,7 @@ public class DSLinkOptions {
             } else if (key.equals("--name")) {
                 setLinkName(value);
             } else if (key.equals("--nodes")) {
-                setNodesFile(new File(value));
+                setNodesFile(value);
             } else if (key.equals("--token")) {
                 setToken(value);
             } else {

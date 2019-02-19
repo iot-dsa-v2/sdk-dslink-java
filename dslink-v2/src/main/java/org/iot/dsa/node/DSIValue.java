@@ -3,28 +3,15 @@ package org.iot.dsa.node;
 /**
  * How data values are represented in the node tree.
  * <p>
- * <p>
- * <p>
  * Beyond the interface methods, custom implementations should:
- *
- *
- *
  * <ul>
- *
  * <li>Have a NULL instance if possible.
- *
  * <li>Try to maintain singleton instances when possible, especially for common instances.
- *
  * <li>Instead of constructors, use static valueOf methods to ensure singleton values such as NULL
  * are used.
- *
  * <li>Register an instance for decoding with DSRegistry.registerDecoder(YourValue.class, instance)
  * in a static initializer. If you have a NULL instance, use that.
- *
- * <li>If mutable (avoid if at all possible), implement DSIPublisher so nodes know of changes.
- *
  * <li>If a DSNode subclass is implementing DSIValue, it's onSet(DSIValue) must also be overridden.
- *
  * </ul>
  *
  * @author Aaron Hansen

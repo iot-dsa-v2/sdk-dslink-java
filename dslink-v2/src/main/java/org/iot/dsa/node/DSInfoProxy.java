@@ -108,6 +108,7 @@ class DSInfoProxy extends DSInfo {
             return new DSMetadata(metadata);
         }
         metadata = new DSMap();
+        metadata.setParent(this);
         defaultInfo.getMetadata(metadata);
         return new DSMetadata(metadata);
     }

@@ -1,9 +1,9 @@
 package com.acuity.iot.dsa.dslink.test;
 
+import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1ConnectionInit;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
-import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSMainNode;
 import org.iot.dsa.node.DSMap;
@@ -13,14 +13,13 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Aaron Hansen
  */
-public class V1TestLink extends DSLink {
+public class V1TestLink extends DSRootLink {
 
     public V1TestLink() {
     }
 
     public V1TestLink(DSMainNode MainNode) {
-        getSys().getBackupService().setEnabled(false);
-        setNodes(MainNode);
+        setMain(MainNode);
         DSLinkOptions cfg = new DSLinkOptions();
         cfg.setDslinkMap(new DSMap().put("configs", new DSMap()));
         cfg.setLinkName("dslink-java-testing");
@@ -28,6 +27,7 @@ public class V1TestLink extends DSLink {
         cfg.setConfig(DSLinkOptions.CFG_CONNECTION_TYPE, TestConnection.class.getName());
         cfg.setConfig(DSLinkOptions.CFG_STABLE_DELAY, 1);
         init(cfg);
+        getSys().getBackupService().setEnabled(false);
     }
 
     public static class TestConnection extends DS1LinkConnection {

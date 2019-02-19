@@ -74,23 +74,23 @@ public class SerializationTest {
     public void theTest() throws Exception {
         DSNode orig = new MyNode();
         DSNode decoded = decode(encode(orig));
-        Assert.assertTrue(orig.isEqual(decoded));
+        Assert.assertTrue(orig.equals(decoded));
         orig.put("int", DSInt.valueOf(2));
         decoded = decode(encode(orig));
-        Assert.assertTrue(orig.isEqual(decoded));
+        Assert.assertTrue(orig.equals(decoded));
         orig.add("real", DSFloat.valueOf(2.2f));
         decoded = decode(encode(orig));
-        Assert.assertTrue(orig.isEqual(decoded));
+        Assert.assertTrue(orig.equals(decoded));
         Assert.assertTrue(orig.get("real").equals(DSFloat.valueOf(2.2f)));
         orig.getInfo("int").setReadOnly(true);
         decoded = decode(encode(orig));
-        Assert.assertTrue(orig.isEqual(decoded));
+        Assert.assertTrue(orig.equals(decoded));
         DSNode tmp = new MyNode();
         tmp.add("foo", DSString.valueOf("bar"));
         orig.add("anotherNode", tmp);
         debug(orig);
         decoded = decode(encode(orig));
-        Assert.assertTrue(orig.isEqual(decoded));
+        Assert.assertTrue(orig.equals(decoded));
     }
 
     private void debug(DSNode node) throws Exception {

@@ -12,13 +12,13 @@ import org.testng.annotations.Test;
 
 public class SysProfilerTest {
 
-    private DSLink link;
+    private TestLink link;
     private static boolean success = false;
 
     @Test
     public void theTest() throws Exception {
         link = new TestLink(new DSMainNode());
-        link.getConnection().subscribe((event, node, child, data) -> {
+        link.getUpstream().subscribe((event, node, child, data) -> {
             success = true;
             synchronized (SysProfilerTest.this) {
                 SysProfilerTest.this.notifyAll();
@@ -32,7 +32,7 @@ public class SysProfilerTest {
         }
         Assert.assertTrue(success);
         success = false;
-        DSIRequester requester = link.getConnection().getRequester();
+        DSIRequester requester = link.getUpstream().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/sys/" + DSSysNode.OPEN_PROFILER, null, new SimpleInvokeHandler());
         res.getUpdate(1000);
