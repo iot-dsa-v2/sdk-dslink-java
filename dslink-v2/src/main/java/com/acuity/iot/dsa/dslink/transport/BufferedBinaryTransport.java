@@ -107,7 +107,7 @@ public abstract class BufferedBinaryTransport extends DSBinaryTransport {
     }
 
     @Override
-    public int messageSize() {
+    public int writeMessageSize() {
         return messageSize;
     }
 

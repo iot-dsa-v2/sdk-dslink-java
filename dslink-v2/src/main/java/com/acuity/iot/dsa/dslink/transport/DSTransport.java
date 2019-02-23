@@ -77,11 +77,6 @@ public abstract class DSTransport extends DSNode {
     public abstract boolean isOpen();
 
     /**
-     * The size of the current message (in what depends on the type of transport).
-     */
-    public abstract int messageSize();
-
-    /**
      * Establish the underlying connection.  Calling when already open will have no effect.
      *
      * @return This
@@ -116,6 +111,11 @@ public abstract class DSTransport extends DSNode {
         put(READ_TIMEOUT, DSLong.valueOf(millis)).setReadOnly(true);
         return this;
     }
+
+    /**
+     * The size of the current message (in what depends on the type of transport).
+     */
+    public abstract int writeMessageSize();
 
     @Override
     protected void declareDefaults() {

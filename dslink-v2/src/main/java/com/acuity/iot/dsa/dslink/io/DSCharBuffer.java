@@ -13,11 +13,8 @@ public class DSCharBuffer {
     ///////////////////////////////////////////////////////////////////////////
 
     private char[] buffer;
-    private RuntimeException closeException;
     private int length = 0;
     private int offset = 0;
-    private boolean open = false;
-    private long timeout = 60000;
 
     /////////////////////////////////////////////////////////////////
     // Methods - Constructors
@@ -42,66 +39,15 @@ public class DSCharBuffer {
         return length;
     }
 
-    public synchronized void clear() {
+    public void clear() {
         length = 0;
         offset = 0;
-        notifyAll();
-    }
-
-    /**
-     * Important for notifying waiting threads.
-     */
-    public synchronized void close() {
-        if (!open) {
-            return;
-        }
-        open = false;
-        notifyAll();
-    }
-
-    /**
-     * Important for notifying waiting threads.
-     */
-    public synchronized void close(RuntimeException toThrow) {
-        if (!open) {
-            return;
-        }
-        closeException = toThrow;
-        open = false;
-        notifyAll();
-    }
-
-    /**
-     * Number of millis the read methods will block before throwing an IOException.
-     *
-     * @return Zero or less is indefinite.
-     */
-    public long getTimeout() {
-        return timeout;
-    }
-
-    public boolean isOpen() {
-        return open;
-    }
-
-    public synchronized void open() {
-        if (open) {
-            return;
-        }
-        length = 0;
-        offset = 0;
-        open = true;
-        closeException = null;
-        notifyAll();
     }
 
     /**
      * Add the char to the buffer for reading.
      */
-    public synchronized void put(char b) {
-        if (!open) {
-            throw new DSIoException("Closed");
-        }
+    public void put(char b) {
         int bufLen = buffer.length;
         int msgLen = 1;
         if ((msgLen + length + offset) >= bufLen) {
@@ -122,7 +68,7 @@ public class DSCharBuffer {
      *
      * @param msg The data source.
      */
-    public synchronized void put(char[] msg) {
+    public void put(char[] msg) {
         put(msg, 0, msg.length);
     }
 
@@ -133,10 +79,7 @@ public class DSCharBuffer {
      * @param off The start offset in the buffer to put data.
      * @param len The maximum number of chars to read.
      */
-    public synchronized void put(char[] msg, int off, int len) {
-        if (!open) {
-            throw new DSIoException("Closed");
-        }
+    public void put(char[] msg, int off, int len) {
         int bufLen = buffer.length;
         if ((len + length + offset) >= bufLen) {
             if ((len + length) > bufLen) {  //the buffer is too small
@@ -154,10 +97,7 @@ public class DSCharBuffer {
     /**
      * Add chars to the buffer for reading.
      */
-    public synchronized void put(String msg) {
-        if (!open) {
-            throw new DSIoException("Closed");
-        }
+    public void put(String msg) {
         int len = msg.length();
         int bufLen = buffer.length;
         if ((len + length + offset) >= bufLen) {
@@ -174,31 +114,11 @@ public class DSCharBuffer {
     }
 
     /**
-     * Returns the next incoming char, or -1 when end of stream has been reached.
-     *
-     * @throws DSIoException if there are any issues.
+     * Returns the next incoming char, or -1 when there is no data.
      */
-    public synchronized int read() {
-        while (open && (length == 0)) {
-            try {
-                if (timeout > 0) {
-                    wait(timeout);
-                } else {
-                    wait();
-                }
-            } catch (InterruptedException ignore) {
-            }
-        }
-        notifyAll();
-        if (!open) {
-            if (length == 0) {
-                if (closeException != null) {
-                    throw closeException;
-                }
-                return -1;
-            }
-        } else if (length == 0) {
-            throw new DSIoException("Read timeout");
+    public int read() {
+        if (length == 0) {
+            return -1;
         }
         int ret = buffer[offset];
         offset++;
@@ -212,30 +132,12 @@ public class DSCharBuffer {
      * @param buf The buffer into which data is read.
      * @param off The start offset in the buffer to put data.
      * @param len The maximum number of chars to read.
-     * @return The number of chars read or -1 for end of stream.
+     * @return The number of chars read.
      * @throws DSIoException if there are any issues.
      */
-    public synchronized int read(char[] buf, int off, int len) {
-        while (open && (length == 0)) {
-            try {
-                if (timeout > 0) {
-                    wait(timeout);
-                } else {
-                    wait();
-                }
-            } catch (InterruptedException ignore) {
-            }
-        }
-        notifyAll();
-        if (!open) {
-            if (length == 0) {
-                if (closeException != null) {
-                    throw closeException;
-                }
-                return -1;
-            }
-        } else if (length == 0) {
-            throw new DSIoException("Read timeout");
+    public int read(char[] buf, int off, int len) {
+        if (length == 0) {
+            return 0;
         }
         len = Math.min(len, length);
         System.arraycopy(buffer, offset, buf, off, len);
@@ -246,17 +148,6 @@ public class DSCharBuffer {
             offset += len;
         }
         return len;
-    }
-
-    /**
-     * Number of millis the read methods will block before throwing an DSIoException.
-     *
-     * @param timeout Zero or less for indefinite.
-     * @return This
-     */
-    public DSCharBuffer setTimeout(long timeout) {
-        this.timeout = timeout;
-        return this;
     }
 
     /**

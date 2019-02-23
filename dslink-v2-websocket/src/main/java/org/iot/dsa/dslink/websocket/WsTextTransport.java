@@ -107,7 +107,7 @@ public class WsTextTransport extends DSTextTransport {
     }
 
     @Override
-    public int messageSize() {
+    public int writeMessageSize() {
         return messageSize;
     }
 

@@ -120,7 +120,7 @@ public abstract class StreamBinaryTransport extends DSBinaryTransport {
     }
 
     @Override
-    public int messageSize() {
+    public int writeMessageSize() {
         return messageSize;
     }
 

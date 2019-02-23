@@ -6,7 +6,9 @@ import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.info;
 import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.trace;
 import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.warn;
 
+import java.util.function.Supplier;
 import java.util.logging.Logger;
+import org.iot.dsa.util.DSException;
 
 /**
  * Adds an abstraction layer on Java Util Logging for two purposes:
@@ -64,7 +66,7 @@ public class DSLogger {
     }
 
     /**
-     * Log a debug event.
+     * Log a finer message.
      */
     public void debug(Object msg) {
         if (msg != null) {
@@ -73,7 +75,25 @@ public class DSLogger {
     }
 
     /**
-     * Log a debug event.
+     * Log a finer message.
+     */
+    public void debug(Supplier<String> msg) {
+        if (msg != null) {
+            getLogger().log(debug, msg);
+        }
+    }
+
+    /**
+     * Log a parameterized message.
+     */
+    public void debug(Object msg, Object... params) {
+        if (msg != null) {
+            getLogger().log(debug, string(msg), params);
+        }
+    }
+
+    /**
+     * Log a finer message.
      */
     public void debug(Object msg, Throwable x) {
         getLogger().log(debug, string(msg), x);
@@ -86,14 +106,35 @@ public class DSLogger {
         return getLogger().isLoggable(error);
     }
 
+    /**
+     * Log a severe message.
+     */
     public void error(Object msg) {
         if (msg != null) {
             getLogger().log(error, string(msg));
         }
     }
 
+    /**
+     * Log a parameterized message.
+     */
+    public void error(Object msg, Object... params) {
+        if (msg != null) {
+            getLogger().log(error, string(msg), params);
+        }
+    }
+
     public void error(Object msg, Throwable x) {
         getLogger().log(error, string(msg), x);
+    }
+
+    /**
+     * Log a severe message.
+     */
+    public void error(Supplier<String> msg) {
+        if (msg != null) {
+            getLogger().log(error, msg);
+        }
     }
 
     /**
@@ -113,10 +154,28 @@ public class DSLogger {
     }
 
     /**
+     * Log a parameterized message.
+     */
+    public void info(Object msg, Object... params) {
+        if (msg != null) {
+            getLogger().log(info, string(msg), params);
+        }
+    }
+
+    /**
      * Log an infrequent major lifecycle event.
      */
     public void info(Object msg, Throwable x) {
         getLogger().log(info, string(msg), x);
+    }
+
+    /**
+     * Log an infrequent major lifecycle event.
+     */
+    public void info(Supplier<String> msg) {
+        if (msg != null) {
+            getLogger().log(info, msg);
+        }
     }
 
     /**
@@ -136,10 +195,28 @@ public class DSLogger {
     }
 
     /**
+     * Log a parameterized message.
+     */
+    public void trace(Object msg, Object... params) {
+        if (msg != null) {
+            getLogger().log(trace, string(msg), params);
+        }
+    }
+
+    /**
      * Log a trace or verbose event.
      */
     public void trace(Object msg, Throwable x) {
         getLogger().log(trace, string(msg), x);
+    }
+
+    /**
+     * Log a trace or verbose event.
+     */
+    public void trace(Supplier<String> msg) {
+        if (msg != null) {
+            getLogger().log(trace, msg);
+        }
     }
 
     /**
@@ -165,9 +242,34 @@ public class DSLogger {
         }
     }
 
+    /**
+     * Log a parameterized message.
+     */
+    public void warn(Object msg, Object... params) {
+        if (msg != null) {
+            getLogger().log(warn, string(msg), params);
+        }
+    }
+
+    /**
+     * Log a trace or verbose event.
+     */
+    public void warn(Supplier<String> msg) {
+        if (msg != null) {
+            getLogger().log(warn, msg);
+        }
+    }
+
     /////////////////////////////////////////////////////////////////
     // Protected Methods
     /////////////////////////////////////////////////////////////////
+
+    /**
+     * Override point, returns the simple class name by default.
+     */
+    protected String getLogName() {
+        return getClass().getSimpleName();
+    }
 
     /**
      * Override point, returns the console logger by default.
@@ -177,13 +279,6 @@ public class DSLogger {
             logger = Logger.getLogger(getLogName());
         }
         return logger;
-    }
-
-    /**
-     * Override point, returns the simple class name by default.
-     */
-    protected String getLogName() {
-        return getClass().getSimpleName();
     }
 
     /////////////////////////////////////////////////////////////////
