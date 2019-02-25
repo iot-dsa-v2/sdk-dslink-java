@@ -17,7 +17,7 @@ import org.iot.dsa.util.DSException;
  * @author Aaron Hansen
  */
 @ClientEndpoint
-public class TyrusTransport extends DSTransportWs {
+public class ClientTransport extends DSTransportWs {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -38,8 +38,6 @@ public class TyrusTransport extends DSTransportWs {
             if (client == null) {
                 client = ClientManager.createClient();
             }
-            client.setDefaultMaxBinaryMessageBufferSize(64 * 1024);
-            client.setDefaultMaxTextMessageBufferSize(64 * 1024);
             URI connUri = new URI(getConnectionUrl());
             if ("wss".equalsIgnoreCase(connUri.getScheme())) {
                 SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(

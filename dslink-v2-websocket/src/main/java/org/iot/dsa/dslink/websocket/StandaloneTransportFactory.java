@@ -12,8 +12,8 @@ import org.iot.dsa.dslink.DSLinkConnection;
 public class StandaloneTransportFactory implements Factory {
 
     @Override
-    public TyrusTransport makeTransport(DSLinkConnection conn) {
-        return new TyrusTransport();
+    public ClientTransport makeTransport(DSLinkConnection conn) {
+        return new ClientTransport();
     }
 
 }

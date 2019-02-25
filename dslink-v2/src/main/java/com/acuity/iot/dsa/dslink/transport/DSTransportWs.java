@@ -3,16 +3,21 @@ package com.acuity.iot.dsa.dslink.transport;
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.io.DSCharBuffer;
 import com.acuity.iot.dsa.dslink.io.DSIoException;
+import com.acuity.iot.dsa.dslink.sys.cert.SysCertService;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import javax.websocket.CloseReason;
+import javax.websocket.ContainerProvider;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
+import javax.websocket.WebSocketContainer;
+import org.iot.dsa.util.DSException;
 
 /**
  * Abstract websocket transport.
@@ -104,9 +109,9 @@ public abstract class DSTransportWs extends DSTransport {
     @Override
     protected int available() {
         if (isText()) {
-            return getBinReadBuffer().available();
+            return getTextReadBuffer().available();
         }
-        return getTextReadBuffer().available();
+        return getBinReadBuffer().available();
     }
 
     @Override
@@ -120,7 +125,7 @@ public abstract class DSTransportWs extends DSTransport {
                     debug("", x);
                 }
             }
-            if (available() > 0) {
+            if (readBuf.available() > 0) {
                 return readBuf.sendTo(buf, off, len);
             }
             if (!testOpen()) {
@@ -141,7 +146,7 @@ public abstract class DSTransportWs extends DSTransport {
                     debug("", x);
                 }
             }
-            if (available() > 0) {
+            if (readBuf.available() > 0) {
                 return readBuf.read(buf, off, len);
             }
             if (!testOpen()) {

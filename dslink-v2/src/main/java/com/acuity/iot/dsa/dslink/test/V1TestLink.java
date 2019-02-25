@@ -4,7 +4,7 @@ import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1ConnectionInit;
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
-import java.util.logging.Level;
+import com.acuity.iot.dsa.dslink.transport.PipedTransport;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSMainNode;
 import org.iot.dsa.node.DSMap;
@@ -42,7 +42,7 @@ public class V1TestLink extends DSRootLink {
         }
 
         protected DSTransport makeTransport(DS1ConnectionInit init) {
-            return new TestTransport().setText(true);
+            return new PipedTransport().setText(true);
         }
 
     }

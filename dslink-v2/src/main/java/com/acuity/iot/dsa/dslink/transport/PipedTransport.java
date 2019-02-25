@@ -1,16 +1,15 @@
-package com.acuity.iot.dsa.dslink.test;
+package com.acuity.iot.dsa.dslink.transport;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.io.DSCharBuffer;
 import com.acuity.iot.dsa.dslink.io.DSIoException;
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 
 /**
  * Routes requests and responses back to self.
  *
  * @author Aaron Hansen
  */
-public class TestTransport extends DSTransport {
+public class PipedTransport extends DSTransport {
 
     private DSByteBuffer binary;
     private DSCharBuffer text;
