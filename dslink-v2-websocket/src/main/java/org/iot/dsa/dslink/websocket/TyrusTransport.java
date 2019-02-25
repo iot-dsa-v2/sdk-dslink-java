@@ -1,19 +1,9 @@
 package org.iot.dsa.dslink.websocket;
 
 import com.acuity.iot.dsa.dslink.sys.cert.SysCertService;
-import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransportWs;
 import java.net.URI;
 import javax.websocket.ClientEndpoint;
-import javax.websocket.CloseReason;
-import javax.websocket.EndpointConfig;
-import javax.websocket.OnClose;
-import javax.websocket.OnError;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.RemoteEndpoint;
-import javax.websocket.Session;
 import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.client.ClientProperties;
 import org.glassfish.tyrus.client.SslContextConfigurator;
@@ -38,31 +28,6 @@ public class TyrusTransport extends DSTransportWs {
     /////////////////////////////////////////////////////////////////
     // Methods - In alphabetical order by method name.
     /////////////////////////////////////////////////////////////////
-
-    @OnClose
-    public void onClose(Session session, CloseReason reason) {
-        if (isOpen()) {
-            info("Remotely closed, " + reason.toString());
-            close();
-        }
-    }
-
-    @OnError
-    public void onError(Session session, Throwable err) {
-        if (isOpen()) {
-            close(err);
-        }
-    }
-
-    @OnMessage
-    public void onMessage(Session session, String msgPart, boolean isLast) {
-        recv(msgPart, isLast);
-    }
-
-    @OnOpen
-    public void onOpen(Session session, EndpointConfig config) {
-        onOpen(session);
-    }
 
     @Override
     public void open() {

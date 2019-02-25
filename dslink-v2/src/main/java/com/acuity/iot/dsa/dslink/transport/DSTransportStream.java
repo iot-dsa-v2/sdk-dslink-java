@@ -12,7 +12,7 @@ import java.io.Writer;
  *
  * @author Aaron Hansen
  */
-public abstract class DSTransportBaseStream extends DSTransportBase {
+public abstract class DSTransportStream extends DSTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -71,6 +71,18 @@ public abstract class DSTransportBaseStream extends DSTransportBase {
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
+
+
+    @Override
+    protected int available() {
+        int ret = 0;
+        try {
+            ret = in.available();
+        } catch (IOException x) {
+            throw new UncheckedIOException(x);
+        }
+        return ret;
+    }
 
     @Override
     protected int doRead(byte[] buf, int off, int len) {

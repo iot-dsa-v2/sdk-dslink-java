@@ -5,7 +5,6 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v2.requester.DS2Requester;
 import com.acuity.iot.dsa.dslink.protocol.v2.responder.DS2Responder;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,10 +66,6 @@ public class DS2Session extends DSSession implements MessageConstants {
         return responder;
     }
 
-    public DSBinaryTransport getTransport() {
-        return (DSBinaryTransport) super.getTransport();
-    }
-
     @Override
     public boolean shouldEndMessage() {
         return getMessageWriter().getBodyLength() > END_MSG_THRESHOLD;
@@ -82,10 +77,10 @@ public class DS2Session extends DSSession implements MessageConstants {
 
     @Override
     protected void doRecvMessage() {
-        DSBinaryTransport transport = getTransport();
+        DSTransport transport = getTransport();
         DS2MessageReader reader = getMessageReader();
         transport.beginRecvMessage();
-        reader.init(transport.getInput());
+        reader.init(transport.getBinaryInput());
         int ack = reader.getAckId();
         if (ack > 0) {
             setAckRcvd(ack);

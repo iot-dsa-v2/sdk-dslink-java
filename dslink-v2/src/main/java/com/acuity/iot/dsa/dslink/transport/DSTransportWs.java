@@ -19,7 +19,7 @@ import javax.websocket.Session;
  *
  * @author Aaron Hansen
  */
-public abstract class DSTransportBaseWs extends DSTransportBase {
+public abstract class DSTransportWs extends DSTransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -102,6 +102,14 @@ public abstract class DSTransportBaseWs extends DSTransportBase {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
+    protected int available() {
+        if (isText()) {
+            return getBinReadBuffer().available();
+        }
+        return getTextReadBuffer().available();
+    }
+
+    @Override
     protected int doRead(byte[] buf, int off, int len) {
         DSByteBuffer readBuf = getBinReadBuffer();
         synchronized (this) {
@@ -112,13 +120,13 @@ public abstract class DSTransportBaseWs extends DSTransportBase {
                     debug("", x);
                 }
             }
+            if (available() > 0) {
+                return readBuf.sendTo(buf, off, len);
+            }
             if (!testOpen()) {
                 return -1;
             }
-            if (readBuf.available() == 0) {
-                throw new DSIoException("Read timeout");
-            }
-            return readBuf.sendTo(buf, off, len);
+            throw new DSIoException("Read timeout");
         }
     }
 
@@ -133,13 +141,13 @@ public abstract class DSTransportBaseWs extends DSTransportBase {
                     debug("", x);
                 }
             }
+            if (available() > 0) {
+                return readBuf.read(buf, off, len);
+            }
             if (!testOpen()) {
                 return -1;
             }
-            if (readBuf.available() == 0) {
-                throw new DSIoException("Read timeout");
-            }
-            return readBuf.read(buf, off, len);
+            throw new DSIoException("Read timeout");
         }
     }
 

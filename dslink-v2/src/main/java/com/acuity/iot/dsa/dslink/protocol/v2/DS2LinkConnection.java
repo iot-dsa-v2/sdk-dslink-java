@@ -9,7 +9,7 @@ import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.protocol.DSBrokerConnection;
 import com.acuity.iot.dsa.dslink.protocol.DSKeys;
 import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
 import java.io.IOException;
@@ -53,7 +53,7 @@ public class DS2LinkConnection extends DSBrokerConnection {
     private DSInfo brokerSalt = getInfo(BROKER_SALT);
     private DSInfo linkSalt = getInfo(LINK_SALT);
     private DS2Session session;
-    private DSBinaryTransport transport;
+    private DSTransport transport;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -100,7 +100,7 @@ public class DS2LinkConnection extends DSBrokerConnection {
     }
 
     @Override
-    public DSBinaryTransport getTransport() {
+    public DSTransport getTransport() {
         return transport;
     }
 
@@ -131,25 +131,22 @@ public class DS2LinkConnection extends DSBrokerConnection {
      * Looks at the connection initialization response to determine the type of transport then
      * instantiates the correct type fom the config.
      */
-    protected DSBinaryTransport makeTransport() {
+    protected DSTransport makeTransport() {
         DSTransport.Factory factory = null;
         String uri = getLink().getOptions().getBrokerUri();
-        transport = null;
+        DSTransport transport = null;
         if (uri.startsWith("ws")) {
             try {
                 String type = getLink().getOptions().getConfig(
                         DSLinkOptions.CFG_WS_TRANSPORT_FACTORY,
                         "org.iot.dsa.dslink.websocket.StandaloneTransportFactory");
                 factory = (DSTransport.Factory) Class.forName(type).newInstance();
-                transport = factory.makeBinaryTransport(this);
+                transport = factory.makeTransport(this);
             } catch (Exception x) {
                 DSException.throwRuntime(x);
             }
         } else if (uri.startsWith("ds")) {
-            transport = new SocketTransport();
-        }
-        if (transport != null) {
-            transport.setConnectionUrl(uri);
+            transport = new SocketTransport().setText(false);
         }
         debug(debug() ? "Connection URL = " + uri : null);
         return transport;
@@ -184,7 +181,7 @@ public class DS2LinkConnection extends DSBrokerConnection {
     }
 
     private void recvF1() throws IOException {
-        InputStream in = transport.getInput();
+        InputStream in = transport.getBinaryInput();
         DS2MessageReader reader = new DS2MessageReader();
         reader.init(in);
         if (reader.getMethod() != 0xf1) {
@@ -220,7 +217,7 @@ public class DS2LinkConnection extends DSBrokerConnection {
     }
 
     private void recvF3() throws IOException {
-        InputStream in = transport.getInput();
+        InputStream in = transport.getBinaryInput();
         DS2MessageReader reader = new DS2MessageReader();
         reader.init(in);
         if (reader.getMethod() != 0xf3) {

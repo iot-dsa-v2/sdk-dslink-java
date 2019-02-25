@@ -2,7 +2,7 @@ package com.acuity.iot.dsa.dslink.test;
 
 import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSMainNode;
 import org.iot.dsa.node.DSMap;
@@ -35,12 +35,8 @@ public class V2TestLink extends DSRootLink {
         }
 
         @Override
-        protected DSBinaryTransport makeTransport() {
-            TestTransport transport = new TestTransport();
-            transport.setConnection(this);
-            transport.setReadTimeout(getLink().getOptions().getConfig(
-                    DSLinkOptions.CFG_READ_TIMEOUT, 60000));
-            return transport;
+        protected DSTransport makeTransport() {
+            return new TestTransport().setText(false);
         }
 
         @Override

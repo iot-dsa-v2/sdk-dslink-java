@@ -1,6 +1,6 @@
 package com.acuity.iot.dsa.dslink.io;
 
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
+import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -560,7 +560,7 @@ public class DSByteBuffer extends InputStream {
     /**
      * Push bytes from the internal buffer to the transport.
      */
-    public void sendTo(DSBinaryTransport transport, boolean isLast) {
+    public void sendTo(DSTransport transport, boolean isLast) {
         transport.write(buffer, offset, length, isLast);
         offset = 0;
         length = 0;

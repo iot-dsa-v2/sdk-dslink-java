@@ -3,8 +3,6 @@ package com.acuity.iot.dsa.dslink.protocol.v1;
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import com.acuity.iot.dsa.dslink.protocol.DSBrokerConnection;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
-import com.acuity.iot.dsa.dslink.transport.DSTextTransport;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSLinkOptions;
@@ -102,8 +100,7 @@ public class DS1LinkConnection extends DSBrokerConnection {
             if (init == null) {
                 init = initializeConnection();
             }
-            makeTransport(init);
-            put(TRANSPORT, getTransport()).setTransient(true);
+            setTransport(makeTransport(init));
             getTransport().open();
             connectionInit = init;
             info(getConnectionId() + " connected");
@@ -145,9 +142,11 @@ public class DS1LinkConnection extends DSBrokerConnection {
             factory = (DSTransport.Factory) Class.forName(type).newInstance();
             String format = init.getResponse().getString("format");
             if ("msgpack".equals(format)) {
-                transport = factory.makeBinaryTransport(this);
+                transport = factory.makeTransport(this);
+                transport.setText(false);
             } else if ("json".equals(format)) {
-                transport = factory.makeTextTransport(this);
+                transport = factory.makeTransport(this);
+                transport.setText(true);
             } else {
                 throw new IllegalStateException("Unknown format: " + format);
             }
@@ -157,10 +156,6 @@ public class DS1LinkConnection extends DSBrokerConnection {
         String uri = init.makeWsUrl(wsUri);
         debug(debug() ? "Connection URL = " + uri : null);
         transport.setConnectionUrl(uri);
-        transport.setConnection(this);
-        transport.setReadTimeout(getLink().getOptions().getConfig(
-                DSLinkOptions.CFG_READ_TIMEOUT, 60000));
-        setTransport(transport);
         debug(debug() ? "Transport type: " + transport.getClass().getName() : null);
         return transport;
     }
@@ -175,28 +170,24 @@ public class DS1LinkConnection extends DSBrokerConnection {
         debug(getConnectionId() + " disconnected");
     }
 
-    /**
-     * Sets the transport and creates the appropriate reader/writer.
-     */
     protected void setTransport(DSTransport transport) {
-        if (transport instanceof DSBinaryTransport) {
-            final DSBinaryTransport trans = (DSBinaryTransport) transport;
-            reader = new MsgpackReader(trans.getInput());
+        this.transport = transport;
+        if (transport.isText()) {
+            reader = Json.reader(transport.getTextInput());
+            writer = Json.writer(transport.getTextOutput());
+        } else {
+            reader = new MsgpackReader(transport.getBinaryInput());
             writer = new MsgpackWriter() {
                 @Override
                 public void onComplete() {
-                    writeTo(trans);
+                    writeTo(getTransport());
                 }
             };
-        } else if (transport instanceof DSTextTransport) {
-            DSTextTransport trans = (DSTextTransport) transport;
-            reader = Json.reader(trans.getReader());
-            writer = Json.writer(trans.getWriter());
-        } else {
-            throw new IllegalStateException(
-                    "Unexpected transport type: " + transport.getClass().getName());
         }
-        this.transport = transport;
+        transport.setConnection(this);
+        transport.setReadTimeout(getLink().getOptions().getConfig(
+                DSLinkOptions.CFG_READ_TIMEOUT, 60000));
+        put(TRANSPORT, transport);
     }
 
 }

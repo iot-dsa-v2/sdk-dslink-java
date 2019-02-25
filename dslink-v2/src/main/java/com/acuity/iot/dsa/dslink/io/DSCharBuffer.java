@@ -60,7 +60,6 @@ public class DSCharBuffer {
         }
         buffer[length + offset] = b;
         length++;
-        notifyAll();
     }
 
     /**
@@ -91,7 +90,6 @@ public class DSCharBuffer {
         }
         System.arraycopy(msg, off, buffer, offset, len);
         length += len;
-        notifyAll();
     }
 
     /**
@@ -110,7 +108,6 @@ public class DSCharBuffer {
         }
         msg.getChars(0, len, buffer, offset + length);
         length += len;
-        notifyAll();
     }
 
     /**

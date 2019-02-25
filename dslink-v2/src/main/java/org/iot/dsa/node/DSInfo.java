@@ -485,6 +485,13 @@ public class DSInfo implements ApiObject, GroupListener {
         return this;
     }
 
+    public String toString() {
+        if (name != null) {
+            return name;
+        }
+        return String.valueOf(object);
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Package Methods
     ///////////////////////////////////////////////////////////////////////////
