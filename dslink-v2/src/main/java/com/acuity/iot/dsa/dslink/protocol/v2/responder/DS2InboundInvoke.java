@@ -7,7 +7,6 @@ import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundInvoke;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.protocol.v2.MultipartWriter;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;
 
@@ -46,7 +45,7 @@ class DS2InboundInvoke extends DSInboundInvoke implements MessageConstants {
             getResponder().sendResponse(this);
         } else {
             DSBrokerConnection up = (DSBrokerConnection) getResponder().getConnection();
-            out.write((DSBinaryTransport) up.getTransport());
+            out.write(up.getTransport());
         }
     }
 

@@ -7,7 +7,6 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundRequest;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.dslink.DSInvalidPathException;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
@@ -59,7 +58,7 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
         }
         out.addStringHeader(HDR_ERROR_DETAIL, DSException.makeMessage(reason));
         DSBrokerConnection up = (DSBrokerConnection) req.getResponder().getConnection();
-        out.write((DSBinaryTransport) up.getTransport());
+        out.write(up.getTransport());
     }
 
 }

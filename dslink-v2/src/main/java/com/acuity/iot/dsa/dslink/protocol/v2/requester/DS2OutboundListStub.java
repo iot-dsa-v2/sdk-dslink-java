@@ -9,7 +9,6 @@ import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import com.acuity.iot.dsa.dslink.protocol.v2.MultipartWriter;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import java.io.IOException;
 import java.io.InputStream;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
@@ -84,7 +83,7 @@ public class DS2OutboundListStub extends DSOutboundListStub
             multipart.update(out, ack);
             getRequester().sendRequest(this);
         } else {
-            out.write((DSBinaryTransport) getRequester().getTransport());
+            out.write(getRequester().getTransport());
         }
     }
 

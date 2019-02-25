@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.transport;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import javax.net.ssl.SSLSocketFactory;
@@ -10,12 +11,25 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public class SocketTransport extends StreamBinaryTransport {
+public class SocketTransport extends DSTransportStream {
 
     private Socket socket;
 
     @Override
-    public DSTransport open() {
+    public void close() {
+        super.close();
+        try {
+            if (socket != null) {
+                socket.close();
+                socket = null;
+            }
+        } catch (IOException x) {
+            debug(x.getMessage(), x);
+        }
+    }
+
+    @Override
+    public void open() {
         if (isOpen()) {
             throw new IllegalStateException("Already open");
         }
@@ -39,24 +53,11 @@ public class SocketTransport extends StreamBinaryTransport {
                 throw new IllegalArgumentException("Invalid broker URI: " + url);
             }
             socket.setSoTimeout((int) getReadTimeout());
-            init(socket.getInputStream(), socket.getOutputStream());
+            open(socket.getInputStream(), socket.getOutputStream());
             debug(debug() ? "SocketTransport open" : null);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
-        return this;
-    }
-
-    @Override
-    protected void doClose() {
-        try {
-            if (socket != null) {
-                socket.close();
-            }
-        } catch (Exception x) {
-            trace(getPath(), x);
-        }
-        socket = null;
     }
 
 }
