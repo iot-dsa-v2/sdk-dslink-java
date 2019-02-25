@@ -3,7 +3,6 @@ package com.acuity.iot.dsa.dslink.protocol.v2;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 
 /**
  * Responder uses to close streams without errors.
@@ -34,7 +33,7 @@ public class CloseMessage implements MessageConstants, OutboundMessage {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(rid, session.getAckToSend());
         out.setMethod(method);
-        out.write((DSBinaryTransport) session.getTransport());
+        out.write(session.getTransport());
     }
 
 }

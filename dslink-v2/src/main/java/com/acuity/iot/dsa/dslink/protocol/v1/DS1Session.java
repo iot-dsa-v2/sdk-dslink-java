@@ -82,7 +82,7 @@ public class DS1Session extends DSSession {
 
     @Override
     public boolean shouldEndMessage() {
-        return (getWriter().length() + getTransport().messageSize()) > END_MSG_THRESHOLD;
+        return (getWriter().length() + getTransport().writeMessageSize()) > END_MSG_THRESHOLD;
     }
 
     /////////////////////////////////////////////////////////////////

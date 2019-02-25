@@ -6,7 +6,6 @@ import com.acuity.iot.dsa.dslink.protocol.requester.DSRequester;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2Session;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 
 /**
  * Manages all subscriptions for a requester.
@@ -39,7 +38,7 @@ public class DS2OutboundSubscriptions extends DSOutboundSubscriptions implements
         ds2.setMethod(MSG_SUBSCRIBE_REQ);
         ds2.addStringHeader(HDR_TARGET_PATH, path);
         ds2.addByteHeader(HDR_QOS, (byte) qos);
-        ds2.write((DSBinaryTransport) getRequester().getTransport());
+        ds2.write(getRequester().getTransport());
     }
 
     /**

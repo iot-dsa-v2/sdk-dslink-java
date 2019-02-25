@@ -7,7 +7,6 @@ import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscription;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
-import com.acuity.iot.dsa.dslink.transport.DSBinaryTransport;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.time.DSTime;
 
@@ -49,7 +48,7 @@ public class DS2InboundSubscription extends DSInboundSubscription implements Mes
         dsiWriter.reset();
         dsiWriter.value(update.value.toElement());
         DSBrokerConnection up = (DSBrokerConnection) getResponder().getConnection();
-        out.write((DSBinaryTransport) up.getTransport());
+        out.write(up.getTransport());
     }
 
 }
