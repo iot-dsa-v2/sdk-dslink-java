@@ -96,7 +96,7 @@ public class DSPasswordAes128 extends DSValue implements DSIMetadata, DSIPasswor
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof DSPasswordAes128) {
-            return value.equals(obj.toString());
+            return value.toString().equals(obj.toString());
         }
         return false;
     }

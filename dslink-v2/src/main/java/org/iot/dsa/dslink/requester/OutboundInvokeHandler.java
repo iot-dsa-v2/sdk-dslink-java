@@ -19,15 +19,6 @@ public interface OutboundInvokeHandler extends OutboundRequestHandler {
     public void onColumns(DSList list);
 
     /**
-     * Called by the requester before returning from the invoke method.
-     *
-     * @param path   Path being listed.
-     * @param params Parameter to the invoke method.
-     * @param stream Mechanism to close the request stream.
-     */
-    public void onInit(String path, DSMap params, OutboundStream stream);
-
-    /**
      * Called when the given rows should be inserted at the given index.
      *
      * @param index Where to insert the given rows.

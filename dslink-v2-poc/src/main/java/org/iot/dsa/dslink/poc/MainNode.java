@@ -293,45 +293,6 @@ public class MainNode extends DSMainNode implements Runnable {
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
-    private class ListHandler implements OutboundListHandler {
-
-        OutboundStream stream;
-
-        @Override
-        public void onClose() {
-            System.out.println("list closed");
-        }
-
-        @Override
-        public void onError(ErrorType type, String msg) {
-            System.out.println("list error " + type + ", " + msg);
-        }
-
-        @Override
-        public void onInit(String path, OutboundStream stream) {
-            System.out.println("onInit");
-            this.stream = stream;
-        }
-
-        @Override
-        public void onInitialized() {
-            System.out.println("list initialized");
-            stream.closeStream();
-        }
-
-        @Override
-        public void onRemove(String name) {
-            System.out.println("list remove " + name);
-        }
-
-        @Override
-        public void onUpdate(String name, DSElement value) {
-            System.out.print(name);
-            System.out.print(": ");
-            System.out.println(String.valueOf(value));
-        }
-    }
-
     public static class TestNode extends DSNode {
 
         public void declareDefaults() {

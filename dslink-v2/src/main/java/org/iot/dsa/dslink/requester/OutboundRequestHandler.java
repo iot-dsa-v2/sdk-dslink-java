@@ -1,5 +1,8 @@
 package org.iot.dsa.dslink.requester;
 
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
+
 /**
  * Callbacks common to all outbound requests.
  *
@@ -18,5 +21,14 @@ public interface OutboundRequestHandler {
      * Does nothing by default.
      */
     public void onError(ErrorType type, String msg);
+
+    /**
+     * Called by the requester before submitting the actual request to the responder.
+     *
+     * @param path   Path being listed.
+     * @param params Any additional parameters supplied to the operation.
+     * @param stream Mechanism to close the request stream.
+     */
+    public void onInit(String path, DSIValue params, OutboundStream stream);
 
 }

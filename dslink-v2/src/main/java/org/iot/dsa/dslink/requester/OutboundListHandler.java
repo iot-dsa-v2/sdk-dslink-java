@@ -25,14 +25,6 @@ import org.iot.dsa.node.DSElement;
 public interface OutboundListHandler extends OutboundRequestHandler {
 
     /**
-     * Called by the requester before returning from the list method.
-     *
-     * @param path   Parameter to the list method.
-     * @param stream Mechanism to close the request stream.
-     */
-    public void onInit(String path, OutboundStream stream);
-
-    /**
      * Called once the initial state of the target has been transmitted.  This is a good place to
      * call close if not interested in future updates.
      */

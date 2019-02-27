@@ -289,11 +289,12 @@ public abstract class DSTransport extends DSNode {
                 traceOut = new StringBuilder();
                 traceOut.append("Send:\n");
             }
+            int idx = off;
             for (int i = 0; i < len; i++) {
                 if (traceOutCols > 0) {
                     traceOut.append(' ');
                 }
-                DSBytes.toHex(buf[i], traceIn);
+                DSBytes.toHex(buf[idx++], traceOut);
                 if (++traceOutCols == HEX_COLS) {
                     traceOutCols = 0;
                     traceOut.append('\n');

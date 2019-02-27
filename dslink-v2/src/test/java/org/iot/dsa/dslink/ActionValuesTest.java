@@ -58,7 +58,6 @@ public class ActionValuesTest {
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/main/getValues", null, new SimpleInvokeHandler());
         res.waitForClose(5000);
-        Assert.assertTrue(res.isClosed());
         Assert.assertTrue(res.getColumnCount() == 3);
         Assert.assertTrue(res.hasUpdates());
         DSMetadata meta = new DSMetadata();

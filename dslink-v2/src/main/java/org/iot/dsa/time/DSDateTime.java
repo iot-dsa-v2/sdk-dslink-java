@@ -148,6 +148,10 @@ public class DSDateTime extends DSValue {
         return ret;
     }
 
+    public static DSDateTime now() {
+        return valueOf(System.currentTimeMillis());
+    }
+
     public DSDateTime prevDay() {
         Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
         DSTime.addDays(-1, cal);

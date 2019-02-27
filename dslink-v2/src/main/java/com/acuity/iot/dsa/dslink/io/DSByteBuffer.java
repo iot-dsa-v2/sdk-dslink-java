@@ -83,7 +83,6 @@ public class DSByteBuffer extends InputStream {
     }
 
     /**
-     * /**
      * Gets the bytes from the given buffer, which will be flipped, then cleared.
      */
     public DSByteBuffer put(ByteBuffer buf) {
@@ -412,9 +411,7 @@ public class DSByteBuffer extends InputStream {
                    (byte) (v >>> 24));
     }
 
-    /**
-     * Returns the next byte in the buffer, or -1 when nothing is available.
-     */
+    @Override
     public int read() {
         if (length == 0) {
             return -1;
@@ -423,6 +420,11 @@ public class DSByteBuffer extends InputStream {
         offset++;
         length--;
         return ret;
+    }
+
+    @Override
+    public int read(byte[] buf, int off, int len) {
+        return sendTo(buf, off, len);
     }
 
     /**

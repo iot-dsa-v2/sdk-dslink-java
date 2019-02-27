@@ -13,6 +13,7 @@ import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
@@ -273,7 +274,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
             }
         }
         try {
-            req.onInit(path, sub.getQos(), stub);
+            req.onInit(path, DSLong.valueOf(sub.getQos()), stub);
         } catch (Exception x) {
             error(path, x);
         }
