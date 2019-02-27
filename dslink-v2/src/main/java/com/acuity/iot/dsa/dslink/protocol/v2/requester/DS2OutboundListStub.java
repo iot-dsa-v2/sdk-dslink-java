@@ -33,35 +33,36 @@ public class DS2OutboundListStub extends DSOutboundListStub
     @Override
     public void handleResponse(DS2MessageReader response) {
         OutboundListHandler handler = getHandler();
+        try {
+            MsgpackReader reader = response.getBodyReader();
+            InputStream in = response.getBody();
+            int bodyLen = response.getBodyLength();
+            String name;
+            DSElement value = null;
+            while (bodyLen > 0) {
+                int len = DSBytes.readShort(in, false);
+                bodyLen -= len;
+                name = reader.readUTF(len);
+                len = DSBytes.readShort(in, false);
+                bodyLen -= len;
+                bodyLen -= 4; //the two lengths
+                if (len == 0) {
+                    handler.onRemove(name);
+                } else {
+                    reader.reset();
+                    value = reader.getElement();
+                    handler.onUpdate(DSPath.decodeName(name), value);
+                }
+            }
+        } catch (IOException x) {
+            DSException.throwRuntime(x);
+        }
         if (state == STS_INITIALIZING) {
             Byte status = (Byte) response.getHeader(MessageConstants.HDR_STATUS);
             if (status.byteValue() == STS_OK) {
                 state = STS_OK;
                 getHandler().onInitialized();
             }
-        }
-        try {
-            MsgpackReader reader = response.getBodyReader();
-            InputStream in = response.getBody();
-            int bodyLen = response.getBodyLength();
-            String name;
-            DSElement value;
-            while (bodyLen > 0) {
-                int len = DSBytes.readShort(in, false);
-                name = reader.readUTF(len);
-                len = DSBytes.readShort(in, false);
-                if (len == 0) {
-                    handler.onRemove(name);
-                } else {
-                    bodyLen -= len;
-                    reader.reset();
-                    value = reader.getElement();
-                    bodyLen -= len;
-                    handler.onUpdate(DSPath.decodeName(name), value);
-                }
-            }
-        } catch (IOException x) {
-            DSException.throwRuntime(x);
         }
     }
 

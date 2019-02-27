@@ -14,6 +14,8 @@ import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 
@@ -69,7 +71,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     public OutboundListHandler list(String path, OutboundListHandler req) {
         DSOutboundListStub stub = makeList(path, req);
         requests.put(stub.getRequestId(), stub);
-        req.onInit(path, stub);
+        req.onInit(path, null, stub);
         session.enqueueOutgoingRequest(stub);
         return req;
     }

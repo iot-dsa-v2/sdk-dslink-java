@@ -3,21 +3,16 @@ package com.acuity.iot.dsa.dslink.transport;
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.io.DSCharBuffer;
 import com.acuity.iot.dsa.dslink.io.DSIoException;
-import com.acuity.iot.dsa.dslink.sys.cert.SysCertService;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import javax.websocket.CloseReason;
-import javax.websocket.ContainerProvider;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
-import javax.websocket.WebSocketContainer;
-import org.iot.dsa.util.DSException;
 
 /**
  * Abstract websocket transport.
@@ -163,7 +158,7 @@ public abstract class DSTransportWs extends DSTransport {
             byteBuffer.put(buf, off, len);
         }
         try {
-            if (isLast) {
+            if (isLast && (byteBuffer.position() > 0)) {
                 byteBuffer.flip();
                 basicRemote.sendBinary(byteBuffer, isLast);
                 byteBuffer.clear();

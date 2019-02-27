@@ -12,18 +12,6 @@ import org.iot.dsa.time.DSDateTime;
 public interface OutboundSubscribeHandler extends OutboundRequestHandler {
 
     /**
-     * Called by the requester before returning from the subscribe method.  The actual subscribe
-     * message will not have sent yet.  If there is a problem with the subscription
-     * onError will be called, otherwise onUpdate will be called whenever the responder sends
-     * an update.
-     *
-     * @param path   Who is being subscribed.
-     * @param qos    Quality of service, 0-3.
-     * @param stream Mechanism to close the request stream.
-     */
-    public void onInit(String path, int qos, OutboundStream stream);
-
-    /**
      * Subscription update mechanism.
      *
      * @param dateTime Timestamp of the value.

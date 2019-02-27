@@ -1,6 +1,7 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
+import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
 import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.SimpleRequestHandler;
@@ -31,12 +32,11 @@ public class RequesterSubscribeTest {
 
     @Test
     public void test() throws Exception {
-        //todo - two links not working for some reason, the session in the second says unconnected
         //when sending the subscriptions on connected
         link = new V1TestLink(root = new MyMain());
         doit();
-        //link = new V2TestLink(root = new MyMain());
-        //doit();
+        link = new V2TestLink(root = new MyMain());
+        doit();
     }
 
     private void doit() throws Exception {
