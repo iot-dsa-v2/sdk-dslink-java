@@ -48,10 +48,6 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
         return columns.getMap(idx);
     }
 
-    public RuntimeException getError() {
-        return error;
-    }
-
     public Mode getMode() {
         return mode;
     }
@@ -72,7 +68,7 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
     public DSList getUpdate(long timeout) {
         long end = System.currentTimeMillis() + timeout;
         synchronized (this) {
-            while (!closed && !hasError() && !hasUpdates()) {
+            while (!isClosed() && !hasUpdates()) {
                 try {
                     wait(timeout);
                 } catch (Exception expected) {
@@ -81,16 +77,19 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
                     break;
                 }
             }
+            if (isError()) {
+                throw error;
+            }
             if (hasUpdates()) {
                 return updates.remove(0);
             }
-            if (hasError()) {
-                throw error;
-            }
-            if (closed) {
+            if (isClosed()) {
                 return null;
             }
-            throw new IllegalStateException("Action timed out");
+            if (System.currentTimeMillis() > end) {
+                throw new IllegalStateException("Action timed out");
+            }
+            return null;
         }
     }
 
@@ -106,10 +105,6 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
         return ret;
     }
 
-    public boolean hasError() {
-        return error != null;
-    }
-
     public synchronized boolean hasUpdates() {
         if (updates == null) {
             return false;
@@ -117,28 +112,9 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
         return !updates.isEmpty();
     }
 
-    public boolean isClosed() {
-        return closed;
-    }
-
-    @Override
-    public synchronized void onClose() {
-        closed = true;
-        notifyAll();
-    }
-
     @Override
     public synchronized void onColumns(DSList list) {
         this.columns = list;
-        notifyAll();
-    }
-
-    /**
-     * Creates an exception that will be thrown by getUpdate.
-     */
-    @Override
-    public synchronized void onError(ErrorType type, String msg) {
-        error = ErrorType.makeException(type, msg);
         notifyAll();
     }
 
@@ -180,52 +156,6 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
         }
         updates.add(row);
         notifyAll();
-    }
-
-    /**
-     * Waits for any callback from the responder.  Will return immediately if already closed.
-     *
-     * @param timeout Passed to Object.wait
-     * @throws RuntimeException      if there is an error with the invocation.
-     * @throws IllegalStateException if there is a timeout, or if there are any errors.
-     */
-    public void waitForCallback(long timeout) {
-        synchronized (this) {
-            if (!closed) {
-                long end = System.currentTimeMillis() + timeout;
-                try {
-                    wait(timeout);
-                } catch (Exception x) {
-                }
-                if (System.currentTimeMillis() > end) {
-                    throw new IllegalStateException("Action timed out");
-                }
-            }
-        }
-    }
-
-    /**
-     * Waits for the stream to close or the timeout to occur.
-     *
-     * @param timeout Passed to Object.wait
-     * @throws IllegalStateException if there is a timeout, or if there are any errors.
-     */
-    public void waitForClose(long timeout) {
-        long end = System.currentTimeMillis() + timeout;
-        synchronized (this) {
-            while (!closed) {
-                try {
-                    wait(timeout);
-                } catch (Exception x) {
-                }
-                if (System.currentTimeMillis() > end) {
-                    break;
-                }
-            }
-        }
-        if (!closed) {
-            throw new IllegalStateException("Action timed out");
-        }
     }
 
 }

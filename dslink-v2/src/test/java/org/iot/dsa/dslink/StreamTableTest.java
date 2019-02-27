@@ -57,7 +57,6 @@ public class StreamTableTest {
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/main/getTable", null, new SimpleInvokeHandler());
         DSList row = res.getUpdate(5000);
-        Assert.assertFalse(res.isClosed());
         Assert.assertTrue(res.getColumnCount() == 3);
         DSMetadata meta = new DSMetadata();
         meta.setMap(res.getColumnMetadata(0));

@@ -35,7 +35,7 @@ public class SysProfilerTest {
         DSIRequester requester = link.getUpstream().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/sys/" + DSSysNode.OPEN_PROFILER, null, new SimpleInvokeHandler());
-        res.getUpdate(1000);
+        res.getUpdate(2000);
 
         DSSysNode sys = link.getSys();
         DSIObject profobj = sys.get(DSSysNode.PROFILER);

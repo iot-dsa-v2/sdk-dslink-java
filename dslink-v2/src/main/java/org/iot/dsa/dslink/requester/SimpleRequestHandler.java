@@ -1,5 +1,7 @@
 package org.iot.dsa.dslink.requester;
 
+import org.iot.dsa.node.DSIValue;
+
 /**
  * Empty callback implementations.
  *
@@ -15,8 +17,6 @@ public class SimpleRequestHandler implements OutboundRequestHandler {
     /**
      * Does nothing by default.
      * <p>
-     * <p>
-     * <p>
      * {@inheritDoc}
      */
     @Override
@@ -26,12 +26,19 @@ public class SimpleRequestHandler implements OutboundRequestHandler {
     /**
      * Does nothing by default.
      * <p>
-     * <p>
-     * <p>
      * {@inheritDoc}
      */
     @Override
     public void onError(ErrorType type, String msg) {
+    }
+
+    /**
+     * Does nothing by default.
+     * <p>
+     * {@inheritDoc}
+     */
+    @Override
+    public void onInit(String path, DSIValue params, OutboundStream stream) {
     }
 
 }
