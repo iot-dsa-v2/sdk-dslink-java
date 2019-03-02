@@ -18,8 +18,8 @@ public class DSEventFilter implements DSISubscriber {
     ///////////////////////////////////////////////////////////////////////////
 
     protected DSInfo child;
-    protected DSISubscriber subscriber;
     protected DSEvent event;
+    protected DSISubscriber subscriber;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors

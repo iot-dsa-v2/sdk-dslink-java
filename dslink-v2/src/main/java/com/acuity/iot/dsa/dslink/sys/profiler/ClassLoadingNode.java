@@ -7,8 +7,8 @@ import java.util.List;
 
 public class ClassLoadingNode extends MXBeanNode {
 
-    private ClassLoadingMXBean mxbean;
     private static List<String> overriden = new ArrayList<String>();
+    private ClassLoadingMXBean mxbean;
 
     @Override
     public Object getMXBean() {

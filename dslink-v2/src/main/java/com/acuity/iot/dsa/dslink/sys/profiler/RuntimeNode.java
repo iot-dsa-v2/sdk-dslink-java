@@ -12,8 +12,8 @@ import org.iot.dsa.node.DSString;
 
 public class RuntimeNode extends MXBeanNode {
 
-    private RuntimeMXBean mxbean;
     private static List<String> overriden = new ArrayList<String>();
+    private RuntimeMXBean mxbean;
     private DSNode systemNode;
 
     @Override

@@ -26,7 +26,6 @@ public class DSRootLink extends DSLink {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private String dsId;
     private DSKeys keys;
     private DSInfo main;
     private DSInfo sys = getInfo(SYS);
@@ -39,23 +38,6 @@ public class DSRootLink extends DSLink {
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Returns the unique id of the connection.  This is the link name + '-' + the hash of the
-     * public key in base64.
-     *
-     * @return Never null, and url safe.
-     */
-    public String getDsId() {
-        if (dsId == null) {
-            StringBuilder buf = new StringBuilder();
-            buf.append(getLinkName());
-            buf.append('-');
-            buf.append(getKeys().encodePublicHashDsId());
-            dsId = buf.toString();
-        }
-        return dsId;
-    }
 
     /**
      * Public / private keys of the link, used to prove identity with brokers.

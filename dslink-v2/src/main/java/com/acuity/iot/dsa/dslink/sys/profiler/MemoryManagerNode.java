@@ -6,8 +6,8 @@ import java.util.List;
 
 public class MemoryManagerNode extends MXBeanNode {
 
-    private MemoryManagerMXBean mxbean;
     private static List<String> overriden = new ArrayList<String>();
+    private MemoryManagerMXBean mxbean;
 
     public MemoryManagerNode() {
     }

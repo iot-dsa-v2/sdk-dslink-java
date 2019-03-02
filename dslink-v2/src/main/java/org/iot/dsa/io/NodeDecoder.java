@@ -93,7 +93,7 @@ public class NodeDecoder {
         } catch (InstantiationException x) {
             if (clazz != null) {
                 Logger.getLogger("").log(
-                        Level.SEVERE,"Cannot instantiate " + clazz.getName(), x);
+                        Level.SEVERE, "Cannot instantiate " + clazz.getName(), x);
             }
             DSException.throwRuntime(x);
         } catch (Exception x) {

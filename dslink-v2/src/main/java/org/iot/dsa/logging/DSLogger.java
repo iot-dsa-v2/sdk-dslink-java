@@ -8,7 +8,6 @@ import static com.acuity.iot.dsa.dslink.sys.logging.LoggingConstants.warn;
 
 import java.util.function.Supplier;
 import java.util.logging.Logger;
-import org.iot.dsa.util.DSException;
 
 /**
  * Adds an abstraction layer on Java Util Logging for two purposes:

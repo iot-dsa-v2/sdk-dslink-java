@@ -1,6 +1,5 @@
 package org.iot.dsa.dslink.requester;
 
-import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
 
 /**

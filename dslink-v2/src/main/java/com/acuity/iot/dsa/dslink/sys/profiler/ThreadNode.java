@@ -26,9 +26,9 @@ import org.iot.dsa.node.action.DSActionValues;
 
 public class ThreadNode extends MXBeanNode {
 
+    private static List<String> overriden = new ArrayList<String>();
     private Map<Long, ThreadInfoNode> infoNodes = new HashMap<Long, ThreadInfoNode>();
     private ThreadMXBean mxbean;
-    private static List<String> overriden = new ArrayList<String>();
 
     public ActionResult findDeadlocked(DSAction action) {
         long[] ids = mxbean.findDeadlockedThreads();

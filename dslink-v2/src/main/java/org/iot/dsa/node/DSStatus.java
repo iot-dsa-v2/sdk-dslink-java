@@ -138,7 +138,6 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
 
     //The instance for each unique status.
     public static final DSStatus ok = new DSStatus(0);
-    private int bits;
     private static ConcurrentHashMap<Integer, DSStatus> intCache = new ConcurrentHashMap<>();
     public static final DSStatus override = valueOf(OVERRIDE);
     public static final DSStatus remoteOverride = valueOf(REMOTE_OVERRIDE);
@@ -155,12 +154,12 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     public static final DSStatus unknown = valueOf(UNKNOWN);
     public static final DSStatus remoteUnknown = valueOf(REMOTE_UNKNOWN);
     public static final DSStatus start = valueOf(STALE);
-
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
     private static ConcurrentHashMap<String, Integer> stringCache =
             new ConcurrentHashMap<String, Integer>();
+    private int bits;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors

@@ -7,8 +7,8 @@ import org.iot.dsa.node.DSString;
 
 public class GarbageCollectorNode extends MXBeanNode {
 
-    private GarbageCollectorMXBean mxbean;
     private static List<String> overriden = new ArrayList<String>();
+    private GarbageCollectorMXBean mxbean;
 
     public GarbageCollectorNode() {
     }

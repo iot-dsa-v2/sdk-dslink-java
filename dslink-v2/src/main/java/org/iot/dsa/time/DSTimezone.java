@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.TimeZone;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSFlexEnum;
-import org.iot.dsa.node.action.DSISetAction;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -18,6 +17,7 @@ import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSISetAction;
 
 /**
  * Wrapper for a Java timezone.

@@ -28,17 +28,16 @@ public class DSLogHandler extends Handler {
     static final int STATE_OPEN = 1;
     static final int STATE_CLOSE_PENDING = 2;
     static final String lineSeparator;
+    private static Logger root;
+    private static Level rootLevel;
     private StringBuilder builder = new StringBuilder();
     private LogHandlerThread logHandlerThread;
     private int maxQueueSize = 2500;
-
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
     private LinkedList<LogRecord> queue = new LinkedList<LogRecord>();
     private int queueThrottle = (int) (maxQueueSize * .90);
-    private static Logger root;
-    private static Level rootLevel;
     private int state = STATE_CLOSED;
 
     ///////////////////////////////////////////////////////////////////////////
