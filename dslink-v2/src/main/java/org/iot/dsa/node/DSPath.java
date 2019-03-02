@@ -259,6 +259,11 @@ public class DSPath extends DSValue {
         return buf;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return false;
+    }
+
     public String getLastPathElement() {
         String[] elements = getPathElements();
         if ((elements == null) || (elements.length == 0)) {
@@ -287,11 +292,6 @@ public class DSPath extends DSValue {
     @Override
     public DSValueType getValueType() {
         return DSValueType.STRING;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return false;
     }
 
     @Override

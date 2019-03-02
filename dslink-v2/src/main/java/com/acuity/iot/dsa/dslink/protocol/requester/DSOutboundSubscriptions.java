@@ -34,20 +34,19 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
-
-    private final ConcurrentLinkedQueue<DSOutboundSubscription> pendingSubscribe =
-            new ConcurrentLinkedQueue<DSOutboundSubscription>();
-    private final ConcurrentLinkedQueue<DSOutboundSubscription> pendingUnsubscribe =
-            new ConcurrentLinkedQueue<DSOutboundSubscription>();
-    private final Map<String, DSOutboundSubscription> pathMap =
-            new ConcurrentHashMap<String, DSOutboundSubscription>();
-    private final Map<Integer, DSOutboundSubscription> sidMap =
-            new ConcurrentHashMap<Integer, DSOutboundSubscription>();
     private boolean connected = false;
     private DSRuntime.Timer disconnectedTimer;
     private boolean enqueued = false;
     private int nextSid = 1;
+    private final Map<String, DSOutboundSubscription> pathMap =
+            new ConcurrentHashMap<String, DSOutboundSubscription>();
+    private final ConcurrentLinkedQueue<DSOutboundSubscription> pendingSubscribe =
+            new ConcurrentLinkedQueue<DSOutboundSubscription>();
+    private final ConcurrentLinkedQueue<DSOutboundSubscription> pendingUnsubscribe =
+            new ConcurrentLinkedQueue<DSOutboundSubscription>();
     private DSRequester requester;
+    private final Map<Integer, DSOutboundSubscription> sidMap =
+            new ConcurrentHashMap<Integer, DSOutboundSubscription>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors

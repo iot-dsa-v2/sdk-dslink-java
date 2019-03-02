@@ -1,13 +1,11 @@
 package com.acuity.iot.dsa.dslink.protocol.v1;
 
-import com.acuity.iot.dsa.dslink.io.DSBase64;
 import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.MessageDigest;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.io.json.Json;
@@ -167,23 +165,11 @@ public class DS1ConnectionInit extends DSNode {
             if (wsPath.charAt(0) != '/') {
                 buf.append('/');
             }
-            buf.append(wsPath).append("?auth=");
             String saltStr = response.getString("salt");
             if (saltStr != null) {
-                byte[] salt = saltStr.getBytes("UTF-8");
+                buf.append(wsPath).append("?auth=");
                 String tempKey = response.getString("tempKey");
-                byte[] secret = getLink().getKeys().generateSharedSecret(tempKey);
-                byte[] bytes = new byte[salt.length + secret.length];
-                System.arraycopy(salt, 0, bytes, 0, salt.length);
-                System.arraycopy(secret, 0, bytes, salt.length, secret.length);
-                MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-                messageDigest.update(bytes);
-                bytes = messageDigest.digest();
-                buf.append(DSBase64.encodeUrl(bytes));
-            } else {
-                //The comment for the following in the original sdk was
-                //"Fake auth parameter".  Maybe for testing?
-                buf.append("_");
+                buf.append(getLink().getKeys().generateAuth(saltStr, tempKey));
             }
             if (authToken != null) {
                 buf.append("&token=").append(authToken);
@@ -244,7 +230,7 @@ public class DS1ConnectionInit extends DSNode {
      */
     void writeConnectionRequest(HttpURLConnection conn) throws Exception {
         DSMap map = new DSMap();
-        map.put("publicKey", DSBase64.encodeUrl(getLink().getKeys().encodePublic()));
+        map.put("publicKey", getLink().getKeys().urlEncodePublicKey());
         map.put("isRequester", link.getMain().isRequester());
         map.put("isResponder", link.getMain().isResponder());
         map.put("linkData", new DSMap());

@@ -16,6 +16,11 @@ public abstract class DSElement extends DSValue {
         return this;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return equals(obj);
+    }
+
     /**
      * For switch statements.
      */
@@ -45,11 +50,6 @@ public abstract class DSElement extends DSValue {
      */
     public boolean isDouble() {
         return false;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return equals(obj);
     }
 
     /**

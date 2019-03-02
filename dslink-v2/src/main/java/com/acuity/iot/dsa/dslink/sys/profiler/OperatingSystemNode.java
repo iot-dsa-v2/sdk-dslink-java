@@ -7,8 +7,8 @@ import java.util.List;
 
 public class OperatingSystemNode extends MXBeanNode {
 
-    private OperatingSystemMXBean mxbean;
     private static List<String> overriden = new ArrayList<String>();
+    private OperatingSystemMXBean mxbean;
 
     @Override
     public Object getMXBean() {

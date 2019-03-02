@@ -37,8 +37,6 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
-
-    private final Object outgoingMutex = new Object();
     private int ackRcvd = -1;
     private int ackRequired = 0;
     private int ackToSend = -1;
@@ -48,6 +46,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     private long lastTimeSend;
     private int messageId = 0;
     private int nextMessage = 1;
+    private final Object outgoingMutex = new Object();
     private ConcurrentLinkedQueue<OutboundMessage> outgoingRequests = new ConcurrentLinkedQueue<OutboundMessage>();
     private ConcurrentLinkedQueue<OutboundMessage> outgoingResponses = new ConcurrentLinkedQueue<OutboundMessage>();
     private ReadThread readThread;
