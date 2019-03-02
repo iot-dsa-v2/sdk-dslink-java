@@ -1,6 +1,5 @@
 package org.iot.dsa.io.json;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;

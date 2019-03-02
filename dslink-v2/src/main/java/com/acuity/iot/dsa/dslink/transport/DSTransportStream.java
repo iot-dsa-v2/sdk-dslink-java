@@ -125,22 +125,22 @@ public abstract class DSTransportStream extends DSTransport {
     }
 
     /**
-     * Call to open a binary transport
-     */
-    protected void open(InputStream in, OutputStream out) {
-        this.in = in;
-        this.out = out;
-        setText(false);
-        setOpen();
-    }
-
-    /**
      * Call to open a text transport
      */
     protected void init(Reader in, Writer out) {
         this.reader = in;
         this.writer = out;
         setText(true);
+        setOpen();
+    }
+
+    /**
+     * Call to open a binary transport
+     */
+    protected void open(InputStream in, OutputStream out) {
+        this.in = in;
+        this.out = out;
+        setText(false);
         setOpen();
     }
 

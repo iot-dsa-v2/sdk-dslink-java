@@ -198,6 +198,14 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
     }
 
     /**
+     * Defaults to the equals method.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        return equals(obj);
+    }
+
+    /**
      * Possibly null.
      */
     public String getActionGroup() {
@@ -277,14 +285,6 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
      * @throws RuntimeException Throw a runtime exception to report an error and close the stream.
      */
     public abstract ActionResult invoke(DSInfo target, ActionInvocation request);
-
-    /**
-     * Defaults to the equals method.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        return equals(obj);
-    }
 
     /**
      * False

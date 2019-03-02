@@ -132,7 +132,7 @@ public class DSKeys {
      */
     public String encodeKeys() {
         StringBuilder builder = new StringBuilder();
-        builder.append(DSBase64.encodeUrl(encodePublic()));
+        builder.append(urlEncodePublicKey());
         builder.append(" ");
         builder.append(DSBase64.encodeUrl(toUnsignedByteArray(getPrivateKey().getS())));
         return builder.toString();
@@ -142,7 +142,13 @@ public class DSKeys {
      * X9.63 encoding of the public key.
      */
     public byte[] encodePublic() {
-        ECPublicKey publicKey = getPublicKey();
+        return encodePublic(getPublicKey());
+    }
+
+    /**
+     * X9.63 encoding of the public key.
+     */
+    public byte[] encodePublic(ECPublicKey publicKey) {
         byte[] x = toUnsignedByteArray(publicKey.getW().getAffineX());
         byte[] y = toUnsignedByteArray(publicKey.getW().getAffineY());
         byte[] ret = new byte[x.length + y.length + 1]; //32 + 32 + 1
@@ -169,6 +175,42 @@ public class DSKeys {
         return ret;
     }
 
+    /**
+     * Base64 encoding (no padding and url safe) of the SHA256 hash of the public key. This is used
+     * to generate the DSID of a link.
+     *
+     * @throws DSException wrapping any security related exceptions.
+     */
+    public static String encodePublicHashDsId(String publicKey) {
+        String ret = null;
+        try {
+            byte[] pub = DSBase64.decode(publicKey);
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            ret = DSBase64.encodeUrl(md.digest(pub));
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
+        return ret;
+    }
+
+    public String generateAuth(String saltStr, String pubKey) {
+        String ret = null;
+        try {
+            byte[] salt = saltStr.getBytes("UTF-8");
+            byte[] secret = generateSharedSecret(pubKey);
+            byte[] bytes = new byte[salt.length + secret.length];
+            System.arraycopy(salt, 0, bytes, 0, salt.length);
+            System.arraycopy(secret, 0, bytes, salt.length, secret.length);
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest.update(bytes);
+            bytes = messageDigest.digest();
+            ret = DSBase64.encodeUrl(bytes);
+        } catch (Exception x) {
+            DSException.throwRuntime(x);
+        }
+        return ret;
+    }
+
     public static byte[] generateHmacSHA256Signature(byte[] data, byte[] secretKeyBytes) {
         byte[] ret = null;
         try {
@@ -185,11 +227,11 @@ public class DSKeys {
     /**
      * Uses the given public key to generate an ECDH shared secret.
      *
-     * @param publicKeyBytes Public key of the other party.
+     * @param pubKeyBytes Public key of the other party.
      */
-    public byte[] generateSharedSecret(byte[] publicKeyBytes) {
+    public byte[] generateSharedSecret(byte[] pubKeyBytes) {
         try {
-            ECPublicKey pubKey = decodePublic(publicKeyBytes);
+            ECPublicKey pubKey = decodePublic(pubKeyBytes);
             KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH");
             keyAgreement.init(getPrivateKey());
             keyAgreement.doPhase(pubKey, true);
@@ -203,10 +245,10 @@ public class DSKeys {
     /**
      * Uses the given public key to generate an ECDH shared secret.
      *
-     * @param base64key Base64 encoded public key of the other party.
+     * @param base64pubKey Base64 encoded public key of the other party.
      */
-    public byte[] generateSharedSecret(String base64key) {
-        return generateSharedSecret(DSBase64.decode(base64key));
+    public byte[] generateSharedSecret(String base64pubKey) {
+        return generateSharedSecret(DSBase64.decode(base64pubKey));
     }
 
     /**
@@ -386,6 +428,10 @@ public class DSKeys {
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }
+    }
+
+    public String urlEncodePublicKey() {
+        return DSBase64.encodeUrl(encodePublic());
     }
 
     /**

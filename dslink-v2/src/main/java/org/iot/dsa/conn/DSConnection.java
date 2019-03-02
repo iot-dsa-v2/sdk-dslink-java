@@ -2,7 +2,6 @@ package org.iot.dsa.conn;
 
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.time.DSDateTime;

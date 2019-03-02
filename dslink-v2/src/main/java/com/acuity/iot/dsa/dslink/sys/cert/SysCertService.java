@@ -56,7 +56,9 @@ public class SysCertService extends DSNode {
 
     // Fields
     // ------
-
+    private static SysCertService inst;
+    private static HostnameVerifier oldHostnameVerifier = HttpsURLConnection
+            .getDefaultHostnameVerifier();
     private DSInfo allowClients = getInfo(ALLOW_CLIENTS);
     private DSInfo allowServers = getInfo(ALLOW_SERVERS);
     private DSInfo deleteKSEntry = getInfo(DELETE_KS_ENTRY);
@@ -66,13 +68,10 @@ public class SysCertService extends DSNode {
     private HostnameVerifier hostnameVerifier = new SysHostnameVerifier();
     private DSInfo importCaCert = getInfo(IMPORT_CA_CERT);
     private DSInfo importPrimaryCert = getInfo(IMPORT_PRIMARY_CERT);
-    private static SysCertService inst;
     private DSInfo keystorePass = getInfo(CERTFILE_PASS);
     private DSInfo keystorePath = getInfo(CERTFILE);
     private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
     private CertCollection localTruststore;
-    private static HostnameVerifier oldHostnameVerifier = HttpsURLConnection
-            .getDefaultHostnameVerifier();
     private CertCollection quarantine;
     private DSInfo verifyHostnames = getInfo(VERIFY_HOSTNAMES);
     private HostnameWhitelist whitelist;

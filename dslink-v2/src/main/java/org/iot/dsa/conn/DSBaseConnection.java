@@ -6,7 +6,6 @@ import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSEnabledNode;
 import org.iot.dsa.util.DSException;
-import org.iot.dsa.util.DSUtil;
 
 /**
  * Basic representation of a connection, which is subclassed by DSConnection for longer lived

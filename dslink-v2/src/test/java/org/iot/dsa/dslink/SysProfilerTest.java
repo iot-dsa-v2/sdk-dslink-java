@@ -12,8 +12,8 @@ import org.testng.annotations.Test;
 
 public class SysProfilerTest {
 
-    private TestLink link;
     private static boolean success = false;
+    private TestLink link;
 
     @Test
     public void theTest() throws Exception {

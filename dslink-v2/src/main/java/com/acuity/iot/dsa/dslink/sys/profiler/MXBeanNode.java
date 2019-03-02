@@ -15,8 +15,6 @@ import org.iot.dsa.node.action.DSAction;
 
 public abstract class MXBeanNode extends DSNode implements Runnable {
 
-    private Timer pollTimer;
-
     private static DSAction refreshAction = new DSAction.Parameterless() {
         @Override
         public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
@@ -25,6 +23,7 @@ public abstract class MXBeanNode extends DSNode implements Runnable {
         }
 
     };
+    private Timer pollTimer;
 
     public void discover() {
         Object bean = getMXBean();

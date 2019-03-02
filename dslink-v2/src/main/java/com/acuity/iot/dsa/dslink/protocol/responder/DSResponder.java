@@ -3,7 +3,6 @@ package com.acuity.iot.dsa.dslink.protocol.responder;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;

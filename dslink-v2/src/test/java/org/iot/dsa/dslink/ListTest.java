@@ -2,20 +2,10 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import com.acuity.iot.dsa.dslink.test.V2TestLink;
-import java.util.Map;
-import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
-import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.SimpleListHandler;
-import org.iot.dsa.dslink.requester.SimpleRequestHandler;
 import org.iot.dsa.node.DSBool;
-import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSStatus;
-import org.iot.dsa.node.DSValueNode;
-import org.iot.dsa.time.DSDateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

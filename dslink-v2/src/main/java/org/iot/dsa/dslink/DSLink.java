@@ -13,6 +13,7 @@ import org.iot.dsa.logging.DSLogHandler;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
@@ -35,6 +36,7 @@ public abstract class DSLink extends DSNode implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
 
     public static final String DOWNSTREAM = "downstream";
+    public static final String LINKID = "Link ID";
     public static final String MAIN = "main";
     public static final String SYS = "sys";
     public static final String UPSTREAM = "upstream";
@@ -65,6 +67,18 @@ public abstract class DSLink extends DSNode implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
+     * Unique ID of the link instance.
+     */
+    public String getDsId() {
+        String id = get(LINKID).toString();
+        if (id.isEmpty()) {
+            id = getLinkName() + '-' + options.getKeys().encodePublicHashDsId();
+            put(LINKID, id);
+        }
+        return id;
+    }
+
+    /**
      * As defined in dslink.json.
      */
     public String getLinkName() {
@@ -75,6 +89,10 @@ public abstract class DSLink extends DSNode implements Runnable {
      * The node that encapsulates the primary logic of the link.
      */
     public abstract DSMainNode getMain();
+
+    public DSLinkOptions getOptions() {
+        return options;
+    }
 
     /**
      * The local path of the node appended the link's path in the upstream broker.
@@ -88,10 +106,6 @@ public abstract class DSLink extends DSNode implements Runnable {
         StringBuilder buf = new StringBuilder(pathInBroker.length() + nodePath.length() + 10);
         buf.append(pathInBroker);
         return DSPath.append(buf, nodePath).toString();
-    }
-
-    public DSLinkOptions getOptions() {
-        return options;
     }
 
     public abstract DSLinkConnection getUpstream();
@@ -222,6 +236,12 @@ public abstract class DSLink extends DSNode implements Runnable {
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault(LINKID, DSString.EMPTY, "Unique instance ID.").setReadOnly(true);
+    }
 
     /**
      * Called whether the link is deserialized or created new.

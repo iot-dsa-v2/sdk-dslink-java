@@ -15,11 +15,6 @@ import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNull;
 import org.iot.dsa.rollup.DSRollup;
-import org.iot.dsa.security.DSPasswordAes128;
-import org.iot.dsa.security.DSPasswordAes256;
-import org.iot.dsa.security.DSPasswordSha1;
-import org.iot.dsa.security.DSPasswordSha256;
-import org.iot.dsa.security.DSPermission;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.time.DSDuration;
 import org.iot.dsa.time.DSTimeRange;
@@ -48,19 +43,19 @@ public class ValuesTest {
     @Test
     public void test() {
         test(DSBool.TRUE);
-        test(DSBytes.valueOf(new byte[] {1,2,3}));
+        test(DSBytes.valueOf(new byte[]{1, 2, 3}));
         test(DSDouble.valueOf(123124));
         test(DSFlexEnum.valueOf("foo", DSList.valueOf("foo", "bar")));
         test(DSFloat.valueOf(123124));
         test(DSInt.valueOf(123124));
         test(DSJavaEnum.valueOf(TestEnum.one));
         test(DSLong.valueOf(123124));
-        test(DSList.valueOf("one","two","three"));
-        test(new DSMap().put("one",1).put("two", 2));
+        test(DSList.valueOf("one", "two", "three"));
+        test(new DSMap().put("one", 1).put("two", 2));
         test(DSNull.NULL);
         test(DSRollup.AND);
         test(DSDateTime.now());
-        test(DSDuration.valueOf(false,1,1,1));
+        test(DSDuration.valueOf(false, 1, 1, 1));
         test(DSTimeRange.valueOf(DSDateTime.now(), DSDateTime.now().nextDay()));
         test(DSTimezone.DEFAULT);
     }
@@ -72,12 +67,6 @@ public class ValuesTest {
     ///////////////////////////////////////////////////////////////////////////
     // Package Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    private static enum TestEnum {
-        one,
-        two,
-        three
-    }
 
     static void test(DSIValue v) {
         Assert.assertNotNull(v.getValueType());
@@ -99,10 +88,6 @@ public class ValuesTest {
             Assert.assertEquals(v, tmp);
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Private Methods
-    ///////////////////////////////////////////////////////////////////////////
 
     private static void testElement(DSElement e) {
         Assert.assertEquals(e, e.copy());
@@ -132,6 +117,16 @@ public class ValuesTest {
                 Assert.assertNotNull(e.toString());
                 break;
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    private static enum TestEnum {
+        one,
+        two,
+        three
     }
 
     ///////////////////////////////////////////////////////////////////////////

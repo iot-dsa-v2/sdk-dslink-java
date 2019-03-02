@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import javax.websocket.CloseReason;
+import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -32,6 +33,7 @@ public abstract class DSTransportWs extends DSTransport {
     private RemoteEndpoint.Basic basicRemote;
     private DSByteBuffer binReadBuffer;
     private ByteBuffer binWriteBuffer;
+    private EndpointConfig config;
     private Session session;
     private DSCharBuffer textReadBuffer;
 
@@ -91,9 +93,10 @@ public abstract class DSTransportWs extends DSTransport {
     }
 
     @OnOpen
-    public void onOpen(Session session) {
+    public void onOpen(Session session, EndpointConfig config) {
         this.session = session;
         this.basicRemote = session.getBasicRemote();
+        this.config = config;
         setOpen();
     }
 
@@ -175,6 +178,13 @@ public abstract class DSTransportWs extends DSTransport {
         } catch (IOException x) {
             throw new UncheckedIOException(x);
         }
+    }
+
+    /**
+     * The config passed to onOpen.
+     */
+    protected EndpointConfig getConfig() {
+        return config;
     }
 
     ///////////////////////////////////////////////////////////////////////////

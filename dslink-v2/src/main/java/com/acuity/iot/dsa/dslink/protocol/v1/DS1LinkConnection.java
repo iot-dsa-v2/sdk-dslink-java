@@ -103,7 +103,6 @@ public class DS1LinkConnection extends DSBrokerConnection {
             setTransport(makeTransport(init));
             getTransport().open();
             connectionInit = init;
-            info(getConnectionId() + " connected");
             connOk();
         } catch (Exception x) {
             connDown(DSException.makeMessage(x));
@@ -167,7 +166,6 @@ public class DS1LinkConnection extends DSBrokerConnection {
         writer = null;
         transport = null;
         remove(TRANSPORT);
-        debug(getConnectionId() + " disconnected");
     }
 
     protected void setTransport(DSTransport transport) {
