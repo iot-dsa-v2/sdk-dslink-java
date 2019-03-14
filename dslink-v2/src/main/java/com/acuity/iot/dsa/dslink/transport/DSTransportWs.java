@@ -87,6 +87,7 @@ public abstract class DSTransportWs extends DSTransport {
             return;
         }
         synchronized (this) {
+            System.out.println(msgPart);//TODO
             getTextReadBuffer().put(msgPart);
             notifyAll();
         }

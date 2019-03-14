@@ -1049,6 +1049,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Sets the state to starting.  Calls onStarted once the entire subtree is started.
      */
     public final void start() {
+        setLogger(null);
         if (isRunning()) {
             throw new IllegalStateException("Already running: " + getPath());
         }
@@ -1237,6 +1238,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     protected String getLogName() {
         if (getParent() != null) {
             return getParent().getLogger().getName() + '.' + getName().replace('.', '_');
+        }
+        if (isStarted()) {
+            return "dsa";
         }
         return super.getLogName();
     }

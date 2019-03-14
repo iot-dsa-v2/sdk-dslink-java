@@ -1,10 +1,10 @@
 package com.acuity.iot.dsa.dslink.io;
 
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.util.DSException;
 
@@ -557,15 +557,6 @@ public class DSByteBuffer extends InputStream {
             offset += len;
         }
         return len;
-    }
-
-    /**
-     * Push bytes from the internal buffer to the transport.
-     */
-    public void sendTo(DSTransport transport, boolean isLast) {
-        transport.write(buffer, offset, length, isLast);
-        offset = 0;
-        length = 0;
     }
 
     /**

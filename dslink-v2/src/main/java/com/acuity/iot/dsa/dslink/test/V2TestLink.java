@@ -36,6 +36,10 @@ public class V2TestLink extends DSRootLink {
         }
 
         @Override
+        protected void initializeConnection() {
+        }
+
+        @Override
         protected DSTransport makeTransport() {
             return new PipedTransport().setText(false);
         }
@@ -46,8 +50,6 @@ public class V2TestLink extends DSRootLink {
             getSession().setRequesterAllowed(true);
         }
 
-        protected void performHandshake() {
-        }
     }
 
 }

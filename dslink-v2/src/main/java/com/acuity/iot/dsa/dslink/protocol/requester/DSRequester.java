@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.iot.dsa.dslink.DSIRequester;
+import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
@@ -52,7 +53,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
         return session;
     }
 
-    public DSTransport getTransport() {
+    public DSITransport getTransport() {
         return getSession().getTransport();
     }
 

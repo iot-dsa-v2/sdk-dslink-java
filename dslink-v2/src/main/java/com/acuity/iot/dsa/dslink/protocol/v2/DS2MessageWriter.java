@@ -10,6 +10,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
 import java.util.HashMap;
 import java.util.Map;
+import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.node.DSString;
 
 /**
@@ -164,10 +165,10 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     /**
      * Writes the message to the transport.
      */
-    public DS2MessageWriter write(DSTransport out) {
+    public DS2MessageWriter write(DSITransport out) {
         finishHeader();
-        header.sendTo(out, false);
-        body.sendTo(out, true);
+        header.sendTo(out.getBinaryOutput());
+        body.sendTo(out.getBinaryOutput());
         if (debug()) {
             printDebug();
         }

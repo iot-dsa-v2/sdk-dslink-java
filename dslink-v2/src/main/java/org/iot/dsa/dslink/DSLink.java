@@ -18,13 +18,15 @@ import org.iot.dsa.util.DSException;
 import org.iot.dsa.util.DSUtil;
 
 /**
- * The root node of a DSLink node tree with two children: main and sys.  Main is the root
- * data or application node.  Sys contains various services such as the upstream
- * connection to the broker.
+ * Every problem is a link.  A link represents a single module with a specific purpose
+ * in a system.  Links can be run in process and out of process.  They can be the tree root
+ * or them can be found lower in the tree (such as representing out of process links in a
+ * broker).  A  broker is also a link.
  * <p>
- * This node can and should be used as the main class for launching a link process.
+ * This node can be used as the main class for launching a link process.  It loads everything it
+ * needs from dslink.json.
  * <p>
- * This node can be subclassed for specialized purposes.  Testing uses a version that
+ * This node will be subclassed for specialized purposes.  Testing uses a version that
  * creates a special transport for sending and receiving messages to itself.
  *
  * @author Aaron Hansen
@@ -45,7 +47,6 @@ public abstract class DSLink extends DSNode implements Runnable {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo main;
     private String name;
     private DSLinkOptions options;
     private Thread runThread;

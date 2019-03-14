@@ -13,8 +13,8 @@ public interface OutboundMessage {
     public boolean canWrite(DSSession session);
 
     /**
-     * Write the full request or response message object.
+     * Write the full message and return whether or not the message requires an ack.
      */
-    public void write(DSSession session, MessageWriter writer);
+    public boolean write(DSSession session, MessageWriter writer);
 
 }

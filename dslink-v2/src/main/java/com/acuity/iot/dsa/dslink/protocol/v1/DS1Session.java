@@ -6,15 +6,18 @@ import static org.iot.dsa.io.DSIReader.Token.END_LIST;
 import static org.iot.dsa.io.DSIReader.Token.END_MAP;
 import static org.iot.dsa.io.DSIReader.Token.NULL;
 
+import com.acuity.iot.dsa.dslink.io.DSIoException;
+import com.acuity.iot.dsa.dslink.protocol.DSBrokerConnection;
 import com.acuity.iot.dsa.dslink.protocol.DSProtocolException;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
+import com.acuity.iot.dsa.dslink.protocol.message.MessageReader;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v1.requester.DS1Requester;
 import com.acuity.iot.dsa.dslink.protocol.v1.responder.DS1Responder;
-import java.io.IOException;
 import org.iot.dsa.dslink.DSIRequester;
+import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.DSIReader.Token;
 import org.iot.dsa.io.DSIWriter;
@@ -25,7 +28,7 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Aaron Hansen
  */
-public class DS1Session extends DSSession {
+public class DS1Session extends DSSession implements MessageReader, MessageWriter {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -39,7 +42,6 @@ public class DS1Session extends DSSession {
     ///////////////////////////////////////////////////////////////////////////
 
     private long lastMessageSent;
-    private MessageWriter messageWriter;
     private DS1Requester requester = new DS1Requester(this);
     private boolean requestsBegun = false;
     private boolean requestsNext = false;
@@ -53,22 +55,9 @@ public class DS1Session extends DSSession {
     public DS1Session() {
     }
 
-    public DS1Session(DS1LinkConnection connection) {
-        super(connection);
-    }
-
     /////////////////////////////////////////////////////////////////
     // Public Methods
     /////////////////////////////////////////////////////////////////
-
-    @Override
-    public DS1LinkConnection getConnection() {
-        return (DS1LinkConnection) super.getConnection();
-    }
-
-    public DSIReader getReader() {
-        return getConnection().getReader();
-    }
 
     @Override
     public DSIRequester getRequester() {
@@ -81,16 +70,7 @@ public class DS1Session extends DSSession {
     }
 
     @Override
-    public boolean shouldEndMessage() {
-        return (getWriter().length() + getTransport().writeMessageSize()) > END_MSG_THRESHOLD;
-    }
-
-    /////////////////////////////////////////////////////////////////
-    // Protected Methods
-    /////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void doRecvMessage() throws IOException {
+    public void recvMessage() {
         DSIReader reader = getReader();
         getTransport().beginRecvMessage();
         switch (reader.next()) {
@@ -103,11 +83,20 @@ public class DS1Session extends DSSession {
             case ROOT:
                 break;
             case END_INPUT:
-                throw new IOException("Connection remotely closed");
+                throw new DSIoException("Connection remotely closed");
             default:
-                throw new IOException("Unexpected input: " + reader.last());
+                throw new DSIoException("Unexpected input: " + reader.last());
         }
     }
+
+    @Override
+    public boolean shouldEndMessage() {
+        return (getWriter().length() + getTransport().writeMessageSize()) > END_MSG_THRESHOLD;
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Protected Methods
+    /////////////////////////////////////////////////////////////////
 
     @Override
     protected void doSendMessage() {
@@ -119,13 +108,10 @@ public class DS1Session extends DSSession {
                 if (!shouldEndMessage()) {
                     send(!requestsNext);
                 }
-                lastMessageSent = System.currentTimeMillis();
-                if (requestsBegun || responsesBegun) {
-                    setAckRequired();
-                }
             }
             endMessage();
         } finally {
+            lastMessageSent = System.currentTimeMillis();
             requestsBegun = false;
             responsesBegun = false;
         }
@@ -149,7 +135,6 @@ public class DS1Session extends DSSession {
         super.onDisconnected();
         requester.onDisconnected();
         responder.onDisconnected();
-        messageWriter = null;
     }
 
     @Override
@@ -176,7 +161,7 @@ public class DS1Session extends DSSession {
         getTransport().beginSendMessage();
         DSIWriter out = getWriter();
         out.beginMap();
-        out.key("msg").value(getNextMessageId());
+        out.key("msg").value(getNextMid());
         int nextAck = getAckToSend();
         if (nextAck > 0) {
             out.key("ack").value(nextAck);
@@ -236,14 +221,7 @@ public class DS1Session extends DSSession {
     }
 
     private MessageWriter getMessageWriter() {
-        if (messageWriter == null) {
-            messageWriter = new MyMessageWriter(getConnection().getWriter());
-        }
-        return messageWriter;
-    }
-
-    private DSIWriter getWriter() {
-        return getMessageWriter().getWriter();
+        return this;
     }
 
     /**
@@ -275,6 +253,7 @@ public class DS1Session extends DSSession {
             } else if (key.equals("msg")) {
                 reader.next();
                 msg = (int) reader.getLong();
+                setMidRcvd(msg);
             } else if (key.equals("ack")) {
                 reader.next();
                 int ack = (int) reader.getLong();
@@ -285,11 +264,16 @@ public class DS1Session extends DSSession {
                 }
                 debug(debug() ? "Requester allowed" : null);
                 setRequesterAllowed(reader.getBoolean());
+                sendAck = true;
             } else if (key.equals("salt")) {
                 reader.next();
                 String s = reader.getElement().toString();
                 debug(debug() ? "Next salt: " + s : null);
-                getConnection().updateSalt(s);
+                DSLinkConnection conn = getConnection();
+                if (conn instanceof DSBrokerConnection) {
+                    ((DSBrokerConnection) conn).setBrokerSalt(s);
+                }
+                sendAck = true;
             }
             next = reader.next();
         } while (next != END_MAP);
@@ -393,7 +377,9 @@ public class DS1Session extends DSSession {
         if (!requestsBegun) {
             beginRequests();
         }
-        message.write(this, getMessageWriter());
+        if (message.write(this, getMessageWriter())) {
+            setAckRequired();
+        }
     }
 
     /**
@@ -407,25 +393,13 @@ public class DS1Session extends DSSession {
         if (!responsesBegun) {
             beginResponses();
         }
-        message.write(this, getMessageWriter());
+        if (message.write(this, getMessageWriter())) {
+            setAckRequired();
+        }
     }
 
     /////////////////////////////////////////////////////////////////
     // Inner Classes
     /////////////////////////////////////////////////////////////////
-
-    private class MyMessageWriter implements MessageWriter {
-
-        DSIWriter writer;
-
-        MyMessageWriter(DSIWriter writer) {
-            this.writer = writer;
-        }
-
-        @Override
-        public DSIWriter getWriter() {
-            return writer;
-        }
-    }
 
 }

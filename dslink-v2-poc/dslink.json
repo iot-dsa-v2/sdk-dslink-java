@@ -17,7 +17,7 @@
     "log": {
       "help": "all, trace, debug, info, warn, error, off",
       "type": "enum",
-      "value": "info"
+      "value": "trace"
     },
     "msgpack": {
       "help": "Whether or not to use msgpack.  Useful for debugging.",

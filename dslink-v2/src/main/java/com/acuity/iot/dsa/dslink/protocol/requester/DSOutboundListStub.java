@@ -74,13 +74,14 @@ public class DSOutboundListStub extends DSOutboundStub {
      * Writes the v1 request.
      */
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(getRequestId());
         out.key("method").value("list");
         out.key("path").value(getPath());
         out.endMap();
+        return true;
     }
 
 }

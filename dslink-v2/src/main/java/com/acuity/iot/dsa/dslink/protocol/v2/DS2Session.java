@@ -5,10 +5,10 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import com.acuity.iot.dsa.dslink.protocol.v2.requester.DS2Requester;
 import com.acuity.iot.dsa.dslink.protocol.v2.responder.DS2Responder;
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.util.HashMap;
 import java.util.Map;
 import org.iot.dsa.dslink.DSIRequester;
+import org.iot.dsa.dslink.DSITransport;
 
 /**
  * Implements DSA 1.1.2
@@ -43,18 +43,16 @@ public class DS2Session extends DSSession implements MessageConstants {
     public DS2Session() {
     }
 
-    public DS2Session(DS2LinkConnection connection) {
-        super(connection);
-    }
-
     /////////////////////////////////////////////////////////////////
     // Public Methods
     /////////////////////////////////////////////////////////////////
 
+    /*
     @Override
     public DS2LinkConnection getConnection() {
         return (DS2LinkConnection) super.getConnection();
     }
+    */
 
     @Override
     public DSIRequester getRequester() {
@@ -67,21 +65,13 @@ public class DS2Session extends DSSession implements MessageConstants {
     }
 
     @Override
-    public boolean shouldEndMessage() {
-        return getMessageWriter().getBodyLength() > END_MSG_THRESHOLD;
-    }
-
-    /////////////////////////////////////////////////////////////////
-    // Protected Methods
-    /////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void doRecvMessage() {
-        DSTransport transport = getTransport();
+    public void recvMessage() {
+        DSITransport transport = getTransport();
         DS2MessageReader reader = getMessageReader();
         transport.beginRecvMessage();
         reader.init(transport.getBinaryInput());
         int ack = reader.getAckId();
+        setMidRcvd(reader.getRequestId());
         if (ack > 0) {
             setAckRcvd(ack);
         }
@@ -112,6 +102,15 @@ public class DS2Session extends DSSession implements MessageConstants {
         }
         transport.endRecvMessage();
     }
+
+    @Override
+    public boolean shouldEndMessage() {
+        return getMessageWriter().getBodyLength() > END_MSG_THRESHOLD;
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Protected Methods
+    /////////////////////////////////////////////////////////////////
 
     @Override
     protected void doSendMessage() {
@@ -206,7 +205,7 @@ public class DS2Session extends DSSession implements MessageConstants {
             msg = new AckMessage(this);
         }
         if (msg != null) {
-            DSTransport transport = getTransport();
+            DSITransport transport = getTransport();
             transport.beginSendMessage();
             msg.write(this, getMessageWriter());
             transport.endSendMessage();

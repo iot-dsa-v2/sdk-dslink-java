@@ -96,7 +96,8 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
+        boolean wrote = false;
         if (!pendingSubscribe.isEmpty()) {
             debug(debug() ? "Sending subscribe requests" : null);
             doBeginSubscribe(writer);
@@ -110,6 +111,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
                     }
                 }
                 if (sub.getState() == State.PENDING_SUBSCRIBE) {
+                    wrote = true;
                     doWriteSubscribe(writer, sub.getPath(), sub.getSid(), sub.getQos());
                     sub.setState(State.SUBSCRIBED);
                 }
@@ -119,6 +121,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         }
         if (!pendingUnsubscribe.isEmpty() && !session.shouldEndMessage()) {
             debug(debug() ? "Sending unsubscribe requests" : null);
+            wrote = true;
             doBeginUnsubscribe(writer);
             Iterator<DSOutboundSubscription> it = pendingUnsubscribe.iterator();
             while (it.hasNext() && !session.shouldEndMessage()) {
@@ -138,6 +141,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         if (!pendingSubscribe.isEmpty() || !pendingUnsubscribe.isEmpty()) {
             sendMessage();
         }
+        return wrote;
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -2,7 +2,7 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
 import com.acuity.iot.dsa.dslink.sys.profiler.ThreadNode;
-import com.acuity.iot.dsa.dslink.test.TestLink;
+import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInfo;
@@ -13,11 +13,11 @@ import org.testng.annotations.Test;
 public class SysProfilerTest {
 
     private static boolean success = false;
-    private TestLink link;
+    private V1TestLink link;
 
     @Test
     public void theTest() throws Exception {
-        link = new TestLink(new DSMainNode());
+        link = new V1TestLink(new DSMainNode());
         link.getUpstream().subscribe((event, node, child, data) -> {
             success = true;
             synchronized (SysProfilerTest.this) {
@@ -37,7 +37,7 @@ public class SysProfilerTest {
                 "/sys/" + DSSysNode.OPEN_PROFILER, null, new SimpleInvokeHandler());
         res.getUpdate(2000);
 
-        DSSysNode sys = link.getSys();
+        DSSysNode sys = (DSSysNode) link.get(DSLink.SYS);
         DSIObject profobj = sys.get(DSSysNode.PROFILER);
         Assert.assertTrue(profobj instanceof SysProfiler);
 
