@@ -27,6 +27,7 @@ import java.util.Arrays;
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -113,7 +114,9 @@ public class DSKeys {
     public static ECPublicKey decodePublic(byte[] bytes) {
         try {
             if (bytes[0] != 0x04) {
-                throw new IllegalArgumentException("Invalid public key");
+                IllegalArgumentException x = new IllegalArgumentException("Invalid public key");
+                x.printStackTrace();
+                throw x;
             }
             BigInteger x = new BigInteger(Arrays.copyOfRange(bytes, 1, 33));
             BigInteger y = new BigInteger(Arrays.copyOfRange(bytes, 33, 65));
