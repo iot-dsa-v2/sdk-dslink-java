@@ -66,6 +66,9 @@ public class DS1LinkConnection extends DSBrokerConnection {
 
     protected void initializeConnection() {
         try {
+            if (DSString.isNotEmpty(getBrokerSalt()) && DSString.isNotEmpty(getBrokerKey())) {
+                return;
+            }
             String uri = makeHandshakeUri();
             setBrokerUri(uri);
             debug(debug() ? "Broker URI " + uri : null);

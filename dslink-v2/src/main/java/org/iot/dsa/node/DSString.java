@@ -98,7 +98,7 @@ public class DSString extends DSElement implements Comparable<Object> {
         if (str == null) {
             return false;
         }
-        return str.isEmpty();
+        return !str.isEmpty();
     }
 
     @Override

@@ -82,6 +82,9 @@ public class DS2LinkConnection extends DSBrokerConnection {
     @Override
     protected void initializeConnection() {
         try {
+            if (DSString.isNotEmpty(getBrokerSalt()) && DSString.isNotEmpty(getBrokerKey())) {
+                return;
+            }
             sendF0();
             recvF1();
             sendF2();

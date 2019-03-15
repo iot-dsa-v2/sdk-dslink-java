@@ -89,9 +89,7 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
     @Override
     protected void doConnect() {
         try {
-            if (getBrokerSalt().isEmpty()) {
-                initializeConnection();
-            }
+            initializeConnection();
             getTransport().open();
             connOk();
         } catch (Exception x) {

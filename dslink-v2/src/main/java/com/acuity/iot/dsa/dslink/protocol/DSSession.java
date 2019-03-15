@@ -128,6 +128,9 @@ public abstract class DSSession extends DSNode implements DSIConnected, DSISessi
      */
     public synchronized int getAckToSend() {
         int ret = ackToSend;
+        if (ret < 0) {
+            return ret;
+        }
         ackLastSent = ret;
         ackToSend = -1;
         return ret;

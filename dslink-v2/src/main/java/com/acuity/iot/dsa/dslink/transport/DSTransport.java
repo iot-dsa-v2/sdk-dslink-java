@@ -297,7 +297,11 @@ public abstract class DSTransport extends DSNode implements DSITransport {
                 }
             }
         }
-        writeSize += len;
+        if (isLast) {
+            writeSize = 0;
+        } else {
+            writeSize += len;
+        }
         try {
             doWrite(buf, off, len, isLast);
         } catch (Exception x) {
@@ -323,9 +327,9 @@ public abstract class DSTransport extends DSNode implements DSITransport {
             traceOut.append(msgPart);
         }
         if (isLast) {
-            writeSize += msgPart.length();
-        } else {
             writeSize = 0;
+        } else {
+            writeSize += msgPart.length();
         }
         try {
             doWrite(msgPart, isLast);
@@ -353,7 +357,11 @@ public abstract class DSTransport extends DSNode implements DSITransport {
             }
             traceOut.append(buf, off, len);
         }
-        writeSize += len;
+        if (isLast) {
+            writeSize = 0;
+        } else {
+            writeSize += len;
+        }
         try {
             doWrite(buf, off, len, isLast);
         } catch (Exception x) {
