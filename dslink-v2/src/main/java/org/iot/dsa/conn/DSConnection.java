@@ -1,5 +1,6 @@
 package org.iot.dsa.conn;
 
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
@@ -190,6 +191,53 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     public boolean isConnected() {
         return getConnectionState().isConnected();
     }
+
+    /**
+     * Call this to automatically manage the connection lifecycle, it will not return
+     * until the node is stopped.
+    public void newRun() {
+        long interval = 1000;
+        long increment = 2000;
+        long max = 60000;
+        DSRuntime.Timer lc = null;
+        if (isConnected()) {
+            if (!isEnabled()) {
+                disconnect();
+                //call again at min interval to try and reconnect
+                lc = DSRuntime.runDelayed(() -> newRun(), interval);
+            } else {
+                try {
+                    long ivl = getPingInterval();
+                    long last = Math.max(getLastOk(), lastPing);
+                    long next = last
+                    long now = System.currentTimeMillis();
+                    long duration = now - last;
+                    if (duration >= ivl) {
+                        lastPing = now;
+                        try {
+                            doPing();
+                        } catch (Throwable t) {
+                            error(getPath(), t);
+                            connDown(DSException.makeMessage(t));
+                        }
+                    }
+                } catch (Exception x) {
+                    debug(debug() ? getPath() : null, x);
+                }
+                //call again at next ping
+            }
+        } else {
+            connect();
+            long next = interval;
+            if (lc != null) {
+                next += lc.getInterval();
+                next = Math.min(next, 60000);
+            }
+            DSRuntime.runDelayed(()->newRun(),next);
+            //call again at the next attempt
+        }
+    }
+     */
 
     /**
      * Call this to automatically manage the connection lifecycle, it will not return

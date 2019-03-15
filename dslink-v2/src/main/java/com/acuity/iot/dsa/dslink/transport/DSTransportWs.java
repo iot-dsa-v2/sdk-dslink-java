@@ -14,6 +14,8 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
+import org.iot.dsa.node.DSBool;
+import org.iot.dsa.node.DSInfo;
 
 /**
  * Abstract websocket transport.
@@ -25,6 +27,8 @@ public abstract class DSTransportWs extends DSTransport {
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
+
+    protected static final String TEXT = "Text";
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -112,7 +116,7 @@ public abstract class DSTransportWs extends DSTransport {
         return getBinReadBuffer().available();
     }
 
-    @Override
+   @Override
     protected int doRead(byte[] buf, int off, int len) {
         DSByteBuffer readBuf = getBinReadBuffer();
         synchronized (this) {

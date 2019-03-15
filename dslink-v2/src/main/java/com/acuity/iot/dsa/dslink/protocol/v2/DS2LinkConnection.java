@@ -64,6 +64,7 @@ public class DS2LinkConnection extends DSBrokerConnection {
         super.declareDefaults();
         declareDefault(BROKER_AUTH, DSBytes.NULL).setTransient(true).setReadOnly(true);
         declareDefault(LINK_SALT, DSBytes.NULL).setTransient(true).setReadOnly(true);
+        getInfo(ENABLED).setPrivate(true);
     }
 
     public DS2Session getSession() {

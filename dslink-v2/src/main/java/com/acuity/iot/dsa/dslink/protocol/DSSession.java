@@ -6,6 +6,7 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.conn.DSConnection;
 import org.iot.dsa.conn.DSIConnected;
 import org.iot.dsa.dslink.DSIRequester;
@@ -75,6 +76,7 @@ public abstract class DSSession extends DSNode implements DSIConnected, DSISessi
     private DSInfo statMidRcvd = getInfo(LAST_MID_SENT);
     private DSInfo statReqQ = getInfo(REQ_QUEUE);
     private DSInfo statResQ = getInfo(RES_QUEUE);
+    private DSRuntime.Timer updateTimer;
     private WriteThread writeThread;
     private DSIWriter writer;
 
@@ -385,6 +387,16 @@ public abstract class DSSession extends DSNode implements DSIConnected, DSISessi
         }
         //Attempt to exit cleanly, try to get acks for sent messages.
         waitForAcks(1000);
+    }
+
+    @Override
+    protected void onSubscribed() {
+        updateTimer = DSRuntime.run(()->updateStats(), 0, 1000);
+    }
+
+    protected void onUnsubscribed() {
+        updateTimer.cancel();
+        updateTimer = null;
     }
 
     protected void requeueOutgoingRequest(OutboundMessage arg) {

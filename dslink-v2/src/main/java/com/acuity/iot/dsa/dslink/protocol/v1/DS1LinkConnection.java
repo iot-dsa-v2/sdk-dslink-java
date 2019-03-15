@@ -29,7 +29,7 @@ public class DS1LinkConnection extends DSBrokerConnection {
     ///////////////////////////////////////////////////////////////////////////
 
     static final String DSA_VERSION = "1.1.2";
-    static final String WS_URI = "WS URI";
+    static final String WS_URI = "Broker WS URI";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -57,6 +57,7 @@ public class DS1LinkConnection extends DSBrokerConnection {
     protected void declareDefaults() {
         super.declareDefaults();
         declareDefault(WS_URI, DSString.NULL).setReadOnly(true).setTransient(true);
+        getInfo(ENABLED).setPrivate(true);
     }
 
     protected String getWsUri() {
@@ -69,7 +70,13 @@ public class DS1LinkConnection extends DSBrokerConnection {
             setBrokerUri(uri);
             debug(debug() ? "Broker URI " + uri : null);
             DSMap response = Json.read(connect(new URL(uri), 0), true).toMap();
-            setBrokerId(response.getString("dsId"));
+            String s = response.getString("dsId");
+            if (s == null) {
+                s = response.getString("id");
+            }
+            if (s != null) {
+                setBrokerId(s);
+            }
             setBrokerFormat(response.getString("format"));
             setBrokerKey(response.getString("tempKey"));
             setBrokerSalt(response.getString("salt"));
@@ -115,12 +122,6 @@ public class DS1LinkConnection extends DSBrokerConnection {
     ///////////////////////////////////////////////////////////////////////////
     // Package Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    void updateSalt(String salt) {
-        if (salt != null) {
-            setBrokerSalt(salt);
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Private Methods
@@ -215,7 +216,7 @@ public class DS1LinkConnection extends DSBrokerConnection {
             buf.append(wsPath);
             String saltStr = getBrokerSalt();
             boolean queryStarted = false;
-            if (saltStr != null) {
+            if ((saltStr != null) && !saltStr.isEmpty()){
                 setBrokerSalt("");
                 buf.append("?auth=");
                 queryStarted = true;

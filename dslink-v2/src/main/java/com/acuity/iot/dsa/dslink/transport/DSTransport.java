@@ -6,6 +6,7 @@ import java.io.Reader;
 import java.io.Writer;
 import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.util.DSException;
@@ -27,6 +28,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     private static final int DEFAULT_READ_TIMEOUT = 60000;
     private static final byte[] EMPTY_BYTES = new byte[0];
     private static final int HEX_COLS = 30;
+    private static final String TEXT = "Text";
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -261,6 +263,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
      */
     public DSTransport setText(boolean isText) {
         this.text = isText;
+        put(TEXT, DSBool.valueOf(isText));
         return this;
     }
 
@@ -383,6 +386,14 @@ public abstract class DSTransport extends DSNode implements DSITransport {
             closeException = DSException.makeRuntime(reason);
             close();
         }
+    }
+
+    @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault(TEXT, DSBool.TRUE, "Communication Mode")
+                .setReadOnly(true)
+                .setTransient(true);
     }
 
     /**

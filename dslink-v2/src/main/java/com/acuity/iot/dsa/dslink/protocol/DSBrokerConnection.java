@@ -23,7 +23,7 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
     ///////////////////////////////////////////////////////////////////////////
 
 
-    protected static final String BROKER_ID = "Broker DSID";
+    protected static final String BROKER_ID = "Broker ID";
     protected static final String BROKER_FORMAT = "Broker Format";
     protected static final String BROKER_PATH = "Path In Broker";
     protected static final String BROKER_PUB_KEY = "Broker Public Key";
