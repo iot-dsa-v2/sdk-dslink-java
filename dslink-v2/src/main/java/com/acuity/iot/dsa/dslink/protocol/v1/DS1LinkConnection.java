@@ -66,9 +66,6 @@ public class DS1LinkConnection extends DSBrokerConnection {
 
     protected void initializeConnection() {
         try {
-            if (DSString.isNotEmpty(getBrokerSalt()) && DSString.isNotEmpty(getBrokerKey())) {
-                return;
-            }
             String uri = makeHandshakeUri();
             setBrokerUri(uri);
             debug(debug() ? "Broker URI " + uri : null);
@@ -81,8 +78,8 @@ public class DS1LinkConnection extends DSBrokerConnection {
                 setBrokerId(s);
             }
             setBrokerFormat(response.getString("format"));
-            setBrokerKey(response.getString("tempKey"));
-            setBrokerSalt(response.getString("salt"));
+            setBrokerKey(response.get("tempKey", ""));
+            setBrokerSalt(response.get("salt", ""));
             setBrokerVersion(response.getString("version"));
             setWsUri(response.getString("wsUri"));
             setPathInBroker(response.getString("path"));

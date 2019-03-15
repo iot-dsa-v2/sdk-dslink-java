@@ -122,9 +122,6 @@ public class DSString extends DSElement implements Comparable<Object> {
 
     @Override
     public String toString() {
-        if (value == null) {
-            return "null";
-        }
         return value;
     }
 
