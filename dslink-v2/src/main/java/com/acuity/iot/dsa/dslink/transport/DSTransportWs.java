@@ -165,14 +165,6 @@ public abstract class DSTransportWs extends DSTransport {
             byteBuffer.put(buf, off, len);
         }
         try {
-            System.out.println("doWrite!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: " + isLast);//TODO
-            /*
-            if (isLast && (byteBuffer.position() > 0)) { //TODO
-                byteBuffer.flip();
-                basicRemote.sendBinary(byteBuffer, isLast);
-                byteBuffer.clear();
-            }
-            */
             byteBuffer.flip();
             basicRemote.sendBinary(byteBuffer, isLast);
             byteBuffer.clear();
