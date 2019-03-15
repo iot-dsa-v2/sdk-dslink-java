@@ -24,6 +24,7 @@ import java.security.spec.ECPoint;
 import java.security.spec.ECPrivateKeySpec;
 import java.security.spec.ECPublicKeySpec;
 import java.util.Arrays;
+import java.util.logging.Logger;
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -114,9 +115,7 @@ public class DSKeys {
     public static ECPublicKey decodePublic(byte[] bytes) {
         try {
             if (bytes[0] != 0x04) {
-                IllegalArgumentException x = new IllegalArgumentException("Invalid public key");
-                x.printStackTrace();
-                throw x;
+                throw new IllegalArgumentException("Invalid public key");
             }
             BigInteger x = new BigInteger(Arrays.copyOfRange(bytes, 1, 33));
             BigInteger y = new BigInteger(Arrays.copyOfRange(bytes, 33, 65));

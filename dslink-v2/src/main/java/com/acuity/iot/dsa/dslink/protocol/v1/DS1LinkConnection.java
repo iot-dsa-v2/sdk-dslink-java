@@ -215,13 +215,13 @@ public class DS1LinkConnection extends DSBrokerConnection {
             }
             buf.append(wsPath);
             String saltStr = getBrokerSalt();
+            String keyStr = getBrokerKey();
             boolean queryStarted = false;
-            if ((saltStr != null) && !saltStr.isEmpty()){
+            if (DSString.isNotEmpty(saltStr) && DSString.isNotEmpty(keyStr)) {
                 setBrokerSalt("");
                 buf.append("?auth=");
                 queryStarted = true;
-                String tempKey = getBrokerKey();
-                buf.append(link.getOptions().getKeys().generateAuth(saltStr, tempKey));
+                buf.append(link.getOptions().getKeys().generateAuth(saltStr, keyStr));
             }
             String token = link.getOptions().getToken();
             if (token != null) {
