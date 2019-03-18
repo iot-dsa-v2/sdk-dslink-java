@@ -10,7 +10,6 @@ import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.json.Json;
 import org.iot.dsa.logging.DSLogHandler;
-import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSString;

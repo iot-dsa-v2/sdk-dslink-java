@@ -4,10 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
-import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSIObject;
-import org.iot.dsa.node.DSNode;
-import org.iot.dsa.util.DSException;
 
 /**
  * Binds an DSLinkConnection to a binary or text transport implementation.  Examples of transports would
@@ -97,12 +94,12 @@ public interface DSITransport extends DSIObject {
 
     /**
      * Blocking read operation, returns the number of bytes read.
-    public int read(byte[] buf, int off, int len);
+     public int read(byte[] buf, int off, int len);
      */
 
     /**
      * Blocking read operation, returns the number of chars read.
-    public int read(char[] buf, int off, int len);
+     public int read(char[] buf, int off, int len);
      */
 
     /**

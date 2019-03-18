@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
-import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.util.DSException;
 

@@ -24,11 +24,9 @@ import java.security.spec.ECPoint;
 import java.security.spec.ECPrivateKeySpec;
 import java.security.spec.ECPublicKeySpec;
 import java.util.Arrays;
-import java.util.logging.Logger;
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.util.DSException;
 
 /**

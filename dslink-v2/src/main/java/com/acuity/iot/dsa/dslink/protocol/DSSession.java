@@ -51,18 +51,17 @@ public abstract class DSSession extends DSNode implements DSIConnected, DSISessi
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
-
+    private int ackLastSent = -1;
     private int ackRcvd = -1;
     private int ackRequired = 0;
-    private int ackLastSent = -1;
     private int ackToSend = -1;
     private boolean connected = false;
     private DSLinkConnection connection;
     private long lastTimeRecv;
     private long lastTimeSend;
     private long lastUpdateStats;
-    private int midSent = 0;
     private int midRcvd = 0;
+    private int midSent = 0;
     private int nextMessage = 1;
     private final Object outgoingMutex = new Object();
     private ReadThread readThread;
@@ -72,8 +71,8 @@ public abstract class DSSession extends DSNode implements DSIConnected, DSISessi
     private ConcurrentLinkedQueue<OutboundMessage> resQueue = new ConcurrentLinkedQueue<OutboundMessage>();
     private DSInfo statAckRcvd = getInfo(LAST_ACK_RCVD);
     private DSInfo statAckSent = getInfo(LAST_ACK_SENT);
-    private DSInfo statMidSent = getInfo(LAST_MID_SENT);
     private DSInfo statMidRcvd = getInfo(LAST_MID_SENT);
+    private DSInfo statMidSent = getInfo(LAST_MID_SENT);
     private DSInfo statReqQ = getInfo(REQ_QUEUE);
     private DSInfo statResQ = getInfo(RES_QUEUE);
     private DSRuntime.Timer updateTimer;
@@ -394,7 +393,7 @@ public abstract class DSSession extends DSNode implements DSIConnected, DSISessi
 
     @Override
     protected void onSubscribed() {
-        updateTimer = DSRuntime.run(()->updateStats(), 0, 1000);
+        updateTimer = DSRuntime.run(() -> updateStats(), 0, 1000);
     }
 
     protected void onUnsubscribed() {
@@ -442,14 +441,6 @@ public abstract class DSSession extends DSNode implements DSIConnected, DSISessi
         midRcvd = mid;
     }
 
-    protected boolean waitingForAcks() {
-        boolean ret = getMissingAcks() > MAX_MISSING_ACKS;
-        if (ret) {
-            debug(debug() ? "Waiting for " + getMissingAcks() + " acks" : null);
-        }
-        return ret;
-    }
-
     protected void updateStats() {
         long now = System.currentTimeMillis();
         if ((now - lastUpdateStats) > 1000) {
@@ -461,6 +452,14 @@ public abstract class DSSession extends DSNode implements DSIConnected, DSISessi
             put(statMidSent, DSLong.valueOf(midSent));
             lastUpdateStats = now;
         }
+    }
+
+    protected boolean waitingForAcks() {
+        boolean ret = getMissingAcks() > MAX_MISSING_ACKS;
+        if (ret) {
+            debug(debug() ? "Waiting for " + getMissingAcks() + " acks" : null);
+        }
+        return ret;
     }
 
     ///////////////////////////////////////////////////////////////////////////

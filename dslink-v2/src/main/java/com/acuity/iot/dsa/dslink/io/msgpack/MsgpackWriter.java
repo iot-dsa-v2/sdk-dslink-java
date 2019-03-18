@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
-import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.io.AbstractWriter;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.util.DSException;
@@ -83,9 +82,9 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
 
     /**
      * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
-    public void writeTo(DSITransport out) {
-        byteBuffer.sendTo(out, (frame == null));
-    }
+     public void writeTo(DSITransport out) {
+     byteBuffer.sendTo(out, (frame == null));
+     }
      */
 
     /**

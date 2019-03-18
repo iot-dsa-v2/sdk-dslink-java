@@ -64,7 +64,7 @@ public abstract class DSLinkConnection extends DSConnection {
 
     public DSITransport getTransport() {
         if (transport == null) {
-             setTransport(makeTransport());
+            setTransport(makeTransport());
         }
         return transport;
     }
@@ -106,14 +106,14 @@ public abstract class DSLinkConnection extends DSConnection {
         remove(TRANSPORT);
     }
 
-    protected void setTransport(DSITransport transport) {
-        this.transport = transport;
-        put(TRANSPORT, transport).setTransient(true);
-    }
-
     protected void setSession(DSISession session) {
         this.session = session;
         put(SESSION, session).setTransient(true);
+    }
+
+    protected void setTransport(DSITransport transport) {
+        this.transport = transport;
+        put(TRANSPORT, transport).setTransient(true);
     }
 
 }

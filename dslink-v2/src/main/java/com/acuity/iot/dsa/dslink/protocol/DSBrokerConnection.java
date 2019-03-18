@@ -1,8 +1,5 @@
 package com.acuity.iot.dsa.dslink.protocol;
 
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
-import org.iot.dsa.dslink.DSIRequester;
-import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSString;
@@ -57,7 +54,6 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
 
     /**
      * For the sessions to update
-     * @param arg
      */
     public void setBrokerSalt(String arg) {
         put(brokerSalt, DSString.valueOf(arg));
@@ -146,7 +142,7 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
         put(brokerPubKey, DSString.valueOf(arg));
     }
 
-   protected void setBrokerUri(String arg) {
+    protected void setBrokerUri(String arg) {
         put(brokerUri, DSString.valueOf(arg));
     }
 
