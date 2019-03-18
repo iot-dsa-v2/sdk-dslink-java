@@ -30,13 +30,13 @@ public class DS2OutboundSetStub extends DSOutboundSetStub
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         if (multipart != null) {
             if (multipart.update(out, getSession().getAckToSend())) {
                 getRequester().sendRequest(this);
             }
-            return;
+            return true;
         }
         int ack = getSession().getAckToSend();
         out.init(getRequestId(), ack);
@@ -62,6 +62,6 @@ public class DS2OutboundSetStub extends DSOutboundSetStub
         } else {
             out.write(getRequester().getTransport());
         }
-
+        return true;
     }
 }

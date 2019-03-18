@@ -208,17 +208,17 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         synchronized (this) {
             enqueued = false;
         }
         if (isClosed()) {
-            return;
+            return false;
         }
         if (isClosePending() && (updateHead == null) && (closeReason != null)) {
             getResponder().sendError(this, closeReason);
             doClose();
-            return;
+            return false;
         }
         int last = state;
         beginMessage(writer);
@@ -257,6 +257,7 @@ public class DSInboundList extends DSInboundRequest
         } else {
             endMessage(writer, null);
         }
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////

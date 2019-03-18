@@ -114,7 +114,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         writeBegin(writer);
         DSInboundSubscription sub;
         while (!responder.shouldEndMessage()) {
@@ -131,10 +131,11 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         synchronized (this) {
             if (outbound.isEmpty()) {
                 enqueued = false;
-                return;
+                return true;
             }
         }
         responder.sendResponse(this);
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////

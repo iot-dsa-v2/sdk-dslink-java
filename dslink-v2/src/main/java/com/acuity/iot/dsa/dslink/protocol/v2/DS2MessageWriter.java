@@ -3,13 +3,13 @@ package com.acuity.iot.dsa.dslink.protocol.v2;
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetEncoder;
 import java.util.HashMap;
 import java.util.Map;
+import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.node.DSString;
 
 /**
@@ -164,10 +164,10 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     /**
      * Writes the message to the transport.
      */
-    public DS2MessageWriter write(DSTransport out) {
+    public DS2MessageWriter write(DSITransport out) {
         finishHeader();
-        header.sendTo(out, false);
-        body.sendTo(out, true);
+        header.sendTo(out.getBinaryOutput());
+        body.sendTo(out.getBinaryOutput());
         if (debug()) {
             printDebug();
         }

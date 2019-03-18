@@ -1,16 +1,24 @@
 package com.acuity.iot.dsa.dslink.protocol;
 
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackReader;
+import com.acuity.iot.dsa.dslink.io.msgpack.MsgpackWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import com.acuity.iot.dsa.dslink.protocol.responder.DSResponder;
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.conn.DSConnection;
 import org.iot.dsa.conn.DSIConnected;
 import org.iot.dsa.dslink.DSIRequester;
+import org.iot.dsa.dslink.DSISession;
+import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.io.DSIReader;
+import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.io.json.Json;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.util.DSException;
 
@@ -20,12 +28,18 @@ import org.iot.dsa.util.DSException;
  *
  * @author Aaron Hansen
  */
-public abstract class DSSession extends DSNode implements DSIConnected {
+public abstract class DSSession extends DSNode implements DSIConnected, DSISession {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    protected static final String LAST_ACK_RCVD = "Ack Rcvd";
+    protected static final String LAST_ACK_SENT = "Ack Sent";
+    protected static final String LAST_MID_RCVD = "MID Rcvd";
+    protected static final String LAST_MID_SENT = "MID Sent";
+    protected static final String REQ_QUEUE = "Request Queue";
+    protected static final String RES_QUEUE = "Response Queue";
     protected static final String REQUESTER = "Requester";
     protected static final String REQUESTER_ALLOWED = "Requester Allowed";
     protected static final String RESPONDER = "Responder";
@@ -37,31 +51,39 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
+    private int ackLastSent = -1;
     private int ackRcvd = -1;
     private int ackRequired = 0;
     private int ackToSend = -1;
     private boolean connected = false;
-    private DSTransportConnection connection;
+    private DSLinkConnection connection;
     private long lastTimeRecv;
     private long lastTimeSend;
-    private int messageId = 0;
+    private long lastUpdateStats;
+    private int midRcvd = 0;
+    private int midSent = 0;
     private int nextMessage = 1;
     private final Object outgoingMutex = new Object();
-    private ConcurrentLinkedQueue<OutboundMessage> outgoingRequests = new ConcurrentLinkedQueue<OutboundMessage>();
-    private ConcurrentLinkedQueue<OutboundMessage> outgoingResponses = new ConcurrentLinkedQueue<OutboundMessage>();
     private ReadThread readThread;
+    private DSIReader reader;
+    private ConcurrentLinkedQueue<OutboundMessage> reqQueue = new ConcurrentLinkedQueue<OutboundMessage>();
     private DSInfo requesterAllowed = getInfo(REQUESTER_ALLOWED);
+    private ConcurrentLinkedQueue<OutboundMessage> resQueue = new ConcurrentLinkedQueue<OutboundMessage>();
+    private DSInfo statAckRcvd = getInfo(LAST_ACK_RCVD);
+    private DSInfo statAckSent = getInfo(LAST_ACK_SENT);
+    private DSInfo statMidRcvd = getInfo(LAST_MID_SENT);
+    private DSInfo statMidSent = getInfo(LAST_MID_SENT);
+    private DSInfo statReqQ = getInfo(REQ_QUEUE);
+    private DSInfo statResQ = getInfo(RES_QUEUE);
+    private DSRuntime.Timer updateTimer;
     private WriteThread writeThread;
+    private DSIWriter writer;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
     public DSSession() {
-    }
-
-    public DSSession(DSLinkConnection connection) {
-        this.connection = (DSTransportConnection) connection;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -76,9 +98,10 @@ public abstract class DSSession extends DSNode implements DSIConnected {
             if (!isRequesterAllowed()) {
                 throw new IllegalStateException("Requester not allowed");
             }
-            outgoingRequests.add(arg);
+            reqQueue.add(arg);
             notifyOutgoing();
         }
+        updateStats();
     }
 
     /**
@@ -86,9 +109,10 @@ public abstract class DSSession extends DSNode implements DSIConnected {
      */
     public void enqueueOutgoingResponse(OutboundMessage arg) {
         if (connected) {
-            outgoingResponses.add(arg);
+            resQueue.add(arg);
             notifyOutgoing();
         }
+        updateStats();
     }
 
     /**
@@ -103,27 +127,63 @@ public abstract class DSSession extends DSNode implements DSIConnected {
      */
     public synchronized int getAckToSend() {
         int ret = ackToSend;
+        if (ret < 0) {
+            return ret;
+        }
+        ackLastSent = ret;
         ackToSend = -1;
         return ret;
     }
 
     public DSLinkConnection getConnection() {
+        if (connection == null) {
+            connection = (DSLinkConnection) getAncestor(DSLinkConnection.class);
+        }
         return connection;
     }
 
     /**
-     * The current (last) message ID generated.
+     * The last message ID generated for an outbound message (could still be current).
      */
-    public int getMessageId() {
-        return messageId;
+    public int getMidSent() {
+        return midSent;
+    }
+
+    public DSIReader getReader() {
+        if (reader == null) {
+            DSITransport transport = getConnection().getTransport();
+            if (transport.isText()) {
+                reader = Json.reader(transport.getTextInput());
+            } else {
+                reader = new MsgpackReader(transport.getBinaryInput());
+            }
+        }
+        return reader;
     }
 
     public abstract DSIRequester getRequester();
 
     public abstract DSResponder getResponder();
 
-    public DSTransport getTransport() {
-        return connection.getTransport();
+    public DSITransport getTransport() {
+        return getConnection().getTransport();
+    }
+
+    public DSIWriter getWriter() {
+        if (writer == null) {
+            DSITransport transport = getConnection().getTransport();
+            if (transport.isText()) {
+                writer = Json.writer(transport.getTextOutput());
+            } else {
+                writer = new MsgpackWriter() {
+                    @Override
+                    public void onComplete() {
+                        writeTo(getTransport().getBinaryOutput());
+                    }
+                };
+            }
+        }
+        return writer;
     }
 
     public boolean isRequesterAllowed() {
@@ -138,6 +198,8 @@ public abstract class DSSession extends DSNode implements DSIConnected {
                 break;
             case DISCONNECTED:
                 onDisconnected();
+                reader = null;
+                writer = null;
                 break;
             case DISCONNECTING:
                 onDisconnecting();
@@ -145,6 +207,9 @@ public abstract class DSSession extends DSNode implements DSIConnected {
             //case CONNECTING:
         }
     }
+
+    @Override
+    public abstract void recvMessage();
 
     /**
      * Called when the broker signifies that requests are allowed.
@@ -162,28 +227,42 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
-        declareDefault(REQUESTER_ALLOWED, DSBool.FALSE);
+        declareDefault(REQUESTER_ALLOWED, DSBool.FALSE)
+                .setReadOnly(true)
+                .setTransient(true);
+        declareDefault(REQ_QUEUE, DSLong.valueOf(0), "Number outbound requests")
+                .setReadOnly(true)
+                .setTransient(true);
+        declareDefault(RES_QUEUE, DSLong.valueOf(0), "Number of outbound responses")
+                .setReadOnly(true)
+                .setTransient(true);
+        declareDefault(LAST_ACK_RCVD, DSLong.valueOf(0))
+                .setReadOnly(true)
+                .setTransient(true);
+        declareDefault(LAST_ACK_SENT, DSLong.valueOf(0))
+                .setReadOnly(true)
+                .setTransient(true);
+        declareDefault(LAST_MID_RCVD, DSLong.valueOf(0))
+                .setReadOnly(true)
+                .setTransient(true);
+        declareDefault(LAST_MID_SENT, DSLong.valueOf(0))
+                .setReadOnly(true)
+                .setTransient(true);
     }
 
     /**
      * Can return null.
      */
     protected OutboundMessage dequeueOutgoingRequest() {
-        return outgoingRequests.poll();
+        return reqQueue.poll();
     }
 
     /**
      * Can return null.
      */
     protected OutboundMessage dequeueOutgoingResponse() {
-        return outgoingResponses.poll();
+        return resQueue.poll();
     }
-
-    /**
-     * The subclass should read and process a single message.  Throw an exception to indicate
-     * an error.
-     */
-    protected abstract void doRecvMessage() throws Exception;
 
     /**
      * The subclass should send a single message.  Throw an exception to indicate
@@ -195,18 +274,18 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         if (ackRequired > 0) {
             return ackRequired - ackRcvd - 1;
         }
-        return messageId - ackRcvd - 1;
+        return 0;
     }
 
     /**
      * Returns the next new message id.
      */
-    protected synchronized int getNextMessageId() {
-        messageId = nextMessage;
+    protected synchronized int getNextMid() {
+        midSent = nextMessage;
         if (++nextMessage > MAX_MSG_ID) {
             nextMessage = 1;
         }
-        return messageId;
+        return midSent;
     }
 
     protected boolean hasAckToSend() {
@@ -225,15 +304,15 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         if (waitingForAcks()) {
             return false;
         }
-        if (!outgoingResponses.isEmpty()) {
-            for (OutboundMessage msg : outgoingResponses) {
+        if (!resQueue.isEmpty()) {
+            for (OutboundMessage msg : resQueue) {
                 if (msg.canWrite(this)) {
                     return true;
                 }
             }
         }
-        if (!outgoingRequests.isEmpty()) {
-            for (OutboundMessage msg : outgoingRequests) {
+        if (!reqQueue.isEmpty()) {
+            for (OutboundMessage msg : reqQueue) {
                 if (msg.canWrite(this)) {
                     return true;
                 }
@@ -252,11 +331,11 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     }
 
     protected int numOutgoingRequests() {
-        return outgoingRequests.size();
+        return reqQueue.size();
     }
 
     protected int numOutgoingResponses() {
-        return outgoingResponses.size();
+        return resQueue.size();
     }
 
     /**
@@ -276,8 +355,8 @@ public abstract class DSSession extends DSNode implements DSIConnected {
      * Clear the outgoing queues and waits for the the read and write threads to exit.
      */
     protected void onDisconnected() {
-        outgoingRequests.clear();
-        outgoingResponses.clear();
+        reqQueue.clear();
+        resQueue.clear();
         notifyOutgoing();
         try {
             Thread thread = readThread;
@@ -312,12 +391,22 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         waitForAcks(1000);
     }
 
+    @Override
+    protected void onSubscribed() {
+        updateTimer = DSRuntime.run(() -> updateStats(), 0, 1000);
+    }
+
+    protected void onUnsubscribed() {
+        updateTimer.cancel();
+        updateTimer = null;
+    }
+
     protected void requeueOutgoingRequest(OutboundMessage arg) {
-        outgoingRequests.add(arg);
+        reqQueue.add(arg);
     }
 
     protected void requeueOutgoingResponse(OutboundMessage arg) {
-        outgoingResponses.add(arg);
+        resQueue.add(arg);
     }
 
     /**
@@ -335,7 +424,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
      * Used to indicate that the current message ID requires an ack.
      */
     protected void setAckRequired() {
-        ackRequired = messageId;
+        ackRequired = midSent;
     }
 
     /**
@@ -348,6 +437,23 @@ public abstract class DSSession extends DSNode implements DSIConnected {
         }
     }
 
+    protected void setMidRcvd(int mid) {
+        midRcvd = mid;
+    }
+
+    protected void updateStats() {
+        long now = System.currentTimeMillis();
+        if ((now - lastUpdateStats) > 1000) {
+            put(statAckRcvd, DSLong.valueOf(ackRcvd));
+            put(statAckSent, DSLong.valueOf(ackLastSent));
+            put(statReqQ, DSLong.valueOf(reqQueue.size()));
+            put(statResQ, DSLong.valueOf(resQueue.size()));
+            put(statMidRcvd, DSLong.valueOf(midRcvd));
+            put(statMidSent, DSLong.valueOf(midSent));
+            lastUpdateStats = now;
+        }
+    }
+
     protected boolean waitingForAcks() {
         boolean ret = getMissingAcks() > MAX_MISSING_ACKS;
         if (ret) {
@@ -357,7 +463,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Package / Private Methods
+    // Private Methods
     ///////////////////////////////////////////////////////////////////////////
 
     private void verifyLastRead() throws IOException {
@@ -384,7 +490,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
                 }
                 if ((System.currentTimeMillis() - start) > timeout) {
                     debug(debug() ? String
-                            .format("waitForAcks timeout (%s / %s)", ackRcvd, messageId)
+                            .format("waitForAcks timeout (%s / %s)", ackRcvd, midSent)
                                   : null);
                     break;
                 }
@@ -412,7 +518,7 @@ public abstract class DSSession extends DSNode implements DSIConnected {
             try {
                 while (connected) {
                     verifyLastSend();
-                    doRecvMessage();
+                    recvMessage();
                     conn.connOk();
                     lastTimeRecv = System.currentTimeMillis();
                 }

@@ -29,11 +29,12 @@ public class CloseMessage implements MessageConstants, OutboundMessage {
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(rid, session.getAckToSend());
         out.setMethod(method);
         out.write(session.getTransport());
+        return true;
     }
 
 }

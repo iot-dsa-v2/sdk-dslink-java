@@ -26,6 +26,8 @@ public abstract class DSTransportWs extends DSTransport {
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    protected static final String TEXT = "Text";
+
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
@@ -161,11 +163,9 @@ public abstract class DSTransportWs extends DSTransport {
             byteBuffer.put(buf, off, len);
         }
         try {
-            if (isLast && (byteBuffer.position() > 0)) {
-                byteBuffer.flip();
-                basicRemote.sendBinary(byteBuffer, isLast);
-                byteBuffer.clear();
-            }
+            byteBuffer.flip();
+            basicRemote.sendBinary(byteBuffer, isLast);
+            byteBuffer.clear();
         } catch (IOException x) {
             throw new UncheckedIOException(x);
         }

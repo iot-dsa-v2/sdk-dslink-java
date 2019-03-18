@@ -245,7 +245,7 @@ public class DSInboundSubscription extends DSInboundRequest
      */
     protected void write(DSSession session, MessageWriter writer, StringBuilder buf) {
         if (qos > 0) {
-            ackRequired = session.getMessageId();
+            ackRequired = session.getMidSent();
         }
         Update update = dequeue();
         int count = 500;

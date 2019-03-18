@@ -39,13 +39,14 @@ public class DSOutboundRemoveStub extends DSOutboundStub {
      * Writes the v1 version.
      */
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(getRequestId());
         out.key("method").value("remove");
         out.key("path").value(getPath());
         out.endMap();
+        return true;
     }
 
 }

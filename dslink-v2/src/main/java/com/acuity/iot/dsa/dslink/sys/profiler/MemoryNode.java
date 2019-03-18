@@ -27,7 +27,6 @@ public class MemoryNode extends MXBeanNode {
 
     @Override
     public void refreshImpl() {
-        // TODO Auto-generated method stub
     }
 
     @Override

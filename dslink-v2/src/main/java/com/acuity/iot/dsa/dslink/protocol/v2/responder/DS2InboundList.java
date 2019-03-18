@@ -23,13 +23,13 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
     private int seqId = 0;
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         if (multipart != null) {
             if (multipart.update(out, getSession().getAckToSend())) {
                 getResponder().sendResponse(this);
             }
-            return;
+            return false;
         }
         int ack = getSession().getAckToSend();
         out.init(getRequestId(), ack);
@@ -45,6 +45,7 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
             DSBrokerConnection up = (DSBrokerConnection) getResponder().getConnection();
             out.write(up.getTransport());
         }
+        return true;
     }
 
     @Override
