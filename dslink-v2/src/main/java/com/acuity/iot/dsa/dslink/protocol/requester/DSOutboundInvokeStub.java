@@ -94,7 +94,7 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
      * Writes the v1 version by default.
      */
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(getRequestId());
@@ -105,6 +105,7 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
         }
         out.key("params").value(params);
         out.endMap();
+        return true;
     }
 
     protected DSMap getParams() {

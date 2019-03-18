@@ -33,7 +33,7 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         out.init(req.getRequestId(), req.getSession().getAckToSend());
         if (req instanceof DS2InboundInvoke) {
@@ -59,6 +59,7 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
         out.addStringHeader(HDR_ERROR_DETAIL, DSException.makeMessage(reason));
         DSBrokerConnection up = (DSBrokerConnection) req.getResponder().getConnection();
         out.write(up.getTransport());
+        return true;
     }
 
 }

@@ -107,7 +107,7 @@ public class AbstractMessage implements OutboundMessage {
      * response map.
      */
     @Override
-    public void write(DSSession session, MessageWriter out) {
+    public boolean write(DSSession session, MessageWriter out) {
         DSIWriter writer = out.getWriter();
         writer.beginMap();
         if (rid >= 0) {
@@ -122,6 +122,7 @@ public class AbstractMessage implements OutboundMessage {
         if (stream != null) {
             writer.key("stream").value(stream);
         }
+        return true;
     }
 
 }

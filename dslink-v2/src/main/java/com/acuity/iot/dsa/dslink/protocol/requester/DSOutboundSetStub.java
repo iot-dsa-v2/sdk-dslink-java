@@ -42,7 +42,7 @@ public class DSOutboundSetStub extends DSOutboundStub {
      * Writes the v1 request.
      */
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("rid").value(getRequestId());
@@ -51,6 +51,7 @@ public class DSOutboundSetStub extends DSOutboundStub {
         out.key("path").value(getPath());
         out.key("value").value(value.toElement());
         out.endMap();
+        return true;
     }
 
     protected DSIValue getValue() {

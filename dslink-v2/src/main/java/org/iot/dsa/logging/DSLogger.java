@@ -280,6 +280,10 @@ public class DSLogger {
         return logger;
     }
 
+    protected void setLogger(Logger logger) {
+        this.logger = logger;
+    }
+
     /////////////////////////////////////////////////////////////////
     // Package / Privates Methods
     /////////////////////////////////////////////////////////////////

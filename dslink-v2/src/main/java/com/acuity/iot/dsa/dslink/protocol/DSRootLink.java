@@ -12,7 +12,7 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.util.DSUtil;
 
 /**
- * Link implementation for standalone v1 and v2 links.
+ * Links that also the root of the node tree.  These links have sys and upstream children.
  *
  * @author Aaron Hansen
  */
@@ -26,7 +26,6 @@ public class DSRootLink extends DSLink {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSKeys keys;
     private DSInfo main;
     private DSInfo sys = getInfo(SYS);
     private DSInfo upstream;
@@ -38,13 +37,6 @@ public class DSRootLink extends DSLink {
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Public / private keys of the link, used to prove identity with brokers.
-     */
-    public DSKeys getKeys() {
-        return keys;
-    }
 
     @Override
     public DSMainNode getMain() {
@@ -67,13 +59,13 @@ public class DSRootLink extends DSLink {
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
-        declareDefault(SYS, new DSSysNode(), "Services common to all links.").setAdmin(true);
+        declareDefault(SYS, new DSSysNode(),
+                       "Services common to all links in the process.").setAdmin(true);
     }
 
     @Override
     protected DSLink init(DSLinkOptions config) {
         super.init(config);
-        keys = config.getKeys();
         main = getInfo(MAIN);
         if (main == null) {
             String type = getOptions().getMainType();

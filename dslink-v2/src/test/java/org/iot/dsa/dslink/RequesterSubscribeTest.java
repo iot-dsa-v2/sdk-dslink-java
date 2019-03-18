@@ -41,11 +41,21 @@ public class RequesterSubscribeTest {
 
     private void doit() throws Exception {
         success = false;
+        link.getUpstream().subscribe((event, node, child, data) -> {
+            success = true;
+            synchronized (RequesterSubscribeTest.this) {
+                RequesterSubscribeTest.this.notifyAll();
+            }
+        }, DSLinkConnection.CONNECTED_EVENT, null);
+        Thread t = new Thread(link, "DSLink Runner");
+        t.start();
+        synchronized (this) {
+            wait(5000);
+        }
+        success = false;
         subscribe();
         Assert.assertFalse(root.isSubscribed());
         Assert.assertFalse(success);
-        Thread t = new Thread(link, "DSLink Runner");
-        t.start();
         synchronized (this) {
             wait(5000);
         }

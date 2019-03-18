@@ -202,15 +202,15 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         enqueued = false;
         if (isClosed()) {
-            return;
+            return false;
         }
         if (isClosePending() && (updateHead == null) && (closeReason != null)) {
             getResponder().sendError(this, closeReason);
             doClose();
-            return;
+            return false;
         }
         writeBegin(writer);
         switch (state) {
@@ -235,6 +235,7 @@ public class DSInboundInvoke extends DSInboundRequest
             doClose();
         }
         writeEnd(writer);
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////

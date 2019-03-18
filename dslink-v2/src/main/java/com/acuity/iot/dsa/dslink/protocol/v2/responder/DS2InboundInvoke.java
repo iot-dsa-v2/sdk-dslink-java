@@ -25,13 +25,13 @@ class DS2InboundInvoke extends DSInboundInvoke implements MessageConstants {
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DS2MessageWriter out = (DS2MessageWriter) writer;
         if (multipart != null) {
             if (multipart.update(out, getSession().getAckToSend())) {
                 getResponder().sendResponse(this);
             }
-            return;
+            return true;
         }
         int ack = getSession().getAckToSend();
         out.init(getRequestId(), ack);
@@ -47,6 +47,7 @@ class DS2InboundInvoke extends DSInboundInvoke implements MessageConstants {
             DSBrokerConnection up = (DSBrokerConnection) getResponder().getConnection();
             out.write(up.getTransport());
         }
+        return true;
     }
 
     @Override

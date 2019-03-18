@@ -5,16 +5,17 @@ import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INITIAL
 import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INVALID_AUTH;
 import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_OK;
 
+import com.acuity.iot.dsa.dslink.io.DSBase64;
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.protocol.DSBrokerConnection;
 import com.acuity.iot.dsa.dslink.protocol.DSKeys;
-import com.acuity.iot.dsa.dslink.protocol.DSRootLink;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.security.SecureRandom;
-import org.iot.dsa.dslink.DSIRequester;
+import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.node.DSBytes;
@@ -35,24 +36,14 @@ public class DS2LinkConnection extends DSBrokerConnection {
     ///////////////////////////////////////////////////////////////////////////
 
     private static final String BROKER_AUTH = "Broker Auth";
-    private static final String BROKER_ID = "Broker DSID";
-    private static final String BROKER_PUB_KEY = "Broker Public Key";
-    private static final String BROKER_SALT = "Broker Salt";
     private static final String LINK_SALT = "Link Salt";
-    private static final String SESSION = "Session";
-    private static final String TRANSPORT = "Transport";
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private DSInfo brokerAuth = getInfo(BROKER_AUTH);
-    private DSInfo brokerDsId = getInfo(BROKER_ID);
-    private DSInfo brokerPubKey = getInfo(BROKER_PUB_KEY);
-    private DSInfo brokerSalt = getInfo(BROKER_SALT);
     private DSInfo linkSalt = getInfo(LINK_SALT);
-    private DS2Session session;
-    private DSTransport transport;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -69,38 +60,13 @@ public class DS2LinkConnection extends DSBrokerConnection {
     @Override
     public void declareDefaults() {
         super.declareDefaults();
-        declareDefault(BROKER_ID, DSString.NULL).setTransient(true).setReadOnly(true);
-        declareDefault(BROKER_AUTH, DSBytes.NULL)
-                .setTransient(true).setReadOnly(true).setAdmin(true);
-        declareDefault(BROKER_PUB_KEY, DSBytes.NULL)
-                .setTransient(true).setReadOnly(true).setAdmin(true);
-        declareDefault(BROKER_SALT, DSBytes.NULL)
-                .setTransient(true).setReadOnly(true).setAdmin(true);
-        declareDefault(LINK_SALT, DSBytes.NULL)
-                .setTransient(true).setReadOnly(true).setAdmin(true);
-    }
-
-    @Override
-    public DSRootLink getLink() {
-        return (DSRootLink) super.getLink();
-    }
-
-    @Override
-    public DSIRequester getRequester() {
-        return getSession().getRequester();
+        declareDefault(BROKER_AUTH, DSBytes.NULL).setTransient(true).setReadOnly(true);
+        declareDefault(LINK_SALT, DSBytes.NULL).setTransient(true).setReadOnly(true);
+        getInfo(ENABLED).setPrivate(true);
     }
 
     public DS2Session getSession() {
-        if (session == null) {
-            session = new DS2Session(this);
-            put(SESSION, session);
-        }
-        return session;
-    }
-
-    @Override
-    public DSTransport getTransport() {
-        return transport;
+        return (DS2Session) super.getSession();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -112,24 +78,26 @@ public class DS2LinkConnection extends DSBrokerConnection {
     }
 
     @Override
-    protected void doConnect() {
+    protected void initializeConnection() {
         try {
-            transport = makeTransport();
-            put(TRANSPORT, transport);
-            transport.setConnection(this);
-            transport.open();
-            performHandshake();
-            connOk();
-        } catch (Exception x) {
-            error(getPath(), x);
-            connDown(DSException.makeMessage(x));
+            if (DSString.isNotEmpty(getBrokerSalt()) && DSString.isNotEmpty(getBrokerKey())) {
+                return;
+            }
+            sendF0();
+            recvF1();
+            sendF2();
+            recvF3();
+        } catch (IOException x) {
+            throw new UncheckedIOException(x);
         }
     }
 
-    /**
-     * Looks at the connection initialization response to determine the type of transport then
-     * instantiates the correct type fom the config.
-     */
+    @Override
+    protected DS2Session makeSession() {
+        return new DS2Session();
+    }
+
+    @Override
     protected DSTransport makeTransport() {
         DSTransport.Factory factory = null;
         String uri = getLink().getOptions().getBrokerUri();
@@ -151,20 +119,6 @@ public class DS2LinkConnection extends DSBrokerConnection {
         return transport;
     }
 
-    @Override
-    protected void onDisconnected() {
-        super.onDisconnected();
-        transport = null;
-        remove(TRANSPORT);
-    }
-
-    protected void performHandshake() throws IOException {
-        sendF0();
-        recvF1();
-        sendF2();
-        recvF3();
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
@@ -180,7 +134,7 @@ public class DS2LinkConnection extends DSBrokerConnection {
     }
 
     private void recvF1() throws IOException {
-        InputStream in = transport.getBinaryInput();
+        InputStream in = getTransport().getBinaryInput();
         DS2MessageReader reader = new DS2MessageReader();
         reader.init(in);
         if (reader.getMethod() != 0xf1) {
@@ -200,23 +154,23 @@ public class DS2LinkConnection extends DSBrokerConnection {
                                                             DSBytes.toHex(status, null));
             }
         }
-        put(brokerDsId, DSString.valueOf(reader.readString(in)));
+        setBrokerId(reader.readString(in));
         byte[] tmp = new byte[65];
         int len = in.read(tmp);
         if (len != 65) {
             throw new IllegalStateException("Broker pub key not 65 bytes: " + len);
         }
-        put(BROKER_PUB_KEY, DSBytes.valueOf(tmp));
+        setBrokerKey(DSBase64.encodeUrl(tmp));
         tmp = new byte[32];
         len = in.read(tmp);
         if (len != 32) {
             throw new IllegalStateException("Broker salt not 32 bytes: " + len);
         }
-        put(BROKER_SALT, DSBytes.valueOf(tmp));
+        setBrokerSalt(DSBase64.encodeUrl(tmp));
     }
 
     private void recvF3() throws IOException {
-        InputStream in = transport.getBinaryInput();
+        InputStream in = getTransport().getBinaryInput();
         DS2MessageReader reader = new DS2MessageReader();
         reader.init(in);
         if (reader.getMethod() != 0xf3) {
@@ -242,13 +196,13 @@ public class DS2LinkConnection extends DSBrokerConnection {
         setPathInBroker(pathOnBroker);
         byte[] tmp = new byte[32];
         in.read(tmp);
-        put(brokerAuth, DSBytes.valueOf(tmp));
+        put(brokerAuth, DSString.valueOf(DSBase64.encodeUrl(tmp)));
     }
 
     private void sendF0() {
-        DSRootLink link = getLink();
+        DSLink link = getLink();
         String dsId = link.getDsId();
-        DSKeys dsKeys = link.getKeys();
+        DSKeys dsKeys = link.getOptions().getKeys();
         DS2MessageWriter writer = new DS2MessageWriter();
         writer.setMethod(0xf0);
         DSByteBuffer buffer = writer.getBody();
@@ -256,7 +210,7 @@ public class DS2LinkConnection extends DSBrokerConnection {
         writer.writeString(dsId, buffer);
         buffer.put(dsKeys.encodePublic());
         buffer.put(getLinkSalt());
-        writer.write(transport);
+        writer.write(getTransport());
     }
 
     private void sendF2() {
@@ -270,12 +224,12 @@ public class DS2LinkConnection extends DSBrokerConnection {
         writer.writeString(token, buffer);
         buffer.put((byte) 0x01); //isResponder
         writer.writeString("", buffer); //blank server path
-        byte[] sharedSecret = getLink().getKeys().generateSharedSecret(
-                brokerPubKey.getElement().toBytes());
-        byte[] tmp = brokerSalt.getElement().toBytes();
+        byte[] brokerKey = DSBase64.decode(getBrokerKey());
+        byte[] sharedSecret = getLink().getOptions().getKeys().generateSharedSecret(brokerKey);
+        byte[] tmp = DSBase64.decode(getBrokerSalt());
         byte[] authBytes = DSKeys.generateHmacSHA256Signature(tmp, sharedSecret);
         buffer.put(authBytes);
-        writer.write(transport);
+        writer.write(getTransport());
     }
 
 }

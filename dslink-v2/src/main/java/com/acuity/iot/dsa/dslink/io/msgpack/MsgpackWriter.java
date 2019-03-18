@@ -1,7 +1,6 @@
 package com.acuity.iot.dsa.dslink.io.msgpack;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
-import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -83,10 +82,10 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
 
     /**
      * Writes the internal buffer to the parameter.  The internal buffer will be cleared.
+     public void writeTo(DSITransport out) {
+     byteBuffer.sendTo(out, (frame == null));
+     }
      */
-    public void writeTo(DSTransport out) {
-        byteBuffer.sendTo(out, (frame == null));
-    }
 
     /**
      * Writes the internal buffer to the parameter.  The internal buffer will be cleared.

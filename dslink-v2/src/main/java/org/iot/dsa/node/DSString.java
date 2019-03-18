@@ -91,6 +91,16 @@ public class DSString extends DSElement implements Comparable<Object> {
         return value.hashCode();
     }
 
+    /**
+     * True if not null and not empty.
+     */
+    public static boolean isNotEmpty(String str) {
+        if (str == null) {
+            return false;
+        }
+        return !str.isEmpty();
+    }
+
     @Override
     public boolean isString() {
         return true;
@@ -112,9 +122,6 @@ public class DSString extends DSElement implements Comparable<Object> {
 
     @Override
     public String toString() {
-        if (value == null) {
-            return "null";
-        }
         return value;
     }
 

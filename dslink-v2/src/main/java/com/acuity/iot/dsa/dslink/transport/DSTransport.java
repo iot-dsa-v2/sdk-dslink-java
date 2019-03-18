@@ -4,28 +4,31 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.dslink.DSLinkConnection;
+import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.util.DSException;
 
 /**
- * Binds an DSLinkConnection to a binary or text transport implementation.  Examples of transports would
- * be sockets, websockets and http.
+ * Binds an DSLinkConnection to a binary or text transport implementation.  Examples of transports
+ * would be sockets, websockets and http.
  * <p>
- * Subclasses should call and override all protected methods.
+ * Subclasses should call or override all protected methods.
  *
  * @author Aaron Hansen
  */
-public abstract class DSTransport extends DSNode {
+public abstract class DSTransport extends DSNode implements DSITransport {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private static final int DEFAULT_READ_TIMEOUT = 30000;
+    private static final int DEFAULT_READ_TIMEOUT = 60000;
     private static final byte[] EMPTY_BYTES = new byte[0];
     private static final int HEX_COLS = 30;
+    private static final String TEXT = "Text";
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -233,21 +236,13 @@ public abstract class DSTransport extends DSNode {
                     traceIn = new StringBuilder();
                     traceIn.append("Recv:\n");
                 }
-                traceIn.append(buf, off, len);
+                traceIn.append(buf, off, ret);
             }
             return ret;
         } catch (Exception x) {
             close(x);
         }
         return -1;
-    }
-
-    /**
-     * If not explicitly set, will search for the ancestor.
-     */
-    public DSTransport setConnection(DSLinkConnection connection) {
-        this.connection = connection;
-        return this;
     }
 
     public DSTransport setConnectionUrl(String url) {
@@ -268,6 +263,7 @@ public abstract class DSTransport extends DSNode {
      */
     public DSTransport setText(boolean isText) {
         this.text = isText;
+        put(TEXT, DSBool.valueOf(isText));
         return this;
     }
 
@@ -301,7 +297,11 @@ public abstract class DSTransport extends DSNode {
                 }
             }
         }
-        writeSize += len;
+        if (isLast) {
+            writeSize = 0;
+        } else {
+            writeSize += len;
+        }
         try {
             doWrite(buf, off, len, isLast);
         } catch (Exception x) {
@@ -326,7 +326,11 @@ public abstract class DSTransport extends DSNode {
             }
             traceOut.append(msgPart);
         }
-        writeSize += msgPart.length();
+        if (isLast) {
+            writeSize = 0;
+        } else {
+            writeSize += msgPart.length();
+        }
         try {
             doWrite(msgPart, isLast);
         } catch (Exception x) {
@@ -353,7 +357,11 @@ public abstract class DSTransport extends DSNode {
             }
             traceOut.append(buf, off, len);
         }
-        writeSize += len;
+        if (isLast) {
+            writeSize = 0;
+        } else {
+            writeSize += len;
+        }
         try {
             doWrite(buf, off, len, isLast);
         } catch (Exception x) {
@@ -386,6 +394,14 @@ public abstract class DSTransport extends DSNode {
             closeException = DSException.makeRuntime(reason);
             close();
         }
+    }
+
+    @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault(TEXT, DSBool.TRUE, "Communication Mode")
+                .setReadOnly(true)
+                .setTransient(true);
     }
 
     /**

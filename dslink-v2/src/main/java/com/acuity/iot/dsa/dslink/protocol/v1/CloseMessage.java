@@ -30,7 +30,7 @@ public class CloseMessage implements OutboundMessage {
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap().key("rid").value(rid);
         if (method) {
@@ -39,6 +39,7 @@ public class CloseMessage implements OutboundMessage {
             out.key("stream").value("closed");
         }
         out.endMap();
+        return true;
     }
 
 }

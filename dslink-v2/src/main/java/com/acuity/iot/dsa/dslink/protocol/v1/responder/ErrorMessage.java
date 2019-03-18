@@ -52,7 +52,7 @@ class ErrorMessage implements OutboundMessage {
     }
 
     @Override
-    public void write(DSSession session, MessageWriter writer) {
+    public boolean write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         out.beginMap()
            .key("rid").value(rid)
@@ -62,6 +62,7 @@ class ErrorMessage implements OutboundMessage {
            .key("msg").value(message)
            .endMap();
         out.endMap();
+        return true;
     }
 
     private String toString(Throwable arg) {
