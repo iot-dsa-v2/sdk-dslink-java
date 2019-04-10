@@ -186,7 +186,7 @@ public class DSInfo implements ApiObject, GroupListener {
                 info = info.next();
             }
         } else {
-            getNode().getVirtualActions(this, bucket);
+            getParent().getVirtualActions(this, bucket);
         }
         return bucket.iterator();
     }

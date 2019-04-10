@@ -135,11 +135,9 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public void onClose(Integer requestId) {
-        System.out.println("CLOSED1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + hashCode());//todo
         if (isClosed()) {
             return;
         }
-        System.out.println("CLOSED2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + hashCode());//todo
         state = STATE_CLOSED;
         debug(debug() ? getPath() + " list closed" : null);
         synchronized (this) {
