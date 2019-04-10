@@ -40,7 +40,7 @@ public class StreamTableTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getUpstream().subscribe((event, node, child, data) -> {
+        link.getConnection().subscribe((event, node, child, data) -> {
             success = true;
             synchronized (StreamTableTest.this) {
                 StreamTableTest.this.notifyAll();
@@ -53,7 +53,7 @@ public class StreamTableTest {
         }
         Assert.assertTrue(success);
         success = false;
-        DSIRequester requester = link.getUpstream().getRequester();
+        DSIRequester requester = link.getConnection().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/main/getTable", null, new SimpleInvokeHandler());
         DSList row = res.getUpdate(5000);
@@ -89,7 +89,7 @@ public class StreamTableTest {
 
         @Override
         public DSInfo getVirtualAction(DSInfo target, String name) {
-            return actionInfo(name, new DSAction.Parameterless() {
+            return virtualInfo(name, new DSAction.Parameterless() {
                 @Override
                 public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
                     return new OpenTable(this, invocation);

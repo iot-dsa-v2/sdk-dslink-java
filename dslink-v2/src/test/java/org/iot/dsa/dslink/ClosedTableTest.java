@@ -40,7 +40,7 @@ public class ClosedTableTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getUpstream().subscribe((event, node, child, data) -> {
+        link.getConnection().subscribe((event, node, child, data) -> {
             success = true;
             synchronized (ClosedTableTest.this) {
                 ClosedTableTest.this.notifyAll();
@@ -53,7 +53,7 @@ public class ClosedTableTest {
         }
         Assert.assertTrue(success);
         success = false;
-        DSIRequester requester = link.getUpstream().getRequester();
+        DSIRequester requester = link.getConnection().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/main/getTable", null, new SimpleInvokeHandler());
         res.waitForClose(5000);
@@ -132,7 +132,7 @@ public class ClosedTableTest {
 
         @Override
         public DSInfo getVirtualAction(DSInfo target, String name) {
-            return actionInfo(name, new DSAction.Parameterless() {
+            return virtualInfo(name, new DSAction.Parameterless() {
                 @Override
                 public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
                     return new ClosedTable(this);

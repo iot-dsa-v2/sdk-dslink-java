@@ -98,7 +98,7 @@ public abstract class DSLink extends DSNode implements Runnable {
      * The local path of the node appended the link's path in the upstream broker.
      */
     public String getPathInBroker(DSNode node) {
-        String pathInBroker = getUpstream().getPathInBroker();
+        String pathInBroker = getConnection().getPathInBroker();
         String nodePath = node.getPath();
         if ((pathInBroker == null) || pathInBroker.isEmpty()) {
             return nodePath;
@@ -108,7 +108,7 @@ public abstract class DSLink extends DSNode implements Runnable {
         return DSPath.append(buf, nodePath).toString();
     }
 
-    public abstract DSLinkConnection getUpstream();
+    public abstract DSLinkConnection getConnection();
 
     /**
      * Creates a link by first testing for an existing serialized database.

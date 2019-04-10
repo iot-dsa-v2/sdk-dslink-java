@@ -32,7 +32,7 @@ public class ListTest {
     }
 
     private void doit() throws Exception {
-        link.getUpstream().subscribe((event, node, child, data) -> {
+        link.getConnection().subscribe((event, node, child, data) -> {
             synchronized (ListTest.this) {
                 ListTest.this.notifyAll();
             }
@@ -42,7 +42,7 @@ public class ListTest {
         synchronized (this) {
             this.wait(5000);
         }
-        DSIRequester requester = link.getUpstream().getRequester();
+        DSIRequester requester = link.getConnection().getRequester();
         SimpleListHandler handler = (SimpleListHandler) requester.list("/main",
                                                                        new SimpleListHandler());
         handler.waitForInitialized(5000);

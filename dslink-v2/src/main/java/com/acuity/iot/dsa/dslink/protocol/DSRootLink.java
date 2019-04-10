@@ -48,7 +48,7 @@ public class DSRootLink extends DSLink {
     }
 
     @Override
-    public DSLinkConnection getUpstream() {
+    public DSLinkConnection getConnection() {
         return (DSLinkConnection) upstream.get();
     }
 

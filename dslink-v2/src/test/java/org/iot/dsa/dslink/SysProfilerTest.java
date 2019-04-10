@@ -18,7 +18,7 @@ public class SysProfilerTest {
     @Test
     public void theTest() throws Exception {
         link = new V1TestLink(new DSMainNode());
-        link.getUpstream().subscribe((event, node, child, data) -> {
+        link.getConnection().subscribe((event, node, child, data) -> {
             success = true;
             synchronized (SysProfilerTest.this) {
                 SysProfilerTest.this.notifyAll();
@@ -32,7 +32,7 @@ public class SysProfilerTest {
         }
         Assert.assertTrue(success);
         success = false;
-        DSIRequester requester = link.getUpstream().getRequester();
+        DSIRequester requester = link.getConnection().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/sys/" + DSSysNode.OPEN_PROFILER, null, new SimpleInvokeHandler());
         res.getUpdate(2000);

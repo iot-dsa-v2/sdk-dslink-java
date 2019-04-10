@@ -1,9 +1,10 @@
 package org.iot.dsa.dslink.responder;
 
 import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.node.DSElement;
 
 /**
- * The details about an incoming list request passed to the responder.
+ * The mechanism by which a responder and provide updates to a list request.
  *
  * @author Aaron Hansen
  * @see DSIResponder#onList(InboundListRequest)
@@ -11,19 +12,14 @@ import org.iot.dsa.dslink.DSIResponder;
 public interface InboundListRequest extends InboundRequest {
 
     /**
-     * The responder should call this whenever a child is added.
+     * The responder should call this whenever a child changes or is added.
      */
-    public void childAdded(ApiObject child);
+    public void added(String name, ApiObject child);
 
     /**
-     * The responder should call this whenever a child is removed.
+     * The responder should call this whenever metadata changes.
      */
-    public void childRemoved(String name);
-
-    /**  TODO
-     * The response should call this whenever the meta-data about the target changes.
-     public void metadataChanged();
-     */
+    public void changed(String name, DSElement value);
 
     /**
      * Allows the responder to forcefully close the list stream.
@@ -39,5 +35,10 @@ public interface InboundListRequest extends InboundRequest {
      * Whether or not the list stream is still open.
      */
     public boolean isOpen();
+
+    /**
+     * The responder should call this whenever a child is removed.
+     */
+    public void removed(String name);
 
 }

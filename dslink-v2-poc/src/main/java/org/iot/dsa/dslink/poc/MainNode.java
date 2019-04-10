@@ -3,9 +3,6 @@ package org.iot.dsa.dslink.poc;
 import java.util.Collection;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSMainNode;
-import org.iot.dsa.dslink.requester.ErrorType;
-import org.iot.dsa.dslink.requester.OutboundListHandler;
-import org.iot.dsa.dslink.requester.OutboundStream;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSDouble;
 import org.iot.dsa.node.DSElement;
@@ -56,7 +53,7 @@ public class MainNode extends DSMainNode implements Runnable {
     public DSInfo getVirtualAction(DSInfo target, String name) {
         if (target == incrementingInt) {
             if (name.equals("Reset")) {
-                return actionInfo(name, new DSAction.Parameterless() {
+                return virtualInfo(name, new DSAction.Parameterless() {
                     @Override
                     public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
                         put(incrementingInt, DSElement.make(0));
@@ -66,7 +63,7 @@ public class MainNode extends DSMainNode implements Runnable {
             }
         } else if (target.get() == this) {
             if (name.equals("Foobar")) {
-                return actionInfo(name, new Parameterless() {
+                return virtualInfo(name, new Parameterless() {
                     @Override
                     public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
                         System.out.println("Hi Mom");

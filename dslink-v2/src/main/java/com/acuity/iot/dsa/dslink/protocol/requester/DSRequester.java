@@ -2,6 +2,7 @@ package com.acuity.iot.dsa.dslink.protocol.requester;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,6 +13,7 @@ import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
+import org.iot.dsa.dslink.requester.OutboundStream;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSMap;
@@ -28,6 +30,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private Map<String, DSOutboundListStub> lists = new HashMap<>();
     private AtomicInteger nextRid = new AtomicInteger();
     private Map<Integer, DSOutboundStub> requests = new ConcurrentHashMap<Integer, DSOutboundStub>();
     private DSSession session;
@@ -66,10 +69,17 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     }
 
     @Override
-    public OutboundListHandler list(String path, OutboundListHandler req) {
-        DSOutboundListStub stub = makeList(path, req);
-        requests.put(stub.getRequestId(), stub);
-        req.onInit(path, null, stub);
+    public OutboundListHandler list(String path, final OutboundListHandler req) {
+        DSOutboundListStub stub;
+        synchronized (lists) {
+            stub = lists.get(path);
+            if (stub == null) {
+                stub = makeList(path, req);
+                requests.put(stub.getRequestId(), stub);
+            } else {
+                stub.addHandler(req);
+            }
+        }
         session.enqueueOutgoingRequest(stub);
         return req;
     }
@@ -81,6 +91,9 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     public void onDisconnected() {
         Iterator<Entry<Integer, DSOutboundStub>> it = requests.entrySet().iterator();
         Map.Entry<Integer, DSOutboundStub> me;
+        synchronized (lists) {
+            lists.clear();
+        }
         while (it.hasNext()) {
             me = it.next();
             try {
@@ -175,5 +188,9 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     }
 
     protected abstract void sendClose(Integer rid);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////////////////////////////////////////////
 
 }

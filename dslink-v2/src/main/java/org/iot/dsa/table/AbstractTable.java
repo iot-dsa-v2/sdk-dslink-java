@@ -1,6 +1,7 @@
 package org.iot.dsa.table;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSMap;
@@ -21,7 +22,7 @@ public class AbstractTable {
     ///////////////////////////////////////////////////////////////////////////
 
     protected ArrayList<DSMap> columns = new ArrayList<DSMap>();
-    protected ArrayList<DSIValue[]> rows = new ArrayList<DSIValue[]>();
+    protected ConcurrentLinkedQueue<DSIValue[]> rows = new ConcurrentLinkedQueue<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -35,9 +36,7 @@ public class AbstractTable {
         return columns.get(idx);
     }
 
-    public DSIValue[] getRow(int idx) {
-        return rows.get(idx);
-    }
+    //public DSIValue[] getRow(int idx) { return rows.get(idx); }
 
     public int rowCount() {
         return rows.size();

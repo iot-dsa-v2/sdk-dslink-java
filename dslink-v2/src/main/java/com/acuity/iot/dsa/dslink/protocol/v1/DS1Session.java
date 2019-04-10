@@ -34,8 +34,8 @@ public class DS1Session extends DSSession implements MessageReader, MessageWrite
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    static final int END_MSG_THRESHOLD = 30000;
-    static final int MAX_MSG_IVL = 45000;
+    public static int END_MSG_THRESHOLD = 30000;
+    static final int MAX_MSG_IVL = 55000;
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields

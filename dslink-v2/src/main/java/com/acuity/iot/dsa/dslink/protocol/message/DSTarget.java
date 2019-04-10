@@ -15,12 +15,11 @@ import org.iot.dsa.node.action.DSAction;
  */
 public class DSTarget {
 
-    private String[] names;
-
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private String[] names;
     private DSNode node;
     private DSInfo parentInfo;
     private String path;
