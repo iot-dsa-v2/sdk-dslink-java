@@ -36,8 +36,6 @@ public class AbstractTable {
         return columns.get(idx);
     }
 
-    //public DSIValue[] getRow(int idx) { return rows.get(idx); }
-
     public int rowCount() {
         return rows.size();
     }

@@ -1,11 +1,11 @@
 subprojects {
 
     apply plugin: 'jacoco'
-    apply plugin: 'java'
+    apply plugin: 'java-library'
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.57.0a6'
+    version '0.57.0'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8

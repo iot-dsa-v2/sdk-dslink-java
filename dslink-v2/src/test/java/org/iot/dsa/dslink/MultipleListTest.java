@@ -74,7 +74,7 @@ public class MultipleListTest {
         handler2.getStream().closeStream();
         handler2.waitForClosed(5000);
         Assert.assertFalse(handler1.getStream().isStreamOpen());
-        //Assert.assertFalse(link.getMain().isSubscribed()); //todo
+        //Assert.assertFalse(link.getMain().isSubscribed()); //todo - need to fix this bug
         link.shutdown();
         DS1Session.END_MSG_THRESHOLD = emt;
     }
