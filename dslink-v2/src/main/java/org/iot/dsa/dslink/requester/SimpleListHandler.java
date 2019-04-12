@@ -70,6 +70,12 @@ public class SimpleListHandler extends AbstractListHandler {
     }
 
     @Override
+    public synchronized void onClose() {
+        super.onClose();
+        notifyAll();
+    }
+
+    @Override
     public synchronized void onInitialized() {
         isInitialized = true;
         notifyAll();
@@ -90,6 +96,30 @@ public class SimpleListHandler extends AbstractListHandler {
         }
         updates.put(name, value);
         notifyAll();
+    }
+
+    /**
+     * Waits for the initialed state.
+     *
+     * @param timeout Passed to Object.wait
+     * @throws RuntimeException      if there is an error with the invocation.
+     * @throws IllegalStateException if there is a timeout, or if there are any errors.
+     */
+    public synchronized void waitForClosed(long timeout) {
+        long end = System.currentTimeMillis() + timeout;
+        while (!isClosed()) {
+            try {
+                wait(timeout);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+            if (isError()) {
+                throw getError();
+            }
+            if (!isClosed() && (System.currentTimeMillis() > end)) {
+                throw new IllegalStateException("Timed out");
+            }
+        }
     }
 
     /**

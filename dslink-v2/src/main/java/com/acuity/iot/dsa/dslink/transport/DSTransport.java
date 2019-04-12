@@ -154,7 +154,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     }
 
     /**
-     * Read timeout in milliseconds, default is 30000.
+     * Read timeout in milliseconds.
      */
     public int getReadTimeout() {
         return readTimeout;

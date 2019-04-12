@@ -54,6 +54,7 @@ public interface DSIRequester {
     /**
      * Submits a subscribe request.
      *
+     * @param qos DSA quality of service, 0-2 supported.
      * @param handler Callback mechanism.
      * @return The handler parameter.
      * @see org.iot.dsa.dslink.requester.AbstractSubscribeHandler

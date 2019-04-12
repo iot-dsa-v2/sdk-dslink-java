@@ -26,8 +26,6 @@ public abstract class DSTransportWs extends DSTransport {
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    protected static final String TEXT = "Text";
-
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
@@ -118,7 +116,7 @@ public abstract class DSTransportWs extends DSTransport {
     protected int doRead(byte[] buf, int off, int len) {
         DSByteBuffer readBuf = getBinReadBuffer();
         synchronized (this) {
-            if (testOpen() && readBuf.available() == 0) {
+            while (testOpen() && readBuf.available() == 0) {
                 try {
                     wait(getReadTimeout());
                 } catch (Exception x) {
@@ -128,10 +126,7 @@ public abstract class DSTransportWs extends DSTransport {
             if (readBuf.available() > 0) {
                 return readBuf.sendTo(buf, off, len);
             }
-            if (!testOpen()) {
-                return -1;
-            }
-            throw new DSIoException("Read timeout");
+            return -1;
         }
     }
 
@@ -139,7 +134,7 @@ public abstract class DSTransportWs extends DSTransport {
     protected int doRead(char[] buf, int off, int len) {
         DSCharBuffer readBuf = getTextReadBuffer();
         synchronized (this) {
-            if (testOpen() && readBuf.available() == 0) {
+            while (testOpen() && readBuf.available() == 0) {
                 try {
                     wait(getReadTimeout());
                 } catch (Exception x) {
@@ -149,10 +144,7 @@ public abstract class DSTransportWs extends DSTransport {
             if (readBuf.available() > 0) {
                 return readBuf.read(buf, off, len);
             }
-            if (!testOpen()) {
-                return -1;
-            }
-            throw new DSIoException("Read timeout");
+            return -1;
         }
     }
 
