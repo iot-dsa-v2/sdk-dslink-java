@@ -2,6 +2,7 @@ package org.iot.dsa.node;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DSISetAction;
@@ -158,32 +159,36 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     @Override
-    public Iterator<ApiObject> getChildren() {
-        ArrayList<ApiObject> ret = new ArrayList<>();
-        ArrayList<String> actions = new ArrayList<>();
-        DSInfo info;
-        DSNode node;
+    public ApiObject getChild(String name) {
         if (isNode()) {
-            node = getNode();
-            node.getVirtualActions(this, actions);
-        } else {
-            node = getParent();
-            node.getVirtualActions(this, actions);
+            return getNode().getInfo(name);
         }
-        for (String s : actions) {
-            info = node.getVirtualAction(this, s);
-            if (info != null) {
-                ret.add(info);
-            }
-        }
+        return getParent().getVirtualAction(this, name);
+    }
+
+    @Override
+    public Iterator<String> getChildren() {
+        List<String> bucket = new ArrayList<>();
         if (isNode()) {
-            info = node.getFirstInfo();
+            DSNode node = getNode();
+            node.getVirtualActions(this, bucket);
+            DSInfo info = node.getFirstInfo();
+            String name;
             while (info != null) {
-                ret.add(info);
+                name = info.getName();
+                switch (name.charAt(0)) {
+                    case '$':
+                    case '@':
+                        break;
+                    default:
+                        bucket.add(name);
+                }
                 info = info.next();
             }
+        } else {
+            getParent().getVirtualActions(this, bucket);
         }
-        return ret.iterator();
+        return bucket.iterator();
     }
 
     /**
@@ -259,7 +264,6 @@ public class DSInfo implements ApiObject, GroupListener {
     /**
      * A convenience that casts getObject().
      */
-    @Override
     public DSIValue getValue() {
         return (DSIValue) object;
     }

@@ -1,7 +1,7 @@
 package org.iot.dsa.dslink.responder;
 
 import java.util.Iterator;
-import org.iot.dsa.node.DSIValue;
+import java.util.List;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.action.ActionSpec;
 
@@ -18,21 +18,26 @@ public interface ApiObject {
     public ActionSpec getAction();
 
     /**
-     * Iterator of children of this object.
+     * Return the object representing the child with the given name.
      */
-    public Iterator<ApiObject> getChildren();
+    public ApiObject getChild(String name);
+
+    /**
+     * Add the children names to the given bucket
+     */
+    public Iterator<String> getChildren();
 
     public void getMetadata(DSMap bucket);
 
     /**
      * The display name.
+     public String getName();
      */
-    public String getName();
 
     /**
      * Value of the object, should only be called if isValue() returns true.
+     public DSIValue getValue();
      */
-    public DSIValue getValue();
 
     /**
      * True if the object is an action.

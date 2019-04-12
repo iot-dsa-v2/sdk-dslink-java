@@ -8,7 +8,8 @@ import com.acuity.iot.dsa.dslink.protocol.DSSession;
 public interface OutboundMessage {
 
     /**
-     * True if the message is ready to be written.
+     * True if the message is ready to be written. A can be queued to write something, but may
+     * not be able to such as waiting for an ack.
      */
     public boolean canWrite(DSSession session);
 

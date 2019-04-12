@@ -609,7 +609,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param target Could be the info for this node, or the info of a non-node value child.
      * @param name   The name of the action.
      * @return DSInfo for the desired action.
-     * @see #actionInfo(String, DSAction)
+     * @see #virtualInfo(String, DSAction)
      */
     public DSInfo getVirtualAction(DSInfo target, String name) {
         DSInfo info = null;
@@ -619,19 +619,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 if (target.getFlag(DSInfo.READONLY)) {
                     throw new IllegalStateException("Value is readonly: " + name);
                 }
-                return actionInfo(sa.getSetActionName(), sa.getSetAction());
+                return virtualInfo(sa.getSetActionName(), sa.getSetAction());
             }
         }
         if (target.isRemovable()) {
             switch (name) {
                 case DeleteAction.DELETE:
-                    info = actionInfo(name, DeleteAction.INSTANCE);
+                    info = virtualInfo(name, DeleteAction.INSTANCE);
                     break;
                 case DuplicateAction.DUPLICATE:
-                    info = actionInfo(name, DuplicateAction.INSTANCE);
+                    info = virtualInfo(name, DuplicateAction.INSTANCE);
                     break;
                 case RenameAction.RENAME:
-                    info = actionInfo(name, RenameAction.INSTANCE);
+                    info = virtualInfo(name, RenameAction.INSTANCE);
                     break;
             }
             if (info != null) {
@@ -657,6 +657,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 return;
             } else if (target.getNode() != this) {
                 throw new IllegalArgumentException("DSInfo target is from another node.");
+            } else if (target.getParent() == null) {
+                return; //no edit actions on root node
             }
         } else if (target.is(DSISetAction.class)) {
             if (!target.getFlag(DSInfo.READONLY)) {
@@ -1159,13 +1161,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Use to create DSInfos when overriding getDynamicAction(s).
-     */
-    protected DSInfo actionInfo(String name, DSAction target) {
-        return new VirtualInfo(name, target).setParent(this);
-    }
-
-    /**
      * Use this in the declareDefaults method to create a non-removable child.  This is only called
      * on the default instance.  Runtime instances clone the declared defaults found on the default
      * instance.
@@ -1344,6 +1339,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     protected void onSubscribed() {
     }
 
+    /**
+     * Called for every unsubscribe.
+     */
+    protected void onUnsubscribe(Subscription subscription) {
+    }
+
     /** TODO later
      * Reorder the child to be first.
      public void reorderToFirst(DSInfo info) {
@@ -1373,12 +1374,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
 
     /**
-     * Called for every unsubscribe.
-     */
-    protected void onUnsubscribe(Subscription subscription) {
-    }
-
-    /**
      * Called when this node transitions to having no subscriptions of any kind.
      */
     protected void onUnsubscribed() {
@@ -1401,6 +1396,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Override point, throw a meaningful IllegalArgumentException if the parent is not allowed
      */
     protected void validateParent(DSNode node) {
+    }
+
+    /**
+     * Use to create DSInfos when overriding getVirtualAction(s).
+     */
+    protected DSInfo virtualInfo(String name, DSAction target) {
+        return new VirtualInfo(name, target).setParent(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////

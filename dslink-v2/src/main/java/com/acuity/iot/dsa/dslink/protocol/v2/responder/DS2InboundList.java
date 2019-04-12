@@ -114,7 +114,8 @@ class DS2InboundList extends DSInboundList implements MessageConstants {
     @Override
     protected void encodeUpdate(Update update, MessageWriter writer, StringBuilder buf) {
         if (update instanceof AddUpdate) {
-            encodeChild(((AddUpdate) update).child, writer);
+            AddUpdate au = (AddUpdate) update;
+            encodeChild(au.name, au.child, writer);
         } else {
             DS2MessageWriter out = (DS2MessageWriter) writer;
             out.writeString(encodeName(((RemoveUpdate) update).name, buf));

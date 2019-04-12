@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink;
 
+import com.acuity.iot.dsa.dslink.protocol.v1.DS1Session;
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import org.iot.dsa.dslink.requester.SimpleListHandler;
@@ -12,7 +13,7 @@ import org.testng.annotations.Test;
 /**
  * @author Aaron Hansen
  */
-public class ListTest {
+public class LargeListTest {
 
     // Fields
     // ------
@@ -32,9 +33,11 @@ public class ListTest {
     }
 
     private void doit() throws Exception {
+        int emt = DS1Session.END_MSG_THRESHOLD;
+        DS1Session.END_MSG_THRESHOLD = 1000;
         link.getConnection().subscribe((event, node, child, data) -> {
-            synchronized (ListTest.this) {
-                ListTest.this.notifyAll();
+            synchronized (LargeListTest.this) {
+                LargeListTest.this.notifyAll();
             }
         }, DSLinkConnection.CONNECTED_EVENT, null);
         Thread t = new Thread(link, "DSLink Runner");
@@ -42,18 +45,25 @@ public class ListTest {
         synchronized (this) {
             this.wait(5000);
         }
+        Assert.assertTrue(link.getConnection().isConnected());
+        Assert.assertTrue(link.getMain().isStable());
         DSIRequester requester = link.getConnection().getRequester();
         SimpleListHandler handler = (SimpleListHandler) requester.list("/main",
                                                                        new SimpleListHandler());
         handler.waitForInitialized(5000);
+        Assert.assertTrue(link.getMain().isSubscribed());
         Assert.assertTrue(handler.isInitialized());
         Assert.assertTrue(handler.hasUpdates());
-        DSMap map = (DSMap) handler.getUpdate("int");
-        Assert.assertNotNull(map);
-        map = (DSMap) handler.getUpdate("bool");
-        Assert.assertNotNull(map);
+        for (int i = 1000; --i >= 0; ) {
+            DSMap map = (DSMap) handler.getUpdate("int"+i);
+            Assert.assertNotNull(map);
+        }
+        //handler.getStream().closeStream();
+        //handler.waitForCallback(5000);
+        //Assert.assertFalse(link.getMain().isSubscribed());
+        Thread.sleep(100);
         link.shutdown();
-        link = null;
+        DS1Session.END_MSG_THRESHOLD = emt;
     }
 
     // Inner Classes
@@ -61,9 +71,11 @@ public class ListTest {
 
     public static class MyMain extends DSMainNode {
 
-        public void declareDefaults() {
-            declareDefault("int", DSInt.valueOf(0));
-            declareDefault("bool", DSBool.TRUE);
+        @Override
+        protected void onStarted() {
+            for (int i = 1000; --i >= 0; ) {
+                put("int" + i, DSInt.valueOf(i));
+            }
         }
 
     }

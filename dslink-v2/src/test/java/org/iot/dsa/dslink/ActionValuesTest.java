@@ -41,7 +41,7 @@ public class ActionValuesTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getUpstream().subscribe((event, node, child, data) -> {
+        link.getConnection().subscribe((event, node, child, data) -> {
             success = true;
             synchronized (ActionValuesTest.this) {
                 ActionValuesTest.this.notifyAll();
@@ -54,7 +54,7 @@ public class ActionValuesTest {
         }
         Assert.assertTrue(success);
         success = false;
-        DSIRequester requester = link.getUpstream().getRequester();
+        DSIRequester requester = link.getConnection().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/main/getValues", null, new SimpleInvokeHandler());
         res.waitForClose(5000);
@@ -83,7 +83,7 @@ public class ActionValuesTest {
 
         @Override
         public DSInfo getVirtualAction(DSInfo target, String name) {
-            return actionInfo(name, new DSAction.Parameterless() {
+            return virtualInfo(name, new DSAction.Parameterless() {
                 @Override
                 public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
                     return new Values(this);

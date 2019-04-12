@@ -166,7 +166,7 @@ public class DSMetadata {
     }
 
     /**
-     * The name, or null.
+     * Not the name in the parent node, but used for things such as columns and parameters.
      */
     public String getName() {
         return map.getString(NAME);
@@ -338,6 +338,9 @@ public class DSMetadata {
         return this;
     }
 
+    /**
+     * Not the name used in the parent node, but used elsewhere such as parameter or column names.
+     */
     public DSMetadata setName(String arg) {
         if (arg != null) {
             map.put(NAME, arg);
