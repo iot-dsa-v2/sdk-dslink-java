@@ -159,6 +159,21 @@ public class DSOutboundListStub extends DSOutboundStub {
         }
 
         @Override
+        public DSIValue getParams() {
+            return null;
+        }
+
+        @Override
+        public String getPath() {
+            return DSOutboundListStub.this.getPath();
+        }
+
+        @Override
+        public OutboundStream getStream() {
+            throw new IllegalStateException("This should not have been called");
+        }
+
+        @Override
         public void onClose() {
             for (OutboundListHandler h : handlers) {
                 try {

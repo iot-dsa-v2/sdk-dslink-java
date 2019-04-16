@@ -13,6 +13,7 @@ import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.DSStatus;
@@ -265,7 +266,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     /**
      * Create or update a subscription.
      */
-    OutboundSubscribeHandler subscribe(String path, int qos, OutboundSubscribeHandler req) {
+    OutboundSubscribeHandler subscribe(String path, DSIValue qos, OutboundSubscribeHandler req) {
         trace(trace() ? String.format("Subscribe (qos=%s) %s", qos, path) : null);
         DSOutboundSubscribeStub stub = new DSOutboundSubscribeStub(path, qos, req);
         DSOutboundSubscription sub = null;
@@ -277,7 +278,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
             }
         }
         try {
-            req.onInit(path, DSLong.valueOf(sub.getQos()), stub);
+            req.onInit(path, qos, stub);
         } catch (Exception x) {
             error(path, x);
         }

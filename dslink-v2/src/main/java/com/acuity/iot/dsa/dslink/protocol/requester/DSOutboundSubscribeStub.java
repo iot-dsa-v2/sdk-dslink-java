@@ -3,14 +3,14 @@ package com.acuity.iot.dsa.dslink.protocol.requester;
 import org.iot.dsa.dslink.requester.OutboundStream;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
 
 /**
  * Manages the lifecycle of a single subscription and is also the outbound stream passed to the
  * requester.
- * <p>
- * <p>
  * <p>
  * There can be multiple subscriptions to a single path.  They are all contained in a
  * DSOutboundSubscription object.
@@ -22,13 +22,17 @@ class DSOutboundSubscribeStub implements OutboundStream {
     private DSOutboundSubscribeStub next; //linked list in subscription object
     private boolean open = true;
     private String path;
-    private int qos = 0;
+    private DSIValue qos;
     private OutboundSubscribeHandler request;
     private DSOutboundSubscription sub;
 
-    public DSOutboundSubscribeStub(String path, int qos, OutboundSubscribeHandler request) {
+    public DSOutboundSubscribeStub(String path, DSIValue qos, OutboundSubscribeHandler request) {
         this.path = path;
-        this.qos = qos;
+        if (qos == null) {
+            this.qos = DSLong.valueOf(0);
+        } else {
+            this.qos = qos;
+        }
         this.request = request;
     }
 
@@ -57,7 +61,7 @@ class DSOutboundSubscribeStub implements OutboundStream {
     }
 
     public int getQos() {
-        return qos;
+        return qos.toElement().toInt();
     }
 
     @Override

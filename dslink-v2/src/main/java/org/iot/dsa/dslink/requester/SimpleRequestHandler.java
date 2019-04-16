@@ -13,6 +13,24 @@ public class SimpleRequestHandler implements OutboundRequestHandler {
      * An instance that can be used for those requests where the callbacks don't really matter.
      */
     public static final SimpleRequestHandler DEFAULT = new SimpleRequestHandler();
+    private DSIValue params;
+    private String path;
+    private OutboundStream stream;
+
+    @Override
+    public DSIValue getParams() {
+        return params;
+    }
+
+    @Override
+    public String getPath() {
+        return path;
+    }
+
+    @Override
+    public OutboundStream getStream() {
+        return stream;
+    }
 
     /**
      * Does nothing by default.
@@ -32,13 +50,11 @@ public class SimpleRequestHandler implements OutboundRequestHandler {
     public void onError(ErrorType type, String msg) {
     }
 
-    /**
-     * Does nothing by default.
-     * <p>
-     * {@inheritDoc}
-     */
     @Override
     public void onInit(String path, DSIValue params, OutboundStream stream) {
+        this.path = path;
+        this.params = params;
+        this.stream = stream;
     }
 
 }

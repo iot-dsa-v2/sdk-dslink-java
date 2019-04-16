@@ -6,6 +6,8 @@ import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.dslink.requester.SimpleRequestHandler;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSMap;
 
 /**
@@ -59,7 +61,7 @@ public interface DSIRequester {
      * @return The handler parameter.
      * @see org.iot.dsa.dslink.requester.AbstractSubscribeHandler
      */
-    public OutboundSubscribeHandler subscribe(String path, int qos,
+    public OutboundSubscribeHandler subscribe(String path, DSIValue qos,
                                               OutboundSubscribeHandler handler);
 
 }

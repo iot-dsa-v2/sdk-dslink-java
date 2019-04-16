@@ -10,7 +10,7 @@ public abstract class AbstractSubscribeHandler
         implements OutboundSubscribeHandler {
 
     /**
-     * Returns the value passed to onInit.
+     * Returns the param passed to onInit.
      */
     public int getQos() {
         return getParams().toElement().toInt();
