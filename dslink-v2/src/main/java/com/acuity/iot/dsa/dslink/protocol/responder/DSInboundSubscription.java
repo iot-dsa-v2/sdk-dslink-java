@@ -214,8 +214,8 @@ public class DSInboundSubscription extends DSInboundRequest
         DSTarget path = new DSTarget(getPath(), getLink().getRootNode());
         if (path.isResponder()) {
             DSIResponder responder = (DSIResponder) path.getTarget();
-            setPath(path.getPath());
-            closeHandler = responder.onSubscribe(this);
+            closeHandler = responder.onSubscribe(
+                    new SubWrapper(path.getPath(), this));
         } else {
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
@@ -318,6 +318,7 @@ public class DSInboundSubscription extends DSInboundRequest
         try {
             if (closeHandler != null) {
                 closeHandler.onClose(getSubscriptionId());
+                closeHandler = null;
             }
         } catch (Exception x) {
             manager.debug(manager.getPath(), x);

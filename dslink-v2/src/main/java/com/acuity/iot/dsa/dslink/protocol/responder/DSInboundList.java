@@ -5,6 +5,8 @@ import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.DSTarget;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSIResponder;
@@ -21,6 +23,7 @@ import org.iot.dsa.node.DSMap.Entry;
 import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionSpec;
 import org.iot.dsa.node.action.DSAction;
@@ -28,6 +31,7 @@ import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.security.DSPermission;
+import org.iot.dsa.util.DSException;
 
 /**
  * List implementation for a responder.
@@ -148,7 +152,7 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public void onClosed(DSISubscription subscription) {
-        subscription = null;
+        this.subscription = null;
         close();
     }
 
@@ -649,18 +653,42 @@ public class DSInboundList extends DSInboundRequest
      * Properly formats boolean and enum ranges for v1 and v2.
      */
     private void fixRangeTypes(DSMap arg) {
-        String type = arg.getString(DSMetadata.TYPE);
-        if ("bool".equals(type)) {
-            DSList range = (DSList) arg.remove(DSMetadata.BOOLEAN_RANGE);
-            if ((range == null) || (range.size() != 2)) {
-                return;
-            } else {
+        try {
+            String type = arg.getString(DSMetadata.TYPE);
+            if ("bool".equals(type)) {
+                DSList range = (DSList) arg.remove(DSMetadata.BOOLEAN_RANGE);
+                if ((range == null) || (range.size() != 2)) {
+                    return;
+                } else {
+                    String utf8 = DSString.UTF8.toString();
+                    cacheBuf.setLength(0);
+                    cacheBuf.append(type);
+                    cacheBuf.append('[');
+                    cacheBuf.append(URLEncoder.encode(range.get(0).toString(), utf8));
+                    cacheBuf.append(',');
+                    cacheBuf.append(URLEncoder.encode(range.get(1).toString(), utf8));
+                    cacheBuf.append(']');
+                    if (getResponder().isV1()) {
+                        arg.put(DSMetadata.TYPE, cacheBuf.toString());
+                    } else {
+                        arg.put(DSMetadata.EDITOR, cacheBuf.toString());
+                    }
+                }
+            } else if ("enum".equals(type) || "string".equals(type)) {
+                DSList range = (DSList) arg.remove(DSMetadata.ENUM_RANGE);
+                if (range == null) {
+                    return;
+                }
                 cacheBuf.setLength(0);
-                cacheBuf.append(type);
+                cacheBuf.append("enum");
                 cacheBuf.append('[');
-                cacheBuf.append(range.get(0).toString());
-                cacheBuf.append(',');
-                cacheBuf.append(range.get(1).toString());
+                String utf8 = DSString.UTF8.toString();
+                for (int i = 0, len = range.size(); i < len; i++) {
+                    if (i > 0) {
+                        cacheBuf.append(',');
+                    }
+                    cacheBuf.append(URLEncoder.encode(range.get(i).toString(), utf8));
+                }
                 cacheBuf.append(']');
                 if (getResponder().isV1()) {
                     arg.put(DSMetadata.TYPE, cacheBuf.toString());
@@ -668,26 +696,8 @@ public class DSInboundList extends DSInboundRequest
                     arg.put(DSMetadata.EDITOR, cacheBuf.toString());
                 }
             }
-        } else if ("enum".equals(type) || "string".equals(type)) {
-            DSList range = (DSList) arg.remove(DSMetadata.ENUM_RANGE);
-            if (range == null) {
-                return;
-            }
-            cacheBuf.setLength(0);
-            cacheBuf.append("enum");
-            cacheBuf.append('[');
-            for (int i = 0, len = range.size(); i < len; i++) {
-                if (i > 0) {
-                    cacheBuf.append(',');
-                }
-                cacheBuf.append(range.get(i).toString());
-            }
-            cacheBuf.append(']');
-            if (getResponder().isV1()) {
-                arg.put(DSMetadata.TYPE, cacheBuf.toString());
-            } else {
-                arg.put(DSMetadata.EDITOR, cacheBuf.toString());
-            }
+        } catch (UnsupportedEncodingException x) {
+            DSException.throwRuntime(x);
         }
     }
 

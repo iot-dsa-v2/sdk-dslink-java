@@ -81,7 +81,7 @@ class DSOutboundSubscribeStub implements OutboundStream {
     }
 
     /**
-     * The next stub in the parents stubs object.
+     * The next stub in the parent stubs object.
      */
     void setNext(DSOutboundSubscribeStub next) {
         this.next = next;
