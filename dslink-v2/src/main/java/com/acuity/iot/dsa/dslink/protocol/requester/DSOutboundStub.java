@@ -8,7 +8,7 @@ import org.iot.dsa.dslink.requester.OutboundStream;
 import org.iot.dsa.node.DSMap;
 
 /**
- * All stubs manage the lifecycle of a request and are also the outbound stream passed back to the
+ * All stubs manage the lifecycle of a request and are also the OutboundStream passed back to the
  * requester.
  *
  * @author Daniel Shapiro, Aaron Hansen
@@ -59,10 +59,12 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
     }
 
     public void handleClose() {
-        if (!open) {
-            return;
+        synchronized (this) {
+            if (!open) {
+                return;
+            }
+            open = false;
         }
-        open = false;
         try {
             getHandler().onClose();
         } catch (Exception x) {

@@ -16,6 +16,7 @@ import org.iot.dsa.dslink.requester.OutboundRequestHandler;
 import org.iot.dsa.dslink.requester.OutboundStream;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 
@@ -131,7 +132,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     }
 
     @Override
-    public OutboundSubscribeHandler subscribe(String path, int qos, OutboundSubscribeHandler req) {
+    public OutboundSubscribeHandler subscribe(String path, DSIValue qos, OutboundSubscribeHandler req) {
         return subscriptions.subscribe(path, qos, req);
     }
 

@@ -30,25 +30,17 @@ public abstract class AbstractRequestHandler implements OutboundRequestHandler {
         return error;
     }
 
-    /**
-     * Any parameters supplied to the requester method invocation and passed to onInit.
-     *
-     * @return Possibly null.
-     */
+    @Override
     public DSIValue getParams() {
         return params;
     }
 
-    /**
-     * Path passed to onInit.
-     */
+    @Override
     public String getPath() {
         return path;
     }
 
-    /**
-     * Stream passed to onInit.
-     */
+    @Override
     public OutboundStream getStream() {
         return stream;
     }

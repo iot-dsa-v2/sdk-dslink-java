@@ -74,20 +74,19 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     public DSInboundSubscription subscribe(Integer sid, String path, int qos) {
         DSInboundSubscription subscription = pathMap.get(path);
         if (subscription != null) {
-            trace(trace() ? String.format("Updating (sid=%s,qos=%s) %s", sid, qos, path)
+            debug(debug() ? String.format("Updating (sid=%s,qos=%s) %s", sid, qos, path)
                           : null);
-            pathMap.remove(subscription.getPath());
-            if (sid.equals(subscription.getSubscriptionId())) {
-                sidMap.remove(sid);
+            if (!sid.equals(subscription.getSubscriptionId())) {
+                sidMap.remove(subscription.getSubscriptionId());
                 subscription.setSubscriptionId(sid);
                 sidMap.put(sid, subscription);
             }
             if (qos != subscription.getQos()) {
                 subscription.setQos(qos);
             }
-            enqueue(subscription);
+            enqueue(subscription); //resend current
         } else {
-            trace(trace() ? String.format("Subscribing (sid=%s,qos=%s) %s", sid, qos, path)
+            debug(debug() ? String.format("Subscribing (sid=%s,qos=%s) %s", sid, qos, path)
                           : null);
             subscription = makeSubscription(sid, path, qos);
             sidMap.put(sid, subscription);
@@ -102,7 +101,7 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
     public void unsubscribe(Integer sid) {
         DSInboundSubscription subscription = sidMap.remove(sid);
         if (subscription != null) {
-            trace(trace() ? String.format("Unsubscribe (sid=%s) %s ", sid, subscription.getPath())
+            debug(debug() ? String.format("Unsubscribe (sid=%s) %s ", sid, subscription.getPath())
                           : null);
             pathMap.remove(subscription.getPath());
             try {
