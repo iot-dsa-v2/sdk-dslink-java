@@ -8,6 +8,7 @@ import org.iot.dsa.dslink.requester.SimpleRequestHandler;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSValueNode;
 import org.iot.dsa.time.DSDateTime;
@@ -94,7 +95,7 @@ public class RequesterSubscribeTest {
     private void subscribe() {
         DSIRequester requester = link.getConnection().getRequester();
         handler = (AbstractSubscribeHandler) requester.subscribe(
-                "/main/int", 0, new AbstractSubscribeHandler() {
+                "/main/int", DSLong.valueOf(0), new AbstractSubscribeHandler() {
                     boolean first = true;
 
                     @Override
@@ -128,7 +129,7 @@ public class RequesterSubscribeTest {
     private void testChild(DSIRequester requester) throws Exception {
         ANode node = (ANode) root.getNode("aNode");
         AbstractSubscribeHandler handler = (AbstractSubscribeHandler) requester.subscribe(
-                "/main/aNode", 0, new AbstractSubscribeHandler() {
+                "/main/aNode", DSLong.valueOf(0), new AbstractSubscribeHandler() {
                     @Override
                     public void onClose() {
                     }

@@ -68,11 +68,11 @@ public class MultipleListTest {
             Assert.assertNotNull(map);
         }
         handler1.getStream().closeStream();
-        handler1.waitForClosed(5000);
+        handler1.waitForClose(5000);
         Assert.assertFalse(handler1.getStream().isStreamOpen());
         Assert.assertTrue(link.getMain().isSubscribed());
         handler2.getStream().closeStream();
-        handler2.waitForClosed(5000);
+        handler2.waitForClose(5000);
         Assert.assertFalse(handler1.getStream().isStreamOpen());
         //Assert.assertFalse(link.getMain().isSubscribed()); //todo - need to fix this bug
         link.shutdown();

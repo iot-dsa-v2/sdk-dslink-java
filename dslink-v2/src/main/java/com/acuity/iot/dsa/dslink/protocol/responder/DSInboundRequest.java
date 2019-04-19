@@ -26,50 +26,50 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
 
-    public DSLink getLink() {
+    public final DSLink getLink() {
         if (link == null) {
             link = responder.getLink();
         }
         return link;
     }
 
-    public String getPath() {
+    public final String getPath() {
         return path;
     }
 
-    public Integer getRequestId() {
+    public final Integer getRequestId() {
         return requestId;
     }
 
-    public DSResponder getResponder() {
+    public final DSResponder getResponder() {
         return responder;
     }
 
-    public DSSession getSession() {
+    public final DSSession getSession() {
         return session;
     }
 
-    public DSInboundRequest setLink(DSLink link) {
+    public final DSInboundRequest setLink(DSLink link) {
         this.link = link;
         return this;
     }
 
-    public DSInboundRequest setPath(String path) {
+    public final DSInboundRequest setPath(String path) {
         this.path = path;
         return this;
     }
 
-    public DSInboundRequest setRequestId(Integer requestId) {
+    public final DSInboundRequest setRequestId(Integer requestId) {
         this.requestId = requestId;
         return this;
     }
 
-    public DSInboundRequest setResponder(DSResponder responder) {
+    public final DSInboundRequest setResponder(DSResponder responder) {
         this.responder = responder;
         return this;
     }
 
-    public DSInboundRequest setSession(DSSession session) {
+    public final DSInboundRequest setSession(DSSession session) {
         this.session = session;
         return this;
     }

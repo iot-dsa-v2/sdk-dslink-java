@@ -8,6 +8,7 @@ import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import org.iot.dsa.io.DSIWriter;
+import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.time.DSTime;
 
 /**
@@ -36,9 +37,7 @@ public class DS2InboundSubscription extends DSInboundSubscription implements Mes
         byteBuffer.skip(2);
         int start = byteBuffer.length();
         dsiWriter.beginMap();
-        buf.setLength(0);
-        DSTime.encode(update.timestamp, true, buf);
-        dsiWriter.key("timestamp").value(buf.toString());
+        dsiWriter.key("timestamp").value(update.timestamp.toString());
         if (!update.status.isOk()) {
             dsiWriter.key("status").value(update.status.toElement());
         }

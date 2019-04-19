@@ -16,7 +16,7 @@ import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
-import org.iot.dsa.time.DSTime;
+import org.iot.dsa.time.DSDateTime;
 
 /**
  * Subscribe implementation for the responder.
@@ -120,7 +120,7 @@ public class DSInboundSubscription extends DSInboundRequest
         if (value instanceof DSIStatus) {
             status = ((DSIStatus) value).getStatus();
         }
-        update(System.currentTimeMillis(), value, status);
+        update(DSDateTime.now(), value, status);
     }
 
     /**
@@ -153,7 +153,7 @@ public class DSInboundSubscription extends DSInboundRequest
      * The responder should call this whenever the value or status changes.
      */
     @Override
-    public void update(long timestamp, DSIValue value, DSStatus status) {
+    public void update(DSDateTime timestamp, DSIValue value, DSStatus status) {
         if (!open) {
             return;
         }
@@ -214,8 +214,8 @@ public class DSInboundSubscription extends DSInboundRequest
         DSTarget path = new DSTarget(getPath(), getLink().getRootNode());
         if (path.isResponder()) {
             DSIResponder responder = (DSIResponder) path.getTarget();
-            setPath(path.getPath());
-            closeHandler = responder.onSubscribe(this);
+            closeHandler = responder.onSubscribe(
+                    new SubWrapper(path.getPath(), this));
         } else {
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
@@ -285,9 +285,7 @@ public class DSInboundSubscription extends DSInboundRequest
         DSIWriter out = writer.getWriter();
         out.beginMap();
         out.key("sid").value(getSubscriptionId());
-        buf.setLength(0);
-        DSTime.encode(update.timestamp, true, buf);
-        out.key("ts").value(buf.toString());
+        out.key("ts").value(update.timestamp.toString());
         out.key("value").value(update.value.toElement());
         if ((update.status != null) && !update.status.isOk()) {
             out.key("status").value(update.status.toString());
@@ -320,6 +318,7 @@ public class DSInboundSubscription extends DSInboundRequest
         try {
             if (closeHandler != null) {
                 closeHandler.onClose(getSubscriptionId());
+                closeHandler = null;
             }
         } catch (Exception x) {
             manager.debug(manager.getPath(), x);
@@ -334,10 +333,10 @@ public class DSInboundSubscription extends DSInboundRequest
 
         Update next;
         public DSStatus status;
-        public long timestamp;
+        public DSDateTime timestamp;
         public DSIValue value;
 
-        Update set(long timestamp, DSIValue value, DSStatus status) {
+        Update set(DSDateTime timestamp, DSIValue value, DSStatus status) {
             this.timestamp = timestamp;
             this.value = value;
             this.status = status;
