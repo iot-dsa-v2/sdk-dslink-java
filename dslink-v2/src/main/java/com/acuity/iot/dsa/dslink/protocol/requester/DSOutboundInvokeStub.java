@@ -40,6 +40,10 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
     @Override
     public void handleResponse(DSMap response) {
         try {
+            if (handler instanceof RawHandler) {
+                ((RawHandler) handler).handleRaw(response);
+                return;
+            }
             DSList updates = response.getList("updates");
             DSMap meta = response.getMap("meta");
             if (meta != null) {
@@ -110,6 +114,12 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
 
     protected DSMap getParams() {
         return params;
+    }
+
+    public interface RawHandler {
+
+        public void handleRaw(DSMap response);
+
     }
 
 }

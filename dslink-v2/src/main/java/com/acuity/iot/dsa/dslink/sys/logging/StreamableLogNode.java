@@ -36,7 +36,7 @@ public abstract class StreamableLogNode extends DSNode {
 
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                return ((StreamableLogNode) target.get()).startLogStream(target, invocation);
+                return ((StreamableLogNode) target.get()).startLogStream(this, target, invocation);
             }
 
         };
@@ -46,7 +46,8 @@ public abstract class StreamableLogNode extends DSNode {
         return act;
     }
 
-    private ActionTable startLogStream(final DSInfo actionInfo, final ActionInvocation invocation) {
+    private ActionTable startLogStream(final DSAction action, final DSInfo targetInfo,
+                                       final ActionInvocation invocation) {
         final Logger loggerObj = getLoggerObj();
         final String filter = invocation.getParameters().getString("Filter");
         final Handler handler = new DSLogHandler() {
@@ -66,7 +67,7 @@ public abstract class StreamableLogNode extends DSNode {
 
             @Override
             public ActionSpec getAction() {
-                return actionInfo.getAction();
+                return action;
             }
 
             @Override
