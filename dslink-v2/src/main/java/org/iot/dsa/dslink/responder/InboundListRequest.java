@@ -12,16 +12,6 @@ import org.iot.dsa.node.DSElement;
 public interface InboundListRequest extends InboundRequest {
 
     /**
-     * The responder should call this whenever a child changes or is added.
-     */
-    public void added(String name, ApiObject child);
-
-    /**
-     * The responder should call this whenever metadata changes.
-     */
-    public void changed(String name, DSElement value);
-
-    /**
      * Allows the responder to forcefully close the list stream.
      */
     public void close();
@@ -39,6 +29,16 @@ public interface InboundListRequest extends InboundRequest {
     /**
      * The responder should call this whenever a child is removed.
      */
-    public void removed(String name);
+    public void remove(String name);
+
+    /**
+     * The responder should call this whenever a child changes or is added.
+     */
+    public void update(String name, ApiObject child);
+
+    /**
+     * The responder should call this whenever metadata changes or is added.
+     */
+    public void update(String name, DSElement value);
 
 }

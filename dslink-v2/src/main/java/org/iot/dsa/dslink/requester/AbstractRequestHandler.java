@@ -31,7 +31,7 @@ public abstract class AbstractRequestHandler implements OutboundRequestHandler {
     }
 
     @Override
-    public DSIValue getParams() {
+    public DSIValue getParameters() {
         return params;
     }
 

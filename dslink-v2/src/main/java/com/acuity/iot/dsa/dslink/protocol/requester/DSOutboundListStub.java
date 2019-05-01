@@ -159,7 +159,7 @@ public class DSOutboundListStub extends DSOutboundStub {
         }
 
         @Override
-        public DSIValue getParams() {
+        public DSIValue getParameters() {
             return null;
         }
 
