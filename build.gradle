@@ -12,7 +12,7 @@ subprojects {
 
     repositories {
         mavenLocal()
-        mavenCentral()
+        jcenter()
     }
 
     task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {

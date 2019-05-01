@@ -1,7 +1,6 @@
 package org.iot.dsa.dslink.responder;
 
 import java.util.Iterator;
-import java.util.List;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.action.ActionSpec;
 

@@ -16,8 +16,8 @@ public abstract class AbstractInvokeHandler
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public DSMap getParams() {
-        return (DSMap) super.getParams();
+    public DSMap getParameters() {
+        return (DSMap) super.getParameters();
     }
 
 }

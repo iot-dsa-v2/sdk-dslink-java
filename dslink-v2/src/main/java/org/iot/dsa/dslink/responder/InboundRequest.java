@@ -10,16 +10,16 @@ import org.iot.dsa.node.DSIValue;
 public interface InboundRequest {
 
     /**
+     * Any parameters accompanying the request, possibly null.
+     */
+    public default DSIValue getParameters() {
+        return null;
+    }
+
+    /**
      * The target of the request.
      */
     public String getPath();
-
-    /**
-     * Any parameters accompanying the request, possibly null.
-     */
-    public default DSIValue getParams() {
-        return null;
-    }
 
     /**
      * Unique ID of the request, or 0 for subscriptions.
