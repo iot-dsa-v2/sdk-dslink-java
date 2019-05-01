@@ -77,7 +77,7 @@ public class DSInboundList extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void added(String name, ApiObject child) {
+    public void update(String name, ApiObject child) {
         if (!isClosed()) {
             enqueue(new AddUpdate(name, child));
         }
@@ -89,7 +89,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void changed(String name, DSElement value) {
+    public void update(String name, DSElement value) {
         if (!isClosed()) {
             enqueue(new ChangeUpdate(name, value));
         }
@@ -160,20 +160,20 @@ public class DSInboundList extends DSInboundRequest
     public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
         switch (event.getEventId()) {
             case DSNode.CHILD_ADDED:
-                added(child.getName(), child);
+                update(child.getName(), child);
                 break;
             case DSNode.CHILD_RENAMED:
-                removed(data.toString());
-                added(child.getName(), child);
+                remove(data.toString());
+                update(child.getName(), child);
                 break;
             case DSNode.CHILD_REMOVED:
-                removed(child.getName());
+                remove(child.getName());
                 break;
         }
     }
 
     @Override
-    public void removed(String name) {
+    public void remove(String name) {
         if (!isClosed()) {
             enqueue(new RemoveUpdate(name));
         }

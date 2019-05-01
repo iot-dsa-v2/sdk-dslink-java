@@ -18,7 +18,7 @@ public class SimpleRequestHandler implements OutboundRequestHandler {
     private OutboundStream stream;
 
     @Override
-    public DSIValue getParams() {
+    public DSIValue getParameters() {
         return params;
     }
 

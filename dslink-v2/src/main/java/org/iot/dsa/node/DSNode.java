@@ -697,7 +697,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @see org.iot.dsa.node.action.DSAction#invoke(DSInfo, ActionInvocation)
      */
     public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
-        trace(trace() ? String
+        debug(debug() ? String
                 .format("action=%s, target=%s, params=%s", action, target, request.getParameters())
                       : null);
         return action.getAction().invoke(target, request);
@@ -1213,7 +1213,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (event == null) {
             throw new NullPointerException("Null event");
         }
-        trace(trace() ? String
+        debug(debug() ? String
                 .format("event=%s, child=%s, data=%s", event.getEventId(), child, data) : null);
         Subscription sub = subscription;
         while (sub != null) {

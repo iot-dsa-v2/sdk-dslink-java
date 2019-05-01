@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink.responder;
 
+import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.action.ActionInvocation;
 
 /**
@@ -9,5 +10,10 @@ import org.iot.dsa.node.action.ActionInvocation;
  * @see ActionInvocation
  */
 public interface InboundInvokeRequest extends InboundRequest, ActionInvocation {
+
+    /**
+     * The parameters supplied by the invoker, or null.
+     */
+    public DSMap getParameters();
 
 }

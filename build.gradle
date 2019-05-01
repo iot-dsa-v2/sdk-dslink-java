@@ -5,14 +5,14 @@ subprojects {
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.58.0'
+    version '0.59.0'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
     repositories {
         mavenLocal()
-        mavenCentral()
+        jcenter()
     }
 
     task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
@@ -45,5 +45,5 @@ allprojects {
 }
 
 wrapper {
-    gradleVersion = '5.2'
+    gradleVersion = '5.4'
 }

@@ -39,6 +39,7 @@ public class DSInboundInvoke extends DSInboundRequest
     private static final int STATE_UPDATES = 2;
     private static final int STATE_CLOSE_PENDING = 3;
     private static final int STATE_CLOSED = 4;
+    private static final int STATE_RAW = 10;
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -156,6 +157,9 @@ public class DSInboundInvoke extends DSInboundRequest
                 DSIResponder responder = (DSIResponder) path.getTarget();
                 setPath(path.getPath());
                 result = responder.onInvoke(this);
+                if (result instanceof RawActionResult) {
+                    state = STATE_RAW;
+                }
             } else {
                 DSInfo info = path.getTargetInfo();
                 if (!info.isAction()) {
@@ -193,6 +197,10 @@ public class DSInboundInvoke extends DSInboundRequest
         enqueueUpdate(new Update(row));
     }
 
+    public void sendRaw(DSMap raw) {
+        enqueueUpdate(new Update(raw));
+    }
+
     /**
      * For v2 only, set to false to auto close the stream after sending the initial state.
      */
@@ -214,6 +222,9 @@ public class DSInboundInvoke extends DSInboundRequest
         }
         writeBegin(writer);
         switch (state) {
+            case STATE_RAW:
+                writeRaw(writer);
+                break;
             case STATE_INIT:
                 writeColumns(writer);
                 writeInitialResults(writer);
@@ -429,6 +440,36 @@ public class DSInboundInvoke extends DSInboundRequest
         }
     }
 
+    private void writeRaw(MessageWriter writer) {
+        DSIWriter out = writer.getWriter();
+        Update update = updateHead; //peak ahead
+        if (update == null) {
+            return;
+        }
+        DSMap map;
+        DSResponder responder = getResponder();
+        while (true) {
+            update = dequeueUpdate();
+            map = update.raw;
+            map.remove("rid");
+            for (DSMap.Entry e : map) {
+                out.key(e.getKey());
+                out.value(e.getValue());
+            }
+            if (updateHead == null) {
+                break;
+            }
+            if (responder.shouldEndMessage()) {
+                enqueueResponse();
+                break;
+            }
+        }
+        String stream = map.get("stream", "");
+        if (stream.equals("closed")) {
+            doClose();
+        }
+    }
+
     private void writeUpdates(MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         Update update = updateHead; //peak ahead
@@ -474,7 +515,8 @@ public class DSInboundInvoke extends DSInboundRequest
     protected enum UpdateType {
         INSERT("insert"),
         REFRESH("refresh"),
-        REPLACE("replace");
+        REPLACE("replace"),
+        RAW("raw");
 
         private String display;
 
@@ -488,6 +530,13 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     /**
+     * Used as a pass through on the broker.
+     */
+    public interface RawActionResult extends ActionResult {
+
+    }
+
+    /**
      * Describes an update to be sent to the requester.
      */
     protected static class Update {
@@ -495,9 +544,15 @@ public class DSInboundInvoke extends DSInboundRequest
         int beginIndex = -1;
         int endIndex = -1;
         Update next;
+        DSMap raw;
         DSList row;
         DSList[] rows;
         UpdateType type;
+
+        Update(DSMap raw) {
+            this.raw = raw;
+            this.type = UpdateType.RAW;
+        }
 
         Update(DSList row) {
             this.row = row;
