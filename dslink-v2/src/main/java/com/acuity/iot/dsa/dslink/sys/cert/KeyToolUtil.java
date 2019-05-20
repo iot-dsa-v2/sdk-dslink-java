@@ -42,7 +42,7 @@ public class KeyToolUtil extends DSLogger {
                 "-alias", "dsa",
                 "-keyalg", "RSA",
                 "-validity", "18000",
-                "-dname", "\"CN=dslink-java-v2, O=DSA, C=US\"",
+                "-dname", "CN=dslink-java-v2, O=DSA, C=US",
                 "-file", filename
         };
         String result = inst.executeCommand(cmd);
@@ -128,7 +128,7 @@ public class KeyToolUtil extends DSLogger {
     private String executeCommand(String[] cmd) {
         try {
             ProcessBuilder builder = new ProcessBuilder();
-            Process process = builder.command(cmd).start();
+            Process process = builder.command(cmd).redirectErrorStream(true).start();
             process.waitFor();
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()));
