@@ -100,7 +100,7 @@ public class DSLinkOptions {
      */
     public String getBrokerUri() {
         if (brokerUri == null) {
-            brokerUri = getConfig(CFG_BROKER_URL, "http://localhost:8080/conn");
+            brokerUri = getConfig(CFG_BROKER_URL, null);
         }
         return brokerUri;
     }
@@ -164,15 +164,6 @@ public class DSLinkOptions {
      * Uses the broker uri to determine the protocol version.
      */
     public String getDsaVersion() {
-        String brokerUri = getBrokerUri();
-        if (brokerUri != null) {
-            if (brokerUri.startsWith("http")) {
-                if (brokerUri.indexOf("/conn") > 0) {
-                    return "1.0";
-                }
-            }
-            return "2.0";
-        }
         return getDslinkMap().get("dsa-version", "1.0");
     }
 
