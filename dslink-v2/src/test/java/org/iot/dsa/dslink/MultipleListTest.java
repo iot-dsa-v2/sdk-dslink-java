@@ -2,7 +2,6 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1Session;
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
-import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import org.iot.dsa.dslink.requester.SimpleListHandler;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSMap;
@@ -47,13 +46,13 @@ public class MultipleListTest {
         Assert.assertTrue(link.getMain().isStable());
         DSIRequester requester = link.getConnection().getRequester();
         SimpleListHandler handler1 = (SimpleListHandler) requester.list("/main",
-                                                                       new MyHandler());
+                                                                        new MyHandler());
         handler1.waitForInitialized(5000);
         Assert.assertTrue(link.getMain().isSubscribed());
         Assert.assertTrue(handler1.isInitialized());
         Assert.assertTrue(handler1.hasUpdates());
         for (int i = 1000; --i >= 0; ) {
-            DSMap map = (DSMap) handler1.getUpdate("int"+i);
+            DSMap map = (DSMap) handler1.getUpdate("int" + i);
             Assert.assertNotNull(map);
         }
         SimpleListHandler handler2 = (SimpleListHandler) requester.list("/main",
@@ -63,7 +62,7 @@ public class MultipleListTest {
         Assert.assertTrue(handler2.isInitialized());
         Assert.assertTrue(handler2.hasUpdates());
         for (int i = 1000; --i >= 0; ) {
-            DSMap map = (DSMap) handler2.getUpdate("int"+i);
+            DSMap map = (DSMap) handler2.getUpdate("int" + i);
             Assert.assertNotNull(map);
         }
         handler1.getStream().closeStream();
@@ -92,11 +91,13 @@ public class MultipleListTest {
     // -------------
 
     class MyHandler extends SimpleListHandler {
+
         @Override
         public void onInitialized() {
             super.onInitialized();
         }
     }
+
     public static class MyMain extends DSMainNode {
 
         @Override

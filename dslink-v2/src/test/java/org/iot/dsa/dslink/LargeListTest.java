@@ -4,7 +4,6 @@ import com.acuity.iot.dsa.dslink.protocol.v1.DS1Session;
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import org.iot.dsa.dslink.requester.SimpleListHandler;
-import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSMap;
 import org.testng.Assert;
@@ -55,7 +54,7 @@ public class LargeListTest {
         Assert.assertTrue(handler.isInitialized());
         Assert.assertTrue(handler.hasUpdates());
         for (int i = 1000; --i >= 0; ) {
-            DSMap map = (DSMap) handler.getUpdate("int"+i);
+            DSMap map = (DSMap) handler.getUpdate("int" + i);
             Assert.assertNotNull(map);
         }
         //handler.getStream().closeStream();
