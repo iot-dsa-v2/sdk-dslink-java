@@ -25,7 +25,7 @@ class DSOutboundSubscription {
     private int qos = -1;
     private Integer sid;
     private int size;
-    private State state = State.PENDING_SUBSCRIBE;
+    private State state = State.INIT;
     private DSOutboundSubscriptions subscriptions;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -106,13 +106,12 @@ class DSOutboundSubscription {
             last.setNext(stub);
             last = stub;
         }
-        if (++size > 1) {
-            if (lastValue != null) {
-                try {
-                    stub.update(lastTs, lastValue, lastStatus);
-                } catch (Exception x) {
-                    subscriptions.error(path, x);
-                }
+        size++;
+        if (lastValue != null) {
+            try {
+                stub.update(lastTs, lastValue, lastStatus);
+            } catch (Exception x) {
+                subscriptions.error(path, x);
             }
         }
         if (qos > prevQos) { //need to resubscribe for new qos
@@ -178,16 +177,17 @@ class DSOutboundSubscription {
     }
 
     void updateDisconnected() {
-        if (lastStatus == DSStatus.unknown) {
-            return;
+        if (lastStatus == null) {
+            lastStatus = DSStatus.down;
+        } else {
+            lastStatus = lastStatus.add(DSStatus.DOWN);
         }
-        lastStatus = DSStatus.unknown;
         lastTs = DSDateTime.currentTime();
         if (lastValue == null) {
             lastValue = DSNull.NULL;
         }
         DSOutboundSubscribeStub cur = first;
-        while (cur.getNext() != null) {
+        while (cur != null) {
             cur.update(lastTs, lastValue, lastStatus);
             cur = cur.getNext();
         }
@@ -225,6 +225,7 @@ class DSOutboundSubscription {
     ///////////////////////////////////////////////////////////////////////////
 
     public enum State {
+        INIT,
         PENDING_SUBSCRIBE,
         PENDING_UNSUBSCRIBE,
         SUBSCRIBED,

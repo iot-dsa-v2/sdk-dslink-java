@@ -40,9 +40,11 @@ public class DSPath extends DSValue {
 
     /**
      * Concatenates the two paths into the leading bucket.  Insures a single forward slash
-     * character separates them. The bucket will not be cleared, the path will be appended to it.
+     * character separates them. The bucket will not be cleared, the second parameter will be
+     * appended to it.
      *
-     * @param leading Can be null, in which case a new buffer will be created.
+     * @param leading  Can be null, in which case a new buffer will be created.
+     * @param trailing The path to append to the buffer.
      * @return The given bucket, or a new one if that was null, with the complete path appended.
      */
     public static StringBuilder append(StringBuilder leading, String trailing) {
@@ -145,7 +147,8 @@ public class DSPath extends DSValue {
     }
 
     /**
-     * Splits the path and decodes each individual name.
+     * Splits the path and decodes each individual name.  The difference between this and splitPath
+     * is that splitPath does not decode the names.
      */
     public static String[] decodePath(String path) {
         if (path == null) {
@@ -297,6 +300,28 @@ public class DSPath extends DSValue {
     @Override
     public boolean isNull() {
         return this == NULL;
+    }
+
+    /**
+     * Resolves a path against some base node.
+     *
+     * @param base The root of the path (ie '/')
+     * @param path The path to resolve, can be null or the empty string.
+     * @return The info of the target of the path, or null if the path can't be resolved.
+     */
+    public static DSInfo resolve(DSNode base, String path) {
+        DSInfo targetInfo = base.getInfo();
+        for (String name : decodePath(path)) {
+            if (targetInfo.isNode()) {
+                targetInfo = targetInfo.getNode().getInfo(name);
+            } else {
+                targetInfo = targetInfo.getParent().getVirtualAction(targetInfo, name);
+            }
+            if (targetInfo == null) {
+                break;
+            }
+        }
+        return targetInfo;
     }
 
     /**

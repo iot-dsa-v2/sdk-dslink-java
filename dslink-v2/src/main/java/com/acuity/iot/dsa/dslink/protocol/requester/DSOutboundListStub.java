@@ -2,6 +2,7 @@ package com.acuity.iot.dsa.dslink.protocol.requester;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
+import java.io.OutputStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.requester.ErrorType;
@@ -13,6 +14,7 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSPath;
+import org.iot.dsa.time.DSDateTime;
 
 /**
  * Manages the lifecycle of an list request and is also the outbound stream passed to the
@@ -26,7 +28,7 @@ public class DSOutboundListStub extends DSOutboundStub {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private OutboundListHandler handler;
+    private HandlerAdapter adapter = new HandlerAdapter();
     private boolean initialized = false;
     private DSMap state = new DSMap();
 
@@ -39,28 +41,20 @@ public class DSOutboundListStub extends DSOutboundStub {
                                  String path,
                                  OutboundListHandler handler) {
         super(requester, requestId, path);
-        this.handler = handler;
-        handler.onInit(path, null, this);
+        adapter.add(handler);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    public synchronized void addHandler(OutboundListHandler handler) {
-        HandlerAdapter adapter;
-        if (this.handler instanceof HandlerAdapter) {
-            adapter = (HandlerAdapter) this.handler;
-        } else {
-            adapter = new HandlerAdapter(this.handler);
-            this.handler = adapter;
-        }
+    public void addHandler(OutboundListHandler handler) {
         adapter.add(handler);
     }
 
     @Override
     public OutboundListHandler getHandler() {
-        return handler;
+        return adapter;
     }
 
     public DSMap getState() {
@@ -87,14 +81,14 @@ public class DSOutboundListStub extends DSOutboundStub {
                         }
                         DSElement e = list.remove(1);
                         state.put(name, e);
-                        handler.onUpdate(name, e);
+                        adapter.onUpdate(name, e);
                     } else if (elem.isMap()) {
                         map = (DSMap) elem;
                         name = DSPath.decodeName(map.getString("name"));
                         String change = map.getString("change");
                         if ("remove".equals(change)) {
                             state.remove(name);
-                            handler.onRemove(name);
+                            adapter.onRemove(name);
                         }
                     } else {
                         throw new DSRequestException(
@@ -104,7 +98,7 @@ public class DSOutboundListStub extends DSOutboundStub {
             }
             if ("open".equals(response.getString("stream"))) {
                 initialized = true;
-                handler.onInitialized();
+                adapter.onInitialized();
             }
         } catch (Exception x) {
             getRequester().error(getRequester().getPath(), x);
@@ -126,28 +120,54 @@ public class DSOutboundListStub extends DSOutboundStub {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    // Package Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    synchronized void disconnected() {
+        initialized = false;
+        String name = "$disconnectedTs";
+        DSElement value = DSDateTime.currentTime().toElement();
+        state.put(name, value);
+        try {
+            adapter.onUpdate(name, value);
+        } catch (Exception x) {
+            getRequester().error(getRequester().getPath(), x);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
+
+    public interface HandlerAdapterStream extends OutboundStream {
+
+        public DSMap getState();
+
+    }
 
     class HandlerAdapter implements OutboundListHandler {
 
         private ConcurrentLinkedQueue<OutboundListHandler> handlers = new ConcurrentLinkedQueue<>();
 
-        public HandlerAdapter(OutboundListHandler first) {
-            handlers.add(first);
+        public HandlerAdapter() {
         }
 
         public void add(final OutboundListHandler handler) {
             handlers.add(handler);
-            handler.onInit(getPath(), null, new OutboundStream() {
+            handler.onInit(getPath(), null, new HandlerAdapterStream() {
+                boolean open = true;
                 @Override
                 public void closeStream() {
+                    open = false;
                     remove(handler);
                 }
-
+                @Override
+                public DSMap getState() {
+                    return state;
+                }
                 @Override
                 public boolean isStreamOpen() {
-                    return DSOutboundListStub.this.isStreamOpen();
+                    return open;
                 }
             });
             for (DSMap.Entry e : state) {

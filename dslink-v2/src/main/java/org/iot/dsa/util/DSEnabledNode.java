@@ -70,8 +70,25 @@ public abstract class DSEnabledNode extends DSStatusNode implements DSIStatus {
     protected void onChildChanged(DSInfo child) {
         if (child == enabled) {
             updateStatus(null);
+            if (isEnabled()) {
+                onEnabled();
+            } else {
+                onDisabled();
+            }
         }
         super.onChildChanged(child);
+    }
+
+    /**
+     * Override point, does nothing by default.
+     */
+    protected void onDisabled() {
+    }
+
+    /**
+     * Override point, does nothing by default.
+     */
+    protected void onEnabled() {
     }
 
 
