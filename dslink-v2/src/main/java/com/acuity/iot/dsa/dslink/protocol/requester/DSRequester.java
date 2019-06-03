@@ -8,12 +8,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSIRequester;
 import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.dslink.requester.OutboundInvokeHandler;
 import org.iot.dsa.dslink.requester.OutboundListHandler;
 import org.iot.dsa.dslink.requester.OutboundRequestHandler;
-import org.iot.dsa.dslink.requester.OutboundStream;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSLong;
@@ -28,6 +28,14 @@ import org.iot.dsa.node.DSNode;
 public abstract class DSRequester extends DSNode implements DSIRequester {
 
     ///////////////////////////////////////////////////////////////////////////
+    // Class Fields
+    ///////////////////////////////////////////////////////////////////////////
+
+    private static final String LIST_COUNT = "Lists";
+    private static final String REQ_COUNT = "Total Requests";
+    private static final String SUB_COUNT = "Subscriptions";
+
+    ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
@@ -36,6 +44,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     private Map<Integer, DSOutboundStub> requests = new ConcurrentHashMap<Integer, DSOutboundStub>();
     private DSSession session;
     private DSOutboundSubscriptions subscriptions = makeSubscriptions();
+    private DSRuntime.Timer updateTimer;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -72,39 +81,56 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     @Override
     public OutboundListHandler list(String path, final OutboundListHandler req) {
         DSOutboundListStub stub;
+        boolean existing = false;
         synchronized (lists) {
             stub = lists.get(path);
             if (stub == null) {
                 stub = makeList(path, req);
                 requests.put(stub.getRequestId(), stub);
+                lists.put(path, stub);
             } else {
+                existing = true;
                 stub.addHandler(req);
             }
         }
-        session.enqueueOutgoingRequest(stub);
+        if (!getSession().getConnection().isConnected()) {
+            stub.disconnected();
+        } else if (!existing) {
+            session.enqueueOutgoingRequest(stub);
+        }
         return req;
     }
 
     public void onConnected() {
         subscriptions.onConnected();
+        synchronized (lists) {
+            for (DSOutboundListStub stub : lists.values()) {
+                requests.remove(stub.getRequestId());
+                stub.setRequestId(getNextRid());
+                requests.put(stub.getRequestId(), stub);
+                session.enqueueOutgoingRequest(stub);
+            }
+        }
     }
 
     public void onDisconnected() {
         Iterator<Entry<Integer, DSOutboundStub>> it = requests.entrySet().iterator();
         Map.Entry<Integer, DSOutboundStub> me;
-        synchronized (lists) {
-            lists.clear();
-        }
         while (it.hasNext()) {
             me = it.next();
-            try {
-                me.getValue().getHandler().onClose();
-            } catch (Exception x) {
-                error(getPath(), x);
+            if (!(me.getValue() instanceof DSOutboundListStub)) {
+                try {
+                    me.getValue().getHandler().onClose();
+                } catch (Exception x) {
+                    error(getPath(), x);
+                }
+                it.remove();
             }
-            it.remove();
         }
         subscriptions.onDisconnected();
+        synchronized (lists) {
+            disconnectLists();
+        }
     }
 
     @Override
@@ -116,7 +142,11 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     }
 
     public void removeRequest(Integer rid) {
-        requests.remove(rid);
+        Object obj = requests.remove(rid);
+        if (obj instanceof DSOutboundListStub) {
+            DSOutboundListStub stub = (DSOutboundListStub) obj ;
+            lists.remove(stub.getPath());
+        }
     }
 
     public void sendRequest(OutboundMessage res) {
@@ -132,13 +162,22 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     }
 
     @Override
-    public OutboundSubscribeHandler subscribe(String path, DSIValue qos, OutboundSubscribeHandler req) {
+    public OutboundSubscribeHandler subscribe(String path, DSIValue qos,
+                                              OutboundSubscribeHandler req) {
         return subscriptions.subscribe(path, qos, req);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void declareDefaults() {
+        super.declareDefaults();
+        declareDefault(LIST_COUNT, DSLong.valueOf(0)).setReadOnly(true).setTransient(true);
+        declareDefault(SUB_COUNT, DSLong.valueOf(0)).setReadOnly(true).setTransient(true);
+        declareDefault(REQ_COUNT, DSLong.valueOf(0)).setReadOnly(true).setTransient(true);
+    }
 
     protected int getNextRid() {
         return nextRid.incrementAndGet();
@@ -188,10 +227,48 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
         return new DSOutboundSubscriptions(this);
     }
 
+    @Override
+    protected void onStopped() {
+        super.onStopped();
+        if (updateTimer != null) {
+            updateTimer.cancel();
+            updateTimer = null;
+        }
+    }
+
+    @Override
+    protected void onSubscribed() {
+        super.onSubscribed();
+        if (updateTimer == null) {
+            updateTimer = DSRuntime.runAfterDelay(()->updateStats(), 1000, 2000);
+        }
+    }
+
+    @Override
+    protected void onUnsubscribed() {
+        super.onUnsubscribed();
+        if (updateTimer != null) {
+            updateTimer.cancel();
+            updateTimer = null;
+        }
+    }
+
     protected abstract void sendClose(Integer rid);
 
     ///////////////////////////////////////////////////////////////////////////
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    private void disconnectLists() {
+        for (DSOutboundListStub stub : lists.values()) {
+            stub.disconnected();
+        }
+    }
+
+    private void updateStats() {
+        put(LIST_COUNT,DSLong.valueOf(lists.size()));
+        put(SUB_COUNT,DSLong.valueOf(subscriptions.size()));
+        put(REQ_COUNT,DSLong.valueOf(requests.size()));
+    }
 
 }

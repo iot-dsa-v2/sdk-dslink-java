@@ -244,6 +244,13 @@ public abstract class DSLink extends DSNode implements Runnable {
     }
 
     /**
+     * Override point, default is the MAIN constant.
+     */
+    protected String getMainName() {
+        return MAIN;
+    }
+
+    /**
      * Called whether the link is deserialized or created new.
      *
      * @return This

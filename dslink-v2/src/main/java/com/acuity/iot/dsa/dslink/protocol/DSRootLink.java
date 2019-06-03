@@ -66,13 +66,13 @@ public class DSRootLink extends DSLink {
     @Override
     protected DSLink init(DSLinkOptions config) {
         super.init(config);
-        main = getInfo(MAIN);
+        main = getInfo(getMainName());
         if (main == null) {
             String type = getOptions().getMainType();
             if (type != null) {
                 debug("Main node type: " + type);
                 DSNode node = (DSNode) DSUtil.newInstance(type);
-                main = put(MAIN, node);
+                main = put(getMainName(), node);
             }
         }
         String ver = config.getDsaVersion();

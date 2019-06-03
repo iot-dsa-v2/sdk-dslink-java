@@ -93,4 +93,8 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
         return open;
     }
 
+    public void setRequestId(Integer rid) {
+        this.requestId = rid;
+    }
+
 }

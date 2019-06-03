@@ -343,10 +343,20 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     protected void onConnected() {
     }
 
+    @Override
+    protected synchronized void onDisabled() {
+        notifyAll();
+    }
+
     /**
      * Called by connDown() when transitioning to disconnected.  By default, this does nothing.
      */
     protected void onDisconnected() {
+    }
+
+    @Override
+    protected synchronized void onEnabled() {
+        notifyAll();
     }
 
     ///////////////////////////////////////////////////////////////////////////
