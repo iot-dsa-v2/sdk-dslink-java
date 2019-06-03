@@ -89,6 +89,7 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
             getTransport().open();
             connOk();
         } catch (Exception x) {
+            debug(null, debug() ? x : null);
             connDown(DSException.makeMessage(x));
         }
     }

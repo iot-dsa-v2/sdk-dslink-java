@@ -77,22 +77,8 @@ public class DSInboundList extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void update(String name, ApiObject child) {
-        if (!isClosed()) {
-            enqueue(new AddUpdate(name, child));
-        }
-    }
-
-    @Override
     public boolean canWrite(DSSession session) {
         return true;
-    }
-
-    @Override
-    public void update(String name, DSElement value) {
-        if (!isClosed()) {
-            enqueue(new ChangeUpdate(name, value));
-        }
     }
 
     @Override
@@ -187,6 +173,7 @@ public class DSInboundList extends DSInboundRequest
                 DSIResponder responder = (DSIResponder) target.getTarget();
                 setPath(target.getPath());
                 response = responder.onList(this);
+                response.getTarget();
             } else {
                 info = target.getTargetInfo();
                 if (info == null) {
@@ -216,6 +203,20 @@ public class DSInboundList extends DSInboundRequest
     public DSInboundList setStream(boolean stream) {
         this.stream = stream;
         return this;
+    }
+
+    @Override
+    public void update(String name, ApiObject child) {
+        if (!isClosed()) {
+            enqueue(new AddUpdate(name, child));
+        }
+    }
+
+    @Override
+    public void update(String name, DSElement value) {
+        if (!isClosed()) {
+            enqueue(new ChangeUpdate(name, value));
+        }
     }
 
     @Override
@@ -345,7 +346,7 @@ public class DSInboundList extends DSInboundRequest
         e = cacheMap.remove("$writable");
         if (e != null) {
             map.put("$writable", e);
-        } else if (!child.isReadOnly()) {
+        } else if (child.isValue() && !child.isReadOnly()) {
             map.put("$writable", child.isAdmin() ? "config" : "write");
         }
         e = cacheMap.remove("$permission");
@@ -378,10 +379,7 @@ public class DSInboundList extends DSInboundRequest
             encodeChild(au.name, au.child, writer);
         } else if (update instanceof ChangeUpdate) {
             ChangeUpdate cu = (ChangeUpdate) update;
-            writer.getWriter().beginMap()
-                  .key(encodeName(cu.name, buf))
-                  .value(cu.value)
-                  .endMap();
+            encode(encodeName(cu.name, cacheBuf), cu.value, writer);
         } else {
             writer.getWriter().beginMap()
                   .key("name").value(encodeName(((RemoveUpdate) update).name, buf))
@@ -458,7 +456,6 @@ public class DSInboundList extends DSInboundRequest
             encode("$is", "node", writer);
         } else {
             encode("$is", e, writer);
-
         }
         e = cacheMap.remove("$name");
         if (e == null) {

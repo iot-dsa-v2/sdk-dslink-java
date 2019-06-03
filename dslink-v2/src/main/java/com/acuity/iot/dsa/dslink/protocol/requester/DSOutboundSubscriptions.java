@@ -8,13 +8,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.requester.OutboundSubscribeHandler;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSLong;
+import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.time.DSDateTime;
@@ -24,19 +22,19 @@ import org.iot.dsa.time.DSDateTime;
  *
  * @author Aaron Hansen
  */
-public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage {
+public class DSOutboundSubscriptions extends DSNode implements OutboundMessage {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    static final int MAX_SID = 2147483647;
+    static final int MAX_SID = 2147483646;
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
+
     private boolean connected = false;
-    private DSRuntime.Timer disconnectedTimer;
     private boolean enqueued = false;
     private int nextSid = 1;
     private final Map<String, DSOutboundSubscription> pathMap =
@@ -204,10 +202,6 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
 
     protected void onConnected() {
         connected = true;
-        if (disconnectedTimer != null) {
-            disconnectedTimer.cancel();
-            disconnectedTimer = null;
-        }
         for (DSOutboundSubscription sub : pathMap.values()) {
             sub.setState(State.PENDING_SUBSCRIBE);
             pendingSubscribe.add(sub);
@@ -228,23 +222,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
             pendingUnsubscribe.clear();
         }
         enqueued = false;
-        if (disconnectedTimer == null) {
-            disconnectedTimer = DSRuntime.runDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    updateDisconnected();
-                }
-            }, 15000);
-        }
-    }
-
-    protected void updateDisconnected() {
-        disconnectedTimer = null;
-        if (!connected) {
-            for (Map.Entry<String, DSOutboundSubscription> entry : pathMap.entrySet()) {
-                entry.getValue().updateDisconnected();
-            }
-        }
+        updateDisconnected();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -256,7 +234,7 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
      * it is a new subscription or there change in qos.
      */
     void sendSubscribe(DSOutboundSubscription sub) {
-        if (connected) {
+        if (connected && (sub.getState() != State.PENDING_SUBSCRIBE)) {
             sub.setState(State.PENDING_SUBSCRIBE);
             pendingSubscribe.add(sub);
             sendMessage();
@@ -264,10 +242,19 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
     }
 
     /**
+     * Number of subscriptions.
+     */
+    int size() {
+        synchronized (pathMap) {
+            return pathMap.size();
+        }
+    }
+
+    /**
      * Create or update a subscription.
      */
     OutboundSubscribeHandler subscribe(String path, DSIValue qos, OutboundSubscribeHandler req) {
-        trace(trace() ? String.format("Subscribe (qos=%s) %s", qos, path) : null);
+        debug(debug() ? String.format("Subscribe (qos=%s) %s", qos, path) : null);
         DSOutboundSubscribeStub stub = new DSOutboundSubscribeStub(path, qos, req);
         DSOutboundSubscription sub = null;
         synchronized (pathMap) {
@@ -324,5 +311,13 @@ public class DSOutboundSubscriptions extends DSLogger implements OutboundMessage
         }
         requester.sendRequest(this);
     }
+
+    private void updateDisconnected() {
+        for (Map.Entry<String, DSOutboundSubscription> entry : pathMap.entrySet()) {
+            entry.getValue().updateDisconnected();
+        }
+    }
+
+
 
 }
