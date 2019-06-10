@@ -7,6 +7,8 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Base64.Encoder;
+import java.util.HashMap;
+import java.util.Map;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
@@ -26,6 +28,19 @@ public class CertCollection extends DSNode {
     
     private static final String ADD_CERT = "Add Certificate";
     private static final String CERT = "Certificate";
+    
+    private CertificateFactory certFactory;
+    
+    private CertificateFactory getCertFactory() {
+        if (certFactory == null) {
+            try {
+                certFactory = CertificateFactory.getInstance("X.509");
+            } catch (CertificateException e) {
+                warn("", e);
+            }
+        }
+        return certFactory;
+    }
 
     public void addCertificate(X509Certificate cert) throws CertificateEncodingException {
         String name = certToName(cert);
@@ -33,7 +48,13 @@ public class CertCollection extends DSNode {
     }
 
     public void addCertificate(String name, String cert) {
-        put(name, new CertNode().updateValue(cert));
+        CertNode certNode = new CertNode().updateValue(cert);
+        put(name, certNode);
+        try {
+            certNode.getCertManager().onCertAddedToCollection(this, name, certFromString(cert));
+        } catch (CertificateException e) {
+            warn("", e);
+        }
     }
 
     public static String certToName(X509Certificate cert) {
@@ -53,6 +74,24 @@ public class CertCollection extends DSNode {
         }
         return obj != null && obj instanceof CertNode && certStr
                 .equals(((CertNode) obj).toElement().toString());
+    }
+    
+    public Map<String, X509Certificate> getCertificates() {
+        Map<String, X509Certificate> certs = new HashMap<String, X509Certificate>();
+        for (DSInfo info: this) {
+            DSIObject obj = info.get();
+            if (obj instanceof CertNode) {
+                String certStr = ((CertNode) obj).toElement().toString();
+                X509Certificate cert;
+                try {
+                    cert = certFromString(certStr);
+                    certs.put(info.getName(), cert);
+                } catch (CertificateException e) {
+                    warn("", e);
+                }
+            }
+        }
+        return certs;
     }
 
     public static String encodeCertificate(X509Certificate cert)
@@ -83,13 +122,16 @@ public class CertCollection extends DSNode {
     private void addCert(DSMap parameters) {
         String certStr = parameters.getString(CERT);
         try {
-            CertificateFactory cFactory = CertificateFactory.getInstance("X.509");
-            X509Certificate cert = (X509Certificate) cFactory.generateCertificate(new ByteArrayInputStream(certStr.getBytes()));
+            X509Certificate cert = certFromString(certStr);
             addCertificate(cert);
         } catch (CertificateException e) {
             warn("", e);
             DSException.throwRuntime(e);
         }
+    }
+    
+    private X509Certificate certFromString(String certStr) throws CertificateException {
+        return (X509Certificate) getCertFactory().generateCertificate(new ByteArrayInputStream(certStr.getBytes()));
     }
 
 }

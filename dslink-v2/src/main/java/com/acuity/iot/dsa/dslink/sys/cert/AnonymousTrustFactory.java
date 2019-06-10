@@ -35,6 +35,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
 
     private static SysCertService certManager;
     private static X509TrustManager defaultX509Mgr;
+    private static X509TrustManager localX509Mgr;
     private static TrustManager[] trustManagers;
 
     /////////////////////////////////////////////////////////////////
@@ -60,8 +61,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     static void init(SysCertService mgr) {
         certManager = mgr;
         try {
-            TrustManagerFactory fac = TrustManagerFactory.getInstance(
-                    TrustManagerFactory.getDefaultAlgorithm());
+            TrustManagerFactory fac = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             fac.init((KeyStore) null);
             trustManagers = fac.getTrustManagers();
             if (trustManagers == null) {
@@ -81,6 +81,15 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 List<TrustManager> list = Arrays.asList(trustManagers);
                 list.add(new MyTrustManager());
                 trustManagers = list.toArray(new TrustManager[list.size()]);
+            }
+            
+            fac =  TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            fac.init(certManager.getLocalTruststore());
+            for (TrustManager locTm: fac.getTrustManagers()) {
+                if (locTm instanceof X509TrustManager) {
+                    localX509Mgr = (X509TrustManager) locTm;
+                    break;
+                }
             }
         } catch (Exception x) {
             certManager.error(certManager.getPath(), x);
@@ -129,6 +138,11 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                     defaultX509Mgr.checkClientTrusted(chain, authType);
                     return;
                 } catch (CertificateException e) {
+                    try {
+                        localX509Mgr.checkClientTrusted(chain, authType);
+                        return;
+                    } catch (CertificateException e1) {
+                    }
                 }
             }
             checkLocally(chain, authType);
@@ -145,6 +159,11 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                     defaultX509Mgr.checkServerTrusted(chain, authType);
                     return;
                 } catch (CertificateException e) {
+                    try {
+                        localX509Mgr.checkServerTrusted(chain, authType);
+                        return;
+                    } catch (CertificateException e1) {
+                    }
                 }
             }
             checkLocally(chain, authType);
