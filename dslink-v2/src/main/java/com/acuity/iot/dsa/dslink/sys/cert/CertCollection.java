@@ -1,6 +1,8 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
 import java.io.ByteArrayInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -51,8 +53,14 @@ public class CertCollection extends DSNode {
         CertNode certNode = new CertNode().updateValue(cert);
         put(name, certNode);
         try {
-            certNode.getCertManager().onCertAddedToCollection(this, name, certFromString(cert));
-        } catch (CertificateException e) {
+            byte[] digest = MessageDigest.getInstance("MD5").digest(cert.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for(int i=0; i< digest.length ;i++)
+            {
+                sb.append(Integer.toString((digest[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            certNode.getCertManager().onCertAddedToCollection(this, sb.toString(), certFromString(cert));
+        } catch (CertificateException | NoSuchAlgorithmException e) {
             warn("", e);
         }
     }
