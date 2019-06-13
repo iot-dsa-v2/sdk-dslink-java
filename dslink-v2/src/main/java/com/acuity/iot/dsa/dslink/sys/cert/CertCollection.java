@@ -131,6 +131,13 @@ public class CertCollection extends DSNode {
     }
     
     private X509Certificate certFromString(String certStr) throws CertificateException {
+        certStr = certStr.trim();
+        if (!certStr.startsWith("-----BEGIN CERTIFICATE-----")) {
+            certStr = "-----BEGIN CERTIFICATE-----\n" + certStr;
+        }
+        if (!certStr.endsWith("-----END CERTIFICATE-----")) {
+            certStr = certStr + "\n-----END CERTIFICATE-----";
+        }
         return (X509Certificate) getCertFactory().generateCertificate(new ByteArrayInputStream(certStr.getBytes()));
     }
 
