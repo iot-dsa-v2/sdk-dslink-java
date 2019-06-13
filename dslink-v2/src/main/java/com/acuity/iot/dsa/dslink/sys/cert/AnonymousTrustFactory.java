@@ -196,10 +196,8 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                     throw new CertificateException();
                 }
 
-                if (!certManager.isInTrustStore(anchorCert)) {
-                    certManager.addToQuarantine(anchorCert);
-                    throw new CertificateException();
-                }
+                certManager.addToQuarantine(anchorCert);
+                throw new CertificateException();
 
             } catch (CertificateVerificationException e1) {
                 throw new CertificateException();

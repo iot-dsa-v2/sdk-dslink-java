@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -101,13 +102,23 @@ public class SysCertService extends DSNode {
         getLocalTruststoreNode().addCertificate(name, certStr);
     }
     
-    public void onCertAddedToCollection(CertCollection collection, String name, X509Certificate cert) {
+    public void onCertAddedToCollection(CertCollection collection, X509Certificate cert) {
         if (collection == localTruststoreNode) {
-            try {
-                getLocalTruststore().setCertificateEntry(name, cert);
-            } catch (KeyStoreException e) {
-                warn("", e);
+           addCertToLocalTruststore(cert);
+        }
+    }
+    
+    private void addCertToLocalTruststore(X509Certificate cert) {
+        try {
+            byte[] digest = MessageDigest.getInstance("MD5").digest(cert.getEncoded());
+            StringBuilder sb = new StringBuilder();
+            for(int i=0; i< digest.length ;i++)
+            {
+                sb.append(Integer.toString((digest[i] & 0xff) + 0x100, 16).substring(1));
             }
+            getLocalTruststore().setCertificateEntry(sb.toString(), cert);
+        } catch (CertificateEncodingException | NoSuchAlgorithmException | KeyStoreException e) {
+            warn("", e);
         }
     }
 
@@ -172,9 +183,8 @@ public class SysCertService extends DSNode {
                 localTruststore = KeyStore.getInstance(KeyStore.getDefaultType());
                 localTruststore.load(null);
                 for (Entry<String, X509Certificate> entry: getLocalTruststoreNode().getCertificates().entrySet()) {
-                    String alias = entry.getKey();
                     X509Certificate cert = entry.getValue();
-                    localTruststore.setCertificateEntry(alias, cert);
+                    addCertToLocalTruststore(cert);
                 }
             } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
                 warn("Failed to create local truststore object", e);
