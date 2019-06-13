@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Map.Entry;
 import javax.net.ssl.HostnameVerifier;
@@ -168,12 +170,13 @@ public class SysCertService extends DSNode {
         if (localTruststore == null) {
             try {
                 localTruststore = KeyStore.getInstance(KeyStore.getDefaultType());
+                localTruststore.load(null);
                 for (Entry<String, X509Certificate> entry: getLocalTruststoreNode().getCertificates().entrySet()) {
                     String alias = entry.getKey();
                     X509Certificate cert = entry.getValue();
                     localTruststore.setCertificateEntry(alias, cert);
                 }
-            } catch (KeyStoreException e) {
+            } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
                 warn("Failed to create local truststore object", e);
             }
         }
