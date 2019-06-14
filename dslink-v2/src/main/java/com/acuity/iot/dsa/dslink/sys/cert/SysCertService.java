@@ -105,6 +105,11 @@ public class SysCertService extends DSNode {
     public void onCertAddedToCollection(CertCollection collection, X509Certificate cert) {
         if (collection == localTruststoreNode) {
            addCertToLocalTruststore(cert);
+           try {
+               AnonymousTrustFactory.initLocalTrustManager();
+           } catch (NoSuchAlgorithmException | KeyStoreException e) {
+               warn("", e);
+           }
         }
     }
     

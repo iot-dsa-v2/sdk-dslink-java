@@ -1,6 +1,7 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Provider;
@@ -54,6 +55,18 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     @Override
     public void engineInit(ManagerFactoryParameters spec) {
     }
+    
+    // This gets called once on startup, and again every time a new certificate is added to the local truststore.
+    public static void initLocalTrustManager() throws NoSuchAlgorithmException, KeyStoreException {
+            TrustManagerFactory fac =  TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            fac.init(certManager.getLocalTruststore());
+            for (TrustManager locTm: fac.getTrustManagers()) {
+                if (locTm instanceof X509TrustManager) {
+                    localX509Mgr = (X509TrustManager) locTm;
+                    break;
+                }
+            }
+    }
 
     /**
      * Captures the default trust factory and installs this one.
@@ -83,14 +96,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 trustManagers = list.toArray(new TrustManager[list.size()]);
             }
             
-            fac =  TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            fac.init(certManager.getLocalTruststore());
-            for (TrustManager locTm: fac.getTrustManagers()) {
-                if (locTm instanceof X509TrustManager) {
-                    localX509Mgr = (X509TrustManager) locTm;
-                    break;
-                }
-            }
+            initLocalTrustManager();
         } catch (Exception x) {
             certManager.error(certManager.getPath(), x);
         }
