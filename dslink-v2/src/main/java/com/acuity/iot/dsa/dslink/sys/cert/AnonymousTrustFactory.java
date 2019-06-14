@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.net.ssl.ManagerFactoryParameters;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.TrustManagerFactorySpi;
@@ -58,7 +59,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     
     // This gets called once on startup, and again every time a new certificate is added to the local truststore.
     public static void initLocalTrustManager() throws NoSuchAlgorithmException, KeyStoreException {
-            TrustManagerFactory fac =  TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            TrustManagerFactory fac =   TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             fac.init(certManager.getLocalTruststore());
             for (TrustManager locTm: fac.getTrustManagers()) {
                 if (locTm instanceof X509TrustManager) {
@@ -72,6 +73,8 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
      * Captures the default trust factory and installs this one.
      */
     static void init(SysCertService mgr) {
+        
+        
         certManager = mgr;
         try {
             TrustManagerFactory fac = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -101,11 +104,15 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
             certManager.error(certManager.getPath(), x);
         }
         try {
-            Thread.currentThread().setContextClassLoader(
-                    AnonymousTrustFactory.class.getClassLoader());
-            System.setProperty("jsse.enableSNIExtension", "false");
-            Security.setProperty("ssl.TrustManagerFactory.algorithm", "DSA_X509");
-            Security.addProvider(new MyProvider());
+//            Thread.currentThread().setContextClassLoader(
+//                    AnonymousTrustFactory.class.getClassLoader());
+//            System.setProperty("jsse.enableSNIExtension", "false");
+//            Security.setProperty("ssl.TrustManagerFactory.algorithm", "DSA_X509");
+//            Security.addProvider(new MyProvider());
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, new TrustManager[] {new MyTrustManager()}, null);
+            
+            SSLContext.setDefault(sslContext);
         } catch (Exception x) {
             certManager.error(certManager.getPath(), x);
         }
