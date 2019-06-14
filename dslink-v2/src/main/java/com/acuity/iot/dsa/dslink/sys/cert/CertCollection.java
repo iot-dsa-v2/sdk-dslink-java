@@ -105,6 +105,20 @@ public class CertCollection extends DSNode {
         declareDefault(ADD_CERT, makeAddCertAction());
     }
     
+    @Override
+    protected void onChildRemoved(DSInfo info) {
+        super.onChildRemoved(info);
+        DSIObject child = info.get();
+        if (child instanceof CertNode) {
+            CertNode certNode = (CertNode) child;
+            try {
+                certNode.getCertManager().onCertRemovedFromCollection(this, certFromString(certNode.toElement().toString()));
+            } catch (CertificateException e) {
+                warn("", e);
+            }
+        }
+    }
+    
     private DSAction makeAddCertAction() {
         DSAction act = new DSAction.Parameterless() {
             

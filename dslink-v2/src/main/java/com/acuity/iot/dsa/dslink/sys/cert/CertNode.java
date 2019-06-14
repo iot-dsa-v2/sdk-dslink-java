@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
+import java.util.Collection;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValueNode;
@@ -33,6 +34,15 @@ public class CertNode extends DSValueNode {
     public CertNode updateValue(String newVal) {
         put(VALUE, newVal);
         return this;
+    }
+    
+    @Override
+    public void getVirtualActions(DSInfo target, Collection<String> bucket) {
+        if (target.getNode() == this) {
+            bucket.clear();
+        } else {
+            super.getVirtualActions(target, bucket);
+        }
     }
 
     @Override

@@ -113,18 +113,43 @@ public class SysCertService extends DSNode {
         }
     }
     
+    public void onCertRemovedFromCollection(CertCollection collection, X509Certificate cert) {
+        if (collection == localTruststoreNode) {
+            removeCertFromLocalTruststore(cert);
+            try {
+                AnonymousTrustFactory.initLocalTrustManager();
+            } catch (NoSuchAlgorithmException | KeyStoreException e) {
+                warn("", e);
+            }
+        }
+    }
+    
     private void addCertToLocalTruststore(X509Certificate cert) {
         try {
-            byte[] digest = MessageDigest.getInstance("MD5").digest(cert.getEncoded());
-            StringBuilder sb = new StringBuilder();
-            for(int i=0; i< digest.length ;i++)
-            {
-                sb.append(Integer.toString((digest[i] & 0xff) + 0x100, 16).substring(1));
-            }
-            getLocalTruststore().setCertificateEntry(sb.toString(), cert);
+            String alias = generateCertAlias(cert);
+            getLocalTruststore().setCertificateEntry(alias, cert);
         } catch (CertificateEncodingException | NoSuchAlgorithmException | KeyStoreException e) {
             warn("", e);
         }
+    }
+    
+    private void removeCertFromLocalTruststore(X509Certificate cert) {
+        try {
+            String alias = generateCertAlias(cert);
+            getLocalTruststore().deleteEntry(alias);
+        } catch (CertificateEncodingException | NoSuchAlgorithmException | KeyStoreException e) {
+            warn("", e);
+        }
+    }
+    
+    private static String generateCertAlias(X509Certificate cert) throws CertificateEncodingException, NoSuchAlgorithmException {
+        byte[] digest = MessageDigest.getInstance("MD5").digest(cert.getEncoded());
+        StringBuilder sb = new StringBuilder();
+        for(int i=0; i< digest.length ;i++)
+        {
+            sb.append(Integer.toString((digest[i] & 0xff) + 0x100, 16).substring(1));
+        }
+        return sb.toString();
     }
 
     /**
