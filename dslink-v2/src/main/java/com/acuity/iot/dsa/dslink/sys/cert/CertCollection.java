@@ -106,8 +106,7 @@ public class CertCollection extends DSNode {
     }
     
     @Override
-    protected void onChildRemoved(DSInfo info) {
-        super.onChildRemoved(info);
+    public DSNode remove(DSInfo info) {
         DSIObject child = info.get();
         if (child instanceof CertNode) {
             CertNode certNode = (CertNode) child;
@@ -117,6 +116,7 @@ public class CertCollection extends DSNode {
                 warn("", e);
             }
         }
+        return super.remove(info);
     }
     
     private DSAction makeAddCertAction() {
