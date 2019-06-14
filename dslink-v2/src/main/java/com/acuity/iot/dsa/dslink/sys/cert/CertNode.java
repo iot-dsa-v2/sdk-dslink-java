@@ -42,7 +42,7 @@ public class CertNode extends DSValueNode {
     @Override
     public void getVirtualActions(DSInfo target, Collection<String> bucket) {
         super.getVirtualActions(target, bucket);
-        if (target.getNode() == this) {
+        if (target.isNode() && target.getNode() == this) {
             bucket.remove(DeleteAction.DELETE);
             bucket.remove(RenameAction.RENAME);
             bucket.remove(DuplicateAction.DUPLICATE);
