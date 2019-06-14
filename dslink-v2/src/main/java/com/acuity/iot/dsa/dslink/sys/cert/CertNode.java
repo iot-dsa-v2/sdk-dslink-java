@@ -7,6 +7,9 @@ import org.iot.dsa.node.DSValueNode;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DeleteAction;
+import org.iot.dsa.node.action.DuplicateAction;
+import org.iot.dsa.node.action.RenameAction;
 
 /**
  * @author Daniel Shapiro
@@ -38,10 +41,11 @@ public class CertNode extends DSValueNode {
     
     @Override
     public void getVirtualActions(DSInfo target, Collection<String> bucket) {
+        super.getVirtualActions(target, bucket);
         if (target.getNode() == this) {
-            bucket.clear();
-        } else {
-            super.getVirtualActions(target, bucket);
+            bucket.remove(DeleteAction.DELETE);
+            bucket.remove(RenameAction.RENAME);
+            bucket.remove(DuplicateAction.DUPLICATE);
         }
     }
 
