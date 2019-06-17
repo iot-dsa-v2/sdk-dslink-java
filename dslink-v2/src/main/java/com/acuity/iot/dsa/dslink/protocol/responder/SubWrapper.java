@@ -41,16 +41,6 @@ class SubWrapper implements InboundSubscribeRequest {
     }
 
     @Override
-    public Integer getSubscriptionId() {
-        return inner.getSubscriptionId();
-    }
-
-    @Override
-    public void update(DSDateTime timestamp, DSIValue value, DSStatus quality) {
-        inner.update(timestamp,value,quality);
-    }
-
-    @Override
     public String getPath() {
         return path;
     }
@@ -58,6 +48,16 @@ class SubWrapper implements InboundSubscribeRequest {
     @Override
     public Integer getRequestId() {
         return inner.getRequestId();
+    }
+
+    @Override
+    public Integer getSubscriptionId() {
+        return inner.getSubscriptionId();
+    }
+
+    @Override
+    public void update(DSDateTime timestamp, DSIValue value, DSStatus quality) {
+        inner.update(timestamp, value, quality);
     }
 
     ///////////////////////////////////////////////////////////////////////////

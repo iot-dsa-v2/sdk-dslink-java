@@ -58,7 +58,7 @@ public class ClosedTableTest {
                 "/main/getTable", null, new SimpleInvokeHandler());
         res.waitForClose(5000);
         Assert.assertTrue(res.isClosed());
-        Assert.assertTrue(res.getColumnCount() == 3);
+        Assert.assertEquals(res.getColumnCount(), 3);
         Assert.assertTrue(res.hasUpdates());
         DSMetadata meta = new DSMetadata();
         meta.setMap(res.getColumnMetadata(0));

@@ -66,6 +66,8 @@ public abstract class DSLink extends DSNode implements Runnable {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    public abstract DSLinkConnection getConnection();
+
     /**
      * Unique ID of the link instance.
      */
@@ -107,8 +109,6 @@ public abstract class DSLink extends DSNode implements Runnable {
         buf.append(pathInBroker);
         return DSPath.append(buf, nodePath).toString();
     }
-
-    public abstract DSLinkConnection getConnection();
 
     /**
      * Creates a link by first testing for an existing serialized database.

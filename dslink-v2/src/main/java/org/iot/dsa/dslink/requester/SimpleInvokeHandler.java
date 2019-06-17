@@ -76,6 +76,7 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
                 if (System.currentTimeMillis() > end) {
                     break;
                 }
+                timeout = end - System.currentTimeMillis();
             }
             if (isError()) {
                 throw error;

@@ -51,7 +51,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     public void handleRequest(DS2MessageReader reader) {
         switch (reader.getMethod()) {
             case MSG_CLOSE:
-                processClose(reader);
+                DSRuntime.runDelayed(() -> processClose(reader), 10);
                 break;
             case MSG_INVOKE_REQ:
                 processInvoke(reader);

@@ -116,9 +116,13 @@ public class SimpleListHandler extends AbstractListHandler {
             if (isError()) {
                 throw getError();
             }
-            if (!isInitialized && (System.currentTimeMillis() > end)) {
-                throw new IllegalStateException("Timed out");
+            if (System.currentTimeMillis() >= end) {
+                break;
             }
+            timeout = end - System.currentTimeMillis();
+        }
+        if (!isInitialized) {
+            throw new IllegalStateException("Timed out");
         }
     }
 

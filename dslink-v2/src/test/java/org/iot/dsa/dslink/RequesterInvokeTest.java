@@ -35,19 +35,10 @@ public class RequesterInvokeTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe((event, node, child, data) -> {
-            success = true;
-            synchronized (RequesterInvokeTest.this) {
-                RequesterInvokeTest.this.notifyAll();
-            }
-        }, DSLinkConnection.CONNECTED_EVENT, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
-        synchronized (this) {
-            this.wait(5000);
-        }
-        Assert.assertTrue(success);
-        success = false;
+        link.getConnection().waitForConnection(5000);
+        Assert.assertTrue(link.getConnection().isConnected());
         DSIRequester requester = link.getConnection().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/main/simpleAction", null, new SimpleInvokeHandler());
@@ -58,13 +49,13 @@ public class RequesterInvokeTest {
                 new SimpleInvokeHandler());
         res.waitForClose(1000);
         Assert.assertTrue(success);
-        res = (SimpleInvokeHandler) requester.invoke(
-                "/main/exception",
-                new DSMap().put("param", true),
-                new SimpleInvokeHandler());
-        success = false;
         try {
-            res.waitForClose(1000);
+            success = false;
+            res = (SimpleInvokeHandler) requester.invoke(
+                    "/main/exception",
+                    new DSMap().put("param", true),
+                    new SimpleInvokeHandler());
+            res.waitForClose(5000);
         } catch (Exception x) {
             success = true;
         }
