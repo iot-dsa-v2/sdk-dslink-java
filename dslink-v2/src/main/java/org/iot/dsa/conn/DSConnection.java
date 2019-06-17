@@ -1,5 +1,6 @@
 package org.iot.dsa.conn;
 
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
@@ -9,25 +10,25 @@ import org.iot.dsa.util.DSException;
 
 /**
  * Represents connection with a lifecycle (connecting, connected, disconnecting, disconnected).
- * These connections do not have to have a long lived pipes such as a sockets, they could simply
- * represent http sessions or other abstract constructs.
+ * These connections do not have to have a long lived pipes such as a sockets, they could
+ * represent http sessions or other such constructs.
  * <p>
  * Subclasses must:<br>
  * <ul>
  * <li> Implement doConnect, doDisconnect and doPing.
- * <li> Consider adding a property to make the ping interval configurable.
  * <li> Call connOk() after a successful communication.
  * <li> Call connDown(String) after a connection failure.  This does not need to be called for
  * higher level errors such as malformed sql statements being submitted over a connection.  In
  * those kinds of scenarios, just call connOk and let the ping loop determine if the connection
  * has been lost.
  * <li> Override checkConfig() and throw an exception if misconfigured.
- * <li> Have a thread call the run() method to manage reconnection.
  * </ul>
+ * onStable() calls startUpdateTimer which calls updateState on a loop to manage connecting,
+ * disconnecting and pinging.
  *
  * @author Aaron Hansen
  */
-public abstract class DSConnection extends DSBaseConnection implements Runnable {
+public abstract class DSConnection extends DSBaseConnection {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -62,8 +63,12 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private long lastPing;
+    private long retryConnectMs = 0;
     protected DSInfo state = getInfo(STATE);
     protected DSInfo stateTime = getInfo(STATE_TIME);
+    private DSRuntime.Timer updateTimer;
+    private boolean updating = false;
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -79,7 +84,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     public void connDown(String reason) {
         debug(debug() ? "connDown: " + reason : null);
         if (getConnectionState().isConnected()) {
-            put(lastFail, DSDateTime.currentTime());
+            put(lastFail, DSDateTime.now());
             if (reason != null) {
                 if (!getStatusText().equals(reason)) {
                     put(statusText, DSString.valueOf(reason));
@@ -88,7 +93,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
             disconnect();
         } else if (!getConnectionState().isDisconnected()) {
             put(state, DSConnectionState.DISCONNECTED);
-            put(stateTime, DSDateTime.currentTime());
+            put(stateTime, DSDateTime.now());
             notifyConnectedDescendants(this, this);
             super.connDown(reason);
             try {
@@ -117,6 +122,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         }
         lastOkMillis = now;
         if (!isConnected()) {
+            lastPing = now;
             put(state, DSConnectionState.CONNECTED);
             put(stateTime, DSDateTime.valueOf(now));
             notifyConnectedDescendants(this, this);
@@ -127,6 +133,9 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
                 error(error() ? getPath() : null, x);
             }
             fire(CONNECTED_EVENT, null, null);
+            synchronized (stateTime) {
+                stateTime.notifyAll();
+            }
         }
     }
 
@@ -140,7 +149,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
         }
         debug(debug() ? "Connect" : null);
         put(state, DSConnectionState.CONNECTING);
-        put(stateTime, DSDateTime.currentTime());
+        put(stateTime, DSDateTime.now());
         notifyConnectedDescendants(this, this);
         if (isEnabled() && canConnect()) {
             try {
@@ -151,7 +160,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
             }
         } else {
             put(state, DSConnectionState.DISCONNECTED);
-            put(stateTime, DSDateTime.currentTime());
+            put(stateTime, DSDateTime.now());
             notifyConnectedDescendants(this, this);
         }
     }
@@ -163,7 +172,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     public void disconnect() {
         debug(debug() ? "Disconnect" : null);
         put(state, DSConnectionState.DISCONNECTING);
-        put(stateTime, DSDateTime.currentTime());
+        put(stateTime, DSDateTime.now());
         notifyConnectedDescendants(this, this);
         try {
             doDisconnect();
@@ -171,7 +180,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
             error(getPath(), x);
         }
         put(state, DSConnectionState.DISCONNECTED);
-        put(stateTime, DSDateTime.currentTime());
+        put(stateTime, DSDateTime.now());
         notifyConnectedDescendants(this, this);
         down = true;
         updateStatus(null);
@@ -192,98 +201,36 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     }
 
     /**
-     * Call this to automatically manage the connection lifecycle, it will not return
-     * until the node is stopped.
-     public void newRun() {
-     long interval = 1000;
-     long increment = 2000;
-     long max = 60000;
-     DSRuntime.Timer lc = null;
-     if (isConnected()) {
-     if (!isEnabled()) {
-     disconnect();
-     //call again at min interval to try and reconnect
-     lc = DSRuntime.runDelayed(() -> newRun(), interval);
-     } else {
-     try {
-     long ivl = getPingInterval();
-     long last = Math.max(getLastOk(), lastPing);
-     long next = last
-     long now = System.currentTimeMillis();
-     long duration = now - last;
-     if (duration >= ivl) {
-     lastPing = now;
-     try {
-     doPing();
-     } catch (Throwable t) {
-     error(getPath(), t);
-     connDown(DSException.makeMessage(t));
-     }
-     }
-     } catch (Exception x) {
-     debug(debug() ? getPath() : null, x);
-     }
-     //call again at next ping
-     }
-     } else {
-     connect();
-     long next = interval;
-     if (lc != null) {
-     next += lc.getInterval();
-     next = Math.min(next, 60000);
-     }
-     DSRuntime.runDelayed(()->newRun(),next);
-     //call again at the next attempt
-     }
-     }
+     * Blocks the calling thread until the connection is connected or a timeout occurs.  Will throw
+     * a IllegalStateException on timeout.
+     *
+     * @param timeout How long to wait in ms.  0 or less is an indefinite timeout.
+     * @throws IllegalStateException If a timeout occurs.
      */
-
-    /**
-     * Call this to automatically manage the connection lifecycle, it will not return
-     * until the node is stopped.
-     */
-    public void run() {
-        long INTERVAL = 2000;
-        long retryMs = 0;
-        long lastPing = 0;
-        while (isRunning()) {
+    public void waitForConnection(int timeout) {
+        synchronized (stateTime) {
             if (isConnected()) {
-                retryMs = INTERVAL;
-                if (!isEnabled()) {
-                    disconnect();
-                } else {
-                    try {
-                        long ivl = getPingInterval();
-                        long last = Math.max(getLastOk(), lastPing);
-                        long now = System.currentTimeMillis();
-                        long duration = now - last;
-                        if (duration >= ivl) {
-                            lastPing = now;
-                            try {
-                                doPing();
-                            } catch (Throwable t) {
-                                error(getPath(), t);
-                                connDown(DSException.makeMessage(t));
-                            }
-                        }
-                    } catch (Exception x) {
-                        debug(debug() ? getPath() : null, x);
-                    }
-                }
-            } else {
-                if (isEnabled() && getConnectionState().isDisconnected()) {
-                    if (getTimeInState() >= retryMs) {
-                        retryMs = Math.min(60000, retryMs + INTERVAL);
-                        connect();
-                    }
-                }
+                return;
             }
-            synchronized (this) {
-                try {
-                    wait(INTERVAL);
-                } catch (Exception x) {
-                    debug(debug() ? getPath() : null, x);
+            try {
+                if (timeout > 0) {
+                    long end = System.currentTimeMillis() + timeout;
+                    while (!isConnected()) {
+                        stateTime.wait(timeout);
+                        if (System.currentTimeMillis() > end) {
+                            break;
+                        }
+                    }
+                } else {
+                    while (!isConnected()) {
+                        stateTime.wait();
+                    }
                 }
+            } catch (Exception x) {
+                debug("", timeout);
+            }
+            if (!isConnected()) {
+                throw new IllegalStateException("Timed out");
             }
         }
     }
@@ -291,12 +238,11 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
-
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
         declareDefault(STATE, DSConnectionState.DISCONNECTED).setReadOnly(true).setTransient(true);
-        declareDefault(STATE_TIME, DSDateTime.currentTime()).setReadOnly(true).setTransient(true);
+        declareDefault(STATE_TIME, DSDateTime.now()).setReadOnly(true).setTransient(true);
     }
 
     /**
@@ -322,19 +268,27 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     }
 
     /**
-     * Ping interval in milliseconds (default is 60000).  If the time since the last call
-     * to connOk exceeds this, the ping method will be called.  Implementations should
-     * call connOk whenever there have been successful communications to minimize pinging.
+     * Ping interval in milliseconds (default is 10000).  If the time since the last
+     * ping exceeds this, the doPing will be called.
      *
-     * @return 60000
+     * @return 10000
      */
     protected long getPingInterval() {
-        return 60000;
+        return 10000;
     }
 
     protected long getTimeInState() {
         DSDateTime time = (DSDateTime) stateTime.get();
         return System.currentTimeMillis() - time.timeInMillis();
+    }
+
+    /**
+     * How often to call updateState in millis.
+     *
+     * @return 5000
+     */
+    protected long getUpdateInterval() {
+        return 5000;
     }
 
     /**
@@ -345,7 +299,7 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
 
     @Override
     protected synchronized void onDisabled() {
-        notifyAll();
+        updateState();
     }
 
     /**
@@ -356,7 +310,79 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
 
     @Override
     protected synchronized void onEnabled() {
-        notifyAll();
+        updateState();
+    }
+
+    /**
+     * Calls startUpdateTimer()
+     */
+    protected void onStable() {
+        super.onStable();
+        startUpdateTimer();
+    }
+
+    /**
+     * Starts a timer to update state.
+     */
+    protected void startUpdateTimer() {
+        if (updateTimer == null) {
+            updateTimer = DSRuntime.run(() -> updateState(), System.currentTimeMillis(), getUpdateInterval());
+        }
+    }
+
+    /**
+     * Stops the update timer if there is one.
+     */
+    protected void stopUpdateTimer() {
+        if (updateTimer != null) {
+            updateTimer.cancel();
+            updateTimer = null;
+        }
+    }
+
+    /**
+     * Manages connecting, disconnecting and pinging.  onStable starts a timer to call this method.
+     */
+    protected void updateState() {
+        synchronized (this) {
+            if (updating) {
+                return;
+            }
+            updating = true;
+        }
+        try {
+            if (isConnected()) {
+                retryConnectMs = getUpdateInterval();
+                if (!isEnabled()) {
+                    disconnect();
+                } else {
+                    try {
+                        long now = System.currentTimeMillis();
+                        long duration = now - lastPing;
+                        if (duration >= getPingInterval()) {
+                            lastPing = now;
+                            try {
+                                doPing();
+                            } catch (Throwable t) {
+                                error(getPath(), t);
+                                connDown(DSException.makeMessage(t));
+                            }
+                        }
+                    } catch (Exception x) {
+                        debug(debug() ? getPath() : null, x);
+                    }
+                }
+            } else {
+                if (isEnabled() && getConnectionState().isDisconnected()) {
+                    if (getTimeInState() >= retryConnectMs) {
+                        retryConnectMs = Math.min(60000, retryConnectMs + getUpdateInterval());
+                        connect();
+                    }
+                }
+            }
+        } finally {
+            updating = false;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -364,15 +390,15 @@ public abstract class DSConnection extends DSBaseConnection implements Runnable 
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Calls DSIConnected.onChange on implementations in the subtree.  Stops at instances of
-     * DSIConnected and DSConnection.
+     * Calls DSIConnectionDescendant.onChange on implementations in the subtree.  Stops at instances of
+     * DSIConnectionDescendant and DSConnection.
      */
     private void notifyConnectedDescendants(DSNode node, DSConnection conn) {
         DSInfo info = node.getFirstInfo();
         while (info != null) {
-            if (info.is(DSIConnected.class)) {
+            if (info.is(DSIConnectionDescendant.class)) {
                 try {
-                    ((DSIConnected) info.get()).onConnectionChange(conn);
+                    ((DSIConnectionDescendant) info.get()).onConnectionChange(conn);
                 } catch (Throwable t) {
                     error(error() ? info.getPath(null) : null, t);
                 }

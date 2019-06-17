@@ -27,7 +27,7 @@ public interface OutboundInvokeHandler extends OutboundRequestHandler {
     public void onInsert(int index, DSList rows);
 
     /**
-     * Called whenever a mode is received.  If the mode is refresh, the
+     * Called whenever a mode is received.
      */
     public void onMode(Mode mode);
 

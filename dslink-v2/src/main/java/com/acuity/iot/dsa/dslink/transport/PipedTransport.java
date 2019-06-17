@@ -12,7 +12,16 @@ import com.acuity.iot.dsa.dslink.io.DSIoException;
 public class PipedTransport extends DSTransport {
 
     private DSByteBuffer binary;
+    private int messages = 0;
     private DSCharBuffer text;
+
+    @Override
+    public void endRecvMessage() {
+        super.endRecvMessage();
+        if (--messages > 0) {
+            getConnection().getSession().recvMessage(true);
+        }
+    }
 
     @Override
     public void open() {
@@ -64,7 +73,8 @@ public class PipedTransport extends DSTransport {
                 }
             }
             if (available() > 0) {
-                return text.read(buf, off, len);
+                int i = text.read(buf, off, len);
+                return i;
             }
             if (!testOpen()) {
                 return -1;
@@ -78,10 +88,16 @@ public class PipedTransport extends DSTransport {
         if (text == null) {
             text = new DSCharBuffer();
         }
-        synchronized (this) {
-            text.put(msgPart);
-            notify();
+        if (!msgPart.isEmpty()) {
+            synchronized (this) {
+                text.put(msgPart);
+                notifyAll();
+            }
         }
+        if (isLast) {
+            messages++;
+        }
+        getConnection().getSession().recvMessage(true);
     }
 
     @Override
@@ -89,10 +105,16 @@ public class PipedTransport extends DSTransport {
         if (binary == null) {
             binary = new DSByteBuffer();
         }
-        synchronized (this) {
-            binary.put(buf, off, len);
-            notify();
+        if (len > 0) {
+            synchronized (this) {
+                binary.put(buf, off, len);
+                notifyAll();
+            }
         }
+        if (isLast) {
+            messages++;
+        }
+        getConnection().getSession().recvMessage(true);
     }
 
 

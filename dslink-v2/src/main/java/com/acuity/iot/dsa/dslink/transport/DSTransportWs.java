@@ -2,7 +2,6 @@ package com.acuity.iot.dsa.dslink.transport;
 
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.io.DSCharBuffer;
-import com.acuity.iot.dsa.dslink.io.DSIoException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -34,6 +33,7 @@ public abstract class DSTransportWs extends DSTransport {
     private DSByteBuffer binReadBuffer;
     private ByteBuffer binWriteBuffer;
     private EndpointConfig config;
+    private int messages = 0;
     private Session session;
     private DSCharBuffer textReadBuffer;
 
@@ -51,6 +51,15 @@ public abstract class DSTransportWs extends DSTransport {
             }
         } catch (IOException x) {
             debug("", x);
+        }
+        getConnection().getSession().recvMessage(true);
+    }
+
+    @Override
+    public void endRecvMessage() {
+        super.endRecvMessage();
+        if (--messages > 0) {
+            getConnection().getSession().recvMessage(true);
         }
     }
 
@@ -70,14 +79,18 @@ public abstract class DSTransportWs extends DSTransport {
     }
 
     @OnMessage
-    public void onMessage(byte[] buf, boolean isLast) {
+    public void onMessage(ByteBuffer buf, boolean isLast) {
         if (!isOpen()) {
             return;
         }
         synchronized (this) {
-            getBinReadBuffer().put(buf, 0, buf.length);
+            getBinReadBuffer().put(buf);
             notifyAll();
         }
+        if (isLast) {
+            messages++;
+        }
+        getConnection().getSession().recvMessage(true);
     }
 
 
@@ -90,6 +103,10 @@ public abstract class DSTransportWs extends DSTransport {
             getTextReadBuffer().put(msgPart);
             notifyAll();
         }
+        if (isLast) {
+            messages++;
+        }
+        getConnection().getSession().recvMessage(true);
     }
 
     @OnOpen

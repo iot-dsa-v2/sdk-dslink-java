@@ -33,30 +33,21 @@ public class RequesterSubscribeTest {
 
     @Test
     public void test() throws Exception {
-        //when sending the subscriptions on connected
         link = new V1TestLink(root = new MyMain());
         doit();
-        link = new V2TestLink(root = new MyMain());
-        doit();
+        //link = new V2TestLink(root = new MyMain());
+        //doit();
     }
 
     private void doit() throws Exception {
         success = false;
-        link.getConnection().subscribe((event, node, child, data) -> {
-            success = true;
-            synchronized (RequesterSubscribeTest.this) {
-                RequesterSubscribeTest.this.notifyAll();
-            }
-        }, DSLinkConnection.CONNECTED_EVENT, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
-        synchronized (this) {
-            wait(5000);
-        }
-        success = false;
-        subscribe();
+        link.getConnection().waitForConnection(5000);
+        Assert.assertTrue(link.getConnection().isConnected());
         Assert.assertFalse(root.isSubscribed());
         Assert.assertFalse(success);
+        subscribe();
         synchronized (this) {
             wait(5000);
         }
@@ -142,9 +133,10 @@ public class RequesterSubscribeTest {
                     public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status) {
                     }
                 });
+        long end = System.currentTimeMillis() + 10000;
         synchronized (node) {
-            if (!node.subscribeCalled) {
-                node.wait(5000);
+            while (!node.subscribeCalled && (System.currentTimeMillis() < end)) {
+                node.wait(1000);
             }
         }
         Assert.assertTrue(node.subscribeCalled);
@@ -152,9 +144,10 @@ public class RequesterSubscribeTest {
         //Now close the stream and validate unsubscribed.
         Assert.assertFalse(node.unsubscribeCalled);
         handler.getStream().closeStream();
+        end = System.currentTimeMillis() + 10000;
         synchronized (node) {
-            if (!node.unsubscribeCalled) {
-                node.wait(5000);
+            while (!node.unsubscribeCalled && (System.currentTimeMillis() < end)) {
+                node.wait(1000);
             }
         }
         Assert.assertTrue(node.unsubscribeCalled);

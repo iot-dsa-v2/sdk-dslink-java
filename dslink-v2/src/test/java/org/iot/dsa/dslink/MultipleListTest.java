@@ -2,6 +2,7 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1Session;
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
+import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import org.iot.dsa.dslink.requester.SimpleListHandler;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSMap;
@@ -25,23 +26,14 @@ public class MultipleListTest {
     public void test() throws Exception {
         link = new V1TestLink(new MyMain());
         doit();
-        //link = new V2TestLink(new MyMain()); //todo why is this failing?
-        //doit();
     }
 
     private void doit() throws Exception {
         int emt = DS1Session.END_MSG_THRESHOLD;
         DS1Session.END_MSG_THRESHOLD = 1000;
-        link.getConnection().subscribe((event, node, child, data) -> {
-            synchronized (MultipleListTest.this) {
-                MultipleListTest.this.notifyAll();
-            }
-        }, DSLinkConnection.CONNECTED_EVENT, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
-        synchronized (this) {
-            this.wait(5000);
-        }
+        link.getConnection().waitForConnection(5000);
         Assert.assertTrue(link.getConnection().isConnected());
         Assert.assertTrue(link.getMain().isStable());
         DSIRequester requester = link.getConnection().getRequester();
@@ -71,8 +63,8 @@ public class MultipleListTest {
         Assert.assertTrue(link.getMain().isSubscribed());
         handler2.getStream().closeStream();
         handler2.waitForClose(5000);
-        Assert.assertFalse(handler1.getStream().isStreamOpen());
-        long end = System.currentTimeMillis() + 5000;
+        Assert.assertFalse(handler2.getStream().isStreamOpen());
+        long end = System.currentTimeMillis() + 10000;
         while (link.getMain().isSubscribed()) {
             try {
                 Thread.sleep(100);
@@ -92,10 +84,6 @@ public class MultipleListTest {
 
     class MyHandler extends SimpleListHandler {
 
-        @Override
-        public void onInitialized() {
-            super.onInitialized();
-        }
     }
 
     public static class MyMain extends DSMainNode {

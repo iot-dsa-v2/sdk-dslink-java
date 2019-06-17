@@ -19,7 +19,6 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-
     protected static final String BROKER_ID = "Broker ID";
     protected static final String BROKER_FORMAT = "Broker Format";
     protected static final String BROKER_PATH = "Path In Broker";
@@ -50,6 +49,11 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
      */
     public String getPathInBroker() {
         return brokerPath.getElement().toString();
+    }
+
+    @Override
+    public DSSession getSession() {
+        return (DSSession) super.getSession();
     }
 
     /**
@@ -94,6 +98,11 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
         }
     }
 
+    @Override
+    protected void doPing() {
+        getSession().sendMessage();
+    }
+
     protected String getBrokerFormat() {
         return brokerFormat.get().toString();
     }
@@ -119,17 +128,6 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
     }
 
     protected abstract void initializeConnection();
-
-    /**
-     * Creates and starts a thread for running the connection lifecycle.
-     */
-    @Override
-    protected void onStable() {
-        super.onStable();
-        Thread t = new Thread(this, "Connection " + getName() + " Runner");
-        t.setDaemon(true);
-        t.start();
-    }
 
     protected void setBrokerFormat(String arg) {
         put(brokerFormat, DSString.valueOf(arg));

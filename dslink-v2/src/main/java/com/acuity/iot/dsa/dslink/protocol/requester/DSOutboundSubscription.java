@@ -113,6 +113,12 @@ class DSOutboundSubscription {
             } catch (Exception x) {
                 subscriptions.error(path, x);
             }
+        } else if (!getSubscriptions().getRequester().getSession().getConnection().isConnected()) {
+            try {
+                stub.update(DSDateTime.now(), DSNull.NULL, DSStatus.unknown);
+            } catch (Exception x) {
+                subscriptions.error(path, x);
+            }
         }
         if (qos > prevQos) { //need to resubscribe for new qos
             getSubscriptions().sendSubscribe(this);
@@ -182,7 +188,7 @@ class DSOutboundSubscription {
         } else {
             lastStatus = lastStatus.add(DSStatus.DOWN);
         }
-        lastTs = DSDateTime.currentTime();
+        lastTs = DSDateTime.now();
         if (lastValue == null) {
             lastValue = DSNull.NULL;
         }
