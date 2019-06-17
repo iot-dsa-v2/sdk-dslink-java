@@ -26,24 +26,16 @@ public class LargeListTest {
     public void test() throws Exception {
         link = new V1TestLink(new MyMain());
         doit();
-        link = new V2TestLink(new MyMain());
-        link.getOptions().setLogLevel("trace");
-        doit();
+        //link = new V2TestLink(new MyMain());
+        //doit();
     }
 
     private void doit() throws Exception {
         int emt = DS1Session.END_MSG_THRESHOLD;
         DS1Session.END_MSG_THRESHOLD = 1000;
-        link.getConnection().subscribe((event, node, child, data) -> {
-            synchronized (LargeListTest.this) {
-                LargeListTest.this.notifyAll();
-            }
-        }, DSLinkConnection.CONNECTED_EVENT, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
-        synchronized (this) {
-            this.wait(5000);
-        }
+        link.getConnection().waitForConnection(5000);
         Assert.assertTrue(link.getConnection().isConnected());
         Assert.assertTrue(link.getMain().isStable());
         DSIRequester requester = link.getConnection().getRequester();

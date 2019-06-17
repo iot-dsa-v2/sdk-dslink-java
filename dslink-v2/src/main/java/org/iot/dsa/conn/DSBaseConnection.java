@@ -14,7 +14,7 @@ import org.iot.dsa.util.DSException;
  * Subclasses must:<br>
  * <ul>
  * <li> Call canConnect() and only execute connection logic if it returns true.
- * <li> Call connOk() after a successful connection.
+ * <li> Call connOk() after a successful connection as well as successful communications.
  * <li> Call connDown(String) after a connection failure.  This does not need to be called for
  * higher level errors such as malformed sql statements being submitted over a connection.  In
  * those kinds of scenarios, just call connOk and log an error.
@@ -54,7 +54,7 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
      */
     public void connDown(String reason) {
         debug(debug() ? getPath() + ": connDown - " + reason : null);
-        put(lastFail, DSDateTime.currentTime());
+        put(lastFail, DSDateTime.now());
         down = true;
         updateStatus(reason);
     }
@@ -143,7 +143,7 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
      */
     private void configFault(String msg) {
         debug(debug() ? getPath() + ": configFault - " + msg : null);
-        put(lastFail, DSDateTime.currentTime());
+        put(lastFail, DSDateTime.now());
         fault = true;
         updateStatus(msg);
     }

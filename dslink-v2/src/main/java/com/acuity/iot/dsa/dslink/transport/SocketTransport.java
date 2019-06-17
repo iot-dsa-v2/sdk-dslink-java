@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import javax.net.ssl.SSLSocketFactory;
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -54,9 +55,19 @@ public class SocketTransport extends DSTransportStream {
             }
             socket.setSoTimeout((int) getReadTimeout());
             open(socket.getInputStream(), socket.getOutputStream());
+            DSRuntime.run(new Reader());
             debug(debug() ? "SocketTransport open" : null);
         } catch (Exception x) {
             DSException.throwRuntime(x);
+        }
+    }
+
+    private class Reader implements Runnable {
+
+        public void run() {
+            while (isOpen()) {
+                getConnection().getSession().recvMessage(false);
+            }
         }
     }
 

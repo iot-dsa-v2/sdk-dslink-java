@@ -3,7 +3,6 @@ package org.iot.dsa.dslink.poc;
 import java.util.Collection;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.DSMainNode;
-import org.iot.dsa.dslink.requester.SimpleListHandler;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSDouble;
 import org.iot.dsa.node.DSElement;

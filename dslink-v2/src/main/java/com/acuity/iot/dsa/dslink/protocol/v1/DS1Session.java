@@ -35,7 +35,7 @@ public class DS1Session extends DSSession implements MessageReader, MessageWrite
     ///////////////////////////////////////////////////////////////////////////
 
     public static int END_MSG_THRESHOLD = 30000;
-    static final int MAX_MSG_IVL = 55000;
+    static final int MAX_MSG_IVL = 45000;
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -70,7 +70,16 @@ public class DS1Session extends DSSession implements MessageReader, MessageWrite
     }
 
     @Override
-    public void recvMessage() {
+    public boolean shouldEndMessage() {
+        return (getWriter().length() + getTransport().writeMessageSize()) > END_MSG_THRESHOLD;
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Protected Methods
+    /////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void doRecvMessage() {
         DSIReader reader = getReader();
         getTransport().beginRecvMessage();
         switch (reader.next()) {
@@ -88,15 +97,6 @@ public class DS1Session extends DSSession implements MessageReader, MessageWrite
                 throw new DSIoException("Unexpected input: " + reader.last());
         }
     }
-
-    @Override
-    public boolean shouldEndMessage() {
-        return (getWriter().length() + getTransport().writeMessageSize()) > END_MSG_THRESHOLD;
-    }
-
-    /////////////////////////////////////////////////////////////////
-    // Protected Methods
-    /////////////////////////////////////////////////////////////////
 
     @Override
     protected void doSendMessage() {

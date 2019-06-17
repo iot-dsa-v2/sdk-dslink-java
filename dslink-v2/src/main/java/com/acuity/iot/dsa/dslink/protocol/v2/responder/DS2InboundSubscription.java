@@ -8,8 +8,6 @@ import com.acuity.iot.dsa.dslink.protocol.responder.DSInboundSubscriptions;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.time.DSDateTime;
-import org.iot.dsa.time.DSTime;
 
 /**
  * Subscribe implementation for the responder.

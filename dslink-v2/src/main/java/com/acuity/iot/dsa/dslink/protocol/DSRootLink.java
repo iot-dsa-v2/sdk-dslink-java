@@ -12,7 +12,7 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.util.DSUtil;
 
 /**
- * Links that also the root of the node tree.  These links have sys and upstream children.
+ * Links that are also the roots of a node tree.  These links have sys and upstream children.
  *
  * @author Aaron Hansen
  */
@@ -39,17 +39,17 @@ public class DSRootLink extends DSLink {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
+    public DSLinkConnection getConnection() {
+        return (DSLinkConnection) upstream.get();
+    }
+
+    @Override
     public DSMainNode getMain() {
         return (DSMainNode) main.getNode();
     }
 
     public DSSysNode getSys() {
         return (DSSysNode) sys.get();
-    }
-
-    @Override
-    public DSLinkConnection getConnection() {
-        return (DSLinkConnection) upstream.get();
     }
 
     ///////////////////////////////////////////////////////////////////////////

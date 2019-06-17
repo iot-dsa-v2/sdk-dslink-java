@@ -80,7 +80,7 @@ public class DSOutboundSubscriptions extends DSNode implements OutboundMessage {
         }
         DSDateTime timestamp = null;
         if ((ts == null) || ts.isEmpty()) {
-            timestamp = DSDateTime.currentTime();
+            timestamp = DSDateTime.now();
         } else {
             timestamp = DSDateTime.valueOf(ts);
         }
@@ -317,7 +317,6 @@ public class DSOutboundSubscriptions extends DSNode implements OutboundMessage {
             entry.getValue().updateDisconnected();
         }
     }
-
 
 
 }

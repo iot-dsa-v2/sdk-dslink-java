@@ -47,13 +47,6 @@ public class DS2Session extends DSSession implements MessageConstants {
     // Public Methods
     /////////////////////////////////////////////////////////////////
 
-    /*
-    @Override
-    public DS2LinkConnection getConnection() {
-        return (DS2LinkConnection) super.getConnection();
-    }
-    */
-
     @Override
     public DSIRequester getRequester() {
         return requester;
@@ -65,7 +58,16 @@ public class DS2Session extends DSSession implements MessageConstants {
     }
 
     @Override
-    public void recvMessage() {
+    public boolean shouldEndMessage() {
+        return getMessageWriter().getBodyLength() > END_MSG_THRESHOLD;
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Protected Methods
+    /////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void doRecvMessage() {
         DSITransport transport = getTransport();
         DS2MessageReader reader = getMessageReader();
         transport.beginRecvMessage();
@@ -102,15 +104,6 @@ public class DS2Session extends DSSession implements MessageConstants {
         }
         transport.endRecvMessage();
     }
-
-    @Override
-    public boolean shouldEndMessage() {
-        return getMessageWriter().getBodyLength() > END_MSG_THRESHOLD;
-    }
-
-    /////////////////////////////////////////////////////////////////
-    // Protected Methods
-    /////////////////////////////////////////////////////////////////
 
     @Override
     protected void doSendMessage() {
