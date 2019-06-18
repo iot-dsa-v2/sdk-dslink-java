@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.net.ssl.ManagerFactoryParameters;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.TrustManagerFactorySpi;
@@ -74,8 +73,6 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
      * Captures the default trust factory and installs this one.
      */
     static void init(SysCertService mgr) {
-        
-        
         certManager = mgr;
         try {
             TrustManagerFactory fac = TrustManagerFactory.getInstance(defaultAlgorithm);
@@ -208,7 +205,6 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
 
                 certManager.addToQuarantine(anchorCert);
                 throw new CertificateException();
-
             } catch (CertificateVerificationException e1) {
                 throw new CertificateException();
             } catch (NoSuchAlgorithmException e) {

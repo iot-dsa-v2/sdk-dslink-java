@@ -121,7 +121,6 @@ public class CertCollection extends DSNode {
     
     private DSAction makeAddCertAction() {
         DSAction act = new DSAction.Parameterless() {
-            
             @Override
             public ActionResult invoke(DSInfo target, ActionInvocation request) {
                 ((CertCollection) target.get()).addCert(request.getParameters());
