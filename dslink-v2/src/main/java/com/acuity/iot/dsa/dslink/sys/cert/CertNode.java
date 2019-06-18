@@ -1,11 +1,15 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
+import java.util.Collection;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValueNode;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DeleteAction;
+import org.iot.dsa.node.action.DuplicateAction;
+import org.iot.dsa.node.action.RenameAction;
 
 /**
  * @author Daniel Shapiro
@@ -33,6 +37,16 @@ public class CertNode extends DSValueNode {
     public CertNode updateValue(String newVal) {
         put(VALUE, newVal);
         return this;
+    }
+    
+    @Override
+    public void getVirtualActions(DSInfo target, Collection<String> bucket) {
+        super.getVirtualActions(target, bucket);
+        if (target.isNode() && target.getNode() == this) {
+            bucket.remove(DeleteAction.DELETE);
+            bucket.remove(RenameAction.RENAME);
+            bucket.remove(DuplicateAction.DUPLICATE);
+        }
     }
 
     @Override

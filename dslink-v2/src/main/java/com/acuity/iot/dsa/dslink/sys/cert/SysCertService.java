@@ -5,8 +5,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Map.Entry;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
@@ -71,7 +77,8 @@ public class SysCertService extends DSNode {
     private DSInfo keystorePass = getInfo(CERTFILE_PASS);
     private DSInfo keystorePath = getInfo(CERTFILE);
     private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
-    private CertCollection localTruststore;
+    private KeyStore localTruststore;
+    private CertCollection localTruststoreNode;
     private CertCollection quarantine;
     private DSInfo verifyHostnames = getInfo(VERIFY_HOSTNAMES);
     private HostnameWhitelist whitelist;
@@ -92,7 +99,57 @@ public class SysCertService extends DSNode {
         CertNode certNode = (CertNode) certInfo.getNode();
         String certStr = certNode.toElement().toString();
         getQuarantine().remove(certInfo);
-        getLocalTruststore().addCertificate(name, certStr);
+        getLocalTruststoreNode().addCertificate(name, certStr);
+    }
+    
+    public void onCertAddedToCollection(CertCollection collection, X509Certificate cert) {
+        if (collection == localTruststoreNode) {
+           addCertToLocalTruststore(cert);
+           try {
+               AnonymousTrustFactory.initLocalTrustManager();
+           } catch (NoSuchAlgorithmException | KeyStoreException e) {
+               warn("", e);
+           }
+        }
+    }
+    
+    public void onCertRemovedFromCollection(CertCollection collection, X509Certificate cert) {
+        if (collection == localTruststoreNode) {
+            removeCertFromLocalTruststore(cert);
+            try {
+                AnonymousTrustFactory.initLocalTrustManager();
+            } catch (NoSuchAlgorithmException | KeyStoreException e) {
+                warn("", e);
+            }
+        }
+    }
+    
+    private void addCertToLocalTruststore(X509Certificate cert) {
+        try {
+            String alias = generateCertAlias(cert);
+            getLocalTruststore().setCertificateEntry(alias, cert);
+        } catch (CertificateEncodingException | NoSuchAlgorithmException | KeyStoreException e) {
+            warn("", e);
+        }
+    }
+    
+    private void removeCertFromLocalTruststore(X509Certificate cert) {
+        try {
+            String alias = generateCertAlias(cert);
+            getLocalTruststore().deleteEntry(alias);
+        } catch (CertificateEncodingException | NoSuchAlgorithmException | KeyStoreException e) {
+            warn("", e);
+        }
+    }
+    
+    private static String generateCertAlias(X509Certificate cert) throws CertificateEncodingException, NoSuchAlgorithmException {
+        byte[] digest = MessageDigest.getInstance("MD5").digest(cert.getEncoded());
+        StringBuilder sb = new StringBuilder();
+        for(int i=0; i< digest.length ;i++)
+        {
+            sb.append(Integer.toString((digest[i] & 0xff) + 0x100, 16).substring(1));
+        }
+        return sb.toString();
     }
 
     /**
@@ -147,7 +204,23 @@ public class SysCertService extends DSNode {
     }
 
     public boolean isInTrustStore(X509Certificate cert) {
-        return getLocalTruststore().containsCertificate(cert);
+        return getLocalTruststoreNode().containsCertificate(cert);
+    }
+    
+    public KeyStore getLocalTruststore() {
+        if (localTruststore == null) {
+            try {
+                localTruststore = KeyStore.getInstance(KeyStore.getDefaultType());
+                localTruststore.load(null);
+                for (Entry<String, X509Certificate> entry: getLocalTruststoreNode().getCertificates().entrySet()) {
+                    X509Certificate cert = entry.getValue();
+                    addCertToLocalTruststore(cert);
+                }
+            } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
+                warn("Failed to create local truststore object", e);
+            }
+        }
+        return localTruststore;
     }
 
     @Override
@@ -357,11 +430,11 @@ public class SysCertService extends DSNode {
         return keystorePath.getElement().toString();
     }
 
-    private CertCollection getLocalTruststore() {
-        if (localTruststore == null) {
-            localTruststore = (CertCollection) getInfo(LOCAL_TRUSTSTORE).get();
+    private CertCollection getLocalTruststoreNode() {
+        if (localTruststoreNode == null) {
+            localTruststoreNode = (CertCollection) getInfo(LOCAL_TRUSTSTORE).get();
         }
-        return localTruststore;
+        return localTruststoreNode;
     }
 
     private CertCollection getQuarantine() {
