@@ -20,6 +20,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.TrustManagerFactorySpi;
 import javax.net.ssl.X509TrustManager;
+import org.iot.dsa.logging.DSLogger;
 
 /**
  * Adds support for self signed SSL.  If anonymous is not allowed
@@ -39,6 +40,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     private static X509TrustManager defaultX509Mgr;
     private static X509TrustManager localX509Mgr;
     private static TrustManager[] trustManagers;
+    private static DSLogger log = new DSLogger();
 
     /////////////////////////////////////////////////////////////////
     // Methods - Public and in alphabetical order by method TrustAnon.
@@ -149,10 +151,11 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                         localX509Mgr.checkClientTrusted(chain, authType);
                         return;
                     } catch (CertificateException e1) {
+                        tryAddingRootCertToQuarantine(chain, authType);
+                        throw e1;
                     }
                 }
             }
-            checkLocally(chain, authType);
         }
 
         @Override
@@ -170,10 +173,11 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                         localX509Mgr.checkServerTrusted(chain, authType);
                         return;
                     } catch (CertificateException e1) {
+                        tryAddingRootCertToQuarantine(chain, authType);
+                        throw e1;
                     }
                 }
             }
-            checkLocally(chain, authType);
         }
 
         @Override
@@ -184,7 +188,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
             return new X509Certificate[0];
         }
 
-        private void checkLocally(X509Certificate[] chain, String authType)
+        private void tryAddingRootCertToQuarantine(X509Certificate[] chain, String authType)
                 throws CertificateException {
             Set<X509Certificate> chainAsSet = new HashSet<X509Certificate>();
             Collections.addAll(chainAsSet, chain);
@@ -200,17 +204,16 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 }
 
                 if (anchorCert == null) {
-                    throw new CertificateException();
+                    return;
                 }
 
                 certManager.addToQuarantine(anchorCert);
-                throw new CertificateException();
-            } catch (CertificateVerificationException e1) {
-                throw new CertificateException();
+            } catch (CertificateVerificationException e) {
+                log.debug("", e);
             } catch (NoSuchAlgorithmException e) {
-                throw new CertificateException();
+                log.debug("", e);
             } catch (NoSuchProviderException e) {
-                throw new CertificateException();
+                log.debug("", e);
             }
         }
 
