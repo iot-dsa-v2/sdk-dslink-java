@@ -19,7 +19,6 @@ public class RequesterSubscriptionsReconnectTest {
     // ------
 
     private Object mutex = this;
-    private boolean success = false;
     private DSStatus testStatus;
 
     // Methods
@@ -32,53 +31,47 @@ public class RequesterSubscriptionsReconnectTest {
     }
 
     private void doit(DSLink link) throws Exception {
-        success = false;
         testStatus = null;
-        link.getConnection().subscribe((event, node, child, data) -> {
-            success = true;
-            synchronized (mutex) {
-                notifyAll();
-            }
-        }, DSLinkConnection.CONNECTED_EVENT, null);
-        synchronized (mutex) {
-            Thread t = new Thread(link, "DSLink Runner");
-            t.start();
-            mutex.wait(5000);
-        }
+        Thread t = new Thread(link, "DSLink Runner");
+        t.start();
+        link.getConnection().waitForConnection(5000);
         Assert.assertTrue(link.getConnection().isConnected());
         DSIRequester requester = link.getConnection().getRequester();
         requester.subscribe("/main/abc", DSLong.valueOf(0), new MyHandler());
+        long end = System.currentTimeMillis() + 20000;
         synchronized (mutex) {
-            mutex.wait(20000);
-        }
-        Assert.assertTrue(testStatus.isOk());
-        testStatus = null;
-        link.getConnection().setEnabled(false);
-        link.getConnection().disconnect();
-        synchronized (mutex) {
-            if (link.getConnection().isConnected()) {
-                mutex.wait(20000);
+            while (((testStatus == null) || (!testStatus.isOk()))
+                    && (System.currentTimeMillis() < end)) {
+                mutex.wait(1000);
             }
         }
+        Assert.assertTrue(testStatus.isOk());
+        link.getConnection().setEnabled(false);
+        testStatus = null;
+        link.getConnection().disconnect();
+        end = System.currentTimeMillis() + 20000;
+        while (link.getConnection().isConnected() && (System.currentTimeMillis() < end)) {
+            mutex.wait(100);
+        }
         Assert.assertFalse(link.getConnection().isConnected());
+        end = System.currentTimeMillis() + 20000;
         synchronized (mutex) {
-            while (testStatus == null) {
-                mutex.wait(20000);
+            while (((testStatus == null) || (!testStatus.isDown()))
+                    && (System.currentTimeMillis() < end)) {
+                mutex.wait(1000);
             }
         }
         Assert.assertTrue(testStatus.isDown());
         testStatus = null;
         link.getConnection().setEnabled(true);
         link.getConnection().connect();
-        synchronized (mutex) {
-            if (!link.getConnection().isConnected()) {
-                mutex.wait(20000);
-            }
-        }
+        link.getConnection().waitForConnection(20000);
         Assert.assertTrue(link.getConnection().isConnected());
+        end = System.currentTimeMillis() + 20000;
         synchronized (mutex) {
-            while ((testStatus == null) || testStatus.isDown()) {
-                mutex.wait(20000);
+            while (((testStatus == null) || (!testStatus.isOk()))
+                    && (System.currentTimeMillis() < end)) {
+                mutex.wait(1000);
             }
         }
         Assert.assertTrue(testStatus.isOk());

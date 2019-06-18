@@ -16,8 +16,10 @@ public interface DSISession extends DSIObject {
     public boolean isRequesterAllowed();
 
     /**
-     * The transport should call this at the start of each message.
+     * Read the next message.  Intended to be called by the transport.
+     *
+     * @param async If false, the messsage will be read on the calling thread.
      */
-    public void recvMessage();
+    public void recvMessage(boolean async);
 
 }

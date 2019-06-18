@@ -2,7 +2,6 @@ package com.acuity.iot.dsa.dslink.protocol.requester;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
-import java.io.OutputStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.iot.dsa.dslink.DSRequestException;
 import org.iot.dsa.dslink.requester.ErrorType;
@@ -126,7 +125,7 @@ public class DSOutboundListStub extends DSOutboundStub {
     synchronized void disconnected() {
         initialized = false;
         String name = "$disconnectedTs";
-        DSElement value = DSDateTime.currentTime().toElement();
+        DSElement value = DSDateTime.now().toElement();
         state.put(name, value);
         try {
             adapter.onUpdate(name, value);
@@ -156,15 +155,18 @@ public class DSOutboundListStub extends DSOutboundStub {
             handlers.add(handler);
             handler.onInit(getPath(), null, new HandlerAdapterStream() {
                 boolean open = true;
+
                 @Override
                 public void closeStream() {
                     open = false;
                     remove(handler);
                 }
+
                 @Override
                 public DSMap getState() {
                     return state;
                 }
+
                 @Override
                 public boolean isStreamOpen() {
                     return open;

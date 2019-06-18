@@ -71,6 +71,9 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
 
     @Override
     public OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler req) {
+        if (!getSession().getConnection().isConnected()) {
+            throw new IllegalStateException("Not connected");
+        }
         DSOutboundInvokeStub stub = makeInvoke(path, params, req);
         requests.put(stub.getRequestId(), stub);
         req.onInit(path, params, stub);
@@ -135,6 +138,9 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
 
     @Override
     public OutboundRequestHandler remove(String path, OutboundRequestHandler req) {
+        if (!getSession().getConnection().isConnected()) {
+            throw new IllegalStateException("Not connected");
+        }
         DSOutboundRemoveStub stub = makeRemove(path, req);
         requests.put(stub.getRequestId(), stub);
         session.enqueueOutgoingRequest(stub);
@@ -144,7 +150,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     public void removeRequest(Integer rid) {
         Object obj = requests.remove(rid);
         if (obj instanceof DSOutboundListStub) {
-            DSOutboundListStub stub = (DSOutboundListStub) obj ;
+            DSOutboundListStub stub = (DSOutboundListStub) obj;
             lists.remove(stub.getPath());
         }
     }
@@ -155,6 +161,9 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
 
     @Override
     public OutboundRequestHandler set(String path, DSIValue value, OutboundRequestHandler req) {
+        if (!getSession().getConnection().isConnected()) {
+            throw new IllegalStateException("Not connected");
+        }
         DSOutboundSetStub stub = makeSet(path, value, req);
         requests.put(stub.getRequestId(), stub);
         session.enqueueOutgoingRequest(stub);
@@ -240,7 +249,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     protected void onSubscribed() {
         super.onSubscribed();
         if (updateTimer == null) {
-            updateTimer = DSRuntime.runAfterDelay(()->updateStats(), 1000, 2000);
+            updateTimer = DSRuntime.runAfterDelay(() -> updateStats(), 1000, 2000);
         }
     }
 
@@ -266,9 +275,9 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     }
 
     private void updateStats() {
-        put(LIST_COUNT,DSLong.valueOf(lists.size()));
-        put(SUB_COUNT,DSLong.valueOf(subscriptions.size()));
-        put(REQ_COUNT,DSLong.valueOf(requests.size()));
+        put(LIST_COUNT, DSLong.valueOf(lists.size()));
+        put(SUB_COUNT, DSLong.valueOf(subscriptions.size()));
+        put(REQ_COUNT, DSLong.valueOf(requests.size()));
     }
 
 }

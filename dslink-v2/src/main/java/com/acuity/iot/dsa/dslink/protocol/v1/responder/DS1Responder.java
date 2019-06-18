@@ -58,18 +58,16 @@ public class DS1Responder extends DSResponder {
                         if (!method.equals("close")) {
                             sendInvalidMethod(rid, method);
                         }
-                        final DSStream req = removeRequest(rid);
-                        if (req != null) {
-                            DSRuntime.run(new Runnable() {
-                                public void run() {
-                                    try {
-                                        req.onClose(rid);
-                                    } catch (Exception x) {
-                                        debug(getPath(), x);
-                                    }
+                        DSRuntime.runDelayed(() -> {
+                            try {
+                                DSStream req = removeRequest(rid);
+                                if (req != null) {
+                                    req.onClose(rid);
                                 }
-                            });
-                        }
+                            } catch (Exception x) {
+                                debug(getPath(), x);
+                            }
+                        }, 10);
                         break;
                     case 'i':  //invoke
                         if (!method.equals("invoke")) {
@@ -96,12 +94,7 @@ public class DS1Responder extends DSResponder {
                         if (method.equals("set")) {
                             processSet(rid, map);
                         } else if (method.equals("subscribe")) {
-                            DSRuntime.run(new Runnable() {
-                                @Override
-                                public void run() {
-                                    processSubscribe(rid, map);
-                                }
-                            });
+                            processSubscribe(rid, map);
                             sendClose(rid);
                         } else {
                             sendInvalidMethod(rid, method);
@@ -111,12 +104,7 @@ public class DS1Responder extends DSResponder {
                         if (!method.equals("unsubscribe")) {
                             sendInvalidMethod(rid, method);
                         }
-                        DSRuntime.run(new Runnable() {
-                            @Override
-                            public void run() {
-                                processUnsubscribe(rid, map);
-                            }
-                        });
+                        DSRuntime.run(() -> processUnsubscribe(rid, map));
                         sendClose(rid);
                         break;
                     default:
@@ -202,7 +190,7 @@ public class DS1Responder extends DSResponder {
                .setRequestId(rid)
                .setLink(getLink())
                .setResponder(this);
-        DSRuntime.run(setImpl);
+        setImpl.run();
     }
 
     /**

@@ -40,24 +40,15 @@ public class StreamTableTest {
 
     private void doit(DSLink link) throws Exception {
         success = false;
-        link.getConnection().subscribe((event, node, child, data) -> {
-            success = true;
-            synchronized (StreamTableTest.this) {
-                StreamTableTest.this.notifyAll();
-            }
-        }, DSLinkConnection.CONNECTED_EVENT, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
-        synchronized (this) {
-            this.wait(5000);
-        }
-        Assert.assertTrue(success);
-        success = false;
+        link.getConnection().waitForConnection(5000);
+        Assert.assertTrue(link.getConnection().isConnected());
         DSIRequester requester = link.getConnection().getRequester();
         SimpleInvokeHandler res = (SimpleInvokeHandler) requester.invoke(
                 "/main/getTable", null, new SimpleInvokeHandler());
         DSList row = res.getUpdate(5000);
-        Assert.assertTrue(res.getColumnCount() == 3);
+        Assert.assertEquals(res.getColumnCount(), 3);
         DSMetadata meta = new DSMetadata();
         meta.setMap(res.getColumnMetadata(0));
         Assert.assertTrue(meta.getName().equals("column0"));
@@ -69,7 +60,6 @@ public class StreamTableTest {
         Assert.assertTrue(row.get(1).toString().equals("1_1"));
         Assert.assertTrue(row.get(2).toString().equals("1_2"));
         row = res.getUpdate(5000);
-        Assert.assertFalse(res.isClosed());
         Assert.assertTrue(row.get(0).toString().equals("2_0"));
         Assert.assertTrue(row.get(1).toString().equals("2_1"));
         Assert.assertTrue(row.get(2).toString().equals("2_2"));

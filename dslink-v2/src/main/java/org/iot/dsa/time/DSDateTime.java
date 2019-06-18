@@ -59,13 +59,6 @@ public class DSDateTime extends DSValue {
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * The current time.
-     */
-    public static DSDateTime currentTime() {
-        return new DSDateTime(System.currentTimeMillis());
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof DSDateTime) {
@@ -148,8 +141,11 @@ public class DSDateTime extends DSValue {
         return ret;
     }
 
+    /**
+     * The current time.
+     */
     public static DSDateTime now() {
-        return valueOf(System.currentTimeMillis());
+        return new DSDateTime(System.currentTimeMillis());
     }
 
     public DSDateTime prevDay() {

@@ -27,21 +27,14 @@ public class ListTest {
         link = new V1TestLink(new MyMain());
         doit();
         link = new V2TestLink(new MyMain());
-        link.getOptions().setLogLevel("trace");
         doit();
     }
 
     private void doit() throws Exception {
-        link.getConnection().subscribe((event, node, child, data) -> {
-            synchronized (ListTest.this) {
-                ListTest.this.notifyAll();
-            }
-        }, DSLinkConnection.CONNECTED_EVENT, null);
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
-        synchronized (this) {
-            this.wait(5000);
-        }
+        link.getConnection().waitForConnection(5000);
+        Assert.assertTrue(link.getConnection().isConnected());
         DSIRequester requester = link.getConnection().getRequester();
         SimpleListHandler handler = (SimpleListHandler) requester.list("/main",
                                                                        new SimpleListHandler());
