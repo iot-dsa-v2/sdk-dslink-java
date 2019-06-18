@@ -1,6 +1,7 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Provider;
@@ -19,6 +20,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.TrustManagerFactorySpi;
 import javax.net.ssl.X509TrustManager;
+import org.iot.dsa.logging.DSLogger;
 
 /**
  * Adds support for self signed SSL.  If anonymous is not allowed
@@ -33,9 +35,12 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     // Fields
     /////////////////////////////////////////////////////////////////
 
+    private static String defaultAlgorithm = TrustManagerFactory.getDefaultAlgorithm(); 
     private static SysCertService certManager;
     private static X509TrustManager defaultX509Mgr;
+    private static X509TrustManager localX509Mgr;
     private static TrustManager[] trustManagers;
+    private static DSLogger log = new DSLogger();
 
     /////////////////////////////////////////////////////////////////
     // Methods - Public and in alphabetical order by method TrustAnon.
@@ -53,6 +58,18 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     @Override
     public void engineInit(ManagerFactoryParameters spec) {
     }
+    
+    // This gets called once on startup, and again every time a new certificate is added to the local truststore.
+    public static void initLocalTrustManager() throws NoSuchAlgorithmException, KeyStoreException {
+            TrustManagerFactory fac =   TrustManagerFactory.getInstance(defaultAlgorithm);
+            fac.init(certManager.getLocalTruststore());
+            for (TrustManager locTm: fac.getTrustManagers()) {
+                if (locTm instanceof X509TrustManager) {
+                    localX509Mgr = (X509TrustManager) locTm;
+                    break;
+                }
+            }
+    }
 
     /**
      * Captures the default trust factory and installs this one.
@@ -60,8 +77,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     static void init(SysCertService mgr) {
         certManager = mgr;
         try {
-            TrustManagerFactory fac = TrustManagerFactory.getInstance(
-                    TrustManagerFactory.getDefaultAlgorithm());
+            TrustManagerFactory fac = TrustManagerFactory.getInstance(defaultAlgorithm);
             fac.init((KeyStore) null);
             trustManagers = fac.getTrustManagers();
             if (trustManagers == null) {
@@ -82,6 +98,8 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 list.add(new MyTrustManager());
                 trustManagers = list.toArray(new TrustManager[list.size()]);
             }
+            
+            initLocalTrustManager();
         } catch (Exception x) {
             certManager.error(certManager.getPath(), x);
         }
@@ -129,9 +147,15 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                     defaultX509Mgr.checkClientTrusted(chain, authType);
                     return;
                 } catch (CertificateException e) {
+                    try {
+                        localX509Mgr.checkClientTrusted(chain, authType);
+                        return;
+                    } catch (CertificateException e1) {
+                        tryAddingRootCertToQuarantine(chain, authType);
+                        throw e1;
+                    }
                 }
             }
-            checkLocally(chain, authType);
         }
 
         @Override
@@ -145,9 +169,15 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                     defaultX509Mgr.checkServerTrusted(chain, authType);
                     return;
                 } catch (CertificateException e) {
+                    try {
+                        localX509Mgr.checkServerTrusted(chain, authType);
+                        return;
+                    } catch (CertificateException e1) {
+                        tryAddingRootCertToQuarantine(chain, authType);
+                        throw e1;
+                    }
                 }
             }
-            checkLocally(chain, authType);
         }
 
         @Override
@@ -158,7 +188,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
             return new X509Certificate[0];
         }
 
-        private void checkLocally(X509Certificate[] chain, String authType)
+        private void tryAddingRootCertToQuarantine(X509Certificate[] chain, String authType)
                 throws CertificateException {
             Set<X509Certificate> chainAsSet = new HashSet<X509Certificate>();
             Collections.addAll(chainAsSet, chain);
@@ -174,20 +204,16 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 }
 
                 if (anchorCert == null) {
-                    throw new CertificateException();
+                    return;
                 }
 
-                if (!certManager.isInTrustStore(anchorCert)) {
-                    certManager.addToQuarantine(anchorCert);
-                    throw new CertificateException();
-                }
-
-            } catch (CertificateVerificationException e1) {
-                throw new CertificateException();
+                certManager.addToQuarantine(anchorCert);
+            } catch (CertificateVerificationException e) {
+                log.debug("", e);
             } catch (NoSuchAlgorithmException e) {
-                throw new CertificateException();
+                log.debug("", e);
             } catch (NoSuchProviderException e) {
-                throw new CertificateException();
+                log.debug("", e);
             }
         }
 
