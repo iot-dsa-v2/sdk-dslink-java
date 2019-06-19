@@ -2,6 +2,8 @@ artifacts {
     archives sourcesJar
 }
 
+ext.moduleName = 'org.iot.dsa.dslink.v2.websocket'
+
 dependencies {
     api project(':dslink-v2')
     implementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:[1.13.1,)'

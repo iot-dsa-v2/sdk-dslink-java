@@ -4,15 +4,28 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven'
 
+    //sourceCompatibility = 1.8
+    //targetCompatibility = 1.8
+
     group 'org.iot-dsa'
     version '0.62.1'
-
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
 
     repositories {
         mavenLocal()
         jcenter()
+    }
+
+    compileJava {
+        afterEvaluate {
+            inputs.property("moduleName", moduleName)
+            doFirst {
+                options.compilerArgs.addAll([
+                        '--module-path', classpath.asPath,
+                        '--add-modules', moduleName
+                ])
+                classpath = files()
+            }
+        }
     }
 
     task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
@@ -45,5 +58,5 @@ allprojects {
 }
 
 wrapper {
-    gradleVersion = '5.4'
+    gradleVersion = '5.4.1'
 }

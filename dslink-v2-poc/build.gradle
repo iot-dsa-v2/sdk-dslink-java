@@ -1,10 +1,12 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+//sourceCompatibility = 1.8
+//targetCompatibility = 1.8
 group 'org.iot-dsa'
 mainClassName = 'org.iot.dsa.dslink.DSLink'
+
+ext.moduleName = 'org.iot.dsa.dslink.v2.poc'
 
 applicationDefaultJvmArgs = [
         "-XX:+HeapDumpOnOutOfMemoryError", "-XX:HeapDumpPath=" + name + ".hprof"]
