@@ -104,11 +104,16 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
      * Writes the UTF8 bytes to the underlying buffer.
      */
     public void writeUTF8(CharSequence arg) {
+        if (arg.length() == 0) {
+            return;
+        }
         CharBuffer chars = getCharBuffer(arg);
-        ByteBuffer strBuffer = getStringBuffer(chars.position() * (int) encoder.maxBytesPerChar());
+        ByteBuffer strBuffer = getStringBuffer(
+                chars.remaining() * (int) encoder.maxBytesPerChar());
         encoder.encode(chars, strBuffer, false);
-        byteBuffer.put(strBuffer);
         encoder.reset();
+        strBuffer.flip();
+        byteBuffer.put(strBuffer);
     }
 
     @Override
@@ -304,14 +309,15 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
                 tmp += 1024;
             }
             charBuffer = CharBuffer.allocate(tmp);
-        } else if (charBuffer.capacity() < len) {
-            int tmp = charBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            charBuffer = CharBuffer.allocate(tmp);
         } else {
             charBuffer.clear();
+            if (charBuffer.capacity() < len) {
+                int tmp = charBuffer.capacity();
+                while (tmp < len) {
+                    tmp += 1024;
+                }
+                charBuffer = CharBuffer.allocate(tmp);
+            }
         }
         charBuffer.append(arg);
         charBuffer.flip();
@@ -329,24 +335,31 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
                 tmp += 1024;
             }
             strBuffer = ByteBuffer.allocate(tmp);
-        } else if (strBuffer.capacity() < len) {
-            int tmp = strBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
         } else {
             strBuffer.clear();
+            if (strBuffer.capacity() < len) {
+                int tmp = strBuffer.capacity();
+                while (tmp < len) {
+                    tmp += 1024;
+                }
+                strBuffer = ByteBuffer.allocate(tmp);
+            }
         }
         return strBuffer;
     }
 
     private void writeString(CharSequence arg) throws IOException {
+        if (arg.length() == 0) {
+            byteBuffer.put(FIXSTR_PREFIX);
+            return;
+        }
         CharBuffer chars = getCharBuffer(arg);
         ByteBuffer strBuffer = getStringBuffer(
-                chars.length() * (int) encoder.maxBytesPerChar());
+                chars.remaining() * (int) encoder.maxBytesPerChar());
         encoder.encode(chars, strBuffer, false);
-        int len = strBuffer.position();
+        encoder.reset();
+        strBuffer.flip();
+        int len = strBuffer.remaining();
         if (len < (1 << 5)) {
             byteBuffer.put((byte) (FIXSTR_PREFIX | len));
         } else if (len < (1 << 8)) {
@@ -360,7 +373,6 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
             byteBuffer.putInt(len);
         }
         byteBuffer.put(strBuffer);
-        encoder.reset();
     }
 
     // Inner Classes
