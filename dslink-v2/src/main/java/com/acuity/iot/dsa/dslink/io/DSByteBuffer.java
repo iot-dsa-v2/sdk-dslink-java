@@ -82,23 +82,22 @@ public class DSByteBuffer extends InputStream {
     }
 
     /**
-     * Gets the bytes from the given buffer, which will be flipped, then cleared.
+     * Gets the bytes from the given buffer, which should be positioned for bulk
+     * relative gets.
      */
     public DSByteBuffer put(ByteBuffer buf) {
-        int pos = buf.position();
+        int len = buf.remaining();
         int bufLen = buffer.length;
-        if ((pos + length + offset) >= bufLen) {
-            if ((pos + length) > bufLen) {  //the buffer is too small
-                growBuffer(pos + length);
+        if ((len + length + offset) >= bufLen) {
+            if ((len + length) > bufLen) {  //the buffer is too small
+                growBuffer(len + length);
             } else { //offset must be > 0, shift everything to index 0
                 System.arraycopy(buffer, offset, buffer, 0, length);
                 offset = 0;
             }
         }
-        buf.flip();
-        buf.get(buffer, length + offset, pos);
-        buf.clear();
-        length += pos;
+        buf.get(buffer, length + offset, len);
+        length += len;
         return this;
     }
 

@@ -176,7 +176,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
      * reuse the same buffer.
      */
     private ByteBuffer getByteBuffer(byte[] bytes, int off, int len) {
-        if ((byteBuffer == null) || (byteBuffer.capacity() < len)) {
+        if (byteBuffer == null) {
             int tmp = 1024;
             while (tmp < len) {
                 tmp += 1024;
@@ -184,6 +184,13 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
             byteBuffer = ByteBuffer.allocate(tmp);
         } else {
             byteBuffer.clear();
+            if (byteBuffer.capacity() < len) {
+                int tmp = 1024;
+                while (tmp < len) {
+                    tmp += 1024;
+                }
+                byteBuffer = ByteBuffer.allocate(tmp);
+            }
         }
         byteBuffer.put(bytes, 0, len);
         byteBuffer.flip();
@@ -195,7 +202,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
      * reuse the same char buffer.
      */
     private CharBuffer getCharBuffer(int size) {
-        if ((charBuffer == null) || (charBuffer.length() < size)) {
+        if (charBuffer == null) {
             int tmp = 1024;
             while (tmp < size) {
                 tmp += 1024;
@@ -203,6 +210,13 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
             charBuffer = CharBuffer.allocate(tmp);
         } else {
             charBuffer.clear();
+            if (charBuffer.remaining() < size) {
+                int tmp = 1024;
+                while (tmp < size) {
+                    tmp += 1024;
+                }
+                charBuffer = CharBuffer.allocate(tmp);
+            }
         }
         return charBuffer;
     }
