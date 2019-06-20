@@ -236,7 +236,7 @@ public class DS2MessageReader extends DS2Message {
      * reuse the same char buffer.
      */
     private CharBuffer getCharBuffer(int size) {
-        if ((charBuffer == null) || (charBuffer.capacity() < size)) {
+        if (charBuffer == null) {
             int tmp = 1024;
             while (tmp < size) {
                 tmp += 1024;
@@ -244,6 +244,13 @@ public class DS2MessageReader extends DS2Message {
             charBuffer = CharBuffer.allocate(tmp);
         } else {
             charBuffer.clear();
+            if (charBuffer.capacity() < size) {
+                int tmp = 1024;
+                while (tmp < size) {
+                    tmp += 1024;
+                }
+                charBuffer = CharBuffer.allocate(tmp);
+            }
         }
         return charBuffer;
     }
@@ -259,14 +266,15 @@ public class DS2MessageReader extends DS2Message {
                 tmp += 1024;
             }
             strBuffer = ByteBuffer.allocate(tmp);
-        } else if (strBuffer.capacity() < len) {
-            int tmp = strBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
         } else {
             strBuffer.clear();
+            if (strBuffer.capacity() < len) {
+                int tmp = strBuffer.capacity();
+                while (tmp < len) {
+                    tmp += 1024;
+                }
+                strBuffer = ByteBuffer.allocate(tmp);
+            }
         }
         return strBuffer;
     }

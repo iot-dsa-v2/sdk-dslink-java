@@ -41,8 +41,8 @@ public class MsgpackTest {
         CharsetEncoder encoder = DSString.UTF8.newEncoder();
         encoder.encode(charBuffer, byteBuffer, false);
         byteBuffer.flip();
-        CharsetDecoder decoder = DSString.UTF8.newDecoder();
         charBuffer.clear();
+        CharsetDecoder decoder = DSString.UTF8.newDecoder();
         decoder.decode(byteBuffer, charBuffer, false);
         charBuffer.flip();
         result = charBuffer.toString();
@@ -57,7 +57,6 @@ public class MsgpackTest {
         tmp.endList();
         DSIReader reader = new MsgpackReader(new ByteArrayInputStream(tmp.toByteArray()));
         reader.getElement().toList();
-
         final ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
         MsgpackWriter out = new MsgpackWriter();
         out.beginList();
@@ -68,8 +67,6 @@ public class MsgpackTest {
         out.value(new DSMap());
         out.value(new DSList());
         out.endList();
-        //out.writeTo(baos1);
-        //out.reset();
         byte[] encoded = out.toByteArray();
         DSIReader parser = new MsgpackReader(new ByteArrayInputStream(encoded));
         DSList list = parser.getElement().toList();

@@ -178,11 +178,17 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
      * DSA 2.n encodes a string into the body.
      */
     public void writeString(CharSequence str) {
+        if (str.length() == 0) {
+            body.putShort((short) 0, false);
+            return;
+        }
         CharBuffer chars = getCharBuffer(str);
         ByteBuffer strBuffer = getStringBuffer(
-                chars.length() * (int) utf8encoder.maxBytesPerChar());
+                chars.remaining() * (int) utf8encoder.maxBytesPerChar());
         utf8encoder.encode(chars, strBuffer, false);
-        body.putShort((short) strBuffer.position(), false);
+        utf8encoder.reset();
+        strBuffer.flip();
+        body.putShort((short) strBuffer.remaining(), false);
         body.put(strBuffer);
     }
 
@@ -190,11 +196,17 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
      * DSA 2.n encodes a string into the the given buffer.
      */
     public void writeString(CharSequence str, DSByteBuffer buf) {
+        if (str.length() == 0) {
+            buf.putShort((short) 0, false);
+            return;
+        }
         CharBuffer chars = getCharBuffer(str);
         ByteBuffer strBuffer = getStringBuffer(
-                chars.length() * (int) utf8encoder.maxBytesPerChar());
+                chars.remaining() * (int) utf8encoder.maxBytesPerChar());
         utf8encoder.encode(chars, strBuffer, false);
-        buf.putShort((short) strBuffer.position(), false);
+        utf8encoder.reset();
+        strBuffer.flip();
+        buf.putShort((short) strBuffer.remaining(), false);
         buf.put(strBuffer);
     }
 
@@ -239,14 +251,15 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
                 tmp += 1024;
             }
             charBuffer = CharBuffer.allocate(tmp);
-        } else if (charBuffer.capacity() < len) {
-            int tmp = charBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            charBuffer = CharBuffer.allocate(tmp);
         } else {
             charBuffer.clear();
+            if (charBuffer.capacity() < len) {
+                int tmp = charBuffer.capacity();
+                while (tmp < len) {
+                    tmp += 1024;
+                }
+                charBuffer = CharBuffer.allocate(tmp);
+            }
         }
         charBuffer.append(arg);
         charBuffer.flip();
@@ -264,14 +277,15 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
                 tmp += 1024;
             }
             strBuffer = ByteBuffer.allocate(tmp);
-        } else if (strBuffer.capacity() < len) {
-            int tmp = strBuffer.capacity();
-            while (tmp < len) {
-                tmp += 1024;
-            }
-            strBuffer = ByteBuffer.allocate(tmp);
         } else {
             strBuffer.clear();
+            if (strBuffer.capacity() < len) {
+                int tmp = strBuffer.capacity();
+                while (tmp < len) {
+                    tmp += 1024;
+                }
+                strBuffer = ByteBuffer.allocate(tmp);
+            }
         }
         return strBuffer;
     }
