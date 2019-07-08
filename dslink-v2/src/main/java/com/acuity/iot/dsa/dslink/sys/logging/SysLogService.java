@@ -7,6 +7,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import org.iot.dsa.logging.DSLevel;
 import org.iot.dsa.node.DSFlexEnum;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;

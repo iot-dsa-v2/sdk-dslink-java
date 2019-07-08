@@ -2,11 +2,11 @@ package com.acuity.iot.dsa.dslink.protocol;
 
 import com.acuity.iot.dsa.dslink.protocol.v1.DS1LinkConnection;
 import com.acuity.iot.dsa.dslink.protocol.v2.DS2LinkConnection;
+import com.acuity.iot.dsa.dslink.sys.DSSysNode;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSMainNode;
-import org.iot.dsa.dslink.DSSysNode;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.util.DSUtil;

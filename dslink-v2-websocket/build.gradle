@@ -1,8 +1,8 @@
-artifacts {
-    archives sourcesJar
-}
-
 dependencies {
     api project(':dslink-v2')
-    implementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:[1.13.1,)'
+    implementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:[1.15,)'
+}
+
+artifacts {
+    archives sourcesJar
 }
