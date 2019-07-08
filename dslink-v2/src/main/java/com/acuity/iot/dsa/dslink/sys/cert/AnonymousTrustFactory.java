@@ -35,7 +35,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     // Fields
     /////////////////////////////////////////////////////////////////
 
-    private static String defaultAlgorithm = TrustManagerFactory.getDefaultAlgorithm(); 
+    private static String defaultAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
     private static SysCertService certManager;
     private static X509TrustManager defaultX509Mgr;
     private static X509TrustManager localX509Mgr;
@@ -58,17 +58,17 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
     @Override
     public void engineInit(ManagerFactoryParameters spec) {
     }
-    
+
     // This gets called once on startup, and again every time a new certificate is added to the local truststore.
     public static void initLocalTrustManager() throws NoSuchAlgorithmException, KeyStoreException {
-            TrustManagerFactory fac =   TrustManagerFactory.getInstance(defaultAlgorithm);
-            fac.init(certManager.getLocalTruststore());
-            for (TrustManager locTm: fac.getTrustManagers()) {
-                if (locTm instanceof X509TrustManager) {
-                    localX509Mgr = (X509TrustManager) locTm;
-                    break;
-                }
+        TrustManagerFactory fac = TrustManagerFactory.getInstance(defaultAlgorithm);
+        fac.init(certManager.getLocalTruststore());
+        for (TrustManager locTm : fac.getTrustManagers()) {
+            if (locTm instanceof X509TrustManager) {
+                localX509Mgr = (X509TrustManager) locTm;
+                break;
             }
+        }
     }
 
     /**
@@ -98,7 +98,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 list.add(new MyTrustManager());
                 trustManagers = list.toArray(new TrustManager[list.size()]);
             }
-            
+
             initLocalTrustManager();
         } catch (Exception x) {
             certManager.error(certManager.getPath(), x);

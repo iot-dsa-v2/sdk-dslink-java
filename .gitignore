@@ -29,4 +29,4 @@
 **test.json
 **/*.log.*.zip
 /dslink-v2/dslink.jks
-/dslink-v2-poc/dslink.jks
+/dslink-v2-api/dslink.jks

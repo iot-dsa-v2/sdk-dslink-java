@@ -5,10 +5,8 @@ import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INITIAL
 import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_INVALID_AUTH;
 import static com.acuity.iot.dsa.dslink.protocol.v2.MessageConstants.STS_OK;
 
-import com.acuity.iot.dsa.dslink.io.DSBase64;
 import com.acuity.iot.dsa.dslink.io.DSByteBuffer;
 import com.acuity.iot.dsa.dslink.protocol.DSBrokerConnection;
-import com.acuity.iot.dsa.dslink.protocol.DSKeys;
 import com.acuity.iot.dsa.dslink.transport.DSTransport;
 import com.acuity.iot.dsa.dslink.transport.SocketTransport;
 import java.io.IOException;
@@ -18,9 +16,11 @@ import java.security.SecureRandom;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.dslink.DSPermissionException;
+import org.iot.dsa.io.DSBase64;
 import org.iot.dsa.node.DSBytes;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSString;
+import org.iot.dsa.security.DSKeys;
 import org.iot.dsa.util.DSException;
 
 /**
