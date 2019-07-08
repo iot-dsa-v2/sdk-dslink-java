@@ -4,27 +4,22 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven'
 
-    //sourceCompatibility = 1.8
-    //targetCompatibility = 1.8
-
     group 'org.iot-dsa'
-    version '0.62.1'
+    version '0.63.0'
+    
+    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
 
     repositories {
         mavenLocal()
         jcenter()
     }
 
-    compileJava {
-        afterEvaluate {
-            inputs.property("moduleName", moduleName)
-            doFirst {
-                options.compilerArgs.addAll([
-                        '--module-path', classpath.asPath,
-                        '--add-modules', moduleName
-                ])
-                classpath = files()
-            }
+    jar {
+        manifest {
+            attributes(
+                    'Automatic-Module-Name' : 'org.iot.dsa.' + project.name.replaceAll('-','.')
+            )
         }
     }
 
@@ -36,6 +31,10 @@ subprojects {
     task javadocJar(type: Jar, dependsOn: javadoc) {
         classifier = 'javadoc'
         from javadoc.destinationDir
+    }
+
+    test {
+        useTestNG()
     }
 
     jacocoTestReport {

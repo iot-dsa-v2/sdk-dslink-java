@@ -34,11 +34,6 @@ public class CertNode extends DSValueNode {
         return value;
     }
 
-    public CertNode updateValue(String newVal) {
-        put(VALUE, newVal);
-        return this;
-    }
-    
     @Override
     public void getVirtualActions(DSInfo target, Collection<String> bucket) {
         super.getVirtualActions(target, bucket);
@@ -47,6 +42,11 @@ public class CertNode extends DSValueNode {
             bucket.remove(RenameAction.RENAME);
             bucket.remove(DuplicateAction.DUPLICATE);
         }
+    }
+
+    public CertNode updateValue(String newVal) {
+        put(VALUE, newVal);
+        return this;
     }
 
     @Override

@@ -27,7 +27,7 @@ public class KeyToolUtil extends DSLogger {
                 "-delete",
                 "-keystore", keystore,
                 "-storepass", password,
-                "-alias", "dsa",
+                "-alias", "org/iot/dsa",
         };
         return inst.executeCommand(cmd);
     }
@@ -39,7 +39,7 @@ public class KeyToolUtil extends DSLogger {
                 "-certreq",
                 "-keystore", keystore,
                 "-storepass", password,
-                "-alias", "dsa",
+                "-alias", "org/iot/dsa",
                 "-keyalg", "RSA",
                 "-validity", "18000",
                 "-dname", "CN=dslink-java-v2, O=DSA, C=US",
@@ -57,7 +57,7 @@ public class KeyToolUtil extends DSLogger {
                 "-keystore", keystore,
                 "-storepass", password,
                 "-keypass", password,
-                "-alias", "dsa",
+                "-alias", "org/iot/dsa",
                 "-keyalg", "RSA",
                 "-validity", "18000",
                 "-dname", "CN=dslink-java-v2, O=DSA, C=US"
@@ -72,7 +72,7 @@ public class KeyToolUtil extends DSLogger {
                 "-v",
                 "-keystore", keystore,
                 "-storepass", password,
-                "-alias", "dsa",
+                "-alias", "org/iot/dsa",
         };
         return inst.executeCommand(cmd);
     }
@@ -116,7 +116,7 @@ public class KeyToolUtil extends DSLogger {
                 "-trustcacerts",
                 "-keystore", keystore,
                 "-storepass", password,
-                "-alias", "dsa",
+                "-alias", "org/iot/dsa",
                 "-file", filename
         };
         String result = inst.executeCommand(cmd);

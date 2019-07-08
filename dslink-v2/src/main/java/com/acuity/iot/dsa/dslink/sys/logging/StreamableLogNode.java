@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import org.iot.dsa.logging.DSLevel;
 import org.iot.dsa.logging.DSLogHandler;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
