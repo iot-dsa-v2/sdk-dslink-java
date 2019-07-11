@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSITransport;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSBool;
@@ -48,6 +49,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     private int traceInCols = 0;
     private StringBuilder traceOut;
     private int traceOutCols = 0;
+    private Logger transportLogger;
     private int writeSize = 0;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -75,7 +77,6 @@ public abstract class DSTransport extends DSNode implements DSITransport {
             if (!open) {
                 return;
             }
-            trace(trace() ? "Close" : null);
             open = false;
             notifyAll();
         }
@@ -85,8 +86,8 @@ public abstract class DSTransport extends DSNode implements DSITransport {
      * Called at the end of a message, this trace logs the entire message.
      */
     public void endRecvMessage() {
-        if (trace() && (traceIn != null)) {
-            trace(traceIn.toString());
+        if ((traceIn != null) && getTransportLogger().isLoggable(trace)) {
+            getTransportLogger().log(trace, traceIn.toString());
             traceIn.setLength(0);
             traceIn.append("Recv:\n");
             traceInCols = 0;
@@ -111,8 +112,8 @@ public abstract class DSTransport extends DSNode implements DSITransport {
             close(x);
         }
         writeSize = 0;
-        if (trace() && (traceOut != null)) {
-            trace(traceOut.toString());
+        if ((traceIn != null) && getTransportLogger().isLoggable(trace)) {
+            getTransportLogger().log(trace, traceOut.toString());
             traceOut.setLength(0);
             traceOut.append("Send:\n");
             traceOutCols = 0;
@@ -202,7 +203,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     public int read(byte[] buf, int off, int len) {
         try {
             int ret = doRead(buf, off, len);
-            if (trace()) {
+            if (getTransportLogger().isLoggable(trace)) {
                 if (traceIn == null) {
                     traceIn = new StringBuilder();
                     traceIn.append("Recv:\n");
@@ -231,7 +232,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     public int read(char[] buf, int off, int len) {
         try {
             int ret = doRead(buf, off, len);
-            if (trace() && (ret > 0)) {
+            if (getTransportLogger().isLoggable(trace) && (ret > 0)) {
                 if (traceIn == null) {
                     traceIn = new StringBuilder();
                     traceIn.append("Recv:\n");
@@ -280,7 +281,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
         if (!testOpen()) {
             throw new IllegalStateException("Transport closed");
         }
-        if (trace()) {
+        if (getTransportLogger().isLoggable(trace)) {
             if (traceOut == null) {
                 traceOut = new StringBuilder();
                 traceOut.append("Send:\n");
@@ -319,7 +320,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
         if (!testOpen()) {
             throw new IllegalStateException("Transport closed");
         }
-        if (trace()) {
+        if (getTransportLogger().isLoggable(trace)) {
             if (traceOut == null) {
                 traceOut = new StringBuilder();
                 traceOut.append("Send:\n");
@@ -350,7 +351,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
         if (!testOpen()) {
             throw new IllegalStateException("Transport closed");
         }
-        if (trace()) {
+        if (getTransportLogger().isLoggable(trace)) {
             if (traceOut == null) {
                 traceOut = new StringBuilder();
                 traceOut.append("Send:\n");
@@ -390,7 +391,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
      */
     protected void close(Throwable reason) {
         if (open) {
-            error("", reason);
+            debug(reason);
             closeException = DSException.makeRuntime(reason);
             close();
         }
@@ -436,11 +437,24 @@ public abstract class DSTransport extends DSNode implements DSITransport {
         }
     }
 
+    protected Logger getTransportLogger() {
+        if (transportLogger == null) {
+            transportLogger = Logger.getLogger(
+                    "transport" + getConnection().getPath().replace('/', '.'));
+        }
+        return transportLogger;
+    }
+
+    @Override
+    protected void onStarted() {
+        super.onStarted();
+        getTransportLogger();
+    }
+
     /**
      * Subclasses must call this when the stream is opened.
      */
     protected void setOpen() {
-        trace(trace() ? "Open" : null);
         open = true;
     }
 

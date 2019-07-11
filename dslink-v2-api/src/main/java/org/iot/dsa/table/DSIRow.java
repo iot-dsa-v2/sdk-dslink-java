@@ -4,7 +4,7 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSMap;
 
 /**
- * Represents an index accessible set of object.
+ * Represents an index accessible list of object.
  *
  * @author Aaron Hansen
  */

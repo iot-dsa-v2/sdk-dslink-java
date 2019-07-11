@@ -94,7 +94,7 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
             configOk();
             return true;
         } catch (Throwable x) {
-            error(error() ? getPath() : null, x);
+            debug(debug() ? getPath() : null, x);
             configFault(DSException.makeMessage(x));
         }
         return false;

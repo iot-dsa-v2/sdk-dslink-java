@@ -1,6 +1,7 @@
 package com.acuity.iot.dsa.dslink.protocol.responder;
 
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
+import java.util.logging.Logger;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.responder.InboundRequest;
 import org.iot.dsa.logging.DSLogger;
@@ -31,6 +32,11 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
             link = responder.getLink();
         }
         return link;
+    }
+
+    @Override
+    public Logger getLogger() {
+        return getResponder().getLogger();
     }
 
     public final String getPath() {

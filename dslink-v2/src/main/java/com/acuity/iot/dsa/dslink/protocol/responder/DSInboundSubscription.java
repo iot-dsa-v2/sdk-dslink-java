@@ -157,7 +157,6 @@ public class DSInboundSubscription extends DSInboundRequest
         if (!open) {
             return;
         }
-        trace(trace() ? "Update " + getPath() + " to " + value : null);
         if (qos == 0) {
             synchronized (this) {
                 if (updateHead == null) {

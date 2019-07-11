@@ -68,6 +68,14 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
+    protected void checkConfig() {
+        String uri = getBrokerUri();
+        if ((uri == null) || uri.isEmpty()) {
+            throw new IllegalStateException("Missing broker URI");
+        }
+    }
+
+    @Override
     protected void declareDefaults() {
         super.declareDefaults();
         declareDefault(BROKER_ID, DSString.NULL).setTransient(true).setReadOnly(true);

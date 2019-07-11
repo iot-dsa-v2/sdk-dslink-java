@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.io.NodeDecoder;
 import org.iot.dsa.io.json.Json;
-import org.iot.dsa.logging.DSLogHandler;
+import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSString;
@@ -115,18 +115,16 @@ public abstract class DSLink extends DSNode implements Runnable {
      * @param config Configuration options
      */
     public static DSLink load(DSLinkOptions config) {
-        Logger logger = Logger.getLogger("");
         DSLink ret = null;
         File nodes = config.getNodesFile();
         if (nodes.exists()) {
-            logger.info("Loading node database " + nodes.getAbsolutePath());
             long time = System.currentTimeMillis();
             DSIReader reader = Json.reader(nodes);
             ret = (DSLink) NodeDecoder.decode(reader);
             reader.close();
             ret.init(config);
             time = System.currentTimeMillis() - time;
-            ret.info("Node database loaded: " + time + "ms");
+            ret.info("Database loaded: " + time + "ms");
         } else {
             String type = config.getConfig("linkType", null);
             if (type == null) {
@@ -135,7 +133,7 @@ public abstract class DSLink extends DSNode implements Runnable {
             } else {
                 ret = (DSLink) DSUtil.newInstance(type);
             }
-            ret.info("Creating new node database...");
+            ret.debug("Creating new node database...");
             ret.init(config);
         }
         return ret;
@@ -170,27 +168,25 @@ public abstract class DSLink extends DSNode implements Runnable {
             Class clazz = DSLink.class;
             try {
                 URL src = clazz.getProtectionDomain().getCodeSource().getLocation();
-                info(info() ? src : null);
+                info(src);
             } catch (Throwable t) {
-                debug("Reporting source of DSLink.class", t);
+                debug(null, t);
             }
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
-                    info("Running shutdown hook");
                     shutdown();
                 }
             });
-            info(info() ? "Starting nodes" : null);
             start();
-            long stableDelay = options.getConfig(DSLinkOptions.CFG_STABLE_DELAY, 5000l);
+            long stableDelay = options.getConfig(DSLinkOptions.CFG_STABLE_DELAY, 2000l);
             try {
                 Thread.sleep(stableDelay);
             } catch (Exception x) {
-                debug("Interrupted stable delay", x);
+                debug(null, x);
             }
             try {
-                info(info() ? "Stabilizing nodes" : null);
                 stable();
+                info("Running");
                 while (isRunning()) {
                     synchronized (this) {
                         try {
@@ -257,7 +253,7 @@ public abstract class DSLink extends DSNode implements Runnable {
      */
     protected DSLink init(DSLinkOptions config) {
         this.options = config;
-        DSLogHandler.setRootLevel(config.getLogLevel());
+        DSLogger.DSA.setLevel(config.getLogLevel());
         name = config.getLinkName();
         return this;
     }

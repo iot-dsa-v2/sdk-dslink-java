@@ -32,6 +32,7 @@ public class DSLogHandler extends Handler {
     private StringBuilder builder = new StringBuilder();
     private LogHandlerThread logHandlerThread;
     private int maxQueueSize = 2500;
+
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
@@ -89,6 +90,15 @@ public class DSLogHandler extends Handler {
      */
     public static Level getRootLevel() {
         return Logger.getLogger("").getLevel();
+    }
+
+    /**
+     * Installs the root handler.
+     */
+    public static void init() {
+        if (root == null) {
+            root = Logger.getLogger("");
+        }
     }
 
     /**
@@ -172,11 +182,6 @@ public class DSLogHandler extends Handler {
             root = Logger.getLogger("");
         }
         root.setLevel(level);
-        /*
-        for (Handler h : root.getHandlers()) {
-            h.setLevel(level);
-        }
-        */
     }
 
     /**
@@ -387,14 +392,16 @@ public class DSLogHandler extends Handler {
     ///////////////////////////////////////////////////////////////////////////
 
     static {
-        Logger rootLogger = Logger.getLogger("");
-        rootLevel = rootLogger.getLevel();
-        for (Handler handler : rootLogger.getHandlers()) {
-            rootLogger.removeHandler(handler);
+        if (root == null) {
+            root = Logger.getLogger("");
+        }
+        rootLevel = root.getLevel();
+        for (Handler handler : root.getHandlers()) {
+            root.removeHandler(handler);
         }
         DSLogHandler async = new DSLogHandler();
         async.setLevel(rootLevel);
-        rootLogger.addHandler(async);
+        root.addHandler(async);
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         pw.println();
