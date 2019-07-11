@@ -316,6 +316,9 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
      * Override point, this returns the result of hasMessagesToSend.
      */
     protected boolean hasSomethingToSend() {
+        if (!getTransport().isOpen()) {
+            return false;
+        }
         if (hasAckToSend() || hasPingToSend()) {
             return true;
         }
@@ -357,12 +360,12 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     }
 
     /**
-     * Clear the outgoing queues and waits for the the read and write threads to exit.
+     * Clear the outgoing queues.
      */
     protected void onDisconnected() {
         reqQueue.clear();
         resQueue.clear();
-        sendMessage();
+        sendMessage(); //todo why is this here?
     }
 
     /**
@@ -521,7 +524,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
             } catch (Exception x) {
                 if (connected) {
                     connected = false;
-                    error(getPath(), x);
+                    debug(x);
                     getConnection().connDown(DSException.makeMessage(x));
                 }
             }
@@ -554,7 +557,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
             } catch (Exception x) {
                 if (connected) {
                     connected = false;
-                    error(getPath(), x);
+                    debug(x);
                     getConnection().connDown(DSException.makeMessage(x));
                 }
             } finally {

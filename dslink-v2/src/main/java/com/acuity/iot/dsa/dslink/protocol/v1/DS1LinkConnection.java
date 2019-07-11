@@ -50,10 +50,6 @@ public class DS1LinkConnection extends DSBrokerConnection {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void checkConfig() {
-    }
-
-    @Override
     protected void declareDefaults() {
         super.declareDefaults();
         declareDefault(WS_URI, DSString.NULL).setReadOnly(true).setTransient(true);

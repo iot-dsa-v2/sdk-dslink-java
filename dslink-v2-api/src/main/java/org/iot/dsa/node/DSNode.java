@@ -219,7 +219,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     /**
      * Singleton instance, fired whenever a child value changes, as well as when nodes that
-     * implement DSIValue change.  There may be a child info, but no data accompanying this event.
+     * implement DSIValue change.  There may be a child info, the data will be the element value.
      */
     public static final DSEvent VALUE_CHANGED_EVENT = new DSEvent(VALUE_CHANGED);
 
@@ -688,7 +688,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @see DSAction#invoke(DSInfo, ActionInvocation)
      */
     public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
-        debug(debug() ? String
+        trace(trace() ? String
                 .format("action=%s, target=%s, params=%s", action, target, request.getParameters())
                       : null);
         return action.getAction().invoke(target, request);
@@ -911,7 +911,11 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 } catch (Exception x) {
                     error(getPath(), x);
                 }
-                fire(VALUE_CHANGED_EVENT, info, null);
+                if (info.isValue()) {
+                    fire(VALUE_CHANGED_EVENT, info, info.getElement());
+                } else {
+                    fire(VALUE_CHANGED_EVENT, info, null);
+                }
             }
         }
         return this;
@@ -1216,7 +1220,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (event == null) {
             throw new NullPointerException("Null event");
         }
-        debug(debug() ? String
+        trace(trace() ? String
                 .format("event=%s, child=%s, data=%s", event.getEventId(), child, data) : null);
         Subscription sub = subscription;
         while (sub != null) {
@@ -1235,12 +1239,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     @Override
     protected String getLogName() {
         if (getParent() != null) {
-            return getParent().getLogger().getName() + '.' + getName().replace('.', '_');
+            return "dsa" + getPath()
+                    .replace('.', '_')
+                    .replace(' ', '_')
+                    .replace('/', '.');
         }
-        if (isStarted()) {
-            return "org/iot/dsa";
-        }
-        return super.getLogName();
+        return "dsa";
     }
 
     /**

@@ -96,6 +96,7 @@ public abstract class DSConnection extends DSBaseConnection {
             put(stateTime, DSDateTime.now());
             notifyConnectedDescendants(this, this);
             super.connDown(reason);
+            info("Disconnected");
             try {
                 onDisconnected();
             } catch (Exception x) {
@@ -127,6 +128,7 @@ public abstract class DSConnection extends DSBaseConnection {
             put(stateTime, DSDateTime.valueOf(now));
             notifyConnectedDescendants(this, this);
             super.connOk();
+            info("Connected");
             try {
                 onConnected();
             } catch (Exception x) {
@@ -147,21 +149,18 @@ public abstract class DSConnection extends DSBaseConnection {
             debug(debug() ? "Not disconnected, ignoring connect()" : null);
             return;
         }
+        if (!isEnabled() || !canConnect()) {
+            return;
+        }
         debug(debug() ? "Connect" : null);
         put(state, DSConnectionState.CONNECTING);
         put(stateTime, DSDateTime.now());
         notifyConnectedDescendants(this, this);
-        if (isEnabled() && canConnect()) {
-            try {
-                doConnect();
-            } catch (Throwable e) {
-                error(error() ? getPath() : null, e);
-                connDown(DSException.makeMessage(e));
-            }
-        } else {
-            put(state, DSConnectionState.DISCONNECTED);
-            put(stateTime, DSDateTime.now());
-            notifyConnectedDescendants(this, this);
+        try {
+            doConnect();
+        } catch (Throwable e) {
+            error(error() ? getPath() : null, e);
+            connDown(DSException.makeMessage(e));
         }
     }
 
@@ -170,7 +169,9 @@ public abstract class DSConnection extends DSBaseConnection {
      * respective callbacks.
      */
     public void disconnect() {
-        debug(debug() ? "Disconnect" : null);
+        if (getConnectionState().isDisconnected()) {
+            return;
+        }
         put(state, DSConnectionState.DISCONNECTING);
         put(stateTime, DSDateTime.now());
         notifyConnectedDescendants(this, this);
@@ -184,6 +185,7 @@ public abstract class DSConnection extends DSBaseConnection {
         notifyConnectedDescendants(this, this);
         down = true;
         updateStatus(null);
+        info("Disconnected");
         try {
             onDisconnected();
         } catch (Exception x) {

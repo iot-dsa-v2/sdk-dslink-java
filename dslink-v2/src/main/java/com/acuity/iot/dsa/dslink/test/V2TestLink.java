@@ -31,6 +31,11 @@ public class V2TestLink extends DSRootLink {
 
     public static class TestConnection extends DS2LinkConnection {
 
+        @Override
+        public void checkConfig() {
+        }
+
+        @Override
         public String getPathInBroker() {
             return "";
         }
