@@ -1,5 +1,6 @@
 /**
- * Node serialization and streaming abstraction for JSON and MsgPack.
+ * Node serialization and a streaming abstraction for JSON and MsgPack that uses the
+ * DSElement types.
  *
  * @author Aaron Hansen
  */

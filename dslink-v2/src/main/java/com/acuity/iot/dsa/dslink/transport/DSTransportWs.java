@@ -50,7 +50,7 @@ public abstract class DSTransportWs extends DSTransport {
                 session = null;
             }
         } catch (IOException x) {
-            debug("", x);
+            debug(null, x);
         }
         getConnection().getSession().recvMessage(true);
     }
@@ -66,7 +66,7 @@ public abstract class DSTransportWs extends DSTransport {
     @OnClose
     public void onClose(CloseReason reason) {
         if (isOpen()) {
-            info("Remotely closed: " + reason.toString());
+            debug("Remotely closed: " + reason.toString());
             close();
         }
     }
@@ -80,9 +80,6 @@ public abstract class DSTransportWs extends DSTransport {
 
     @OnMessage
     public void onMessage(ByteBuffer buf, boolean isLast) {
-        if (!isOpen()) {
-            return;
-        }
         synchronized (this) {
             getBinReadBuffer().put(buf);
             notifyAll();
@@ -96,9 +93,6 @@ public abstract class DSTransportWs extends DSTransport {
 
     @OnMessage
     public void onMessage(String msgPart, boolean isLast) {
-        if (!isOpen()) {
-            return;
-        }
         synchronized (this) {
             getTextReadBuffer().put(msgPart);
             notifyAll();

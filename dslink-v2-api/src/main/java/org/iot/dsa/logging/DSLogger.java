@@ -60,6 +60,8 @@ public class DSLogger {
     public static final Level error = Level.SEVERE;
     public static final Level off = Level.OFF;
 
+    public static final Logger DSA = Logger.getLogger("dsa");
+
     /////////////////////////////////////////////////////////////////
     // Instance Fields
     /////////////////////////////////////////////////////////////////
@@ -147,6 +149,16 @@ public class DSLogger {
         if (msg != null) {
             getLogger().log(error, msg);
         }
+    }
+
+    /**
+     * Override point, returns the console logger by default.
+     */
+    public Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger(getLogName());
+        }
+        return logger;
     }
 
     /**
@@ -280,17 +292,7 @@ public class DSLogger {
      * Override point, returns the simple class name by default.
      */
     protected String getLogName() {
-        return getClass().getSimpleName();
-    }
-
-    /**
-     * Override point, returns the console logger by default.
-     */
-    protected Logger getLogger() {
-        if (logger == null) {
-            logger = Logger.getLogger(getLogName());
-        }
-        return logger;
+        return "dsa";
     }
 
     protected void setLogger(Logger logger) {
@@ -306,6 +308,14 @@ public class DSLogger {
             return null;
         }
         return obj.toString();
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Initialization
+    /////////////////////////////////////////////////////////////////
+
+    static {
+        DSLogHandler.init();
     }
 
 

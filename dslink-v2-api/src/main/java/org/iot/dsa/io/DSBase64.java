@@ -8,6 +8,8 @@ import org.iot.dsa.util.DSException;
  * Thread-safe Base64 encoder and decoder.  This only exists because we had to be compatible with
  * Java 6.  The one benefit of this is that is can decode url safe and unsafe without prior
  * knowledge of the encoding.
+ *
+ * @author Aaron Hansen
  */
 public class DSBase64 {
 
@@ -33,7 +35,7 @@ public class DSBase64 {
     ///////////////////////////////////////////////////////////
 
     /**
-     * Decodes a base 64 encoded string.  Will decodeKeys both url safe and unsafe.
+     * Decodes a base 64 encoded string.  Will decode both url safe and unsafe.
      *
      * @param str Most not be null.
      * @return Never null.

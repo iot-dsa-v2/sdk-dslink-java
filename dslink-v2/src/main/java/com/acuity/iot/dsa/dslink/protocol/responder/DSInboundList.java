@@ -88,7 +88,6 @@ public class DSInboundList extends DSInboundRequest
         }
         state = STATE_CLOSE_PENDING;
         enqueueResponse();
-        debug(debug() ? getPath() + " list closed locally" : null);
     }
 
     @Override
@@ -99,7 +98,6 @@ public class DSInboundList extends DSInboundRequest
         state = STATE_CLOSE_PENDING;
         closeReason = reason;
         enqueueResponse();
-        debug(debug() ? getPath() + " list closed locally" : null, reason);
     }
 
     @Override
@@ -129,7 +127,6 @@ public class DSInboundList extends DSInboundRequest
             return;
         }
         state = STATE_CLOSED;
-        debug(debug() ? getPath() + " list closed" : null);
         synchronized (this) {
             updateHead = updateTail = null;
         }
