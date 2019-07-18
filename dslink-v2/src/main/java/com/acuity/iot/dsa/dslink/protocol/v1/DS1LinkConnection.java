@@ -62,9 +62,7 @@ public class DS1LinkConnection extends DSBrokerConnection {
 
     protected void initializeConnection() {
         try {
-            String uri = makeHandshakeUri();
-            setBrokerUri(uri);
-            debug(debug() ? "Broker URI " + uri : null);
+            String uri = getBrokerUri();
             DSMap response = Json.read(connect(new URL(uri), 0), true).toMap();
             String s = response.getString("dsId");
             if (s == null) {
@@ -109,6 +107,13 @@ public class DS1LinkConnection extends DSBrokerConnection {
         transport.setConnectionUrl(uri);
         debug(debug() ? "Transport type: " + transport.getClass().getName() : null);
         return transport;
+    }
+
+    @Override
+    protected void onStarted() {
+        super.onStarted();
+        setBrokerUri(makeHandshakeUri());
+        debug(debug() ? "Broker URI " + getBrokerUri() : null);
     }
 
     protected void setWsUri(String arg) {
