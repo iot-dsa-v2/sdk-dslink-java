@@ -13,6 +13,7 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
+import org.iot.dsa.dslink.DSLinkConnection;
 
 /**
  * Abstract websocket transport.
@@ -52,7 +53,15 @@ public abstract class DSTransportWs extends DSTransport {
         } catch (IOException x) {
             debug(null, x);
         }
-        getConnection().getSession().recvMessage(true);
+        synchronized (this) {
+            notifyAll();
+            if (available() > 0) {
+                DSLinkConnection conn = getConnection();
+                if (conn != null) {
+                    conn.getSession().recvMessage(true);
+                }
+            }
+        }
     }
 
     @Override
@@ -67,6 +76,7 @@ public abstract class DSTransportWs extends DSTransport {
     public void onClose(CloseReason reason) {
         if (isOpen()) {
             debug("Remotely closed: " + reason.toString());
+            getConnection().connDown(reason.toString());
             close();
         }
     }
@@ -74,6 +84,7 @@ public abstract class DSTransportWs extends DSTransport {
     @OnError
     public void onError(Throwable err) {
         if (isOpen()) {
+            getConnection().connDown(err.toString());
             close(err);
         }
     }
@@ -188,6 +199,13 @@ public abstract class DSTransportWs extends DSTransport {
      */
     protected EndpointConfig getConfig() {
         return config;
+    }
+
+    /**
+     * The session passed to onOpen.
+     */
+    protected Session getSession() {
+        return session;
     }
 
     ///////////////////////////////////////////////////////////////////////////
