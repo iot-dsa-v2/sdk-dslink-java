@@ -695,6 +695,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
+     * True if this is the default instance for the type.
+     */
+    public final boolean isDefaultInstance() {
+        return defaultInstance == defaultDefaultInstance;
+    }
+
+    /**
      * Returns false.
      */
     @Override
@@ -1200,9 +1207,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * The is only called once for each class.  It's purpose is to define the default children of
-     * the node subtype.  Use the declareDefault method to add non-removable children that all
-     * runtime instances should have.  Be sure to call super.declareDefaults().
+     * This only called once for each class.  It's purpose is to define the default children of
+     * the node subtype.  Use the declareDefault method to add permanent children that all
+     * runtime instances will have.  Be sure to call super.declareDefaults().
      *
      * @see #declareDefault(String, DSIObject) To create non-removable children.
      */
@@ -1245,13 +1252,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                     .replace('/', '.');
         }
         return "dsa";
-    }
-
-    /**
-     * True if this is the default instance for the type.
-     */
-    protected final boolean isDefaultInstance() {
-        return defaultInstance == defaultDefaultInstance;
     }
 
     /**
