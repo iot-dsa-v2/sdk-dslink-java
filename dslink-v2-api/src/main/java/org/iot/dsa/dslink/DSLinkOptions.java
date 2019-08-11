@@ -183,9 +183,8 @@ public class DSLinkOptions {
     public DSMap getDslinkMap() {
         if (dslinkMap == null) {
             File file = null;
-            File home = this.home;
-            if (home != null) {
-                file = new File(home, getDslinkJson());
+            if (home != null) { //home cannot be in dslink.json
+                file = makeFile(getHome(), getDslinkJson());
             } else {
                 file = new File(getDslinkJson());
             }
@@ -236,7 +235,7 @@ public class DSLinkOptions {
      */
     public DSKeys getKeys() {
         if (keys == null) {
-            setKeys(new File(getHome(), getConfig(CFG_KEY_FILE, ".key")));
+            setKeys(makeFile(getHome(), getConfig(CFG_KEY_FILE, ".key")));
         }
         return keys;
     }
@@ -313,7 +312,7 @@ public class DSLinkOptions {
     public File getNodesFile() {
         if (nodesFile == null) {
             String path = getConfig(CFG_NODE_FILE, "nodes.zip");
-            nodesFile = new File(getHome(), path);
+            nodesFile = makeFile(getHome(), path);
         }
         return nodesFile;
     }
@@ -398,7 +397,12 @@ public class DSLinkOptions {
     public DSLinkOptions setHome(String path) {
         home = new File(".");
         if ((path != null) && !path.isEmpty()) {
-            home = new File(home, path);
+            home = makeFile(home, path);
+        } else {
+            try {
+                home = home.getCanonicalFile();
+            } catch (Exception x) {
+            }
         }
         home = home.getAbsoluteFile();
         return this;
@@ -421,7 +425,7 @@ public class DSLinkOptions {
     }
 
     public DSLinkOptions setKeys(String path) {
-        return setKeys(new File(getHome(), path));
+        return setKeys(makeFile(getHome(), path));
     }
 
     public DSLinkOptions setLinkName(String arg) {
@@ -540,6 +544,17 @@ public class DSLinkOptions {
         return config;
     }
 
+    private File makeFile(File base, String path) {
+        File file = new File(path);
+        if (!file.isAbsolute() && (base != null)) {
+            file = new File(base, path);
+            try {
+                file = file.getCanonicalFile();
+            } catch (Exception x) {
+            }
+        }
+        return file.getAbsoluteFile();
+    }
 
     /**
      * Called by parseRequest for each key/value pair.
