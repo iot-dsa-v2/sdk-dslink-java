@@ -71,6 +71,9 @@ public class DS1Responder extends DSResponder {
                         break;
                     case 'i':  //invoke
                         if (!method.equals("invoke")) {
+                            if (method.equals("init")) {
+                                break;
+                            }
                             sendInvalidMethod(rid, method);
                         }
                         processInvoke(rid, map);
