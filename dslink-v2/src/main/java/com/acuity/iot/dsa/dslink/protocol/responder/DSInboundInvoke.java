@@ -39,7 +39,6 @@ public class DSInboundInvoke extends DSInboundRequest
     private static final int STATE_UPDATES = 2;
     private static final int STATE_CLOSE_PENDING = 3;
     private static final int STATE_CLOSED = 4;
-    private static final int STATE_RAW = 10;
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -93,8 +92,7 @@ public class DSInboundInvoke extends DSInboundRequest
             return;
         }
         closeReason = reason;
-        state = STATE_CLOSE_PENDING;
-        enqueueResponse();
+        close();
     }
 
     /**
@@ -155,7 +153,8 @@ public class DSInboundInvoke extends DSInboundRequest
                 setPath(path.getPath());
                 result = responder.onInvoke(this);
                 if (result instanceof RawActionResult) {
-                    state = STATE_RAW;
+                    state = STATE_UPDATES;
+                    return;
                 }
             } else {
                 DSInfo info = path.getTargetInfo();
@@ -194,7 +193,11 @@ public class DSInboundInvoke extends DSInboundRequest
         enqueueUpdate(new Update(row));
     }
 
+    /**
+     * For the broker to use as a pass-thru mechanism.
+     */
     public void sendRaw(DSMap raw) {
+        state = STATE_UPDATES;
         enqueueUpdate(new Update(raw));
     }
 
@@ -219,9 +222,6 @@ public class DSInboundInvoke extends DSInboundRequest
         }
         writeBegin(writer);
         switch (state) {
-            case STATE_RAW:
-                writeRaw(writer);
-                break;
             case STATE_INIT:
                 writeColumns(writer);
                 writeInitialResults(writer);
@@ -306,14 +306,11 @@ public class DSInboundInvoke extends DSInboundRequest
         if (result == null) {
             return;
         }
-        DSRuntime.run(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    result.onClose();
-                } catch (Exception x) {
-                    error(getPath(), x);
-                }
+        DSRuntime.run(() -> {
+            try {
+                result.onClose();
+            } catch (Exception x) {
+                error(getPath(), x);
             }
         });
     }
@@ -437,29 +434,17 @@ public class DSInboundInvoke extends DSInboundRequest
         }
     }
 
-    private void writeRaw(MessageWriter writer) {
+    /**
+     * Only called by writeUpdates.
+     */
+    private void writeRaw(Update update, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
-        Update update = updateHead; //peak ahead
-        if (update == null) {
-            return;
-        }
         DSMap map;
-        DSResponder responder = getResponder();
-        while (true) {
-            update = dequeueUpdate();
-            map = update.raw;
-            map.remove("rid");
-            for (DSMap.Entry e : map) {
-                out.key(e.getKey());
-                out.value(e.getValue());
-            }
-            if (updateHead == null) {
-                break;
-            }
-            if (responder.shouldEndMessage()) {
-                enqueueResponse();
-                break;
-            }
+        map = update.raw;
+        map.remove("rid");
+        for (DSMap.Entry e : map) {
+            out.key(e.getKey());
+            out.value(e.getValue());
         }
         String stream = map.get("stream", "");
         if (stream.equals("closed")) {
@@ -468,11 +453,15 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     private void writeUpdates(MessageWriter writer) {
-        DSIWriter out = writer.getWriter();
         Update update = updateHead; //peak ahead
         if (update == null) {
             return;
         }
+        if (update.isRaw()) {
+            writeRaw(update, writer);
+            return;
+        }
+        DSIWriter out = writer.getWriter();
         if (update.type != null) {
             out.key("meta")
                .beginMap()
@@ -494,7 +483,8 @@ public class DSInboundInvoke extends DSInboundRequest
             if ((updateHead == null) || (updateHead.type != null)) {
                 break;
             }
-            if (responder.shouldEndMessage()) {
+            //raw messaging won't be mixed with normal messaging, but best to be safe
+            if (updateHead.isRaw() || responder.shouldEndMessage()) {
                 enqueueResponse();
                 break;
             }
@@ -567,6 +557,10 @@ public class DSInboundInvoke extends DSInboundRequest
                 this.endIndex = index + len - 1; //inclusive end
             }
             this.type = type;
+        }
+
+        boolean isRaw() {
+            return type == UpdateType.RAW;
         }
 
         String typeKey() {

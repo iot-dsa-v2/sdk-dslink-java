@@ -5,14 +5,17 @@ subprojects {
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.65.1'
+    version '0.66.0'
     
     targetCompatibility = JavaVersion.VERSION_1_8
     sourceCompatibility = JavaVersion.VERSION_1_8
 
     repositories {
-        mavenLocal()
         jcenter()
+        mavenLocal()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
 
     jar {
