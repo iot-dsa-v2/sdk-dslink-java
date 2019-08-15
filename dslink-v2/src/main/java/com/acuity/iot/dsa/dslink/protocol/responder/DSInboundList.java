@@ -31,6 +31,7 @@ import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.security.DSPermission;
+import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -95,9 +96,8 @@ public class DSInboundList extends DSInboundRequest
         if (!isOpen()) {
             return;
         }
-        state = STATE_CLOSE_PENDING;
         closeReason = reason;
-        enqueueResponse();
+        close();
     }
 
     @Override
@@ -183,6 +183,7 @@ public class DSInboundList extends DSInboundRequest
                 response = this;
             }
         } catch (Exception x) {
+            update("$disconnectedTs", DSDateTime.now().toElement());
             error(getPath(), x);
             close(x);
             return;
@@ -489,10 +490,6 @@ public class DSInboundList extends DSInboundRequest
      * Called by encodeTarget for actions.
      */
     private void encodeTargetAction(ApiObject object, MessageWriter writer) {
-        DSInfo info = null;
-        if (object instanceof DSInfo) {
-            info = (DSInfo) object;
-        }
         ActionSpec action = object.getAction();
         DSAction dsAction = null;
         if (action instanceof DSAction) {
@@ -651,9 +648,7 @@ public class DSInboundList extends DSInboundRequest
             String type = arg.getString(DSMetadata.TYPE);
             if ("bool".equals(type)) {
                 DSList range = (DSList) arg.remove(DSMetadata.BOOLEAN_RANGE);
-                if ((range == null) || (range.size() != 2)) {
-                    return;
-                } else {
+                if ((range != null) || (range.size() == 2)) {
                     String utf8 = DSString.UTF8.toString();
                     cacheBuf.setLength(0);
                     cacheBuf.append(type);
@@ -784,6 +779,7 @@ public class DSInboundList extends DSInboundRequest
         RemoveUpdate(String name) {
             this.name = name;
         }
+
     }
 
     private static class RootInfo extends DSInfo {
