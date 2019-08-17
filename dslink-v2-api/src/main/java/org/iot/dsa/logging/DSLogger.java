@@ -83,6 +83,9 @@ public class DSLogger {
      * Log a finer message.
      */
     public void debug(Object msg) {
+        if (msg instanceof Throwable) {
+            debug(null, (Throwable) msg);
+        }
         if (msg != null) {
             getLogger().log(debug, string(msg));
         }
@@ -124,6 +127,9 @@ public class DSLogger {
      * Log a severe message.
      */
     public void error(Object msg) {
+        if (msg instanceof Throwable) {
+            error(null, (Throwable) msg);
+        }
         if (msg != null) {
             getLogger().log(error, string(msg));
         }
@@ -172,6 +178,9 @@ public class DSLogger {
      * Log an infrequent major lifecycle event.
      */
     public void info(Object msg) {
+        if (msg instanceof Throwable) {
+            info(null, (Throwable) msg);
+        }
         if (msg != null) {
             getLogger().log(info, string(msg));
         }
@@ -213,6 +222,9 @@ public class DSLogger {
      * Log a trace or verbose event.
      */
     public void trace(Object msg) {
+        if (msg instanceof Throwable) {
+            trace(null, (Throwable) msg);
+        }
         if (msg != null) {
             getLogger().log(trace, string(msg));
         }
@@ -261,6 +273,9 @@ public class DSLogger {
      * Log a trace or verbose event.
      */
     public void warn(Object msg) {
+        if (msg instanceof Throwable) {
+            warn(null, (Throwable) msg);
+        }
         if (msg != null) {
             getLogger().log(warn, string(msg));
         }

@@ -38,7 +38,7 @@ public class RequesterSubscriptionsReconnectTest {
         Assert.assertTrue(link.getConnection().isConnected());
         DSIRequester requester = link.getConnection().getRequester();
         requester.subscribe("/main/abc", DSLong.valueOf(0), new MyHandler());
-        long end = System.currentTimeMillis() + 10000;
+        long end = System.currentTimeMillis() + 15000;
         synchronized (mutex) {
             while (((testStatus == null) || (!testStatus.isOk()))
                     && (System.currentTimeMillis() < end)) {
@@ -49,12 +49,12 @@ public class RequesterSubscriptionsReconnectTest {
         testStatus = null;
         link.getConnection().setEnabled(false);
         link.getConnection().disconnect();
-        end = System.currentTimeMillis() + 10000;
+        end = System.currentTimeMillis() + 15000;
         while (link.getConnection().isConnected() && (System.currentTimeMillis() < end)) {
             mutex.wait(100);
         }
         Assert.assertFalse(link.getConnection().isConnected());
-        end = System.currentTimeMillis() + 10000;
+        end = System.currentTimeMillis() + 15000;
         synchronized (mutex) {
             while (((testStatus == null) || (!testStatus.isDown()))
                     && (System.currentTimeMillis() < end)) {
@@ -65,9 +65,9 @@ public class RequesterSubscriptionsReconnectTest {
         testStatus = null;
         link.getConnection().setEnabled(true);
         link.getConnection().connect();
-        link.getConnection().waitForConnection(10000);
+        link.getConnection().waitForConnection(15000);
         Assert.assertTrue(link.getConnection().isConnected());
-        end = System.currentTimeMillis() + 10000;
+        end = System.currentTimeMillis() + 15000;
         synchronized (mutex) {
             while (((testStatus == null) || (!testStatus.isOk()))
                     && (System.currentTimeMillis() < end)) {
