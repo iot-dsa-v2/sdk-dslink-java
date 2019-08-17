@@ -5,7 +5,7 @@ subprojects {
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.66.0'
+    version '0.66.1'
     
     targetCompatibility = JavaVersion.VERSION_1_8
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -27,12 +27,12 @@ subprojects {
     }
 
     task sourcesJar(group: 'build', type: Jar, dependsOn: classes) {
-        classifier = 'sources'
+        archiveClassifier = 'sources'
         from sourceSets.main.allJava
     }
 
     task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
+        archiveClassifier = 'javadoc'
         from javadoc.destinationDir
     }
 
@@ -60,5 +60,5 @@ allprojects {
 }
 
 wrapper {
-    gradleVersion = '5.5.1'
+    gradleVersion = '5.6'
 }

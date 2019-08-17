@@ -648,7 +648,7 @@ public class DSInboundList extends DSInboundRequest
             String type = arg.getString(DSMetadata.TYPE);
             if ("bool".equals(type)) {
                 DSList range = (DSList) arg.remove(DSMetadata.BOOLEAN_RANGE);
-                if ((range != null) || (range.size() == 2)) {
+                if ((range != null) && (range.size() == 2)) {
                     String utf8 = DSString.UTF8.toString();
                     cacheBuf.setLength(0);
                     cacheBuf.append(type);

@@ -63,6 +63,7 @@ public abstract class DSConnection extends DSBaseConnection {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private long lastConnectAttempt = 0;
     private long lastPing;
     private long retryConnectMs = 0;
     protected DSInfo state = getInfo(STATE);
@@ -375,12 +376,13 @@ public abstract class DSConnection extends DSBaseConnection {
                         debug(debug() ? getPath() : null, x);
                     }
                 }
-            } else {
-                if (isEnabled() && getConnectionState().isDisconnected()) {
-                    if (getTimeInState() >= retryConnectMs) {
-                        retryConnectMs = Math.min(60000, retryConnectMs + getUpdateInterval());
-                        connect();
-                    }
+            } else if (isEnabled() && getConnectionState().isDisconnected()) {
+                long now = System.currentTimeMillis();
+                long millis = now - lastConnectAttempt;
+                if (millis >= retryConnectMs) {
+                    lastConnectAttempt = now;
+                    retryConnectMs = Math.min(60000, retryConnectMs + getUpdateInterval());
+                    connect();
                 }
             }
         } finally {

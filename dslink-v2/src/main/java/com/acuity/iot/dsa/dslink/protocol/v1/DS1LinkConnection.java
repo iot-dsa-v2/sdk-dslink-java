@@ -112,7 +112,10 @@ public class DS1LinkConnection extends DSBrokerConnection {
     @Override
     protected void onStarted() {
         super.onStarted();
-        setBrokerUri(makeHandshakeUri());
+        String uri = makeHandshakeUri();
+        if (uri != null) {
+            setBrokerUri(uri);
+        }
         debug(debug() ? "Broker URI " + getBrokerUri() : null);
     }
 
@@ -175,7 +178,10 @@ public class DS1LinkConnection extends DSBrokerConnection {
         StringBuilder builder = new StringBuilder();
         DSLink link = getLink();
         String uri = link.getOptions().getBrokerUri();
-        if ((uri == null) || uri.isEmpty() || !uri.contains("://")) {
+        if ((uri == null) || uri.isEmpty()) {
+            return null;
+        }
+        if (!uri.contains("://")) {
             throw new IllegalArgumentException("Invalid broker uri: " + uri);
         }
         builder.append(uri);

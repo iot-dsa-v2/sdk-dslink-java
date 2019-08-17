@@ -27,8 +27,6 @@ public class StreamTableTest {
     // Fields
     // ------
 
-    private static boolean success = false;
-
     // Methods
     // -------
 
@@ -39,7 +37,6 @@ public class StreamTableTest {
     }
 
     private void doit(DSLink link) throws Exception {
-        success = false;
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         link.getConnection().waitForConnection(5000);
