@@ -22,14 +22,18 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
     }
 
     /**
-     * This fires the VALUE_CHANGED event when the value child changes.  Overrides should call
-     * super.onChildChanged.
+     * This fires the VALUE_CHANGED event when the value child changes, on this node and the parent
+     * node.  Overrides should call super.onChildChanged.
      */
     @Override
     public void onChildChanged(DSInfo child) {
         DSInfo info = getValueChild();
         if (child == info) {
-            fire(VALUE_CHANGED_EVENT, child, null);
+            fire(VALUE_CHANGED_EVENT, child, child.getValue());
+            DSNode parent = getParent();
+            if (parent != null) {
+                parent.fire(VALUE_CHANGED_EVENT, getInfo(), child.getValue());
+            }
         }
     }
 

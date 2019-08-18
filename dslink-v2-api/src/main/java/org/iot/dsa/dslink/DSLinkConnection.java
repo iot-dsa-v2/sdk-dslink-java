@@ -1,6 +1,7 @@
 package org.iot.dsa.dslink;
 
 import org.iot.dsa.conn.DSConnection;
+import org.iot.dsa.node.DSInfo;
 
 /**
  * Abstract representation of a DSA connection.  Subclasses are responsible for providing
@@ -102,18 +103,21 @@ public abstract class DSLinkConnection extends DSConnection {
     @Override
     protected void onDisconnected() {
         super.onDisconnected();
+        DSInfo info = getInfo(TRANSPORT);
+        if (info != null) {
+            remove(info.setLocked(false));
+        }
         transport = null;
-        remove(TRANSPORT);
     }
 
     protected void setSession(DSISession session) {
         this.session = session;
-        put(SESSION, session).setTransient(true);
+        put(SESSION, session).setTransient(true).setLocked(true);
     }
 
     protected void setTransport(DSITransport transport) {
         this.transport = transport;
-        put(TRANSPORT, transport).setTransient(true);
+        put(TRANSPORT, transport).setTransient(true).setLocked(true);
     }
 
 }

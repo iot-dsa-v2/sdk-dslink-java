@@ -102,7 +102,6 @@ public class SysBackupService extends DSNode implements Runnable {
             File nodes = getLink().getOptions().getNodesFile();
             String name = nodes.getName();
             if (nodes.exists()) {
-                info("Backing up the node database...");
                 StringBuilder buf = new StringBuilder();
                 Calendar cal = DSTime.getCalendar(System.currentTimeMillis());
                 if (name.endsWith(".zip")) {
