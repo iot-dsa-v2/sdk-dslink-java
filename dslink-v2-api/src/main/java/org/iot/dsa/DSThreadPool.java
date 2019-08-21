@@ -3,7 +3,7 @@ package org.iot.dsa;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.iot.dsa.time.DSTime;
+import org.iot.dsa.time.Time;
 
 /**
  * A simple thread pool with the option for an unbounded maximum number of threads.
@@ -193,13 +193,13 @@ class DSThreadPool {
                         while ((r == null) && alive) {
                             r = dequeue();
                             if (r == null) {
-                                if (((System.currentTimeMillis() - start) > DSTime.MILLIS_MINUTE) &&
+                                if (((System.currentTimeMillis() - start) > Time.MILLIS_MINUTE) &&
                                         (numThreads > min)) {
                                     idleThreads--;
                                     return;
                                 } else {
                                     try {
-                                        DSThreadPool.this.wait(DSTime.MILLIS_FIVE_SECONDS);
+                                        DSThreadPool.this.wait(Time.MILLIS_FIVE_SECONDS);
                                     } catch (Exception ignore) {
                                     }
                                 }

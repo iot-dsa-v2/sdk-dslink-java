@@ -313,11 +313,18 @@ public class DSInfo implements ApiObject, GroupListener {
         return getFlag(DECLARED);
     }
 
-     /**
+    /**
      * Whether or not the current value, or the default value is copied.
      */
     public boolean isDefaultOnCopy() {
         return getFlag(DEFAULT_ON_COPY);
+    }
+
+    /**
+     * True if declared or locked.
+     */
+    public boolean isFrozen() {
+        return isDeclared() || isLocked();
     }
 
     /**
@@ -342,13 +349,6 @@ public class DSInfo implements ApiObject, GroupListener {
             return true;
         }
         return object.isNull();
-    }
-
-    /**
-     * True if declared or locked.
-     */
-    public boolean isPermanent() {
-        return isDeclared() || isLocked();
     }
 
     /**

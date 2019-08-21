@@ -300,7 +300,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * default implementation returns false if the child is permanent.
      */
     public boolean canDuplicate(DSInfo child) {
-        return !child.isPermanent();
+        return !child.isFrozen();
     }
 
     /**
@@ -319,7 +319,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     public DSNode clear() {
         DSInfo info = getFirstInfo();
         while (info != null) {
-            if (!info.isPermanent()) {
+            if (!info.isFrozen()) {
                 remove(info);
             }
             info = info.next();
@@ -632,7 +632,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 return virtualInfo(sa.getSetActionName(), sa.getSetAction());
             }
         }
-        if (!target.isPermanent()) {
+        if (!target.isFrozen()) {
             switch (name) {
                 case DeleteAction.DELETE:
                     info = virtualInfo(name, DeleteAction.INSTANCE);
@@ -677,7 +677,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 bucket.add(((DSISetAction) target.get()).getSetActionName());
             }
         }
-        if (!target.isPermanent()) {
+        if (!target.isFrozen()) {
             bucket.add(DeleteAction.DELETE);
             bucket.add(RenameAction.RENAME);
             bucket.add(DuplicateAction.DUPLICATE);

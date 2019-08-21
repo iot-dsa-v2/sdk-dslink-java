@@ -25,7 +25,7 @@ import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.time.DSDateTime;
-import org.iot.dsa.time.DSTime;
+import org.iot.dsa.time.Time;
 
 /**
  * @author Daniel Shapiro
@@ -103,17 +103,17 @@ public class SysBackupService extends DSNode implements Runnable {
             String name = nodes.getName();
             if (nodes.exists()) {
                 StringBuilder buf = new StringBuilder();
-                Calendar cal = DSTime.getCalendar(System.currentTimeMillis());
+                Calendar cal = Time.getCalendar(System.currentTimeMillis());
                 if (name.endsWith(".zip")) {
                     String tmp = name.substring(0, name.lastIndexOf(".zip"));
                     buf.append(tmp).append('.');
-                    DSTime.encodeForFiles(cal, buf);
+                    Time.encodeForFiles(cal, buf);
                     buf.append(".zip");
                     File bakFile = new File(nodes.getParent(), buf.toString());
                     nodes.renameTo(bakFile);
                 } else {
                     buf.append(name).append('.');
-                    DSTime.encodeForFiles(cal, buf);
+                    Time.encodeForFiles(cal, buf);
                     buf.append(".zip");
                     File back = new File(nodes.getParent(), buf.toString());
                     FileOutputStream fos = new FileOutputStream(back);
@@ -132,7 +132,7 @@ public class SysBackupService extends DSNode implements Runnable {
                     zos.close();
                     zos = null;
                 }
-                DSTime.recycle(cal);
+                Time.recycle(cal);
             }
             long time = System.currentTimeMillis();
             put(lastTime, DSDateTime.valueOf(time));
