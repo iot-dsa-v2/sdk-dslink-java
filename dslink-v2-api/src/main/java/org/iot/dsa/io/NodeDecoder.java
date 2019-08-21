@@ -162,9 +162,14 @@ public class NodeDecoder {
                     obj = info.get();
                 }
                 if (obj == null) { //dynamic, or declareDefaults was modified
-                    in.next();
-                    obj = in.getElement();
-                    info = parent.put(name, obj);
+                    if (in.next() == Token.BEGIN_MAP) {
+                        obj = new DSNode();
+                        info = parent.put(name, obj);
+                        readChildren((DSNode)obj);
+                    } else {
+                        obj = in.getElement();
+                        info = parent.put(name, obj);
+                    }
                 } else if (obj instanceof DSNode) {
                     readChildren((DSNode) obj);
                 } else {
@@ -178,7 +183,7 @@ public class NodeDecoder {
                 }
             }
         }
-        if (obj == null) { //Node with no children
+        if (obj == null) { //Node with no children, there was no "v" key.
             if (name == null) {
                 throw new IllegalStateException("Missing name");
             }
@@ -191,6 +196,8 @@ public class NodeDecoder {
                 }
             } else if (info != null) {
                 obj = info.get();
+            } else {
+                obj = new DSNode();
             }
         }
         if (info != null) {

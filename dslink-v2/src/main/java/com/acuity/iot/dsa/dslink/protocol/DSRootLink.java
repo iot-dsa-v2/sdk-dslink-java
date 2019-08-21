@@ -72,7 +72,7 @@ public class DSRootLink extends DSLink {
             if (type != null) {
                 debug("Main node type: " + type);
                 DSNode node = (DSNode) DSUtil.newInstance(type);
-                main = put(getMainName(), node);
+                main = put(getMainName(), node).setLocked(true);
             }
         }
         String ver = config.getDsaVersion();
@@ -86,8 +86,7 @@ public class DSRootLink extends DSLink {
             conn = new DS2LinkConnection();
         }
         debug(debug() ? "Connection type: " + conn.getClass().getName() : null);
-        upstream = put(UPSTREAM, conn);
-        upstream.setTransient(true);
+        upstream = put(UPSTREAM, conn).setTransient(true).setLocked(true);
         return this;
     }
 

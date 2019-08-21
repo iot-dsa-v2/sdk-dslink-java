@@ -10,7 +10,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.iot.dsa.time.DSTime;
+import org.iot.dsa.time.Time;
 
 /**
  * All instances of this handler asynchronously print log records to System.out.
@@ -246,8 +246,8 @@ public class DSLogHandler extends Handler {
         }
         builder.append('[');
         // timestamp
-        Calendar calendar = DSTime.getCalendar(record.getMillis());
-        DSTime.encodeForLogs(calendar, builder);
+        Calendar calendar = Time.getCalendar(record.getMillis());
+        Time.encodeForLogs(calendar, builder);
         builder.append(']');
         builder.append(' ');
         // severity
@@ -284,7 +284,7 @@ public class DSLogHandler extends Handler {
             pw.close();
             builder.append(sw.toString());
         }
-        DSTime.recycle(calendar);
+        Time.recycle(calendar);
     }
 
     /* Old V2 Format, save for now...
@@ -298,10 +298,10 @@ public class DSLogHandler extends Handler {
         // severity
         buf.append('[').append(toString(record.getLevel())).append(' ');
         // timestamp
-        Calendar calendar = DSTime.getCalendar(record.getMillis());
+        Calendar calendar = Time.getCalendar(record.getMillis());
         calendar.setTimeInMillis(record.getMillis());
-        DSTime.encodeForLogs(calendar, buf);
-        DSTime.recycle(calendar);
+        Time.encodeForLogs(calendar, buf);
+        Time.recycle(calendar);
         buf.append(']');
         // log name
         String name = record.getLoggerName();
@@ -365,7 +365,7 @@ public class DSLogHandler extends Handler {
                         }
                         if (state == STATE_OPEN) {
                             try {
-                                queue.wait(DSTime.MILLIS_SECOND);
+                                queue.wait(Time.MILLIS_SECOND);
                             } catch (Exception ignore) {
                             }
                         } else {

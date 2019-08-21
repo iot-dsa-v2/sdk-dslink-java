@@ -1,848 +1,268 @@
 package org.iot.dsa.time;
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SimpleTimeZone;
-import java.util.TimeZone;
+import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMetadata;
+import org.iot.dsa.node.DSRegistry;
+import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.DSValue;
+import org.iot.dsa.node.DSValueType;
+import org.iot.dsa.node.action.ActionInvocation;
+import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSISetAction;
 
 /**
- * Misc time utility functions.
+ * Time of day in the format hh:mm:ss.  Hours are 0-23.
  *
  * @author Aaron Hansen
  */
-public class DSTime {
+public class DSTime extends DSValue implements DSISetAction {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    public static final long NANOS_IN_MS = 1000000;
-    public static final long NANOS_IN_SEC = 1000 * NANOS_IN_MS;
-
-    public static final int MILLIS_SECOND = 1000;
-    public static final int MILLIS_FIVE_SECONDS = 5000;
-    public static final int MILLIS_TEN_SECONDS = 10000;
-    public static final int MILLIS_FIFTEEN_SECONDS = 15000;
-    public static final int MILLIS_THIRTY_SECONDS = 30000;
-    public static final int MILLIS_MINUTE = 60000;
-    public static final int MILLIS_FIVE_MINUTES = 300000;
-    public static final int MILLIS_TEN_MINUTES = 600000;
-    public static final int MILLIS_FIFTEEN_MINUTES = 900000;
-    public static final int MILLIS_TWENTY_MINUTES = 1200000;
-    public static final int MILLIS_THIRTY_MINUTES = 1800000;
-    public static final int MILLIS_HOUR = 3600000;
-    public static final int MILLIS_TWO_HOURS = 7200000;
-    public static final int MILLIS_THREE_HOURS = 10800000;
-    public static final int MILLIS_FOUR_HOURS = 14400000;
-    public static final int MILLIS_SIX_HOURS = 21600000;
-    public static final int MILLIS_TWELVE_HOURS = 43200000;
-    public static final int MILLIS_DAY = 86400000;
-    public static final int MILLIS_WEEK = 604800000;
-    public static final long MILLIS_MONTH = 2592000000l;
-    public static final long MILLIS_QUARTER = MILLIS_MONTH * 3;
-    public static final long MILLIS_YEAR = MILLIS_MONTH * 12;
+    private static final String HOUR = "Hour";
+    private static final String MINUTE = "Minute";
+    private static final String SECOND = "Second";
+    public static final DSTime NULL = new DSTime(0, 0, 0, DSString.NULL);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Fields
+    // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
-    private static final Map<String, TimeZone> timezones = new HashMap<String, TimeZone>();
-    private static Calendar calendarCache1;
-    private static Calendar calendarCache2;
+
+    private int hour;
+    private int minute;
+    private int second;
+    private DSString string;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Do not allow instantiation.
-     */
-    private DSTime() {
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The calendar to modify.
-     * @return The timestamp parameter.
-     */
-    public static Calendar addDays(int count, Calendar timestamp) {
-        timestamp.add(Calendar.DATE, count);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The time to modify.
-     * @return The adjusted time.
-     */
-    public static long addDays(int count, long timestamp) {
-        Calendar cal = getCalendar(timestamp);
-        addDays(count, cal);
-        timestamp = cal.getTimeInMillis();
-        recycle(cal);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The calendar to modify.
-     * @return The timestamp parameter.
-     */
-    public static Calendar addHours(int count, Calendar timestamp) {
-        timestamp.add(Calendar.HOUR_OF_DAY, count);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The time to modify.
-     * @return The adjusted time.
-     */
-    public static long addHours(int count, long timestamp) {
-        Calendar cal = getCalendar(timestamp);
-        addHours(count, cal);
-        timestamp = cal.getTimeInMillis();
-        recycle(cal);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The calendar to modify.
-     * @return The timestamp parameter.
-     */
-    public static Calendar addMillis(int count, Calendar timestamp) {
-        timestamp.add(Calendar.MILLISECOND, count);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The time to modify.
-     * @return The adjusted time.
-     */
-    public static long addMillis(int count, long timestamp) {
-        Calendar cal = getCalendar(timestamp);
-        addMillis(count, cal);
-        timestamp = cal.getTimeInMillis();
-        recycle(cal);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The calendar to modify.
-     * @return The timestamp parameter.
-     */
-    public static Calendar addMinutes(int count, Calendar timestamp) {
-        timestamp.add(Calendar.MINUTE, count);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The time to modify.
-     * @return The adjusted time.
-     */
-    public static long addMinutes(int count, long timestamp) {
-        Calendar cal = getCalendar(timestamp);
-        addMinutes(count, cal);
-        timestamp = cal.getTimeInMillis();
-        recycle(cal);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The calendar to modify.
-     * @return The timestamp parameter.
-     */
-    public static Calendar addMonths(int count, Calendar timestamp) {
-        timestamp.add(Calendar.MONTH, count);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The time to modify.
-     * @return The adjusted time.
-     */
-    public static long addMonths(int count, long timestamp) {
-        Calendar cal = getCalendar(timestamp);
-        addMonths(count, cal);
-        timestamp = cal.getTimeInMillis();
-        recycle(cal);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The calendar to modify.
-     * @return The timestamp parameter.
-     */
-    public static Calendar addSeconds(int count, Calendar timestamp) {
-        timestamp.add(Calendar.SECOND, count);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The time to modify.
-     * @return The adjusted time.
-     */
-    public static long addSeconds(int count, long timestamp) {
-        Calendar cal = getCalendar(timestamp);
-        addSeconds(count, cal);
-        timestamp = cal.getTimeInMillis();
-        recycle(cal);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The calendar to modify.
-     * @return The timestamp parameter.
-     */
-    public static Calendar addWeeks(int count, Calendar timestamp) {
-        return addDays(count * 7, timestamp);
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The time to modify.
-     * @return The adjusted time.
-     */
-    public static long addWeeks(int count, long timestamp) {
-        return addDays(count * 7, timestamp);
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The calendar to modify.
-     * @return The timestamp parameter.
-     */
-    public static Calendar addYears(int count, Calendar timestamp) {
-        timestamp.add(Calendar.YEAR, count);
-        return timestamp;
-    }
-
-    /**
-     * Adds or subtracts the corresponding time field, does not perform any alignment.
-     *
-     * @param count     The quantity to change, can be negative.
-     * @param timestamp The time to modify.
-     * @return The adjusted time.
-     */
-    public static long addYears(int count, long timestamp) {
-        Calendar cal = getCalendar(timestamp);
-        addYears(count, cal);
-        timestamp = cal.getTimeInMillis();
-        recycle(cal);
-        return timestamp;
-    }
-
-    /**
-     * Aligns the time fields to the start of the day.
-     *
-     * @param timestamp The calendar to align.
-     * @return The parameter.
-     */
-    public static Calendar alignDay(Calendar timestamp) {
-        timestamp.set(Calendar.HOUR_OF_DAY, 0);
-        timestamp.set(Calendar.MINUTE, 0);
-        timestamp.set(Calendar.SECOND, 0);
-        timestamp.set(Calendar.MILLISECOND, 0);
-        return timestamp;
-    }
-
-    /**
-     * Aligns the time fields to the start of given interval.
-     *
-     * @param interval  The number of days in the interval to align to.
-     * @param timestamp The calendar to align.
-     * @return The calendar parameter, aligned.
-     */
-    public static Calendar alignDays(int interval, Calendar timestamp) {
-        int value = timestamp.get(Calendar.DATE);
-        value = value - (value % interval);
-        timestamp.set(Calendar.DATE, value);
-        return alignDay(timestamp);
-    }
-
-    /**
-     * Aligns the time fields to the start of the hour.
-     *
-     * @param timestamp The calendar to align.
-     * @return The parameter.
-     */
-    public static Calendar alignHour(Calendar timestamp) {
-        timestamp.set(Calendar.MINUTE, 0);
-        timestamp.set(Calendar.SECOND, 0);
-        timestamp.set(Calendar.MILLISECOND, 0);
-        return timestamp;
-    }
-
-    /**
-     * Aligns the time fields to the start of given interval.
-     *
-     * @param interval  The number of hours in the interval to align to.
-     * @param timestamp The calendar to align.
-     * @return The calendar parameter, aligned.
-     */
-    public static Calendar alignHours(int interval, Calendar timestamp) {
-        int value = timestamp.get(Calendar.HOUR_OF_DAY);
-        value = value - (value % interval);
-        timestamp.set(Calendar.HOUR_OF_DAY, value);
-        return alignHour(timestamp);
-    }
-
-    /**
-     * Aligns the time fields to the start of the minute.
-     *
-     * @param timestamp The calendar to align.
-     * @return The parameter.
-     */
-    public static Calendar alignMinute(Calendar timestamp) {
-        timestamp.set(Calendar.SECOND, 0);
-        timestamp.set(Calendar.MILLISECOND, 0);
-        return timestamp;
-    }
-
-    /**
-     * Aligns the time fields to the start of given interval.
-     *
-     * @param interval  The number of minutes in the interval to align to.
-     * @param timestamp The calendar to align.
-     * @return The calendar parameter, aligned.
-     */
-    public static Calendar alignMinutes(int interval, Calendar timestamp) {
-        int value = timestamp.get(Calendar.MINUTE);
-        value = value - (value % interval);
-        timestamp.set(Calendar.MINUTE, value);
-        return alignMinute(timestamp);
-    }
-
-    /**
-     * Aligns the time fields to the start of the month.
-     *
-     * @param timestamp The calendar to align.
-     * @return The parameter.
-     */
-    public static Calendar alignMonth(Calendar timestamp) {
-        timestamp.set(Calendar.DAY_OF_MONTH, 1);
-        return alignDay(timestamp);
-    }
-
-    /**
-     * Aligns the time fields to the start of the second.
-     *
-     * @param timestamp The calendar to align.
-     * @return The parameter.
-     */
-    public static Calendar alignSecond(Calendar timestamp) {
-        timestamp.set(Calendar.MILLISECOND, 0);
-        return timestamp;
-    }
-
-    /**
-     * Aligns the time fields to the start of given interval.
-     *
-     * @param interval  The number of seconds in the interval to align to.
-     * @param timestamp The calendar to align.
-     * @return The calendar parameter, aligned.
-     */
-    public static Calendar alignSeconds(int interval, Calendar timestamp) {
-        int value = timestamp.get(Calendar.SECOND);
-        value = value - (value % interval);
-        timestamp.set(Calendar.SECOND, value);
-        return alignSecond(timestamp);
-    }
-
-    /**
-     * Aligns the time fields to the start of the week.
-     *
-     * @param timestamp The calendar to align.
-     * @return The parameter.
-     */
-    public static Calendar alignWeek(Calendar timestamp) {
-        timestamp = alignDay(timestamp);
-        int dayOfWeek = timestamp.get(Calendar.DAY_OF_WEEK);
-        int offset = 1 - dayOfWeek;
-        if (offset == 0) {
-            return timestamp;
-        }
-        return addDays(offset, timestamp);
-    }
-
-    /**
-     * Aligns the time fields to the start of the year.
-     *
-     * @param timestamp The calendar to align.
-     * @return The parameter.
-     */
-    public static Calendar alignYear(Calendar timestamp) {
-        timestamp.set(Calendar.MONTH, 0);
-        return alignMonth(timestamp);
-    }
-
-    /**
-     * This is a convenience that uses reuses and recycles a calendar instance to get the time in
-     * millis.
-     */
-    public static long decode(String timestamp) {
-        Calendar cal = getCalendar();
-        decode(timestamp, cal);
-        long millis = cal.getTimeInMillis();
-        recycle(cal);
-        return millis;
-    }
-
-    /**
-     * Converts a DSA encoded timestamp into a Java Calendar.  DSA encoding is based on ISO 8601 but
-     * allows for an unspecified timezone.
-     *
-     * @param timestamp The encoded timestamp.
-     * @param calendar  The instance to decodeKeys into and returnt, may be null.  If the timestamp
-     *                  does not specify a timezone, the zone in this instance will be used.
-     */
-    public static Calendar decode(String timestamp, Calendar calendar) {
-        if (calendar == null) {
-            calendar = getCalendar();
-        }
-        try {
-            char[] chars = timestamp.toCharArray();
-            int idx = 0;
-            int year = convertDigits(chars[idx++], chars[idx++], chars[idx++], chars[idx++]);
-            validateChar(chars[idx++], '-');
-            int month = convertDigits(chars[idx++], chars[idx++]) - 1;
-            validateChar(chars[idx++], '-');
-            int day = convertDigits(chars[idx++], chars[idx++]);
-            validateChar(chars[idx++], 'T');
-            int hour = convertDigits(chars[idx++], chars[idx++]);
-            validateChar(chars[idx++], ':');
-            int minute = convertDigits(chars[idx++], chars[idx++]);
-            validateChar(chars[idx++], ':');
-            int second = convertDigits(chars[idx++], chars[idx++]);
-            int millis = 0;
-            if ((chars.length > idx) && (chars[idx] == '.')) {
-                idx++;
-                millis = convertDigits('0', chars[idx++], chars[idx++], chars[idx++]);
-            }
-            //more than 3 millis digits is possible
-            while ((chars.length > idx)
-                    && (chars[idx] != 'Z')
-                    && (chars[idx] != '+')
-                    && (chars[idx] != '-')) {
-                idx++;
-            }
-            // timezone offset sign
-            if (idx < chars.length) {
-                char sign = chars[idx++];
-                if (sign == 'Z') {
-                    calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
-                } else {
-                    int tzOff;
-                    if (sign != '+' && sign != '-') {
-                        throw new Exception();
-                    }
-                    int hrOff = convertDigits(chars[idx++], chars[idx++]);
-                    int minOff = 0;
-                    //minutes are optional in 8601
-                    if (idx < chars.length) { //minutes optional
-                        validateChar(chars[idx++], ':');
-                        minOff = convertDigits(chars[idx++], chars[idx++]);
-                    }
-                    tzOff = (hrOff * MILLIS_HOUR) + (minOff * MILLIS_MINUTE);
-                    if (sign == '-') {
-                        tzOff *= -1;
-                    }
-                    TimeZone timezone = calendar.getTimeZone();
-                    int localOffset = timezone.getOffset(calendar.getTimeInMillis());
-                    if (localOffset != tzOff) {
-                        String timeZoneName = "Offset" + tzOff;
-                        synchronized (timezones) {
-                            timezone = timezones.get(timeZoneName);
-                            if (timezone == null) {
-                                timezone = new SimpleTimeZone(tzOff, timeZoneName);
-                                timezones.put(timeZoneName, timezone);
-                            }
-                        }
-                        calendar.setTimeZone(timezone);
-                    }
-                }
-            }
-            calendar.set(year, month, day, hour, minute, second);
-            calendar.set(Calendar.MILLISECOND, millis);
-        } catch (Exception x) {
-            throw new IllegalArgumentException("Invalid timestamp: " + timestamp);
-        }
-        return calendar;
-    }
-
-    /**
-     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based on ISO 8601 but
-     * allows the timezone offset to not be specified.
-     *
-     * @param timestamp      What to encode.
-     * @param encodeTzOffset Whether or not to encode the timezone offset.
-     * @return The buffer containing the encoding.
-     */
-    public static StringBuilder encode(long timestamp, boolean encodeTzOffset) {
-        Calendar cal = getCalendar(timestamp);
-        StringBuilder buf = encode(cal, encodeTzOffset, new StringBuilder());
-        recycle(cal);
-        return buf;
-    }
-
-    /**
-     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based on ISO 8601 but
-     * allows the timezone offset to not be specified.
-     *
-     * @param timestamp      What to encode.
-     * @param encodeTzOffset Whether or not to encode the timezone offset.
-     * @param buf            The buffer to append the encoded timestamp and return value, can be
-     *                       null.
-     * @return The buffer containing the encoding.
-     */
-    public static StringBuilder encode(long timestamp, boolean encodeTzOffset, StringBuilder buf) {
-        Calendar cal = getCalendar(timestamp);
-        buf = encode(cal, encodeTzOffset, buf);
-        recycle(cal);
-        return buf;
-    }
-
-    /**
-     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based on ISO 8601 but
-     * the timezone offset is optional.
-     *
-     * @param calendar       The calendar representing the timestamp to encode.
-     * @param encodeTzOffset Whether or not to encode the timezone offset.
-     * @param buf            The buffer to append the encoded timestamp and return value, can be
-     *                       null.
-     * @return The buf argument, or if that was null, a new StringBuilder.
-     */
-    public static StringBuilder encode(Calendar calendar,
-                                       boolean encodeTzOffset,
-                                       StringBuilder buf) {
-        if (buf == null) {
-            buf = new StringBuilder();
-        }
-        long millis = calendar.getTimeInMillis();
-        int tmp = calendar.get(Calendar.YEAR);
-        buf.append(tmp).append('-');
-        //month
-        tmp = calendar.get(Calendar.MONTH) + 1;
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append('-');
-        //date
-        tmp = calendar.get(Calendar.DAY_OF_MONTH);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append('T');
-        //hour
-        tmp = calendar.get(Calendar.HOUR_OF_DAY);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append(':');
-        //minute
-        tmp = calendar.get(Calendar.MINUTE);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append(':');
-        //second
-        tmp = calendar.get(Calendar.SECOND);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append('.');
-        //millis
-        tmp = calendar.get(Calendar.MILLISECOND);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        if (tmp < 100) {
-            buf.append('0');
-        }
-        buf.append(tmp);
-        if (encodeTzOffset) {
-            int offset = calendar.getTimeZone().getOffset(millis);
-            if (offset == 0) {
-                buf.append('Z');
-            } else {
-                int hrOff = Math.abs(offset / MILLIS_HOUR);
-                int minOff = Math.abs((offset % MILLIS_HOUR) / MILLIS_MINUTE);
-                if (offset < 0) {
-                    buf.append('-');
-                } else {
-                    buf.append('+');
-                }
-                if (hrOff < 10) {
-                    buf.append('0');
-                }
-                buf.append(hrOff);
-                buf.append(':');
-                if (minOff < 10) {
-                    buf.append('0');
-                }
-                buf.append(minOff);
-            }
-        }
-        return buf;
-    }
-
-    /**
-     * Converts a Java Calendar into a number safe for file names: YYMMDDHHMMSS. If seconds align to
-     * 00, then they will be omitted.  DSTime.alignMinutes can be used to achieve that.
-     *
-     * @param calendar The calendar representing the timestamp to encode.
-     * @param buf      The buffer to append the encoded timestamp and return, can be null.
-     * @return The buf argument, or if that was null, a new StringBuilder.
-     */
-    public static StringBuilder encodeForFiles(Calendar calendar, StringBuilder buf) {
-        if (buf == null) {
-            buf = new StringBuilder();
-        }
-        int tmp = calendar.get(Calendar.YEAR) % 100;
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp);
-        //month
-        tmp = calendar.get(Calendar.MONTH) + 1;
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp);
-        //date
-        tmp = calendar.get(Calendar.DAY_OF_MONTH);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append('-');
-        //hour
-        tmp = calendar.get(Calendar.HOUR_OF_DAY);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp);
-        //minute
-        tmp = calendar.get(Calendar.MINUTE);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp);
-        //second
-        tmp = calendar.get(Calendar.SECOND);
-        if (tmp > 0) {
-            if (tmp < 10) {
+    private DSTime(int hour, int minute, int second, DSString string) {
+        this.hour = checkHour(hour);
+        this.minute = checkMinute(minute);
+        this.second = checkSecond(second);
+        if (string == null) {
+            StringBuilder buf = new StringBuilder();
+            if (hour < 10) {
                 buf.append('0');
             }
-            buf.append(tmp);
+            buf.append(hour);
+            buf.append(':');
+            if (minute < 10) {
+                buf.append('0');
+            }
+            buf.append(minute);
+            buf.append(':');
+            if (second < 10) {
+                buf.append('0');
+            }
+            buf.append(second);
         }
-        return buf;
+        this.string = string;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof DSTime) {
+            DSTime arg = (DSTime) obj;
+            return arg.hour == hour &&
+                    arg.minute == minute &&
+                    arg.second == second;
+        }
+        return false;
     }
 
     /**
-     * Converts a Java Calendar into a shorter human readable timestamp for use in logging files.
-     *
-     * @param calendar The calendar representing the timestamp to encode.
-     * @param buf      The buffer to append the encoded timestamp and return, can be null.
-     * @return The buf argument, or if that was null, a new StringBuilder.
+     * 0 - 23
      */
-    public static StringBuilder encodeForLogs(Calendar calendar, StringBuilder buf) {
-        if (buf == null) {
-            buf = new StringBuilder();
-        }
-        int tmp = calendar.get(Calendar.YEAR);
-        buf.append(tmp).append('-');
-        //month
-        tmp = calendar.get(Calendar.MONTH) + 1;
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append('-');
-        //date
-        tmp = calendar.get(Calendar.DAY_OF_MONTH);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append(' ');
-        //hour
-        tmp = calendar.get(Calendar.HOUR_OF_DAY);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append(':');
-        //minute
-        tmp = calendar.get(Calendar.MINUTE);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append(':');
-        //second
-        tmp = calendar.get(Calendar.SECOND);
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp).append(':');
-        tmp = calendar.get(Calendar.MILLISECOND);
-        if (tmp < 100) {
-            buf.append('0');
-        }
-        if (tmp < 10) {
-            buf.append('0');
-        }
-        buf.append(tmp);
-        return buf;
+    public int getHour() {
+        return hour;
     }
 
     /**
-     * Attempts to reuse a calendar instance, the timezone will be set to TimeZone.getDefault().
+     * 0 - 59
      */
-    public static Calendar getCalendar() {
-        Calendar cal = null;
-        synchronized (DSTime.class) {
-            if (calendarCache1 != null) {
-                cal = calendarCache1;
-                calendarCache1 = null;
-            } else if (calendarCache2 != null) {
-                cal = calendarCache2;
-                calendarCache2 = null;
+    public int getMinute() {
+        return minute;
+    }
+
+    /**
+     * 0 - 59
+     */
+    public int getSecond() {
+        return second;
+    }
+
+    @Override
+    public DSAction getSetAction() {
+        return SetAction.INSTANCE;
+    }
+
+    /**
+     * String.
+     */
+    @Override
+    public DSValueType getValueType() {
+        return DSValueType.STRING;
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean isNull() {
+        return this == NULL;
+    }
+
+    @Override
+    public DSElement toElement() {
+        if (string == null) {
+            StringBuilder buf = new StringBuilder();
+            if (hour < 10) {
+                buf.append('0');
+            }
+            buf.append(hour);
+            buf.append(':');
+            if (minute < 10) {
+                buf.append('0');
+            }
+            buf.append(minute);
+            buf.append(':');
+            if (second < 10) {
+                buf.append('0');
+            }
+            buf.append(second);
+            string = DSString.valueOf(buf.toString());
+        }
+        return string;
+    }
+
+    /**
+     * Formatted as hh:mm:ss
+     */
+    @Override
+    public String toString() {
+        return toElement().toString();
+    }
+
+    /**
+     * Creates a DSDateTime for the given range.
+     */
+    public static DSTime valueOf(int hour, int minute, int second) {
+        return new DSTime(hour, minute, second, null);
+    }
+
+    @Override
+    public DSTime valueOf(DSElement element) {
+        return valueOf(element.toString());
+    }
+
+    /**
+     * Decodes the format "hh:mm:ss"
+     */
+    public static DSTime valueOf(String string) {
+        if (string == null) {
+            return NULL;
+        }
+        if (string.isEmpty() || "null".equals(string)) {
+            return NULL;
+        }
+        String[] split = string.split(":");
+        if (split.length != 3) {
+            throw new IllegalArgumentException("Invalid format: " + string);
+        }
+        int hour = Integer.parseInt(split[0]);
+        int min = Integer.parseInt(split[1]);
+        int sec = Integer.parseInt(split[2]);
+        return new DSTime(hour, min, sec, DSString.valueOf(string));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    private int checkHour(int hour) {
+        if ((hour < 0) || (hour > 23)) {
+            throw new IllegalArgumentException("Invalid hour: " + hour);
+        }
+        return hour;
+    }
+
+    private int checkMinute(int minute) {
+        if ((minute < 0) || (minute > 59)) {
+            throw new IllegalArgumentException("Invalid minute: " + minute);
+        }
+        return minute;
+    }
+
+    private int checkSecond(int second) {
+        if ((second < 0) || (second > 59)) {
+            throw new IllegalArgumentException("Invalid second: " + second);
+        }
+        return second;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Inner Classes
+    ///////////////////////////////////////////////////////////////////////////
+
+    public static class SetAction extends DSAction {
+
+        public static final SetAction INSTANCE = new SetAction();
+
+        @Override
+        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+            DSMap params = invocation.getParameters();
+            int hr = params.get(HOUR, 0);
+            int min = params.get(MINUTE, 0);
+            int sec = params.get(SECOND, 0);
+            target.getParent().put(target, valueOf(hr, min, sec));
+            return null;
+        }
+
+        @Override
+        public void prepareParameter(DSInfo target, DSMap parameter) {
+            DSTime dt = (DSTime) target.get();
+            String name = parameter.get(DSMetadata.NAME, "");
+            switch (name) {
+                case HOUR:
+                    parameter.put(DSMetadata.DEFAULT, dt.getHour());
+                    break;
+                case MINUTE:
+                    parameter.put(DSMetadata.DEFAULT, dt.getMinute());
+                    break;
+                case SECOND:
+                    parameter.put(DSMetadata.DEFAULT, dt.getSecond());
+                    break;
             }
         }
-        if (cal == null) {
-            cal = Calendar.getInstance();
-        } else {
-            cal.setTimeZone(TimeZone.getDefault());
+
+        {
+            addParameter(HOUR, DSInt.NULL, null);
+            addParameter(MINUTE, DSInt.NULL, null);
+            addParameter(SECOND, DSInt.NULL, null);
         }
-        return cal;
+
     }
 
-    /**
-     * Attempts to reuse a calendar instance and sets the time in millis to the argument and the
-     * timezone to TimeZone.getDefault().
-     */
-    public static Calendar getCalendar(long timestamp) {
-        Calendar cal = getCalendar();
-        cal.setTimeInMillis(timestamp);
-        return cal;
-    }
+    ///////////////////////////////////////////////////////////////////////////
+    // Initialization
+    ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Attempts to reuse a calendar instance and sets the time in millis to the argument and the
-     * timezone too.
-     */
-    public static Calendar getCalendar(long timestamp, TimeZone timeZone) {
-        Calendar cal = getCalendar();
-        cal.setTimeInMillis(timestamp);
-        cal.setTimeZone(timeZone);
-        return cal;
-    }
-
-    public static long millisToNanos(long millis) {
-        return millis * NANOS_IN_MS;
-    }
-
-    public static long nanoTimeToSystemTimeMillis(long nanoTime) {
-        long nowNanos = System.nanoTime();
-        long nowMillis = System.currentTimeMillis();
-        long nanosTillTime = nanoTime - nowNanos;
-        long millisTillTime = nanosTillTime / NANOS_IN_MS;
-        return nowMillis + millisTillTime;
-    }
-
-    public static long nanosToMillis(long nanos) {
-        return nanos / NANOS_IN_MS;
-    }
-
-    /**
-     * Return a calendar instance for reuse.
-     */
-    public static void recycle(Calendar cal) {
-        synchronized (DSTime.class) {
-            if (calendarCache1 == null) {
-                calendarCache1 = cal;
-            } else {
-                calendarCache2 = cal;
-            }
-        }
-    }
-
-    /**
-     * Converts the characters into an int.
-     */
-    private static int convertDigits(char tens, char ones) {
-        return (toDigit(tens) * 10) + toDigit(ones);
-    }
-
-    /**
-     * Converts the characters into an int.
-     */
-    private static int convertDigits(char thousands, char hundreds, char tens, char ones) {
-        return toDigit(thousands) * 1000 +
-                toDigit(hundreds) * 100 +
-                toDigit(tens) * 10 +
-                toDigit(ones);
-    }
-
-    /**
-     * Converts the character to a digit, throws an IllegalStateException if it isn't a valid
-     * digit.
-     */
-    private static int toDigit(char ch) {
-        if (('0' <= ch) && (ch <= '9')) {
-            return ch - '0';
-        }
-        throw new IllegalStateException();
-    }
-
-    /**
-     * Used for decoding timestamp, throws an IllegalStateException if the two characters are not
-     * equal.
-     */
-    private static void validateChar(char c1, char c2) {
-        if (c1 != c2) {
-            throw new IllegalStateException();
-        }
+    static {
+        DSRegistry.registerDecoder(DSTime.class, NULL);
     }
 
 }

@@ -18,7 +18,7 @@ import org.iot.dsa.node.DSValueType;
 import org.iot.dsa.node.action.ActionInvocation;
 import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.time.DSTime;
+import org.iot.dsa.time.Time;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -47,7 +47,7 @@ public class CertCollection extends DSNode {
     }
 
     public static String certToName(X509Certificate cert) {
-        return DSTime.encodeForFiles(DSTime.getCalendar(System.currentTimeMillis()),
+        return Time.encodeForFiles(Time.getCalendar(System.currentTimeMillis()),
                                      new StringBuilder(cert.getIssuerX500Principal().getName()))
                      .toString();
     }

@@ -1,11 +1,20 @@
 package org.iot.dsa.time;
 
 import java.util.Calendar;
+import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSInt;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValue;
 import org.iot.dsa.node.DSValueType;
+import org.iot.dsa.node.action.ActionInvocation;
+import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSISetAction;
 
 /**
  * XML Schema compliant relative amount of time represented as a number of years, months, days,
@@ -13,18 +22,27 @@ import org.iot.dsa.node.DSValueType;
  *
  * @author Aaron Hansen
  */
-public class DSDuration extends DSValue {
+public class DSDuration extends DSValue implements DSISetAction {
 
     /////////////////////////////////////////////////////////////////
     // Class Fields
     /////////////////////////////////////////////////////////////////
 
-    public static DSDuration DEFAULT = new DSDuration();
     public static DSDuration NULL = new DSDuration();
+
+    public static final String NEGATIVE = "Negative";
+    public static final String YEARS = "Years";
+    public static final String MONTHS = "Months";
+    public static final String DAYS = "Days";
+    public static final String HOURS = "Hours";
+    public static final String MINUTES = "Minutes";
+    public static final String SECONDS = "Seconds";
+    public static final String MILLIS = "Milliseconds";
 
     /////////////////////////////////////////////////////////////////
     // Instance Fields
     /////////////////////////////////////////////////////////////////
+
     private int days = 0;
     private int hours = 0;
     private int millis = 0;
@@ -52,47 +70,47 @@ public class DSDuration extends DSValue {
     public Calendar apply(Calendar cal) {
         if (negative) {
             if (years > 0) {
-                DSTime.addYears(-years, cal);
+                Time.addYears(-years, cal);
             }
             if (months > 0) {
-                DSTime.addMonths(-months, cal);
+                Time.addMonths(-months, cal);
             }
             if (days > 0) {
-                DSTime.addDays(-days, cal);
+                Time.addDays(-days, cal);
             }
             if (hours > 0) {
-                DSTime.addHours(-hours, cal);
+                Time.addHours(-hours, cal);
             }
             if (minutes > 0) {
-                DSTime.addMinutes(-minutes, cal);
+                Time.addMinutes(-minutes, cal);
             }
             if (seconds > 0) {
-                DSTime.addSeconds(-seconds, cal);
+                Time.addSeconds(-seconds, cal);
             }
             if (millis > 0) {
-                DSTime.addMillis(-millis, cal);
+                Time.addMillis(-millis, cal);
             }
         } else {
             if (years > 0) {
-                DSTime.addYears(years, cal);
+                Time.addYears(years, cal);
             }
             if (months > 0) {
-                DSTime.addMonths(months, cal);
+                Time.addMonths(months, cal);
             }
             if (days > 0) {
-                DSTime.addDays(days, cal);
+                Time.addDays(days, cal);
             }
             if (hours > 0) {
-                DSTime.addHours(hours, cal);
+                Time.addHours(hours, cal);
             }
             if (minutes > 0) {
-                DSTime.addMinutes(minutes, cal);
+                Time.addMinutes(minutes, cal);
             }
             if (seconds > 0) {
-                DSTime.addSeconds(seconds, cal);
+                Time.addSeconds(seconds, cal);
             }
             if (millis > 0) {
-                DSTime.addMillis(millis, cal);
+                Time.addMillis(millis, cal);
             }
         }
         return cal;
@@ -109,25 +127,11 @@ public class DSDuration extends DSValue {
      * Applies the duration to the given calendar and returns it.
      */
     public long apply(long timestamp) {
-        Calendar cal = DSTime.getCalendar(timestamp);
+        Calendar cal = Time.getCalendar(timestamp);
         apply(cal);
         timestamp = cal.getTimeInMillis();
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return timestamp;
-    }
-
-    @Override
-    public DSDuration copy() {
-        DSDuration ret = new DSDuration();
-        ret.negative = negative;
-        ret.years = years;
-        ret.months = months;
-        ret.days = days;
-        ret.hours = hours;
-        ret.minutes = minutes;
-        ret.seconds = seconds;
-        ret.millis = millis;
-        return ret;
     }
 
     @Override
@@ -168,6 +172,11 @@ public class DSDuration extends DSValue {
 
     public int getSeconds() {
         return seconds;
+    }
+
+    @Override
+    public DSAction getSetAction() {
+        return SetAction.INSTANCE;
     }
 
     /**
@@ -487,6 +496,70 @@ public class DSDuration extends DSValue {
             }
             return num;
         }
+    }
+
+    public static class SetAction extends DSAction {
+
+        public static final SetAction INSTANCE = new SetAction();
+
+        @Override
+        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+            DSMap params = invocation.getParameters();
+            boolean neg = params.get(NEGATIVE, false);
+            int years = params.get(YEARS, 0);
+            int months = params.get(MONTHS, 0);
+            int days = params.get(DAYS, 0);
+            int hrs = params.get(HOURS, 0);
+            int mins = params.get(MINUTES, 0);
+            int secs = params.get(SECONDS, 0);
+            int ms = params.get(MILLIS, 0);
+            target.getParent().put(target, valueOf(neg, years, months, days, hrs, mins, secs, ms));
+            return null;
+        }
+
+        @Override
+        public void prepareParameter(DSInfo target, DSMap parameter) {
+            DSDuration dur = (DSDuration) target.get();
+            String name = parameter.get(DSMetadata.NAME, "");
+            switch (name) {
+                case NEGATIVE:
+                    parameter.put(name, dur.isNegative());
+                    break;
+                case YEARS:
+                    parameter.put(name, dur.getYears());
+                    break;
+                case MONTHS:
+                    parameter.put(name, dur.getMonths());
+                    break;
+                case DAYS:
+                    parameter.put(name, dur.getDays());
+                    break;
+                case HOURS:
+                    parameter.put(name, dur.getHours());
+                    break;
+                case MINUTES:
+                    parameter.put(name, dur.getMinutes());
+                    break;
+                case SECONDS:
+                    parameter.put(name, dur.getSeconds());
+                    break;
+                case MILLIS:
+                    parameter.put(name, dur.getMillis());
+                    break;
+            }
+        }
+
+        {
+            addParameter(NEGATIVE, DSBool.NULL, "Whether or not the duration is negative");
+            addParameter(YEARS, DSInt.NULL, null);
+            addParameter(MONTHS, DSInt.NULL, null);
+            addParameter(DAYS, DSInt.NULL, null);
+            addParameter(HOURS, DSInt.NULL, null);
+            addParameter(MINUTES, DSInt.NULL, null);
+            addParameter(SECONDS, DSInt.NULL, null);
+            addParameter(MILLIS, DSInt.NULL, null);
+        }
+
     }
 
     /////////////////////////////////////////////////////////////////

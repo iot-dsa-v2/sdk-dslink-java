@@ -30,6 +30,7 @@ public class DSTimezone extends DSValue implements DSISetAction {
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    public static final DSFlexEnum ALL_ZONES;
     public static final DSTimezone DEFAULT = new DSTimezone(DSString.valueOf("Default"), null);
     public static final DSTimezone NULL = new DSTimezone(DSString.valueOf("null"), null);
     private static final Map<String, DSTimezone> zones = new HashMap<>();
@@ -90,6 +91,13 @@ public class DSTimezone extends DSValue implements DSISetAction {
         return toString().hashCode();
     }
 
+    /**
+     * True if is the same timezone as that of the local process.
+     */
+    public boolean isDefault() {
+        return this == DEFAULT;
+    }
+
     @Override
     public boolean isNull() {
         return this == NULL;
@@ -123,7 +131,9 @@ public class DSTimezone extends DSValue implements DSISetAction {
     }
 
     /**
-     * Returns the timezone for the given zone ID.
+     * Returns the timezone (possibly null) for the given zone ID.
+     *
+     * @return Possibly null
      */
     public static DSTimezone valueOf(String string) {
         if (string == null) {
@@ -135,6 +145,9 @@ public class DSTimezone extends DSValue implements DSISetAction {
         if ("default".equalsIgnoreCase(string)) {
             return DEFAULT;
         }
+        if (string.equals(DEFAULT.getTimeZone().getID())) {
+            return DEFAULT;
+        }
         if ("null".equalsIgnoreCase(string)) {
             return NULL;
         }
@@ -142,12 +155,16 @@ public class DSTimezone extends DSValue implements DSISetAction {
         if (ret == null) {
             TimeZone zone = TimeZone.getTimeZone(string);
             if (zone == null) {
-                throw new IllegalArgumentException("Unknown timezone: " + string);
+                return null;
             }
             ret = new DSTimezone(DSString.valueOf(string), zone);
             zones.put(string, ret);
         }
         return ret;
+    }
+
+    public static DSTimezone valueOf(TimeZone tz) {
+        return valueOf(tz.getID());
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -179,15 +196,7 @@ public class DSTimezone extends DSValue implements DSISetAction {
         }
 
         {
-            DSList list = new DSList();
-            list.add("Default");
-            String[] ary = TimeZone.getAvailableIDs();
-            Arrays.sort(ary);
-            for (String s : ary) {
-                list.add(s);
-            }
-            DSFlexEnum e = DSFlexEnum.valueOf("Default", list);
-            addParameter(ZONEID, e, "For example: America/Los_Angeles");
+            addParameter(ZONEID, ALL_ZONES, "For example: America/Los_Angeles");
         }
     }
 
@@ -196,6 +205,14 @@ public class DSTimezone extends DSValue implements DSISetAction {
     ///////////////////////////////////////////////////////////////////////////
 
     static {
+        DSList list = new DSList();
+        list.add("Default");
+        String[] ary = TimeZone.getAvailableIDs();
+        Arrays.sort(ary);
+        for (String s : ary) {
+            list.add(s);
+        }
+        ALL_ZONES = DSFlexEnum.valueOf("Default", list);
         DSRegistry.registerDecoder(DSTimezone.class, NULL);
     }
 

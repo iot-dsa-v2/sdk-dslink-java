@@ -1,6 +1,6 @@
 package org.iot.dsa;
 
-import org.iot.dsa.time.DSTime;
+import org.iot.dsa.time.Time;
 
 /**
  * DSA thread pool and timers.
@@ -61,8 +61,8 @@ public class DSRuntime {
      * @return For inspecting and cancel execution.
      */
     public static Timer runAfterDelay(Runnable arg, long delayMillis, long intervalMillis) {
-        long intervalNanos = intervalMillis * DSTime.NANOS_IN_MS;
-        long delayNanos = delayMillis * DSTime.NANOS_IN_MS;
+        long intervalNanos = intervalMillis * Time.NANOS_IN_MS;
+        long delayNanos = delayMillis * Time.NANOS_IN_MS;
         long startNanos = System.nanoTime() + delayNanos;
         Timer f = new Timer(arg, startNanos, intervalNanos);
         synchronized (DSRuntime.class) {
@@ -102,7 +102,7 @@ public class DSRuntime {
      * @return For inspecting and cancel execution.
      */
     public static Timer runDelayed(Runnable arg, long delayMillis) {
-        long delayNanos = delayMillis * DSTime.NANOS_IN_MS;
+        long delayNanos = delayMillis * Time.NANOS_IN_MS;
         long startNanos = System.nanoTime() + delayNanos;
         Timer f = new Timer(arg, startNanos, -1);
         synchronized (DSRuntime.class) {
@@ -179,6 +179,14 @@ public class DSRuntime {
         }
     }
 
+    private static long nanoTimeToSystemTimeMillis(long nanoTime) {
+        long nowNanos = System.nanoTime();
+        long nowMillis = System.currentTimeMillis();
+        long nanosTillTime = nanoTime - nowNanos;
+        long millisTillTime = nanosTillTime / Time.NANOS_IN_MS;
+        return nowMillis + millisTillTime;
+    }
+
     private static void shutdown() {
         synchronized (DSRuntime.class) {
             alive = false;
@@ -206,7 +214,7 @@ public class DSRuntime {
             while (alive) {
                 executeTimers();
                 synchronized (DSRuntime.class) {
-                    delta = (nextCycle - System.nanoTime()) / DSTime.NANOS_IN_MS;
+                    delta = (nextCycle - System.nanoTime()) / Time.NANOS_IN_MS;
                     if (delta > 0) {
                         try {
                             DSRuntime.class.wait(delta);
@@ -274,7 +282,7 @@ public class DSRuntime {
          * The interval between runs, zero or less for no interval.
          */
         public long getInterval() {
-            return interval / DSTime.NANOS_IN_MS;
+            return interval / Time.NANOS_IN_MS;
         }
 
         /**
@@ -306,7 +314,7 @@ public class DSRuntime {
          * The lastRun run or -1 if it hasn't run yet.
          */
         public long lastRun() {
-            return hasRun ? DSTime.nanoTimeToSystemTimeMillis(lastRun) : -1;
+            return hasRun ? nanoTimeToSystemTimeMillis(lastRun) : -1;
         }
 
         /**
@@ -315,7 +323,7 @@ public class DSRuntime {
          * @return 0 or less when finished.
          */
         public long nextRun() {
-            return done ? cancelled ? 0 : -1 : DSTime.nanoTimeToSystemTimeMillis(nextRun);
+            return done ? cancelled ? 0 : -1 : nanoTimeToSystemTimeMillis(nextRun);
         }
 
         /**
@@ -350,7 +358,7 @@ public class DSRuntime {
 
         public String toString() {
             StringBuilder buf = new StringBuilder();
-            DSTime.encode(nextRun(), false, buf);
+            Time.encode(nextRun(), false, buf);
             buf.append(" - ").append(runnable.toString());
             return buf.toString();
         }
