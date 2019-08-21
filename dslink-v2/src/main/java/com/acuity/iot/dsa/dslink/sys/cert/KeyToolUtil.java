@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.time.DSTime;
+import org.iot.dsa.time.Time;
 
 
 /**
@@ -87,7 +87,7 @@ public class KeyToolUtil extends DSLogger {
 
     public static String importCACert(String keystore, String certStr, String alias,
                                       String password) throws IOException {
-        String filename = DSTime.encodeForFiles(DSTime.getCalendar(System.currentTimeMillis()),
+        String filename = Time.encodeForFiles(Time.getCalendar(System.currentTimeMillis()),
                                                 new StringBuilder("tempCACert")).toString();
         Files.write(Paths.get(filename), certStr.getBytes());
         String[] cmd = new String[]{
@@ -107,7 +107,7 @@ public class KeyToolUtil extends DSLogger {
 
     public static String importPrimaryCert(String keystore, String certStr, String password)
             throws IOException {
-        String filename = DSTime.encodeForFiles(DSTime.getCalendar(System.currentTimeMillis()),
+        String filename = Time.encodeForFiles(Time.getCalendar(System.currentTimeMillis()),
                                                 new StringBuilder("tempCert")).toString();
         Files.write(Paths.get(filename), certStr.getBytes());
         String[] cmd = new String[]{

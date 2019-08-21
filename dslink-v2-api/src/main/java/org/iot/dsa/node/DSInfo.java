@@ -34,6 +34,7 @@ public class DSInfo implements ApiObject, GroupListener {
     static final int READONLY = 3;
     static final int DECLARED = 4;
     static final int DEFAULT_ON_COPY = 5;
+    static final int LOCKED = 6;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -320,6 +321,20 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     /**
+     * True if declared or locked.
+     */
+    public boolean isFrozen() {
+        return isDeclared() || isLocked();
+    }
+
+    /**
+     * True if the info cannot be removed or renamed. Use for non-default nodes.
+     */
+    public boolean isLocked() {
+        return getFlag(LOCKED);
+    }
+
+    /**
      * Whether or not the object is a DSNode.
      */
     public boolean isNode() {
@@ -453,6 +468,15 @@ public class DSInfo implements ApiObject, GroupListener {
         return this;
     }
 
+    /**
+     * False by default, set to true if the info cannot be removed or renamed.
+     * Use for non-default nodes.
+     */
+    public DSInfo setLocked(boolean locked) {
+        setFlag(LOCKED, locked);
+        return this;
+    }
+
     public DSInfo setMetadata(DSMap map) {
         map.setParent(this);
         metadata = map;
@@ -540,13 +564,6 @@ public class DSInfo implements ApiObject, GroupListener {
      */
     boolean isProxy() {
         return false;
-    }
-
-    /**
-     * Whether or not this info represents a declared default.
-     */
-    boolean isRemovable() {
-        return !getFlag(DECLARED);
     }
 
     DSInfo setFlag(int position, boolean on) {

@@ -85,6 +85,9 @@ class DSInfoProxy extends DSInfo {
 
     @Override
     public boolean equalsDefaultValue() {
+        if (isNode()) {
+            return getNode().equivalent(defaultInfo.object);
+        }
         return DSUtil.equal(object, defaultInfo.object);
     }
 

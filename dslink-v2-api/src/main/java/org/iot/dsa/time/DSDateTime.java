@@ -3,23 +3,40 @@ package org.iot.dsa.time;
 import java.util.Calendar;
 import java.util.TimeZone;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSLong;
+import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValue;
 import org.iot.dsa.node.DSValueType;
+import org.iot.dsa.node.action.ActionInvocation;
+import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSISetAction;
 
 /**
  * Wrapper for Java time.
  *
  * @author Aaron Hansen
  */
-public class DSDateTime extends DSValue {
+public class DSDateTime extends DSValue implements DSISetAction {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
     public static final DSDateTime NULL = new DSDateTime("null", 0l);
+
+    public static final String YEAR = "Year";
+    public static final String MONTH = "Month";
+    public static final String DAY = "Day";
+    public static final String HOUR = "Hour";
+    public static final String MINUTE = "Minute";
+    public static final String SECOND = "Second";
+    public static final String TIMEZONE = "Timezone";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -44,10 +61,10 @@ public class DSDateTime extends DSValue {
 
     DSDateTime(String string) {
         this.string = string;
-        Calendar cal = DSTime.decode(string, null);
+        Calendar cal = Time.decode(string, null);
         this.millis = cal.getTimeInMillis();
         this.timeZone = cal.getTimeZone();
-        DSTime.recycle(cal);
+        Time.recycle(cal);
     }
 
     DSDateTime(String string, Long millis) {
@@ -59,6 +76,10 @@ public class DSDateTime extends DSValue {
     // Methods in alphabetical order
     ///////////////////////////////////////////////////////////////////////////
 
+    public DSDateTime apply(DSDuration duration) {
+        return duration.apply(this);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof DSDateTime) {
@@ -66,6 +87,61 @@ public class DSDateTime extends DSValue {
             return dt.timeInMillis() == timeInMillis();
         }
         return false;
+    }
+
+    /**
+     * 1-31
+     */
+    public int getDay() {
+        Calendar c = Time.getCalendar(millis);
+        int ret = Time.getDay(c);
+        Time.recycle(c);
+        return ret;
+    }
+
+    /**
+     * 0-23
+     */
+    public int getHour() {
+        Calendar c = Time.getCalendar(millis);
+        int ret = Time.getHour(c);
+        Time.recycle(c);
+        return ret;
+    }
+
+    /**
+     * 0-59
+     */
+    public int getMinute() {
+        Calendar c = Time.getCalendar(millis);
+        int ret = Time.getMinute(c);
+        Time.recycle(c);
+        return ret;
+    }
+
+    /**
+     * 1-12
+     */
+    public int getMonth() {
+        Calendar c = Time.getCalendar(millis);
+        int ret = Time.getMonth(c);
+        Time.recycle(c);
+        return ret;
+    }
+
+    /**
+     * 0-59
+     */
+    public int getSecond() {
+        Calendar c = Time.getCalendar(millis);
+        int ret = Time.getSecond(c);
+        Time.recycle(c);
+        return ret;
+    }
+
+    @Override
+    public DSAction getSetAction() {
+        return SetAction.INSTANCE;
     }
 
     public TimeZone getTimeZone() {
@@ -81,6 +157,13 @@ public class DSDateTime extends DSValue {
     @Override
     public DSValueType getValueType() {
         return DSValueType.STRING;
+    }
+
+    public int getYear() {
+        Calendar c = Time.getCalendar(millis);
+        int ret = Time.getYear(c);
+        Time.recycle(c);
+        return ret;
     }
 
     @Override
@@ -102,42 +185,42 @@ public class DSDateTime extends DSValue {
     }
 
     public DSDateTime nextDay() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addDays(1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addDays(1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime nextHour() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addHours(1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addHours(1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime nextMonth() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addMonths(1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addMonths(1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime nextWeek() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addWeeks(1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addWeeks(1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime nextYear() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addYears(1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addYears(1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
@@ -145,130 +228,130 @@ public class DSDateTime extends DSValue {
      * The current time.
      */
     public static DSDateTime now() {
-        return new DSDateTime(System.currentTimeMillis());
+        return new DSDateTime(System.currentTimeMillis(), DSTimezone.DEFAULT.getTimeZone());
     }
 
     public DSDateTime prevDay() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addDays(-1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addDays(-1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime prevHour() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addHours(-1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addHours(-1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime prevMonth() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addMonths(-1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addMonths(-1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime prevWeek() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addWeeks(-1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addWeeks(-1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime prevYear() {
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.addYears(-1, cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.addYears(-1, cal);
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime startOfDay() {
         long cur = timeInMillis();
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.alignDay(cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.alignDay(cal);
         long neu = cal.getTimeInMillis();
         if (cur == neu) {
-            DSTime.recycle(cal);
+            Time.recycle(cal);
             return this;
         }
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime startOfHour() {
         long cur = timeInMillis();
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.alignHour(cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.alignHour(cal);
         long neu = cal.getTimeInMillis();
         if (cur == neu) {
-            DSTime.recycle(cal);
+            Time.recycle(cal);
             return this;
         }
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime startOfMinute() {
         long cur = timeInMillis();
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.alignMinute(cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.alignMinute(cal);
         long neu = cal.getTimeInMillis();
         if (cur == neu) {
-            DSTime.recycle(cal);
+            Time.recycle(cal);
             return this;
         }
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime startOfMonth() {
         long cur = timeInMillis();
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.alignMonth(cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.alignMonth(cal);
         long neu = cal.getTimeInMillis();
         if (cur == neu) {
-            DSTime.recycle(cal);
+            Time.recycle(cal);
             return this;
         }
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime startOfWeek() {
         long cur = timeInMillis();
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.alignWeek(cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.alignWeek(cal);
         long neu = cal.getTimeInMillis();
         if (cur == neu) {
-            DSTime.recycle(cal);
+            Time.recycle(cal);
             return this;
         }
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
     public DSDateTime startOfYear() {
         long cur = timeInMillis();
-        Calendar cal = DSTime.getCalendar(timeInMillis(), getTimeZone());
-        DSTime.alignYear(cal);
+        Calendar cal = Time.getCalendar(timeInMillis(), getTimeZone());
+        Time.alignYear(cal);
         long neu = cal.getTimeInMillis();
         if (cur == neu) {
-            DSTime.recycle(cal);
+            Time.recycle(cal);
             return this;
         }
         DSDateTime ret = DSDateTime.valueOf(cal);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
     }
 
@@ -277,7 +360,7 @@ public class DSDateTime extends DSValue {
      */
     public long timeInMillis() {
         if (millis == null) {
-            millis = DSTime.decode(string);
+            millis = Time.decode(string);
         }
         return millis;
     }
@@ -293,7 +376,7 @@ public class DSDateTime extends DSValue {
     @Override
     public String toString() {
         if (string == null) {
-            string = DSTime.encode(millis, true).toString();
+            string = Time.encode(millis, true).toString();
         }
         return string;
     }
@@ -409,15 +492,31 @@ public class DSDateTime extends DSValue {
      */
     public static DSDateTime valueOf(int year, int month, int day, int hour, int min, int sec,
                                      TimeZone tz) {
-        Calendar cal = DSTime.getCalendar();
+        Calendar cal = Time.getCalendar();
         if (tz != null) {
             cal.setTimeZone(tz);
         }
         cal.set(year, --month, day, hour, min, sec);
         cal.set(Calendar.MILLISECOND, 0);
         DSDateTime ret = new DSDateTime(cal.getTimeInMillis(), tz);
-        DSTime.recycle(cal);
+        Time.recycle(cal);
         return ret;
+    }
+
+    /**
+     * Create a DSDateTime for the given time fields.
+     *
+     * @param month 1-12
+     * @param day   1-31
+     * @param hour  0-23
+     * @param min   0-59
+     * @param sec   0-59
+     * @param tz    Optional
+     * @return Value representing the given time fields.
+     */
+    public static DSDateTime valueOf(int year, int month, int day, int hour, int min, int sec,
+                                     DSTimezone tz) {
+        return valueOf(year, month, day, hour, min, sec, tz.getTimeZone());
     }
 
     /**
@@ -457,6 +556,71 @@ public class DSDateTime extends DSValue {
     ///////////////////////////////////////////////////////////////////////////
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
+
+    public static class SetAction extends DSAction {
+
+        public static final SetAction INSTANCE = new SetAction();
+
+        @Override
+        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+            DSMap params = invocation.getParameters();
+            int year = params.get(YEAR, 1970);
+            int month = params.get(MONTH, 0);
+            int day = params.get(DAY, 0);
+            int hr = params.get(HOUR, 0);
+            int min = params.get(MINUTE, 0);
+            int sec = params.get(SECOND, 0);
+            DSTimezone tz = DSTimezone.NULL.valueOf(params.get(TIMEZONE));
+            target.getParent().put(target, valueOf(year, month, day, hr, min, sec, tz));
+            return null;
+        }
+
+        @Override
+        public void prepareParameter(DSInfo target, DSMap parameter) {
+            DSDateTime dt = (DSDateTime) target.get();
+            String name = parameter.get(DSMetadata.NAME, "");
+            switch (name) {
+                case YEAR:
+                    parameter.put(DSMetadata.DEFAULT, dt.getYear());
+                    break;
+                case MONTH:
+                    parameter.put(DSMetadata.DEFAULT, dt.getMonth());
+                    break;
+                case DAY:
+                    parameter.put(DSMetadata.DEFAULT, dt.getDay());
+                    break;
+                case HOUR:
+                    parameter.put(DSMetadata.DEFAULT, dt.getHour());
+                    break;
+                case MINUTE:
+                    parameter.put(DSMetadata.DEFAULT, dt.getMinute());
+                    break;
+                case SECOND:
+                    parameter.put(DSMetadata.DEFAULT, dt.getSecond());
+                    break;
+                case TIMEZONE:
+                    if (dt.timeZone != null) {
+                        DSTimezone tz = DSTimezone.valueOf(dt.getTimeZone());
+                        if ((tz != null) && !tz.isDefault()) {
+                            parameter.put(DSMetadata.DEFAULT, tz.toElement());
+                        }
+                    }
+                    break;
+            }
+        }
+
+        {
+            DSLong zero = DSLong.valueOf(0);
+            addParameter(YEAR, zero, null);
+            addParameter(MONTH, zero, null);
+            addParameter(DAY, zero, null);
+            addParameter(HOUR, zero, null);
+            addParameter(MINUTE, zero, null);
+            addParameter(SECOND, zero, null);
+            addParameter(TIMEZONE, DSTimezone.ALL_ZONES, "For example: America/Los_Angeles");
+        }
+
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Initialization

@@ -296,6 +296,14 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
+     * Override point, used to determine whether or not to expose the duplicate action.  The
+     * default implementation returns false if the child is permanent.
+     */
+    public boolean canDuplicate(DSInfo child) {
+        return !child.isFrozen();
+    }
+
+    /**
      * The number of children.
      */
     public int childCount() {
@@ -311,7 +319,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     public DSNode clear() {
         DSInfo info = getFirstInfo();
         while (info != null) {
-            if (info.isRemovable()) {
+            if (!info.isFrozen()) {
                 remove(info);
             }
             info = info.next();
@@ -624,21 +632,23 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 return virtualInfo(sa.getSetActionName(), sa.getSetAction());
             }
         }
-        if (target.isRemovable()) {
+        if (!target.isFrozen()) {
             switch (name) {
                 case DeleteAction.DELETE:
                     info = virtualInfo(name, DeleteAction.INSTANCE);
-                    break;
-                case DuplicateAction.DUPLICATE:
-                    info = virtualInfo(name, DuplicateAction.INSTANCE);
                     break;
                 case RenameAction.RENAME:
                     info = virtualInfo(name, RenameAction.INSTANCE);
                     break;
             }
-            if (info != null) {
-                info.getMetadata().setActionGroup(DSAction.EDIT_GROUP, null);
+        }
+        if (info == null) {
+            if (name.equals(DuplicateAction.DUPLICATE) && canDuplicate(target)) {
+                info = virtualInfo(name, DuplicateAction.INSTANCE);
             }
+        }
+        if (info != null) {
+            info.getMetadata().setActionGroup(DSAction.EDIT_GROUP, null);
         }
         return info;
     }
@@ -667,9 +677,12 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
                 bucket.add(((DSISetAction) target.get()).getSetActionName());
             }
         }
-        if (target.isRemovable()) {
+        if (!target.isFrozen()) {
             bucket.add(DeleteAction.DELETE);
             bucket.add(RenameAction.RENAME);
+            bucket.add(DuplicateAction.DUPLICATE);
+        }
+        if (canDuplicate(target)) {
             bucket.add(DuplicateAction.DUPLICATE);
         }
     }
@@ -935,7 +948,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @throws IllegalStateException If the info is permanent or not a child of this node.
      */
     public DSNode remove(DSInfo info) {
-        if (!info.isRemovable()) {
+        if (info.isDeclared()) {
             throw new IllegalStateException("Can not be removed");
         }
         if (info.isVirtual()) {
@@ -1005,6 +1018,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         synchronized (mutex) {
             if (info.getParent() != this) {
                 throw new IllegalArgumentException("Info not parented by this node");
+            }
+            if (info.isDeclared()) {
+                throw new IllegalArgumentException("Cannot rename declared children");
             }
             if (newName == null) {
                 throw new IllegalArgumentException("Missing new name");
@@ -1119,7 +1135,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
     }
 
-
     /**
      * This is a convenience that creates a filter for the given event and or child.  Only non-null
      * events and children are filtered.
@@ -1131,6 +1146,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     public DSISubscription subscribe(DSISubscriber subscriber, DSEvent event, DSInfo child) {
         return subscribe(new DSEventFilter(subscriber, event, child));
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Only creates a subscription if not already subscribed.
@@ -1169,10 +1188,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         }
         return sub;
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Protected Methods
-    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Use this in the declareDefaults method to create a non-removable child.  This is only called
