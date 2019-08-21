@@ -20,8 +20,9 @@ Please read the [developer guide](https://github.com/iot-dsa-v2/sdk-dslink-java-
 
 **/dslink-v2**
 
-  - For links that wish to use a custom websocket library, such as in a servlet 
-  container that already provides one.
+  - Link implementation.  Links that wish to use a custom websocket library should declare
+  a dependency on this, such as in a servlet container that already provides one.  Otherwise,
+  use dslink-v2-websocket.
   
 **/dslink-v2-api**
 
