@@ -28,11 +28,15 @@ public interface DSIRequester {
     public OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler handler);
 
     /**
-     * Submits a list request.
+     * Submits a list request.  Child names do not need to be encoded unless they contain
+     * a forward slash.  If encoding names, be sure to decode in all responder methods here,
+     * including this one, see DSPath.
      *
      * @param handler Callback mechanism.
      * @return The handler parameter.
      * @see AbstractListHandler
+     * @see org.iot.dsa.node.DSPath#encodeName(String)
+     * @see org.iot.dsa.node.DSPath#decodeName(String)
      */
     public OutboundListHandler list(String path, OutboundListHandler handler);
 
