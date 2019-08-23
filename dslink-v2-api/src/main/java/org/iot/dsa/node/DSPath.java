@@ -482,6 +482,14 @@ public class DSPath extends DSValue {
     private static boolean shouldEncodeV1(int ch) {
         switch (ch) {
             case '/':
+            case '\\':
+            case '?':
+            case '*':
+            case ':':
+            case '|':
+            case '"':
+            case '<':
+            case '>':
             case '%':
                 return true;
             default:
