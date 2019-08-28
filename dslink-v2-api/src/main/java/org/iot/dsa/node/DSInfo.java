@@ -22,7 +22,7 @@ import org.iot.dsa.util.DSUtil;
  *
  * @author Aaron Hansen
  */
-public class DSInfo implements ApiObject, GroupListener {
+public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -44,7 +44,7 @@ public class DSInfo implements ApiObject, GroupListener {
     DSMap metadata;
     String name;
     DSInfo next;
-    DSIObject object;
+    T object;
     DSNode parent;
     DSInfo prev;
 
@@ -55,7 +55,7 @@ public class DSInfo implements ApiObject, GroupListener {
     DSInfo() {
     }
 
-    public DSInfo(String name, DSIObject object) {
+    protected DSInfo(String name, T object) {
         this.name = name;
         setObject(object);
     }
@@ -63,22 +63,6 @@ public class DSInfo implements ApiObject, GroupListener {
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    public DSInfo copy() {
-        DSInfo ret = new DSInfo();
-        ret.copyState(this);
-        if (isDefaultOnCopy()) {
-            DSIObject val = getDefaultObject();
-            if (val != null) {
-                ret.setObject(val.copy());
-                return ret;
-            }
-        }
-        if (object != null) {
-            ret.setObject(object.copy());
-        }
-        return ret;
-    }
 
     public void decodeState(DSElement state) {
         flags = state.toInt();
@@ -159,7 +143,7 @@ public class DSInfo implements ApiObject, GroupListener {
     /**
      * Returns the target object.
      */
-    public DSIObject get() {
+    public T get() {
         return object;
     }
 
@@ -202,13 +186,6 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     /**
-     * If this is a proxy , this will return the original default instance.
-     */
-    public DSIObject getDefaultObject() {
-        return get();
-    }
-
-    /**
      * A convenience that casts the object.  Will call DSIValue.toElement on values.
      */
     public DSElement getElement() {
@@ -248,15 +225,6 @@ public class DSInfo implements ApiObject, GroupListener {
         return (DSNode) get();
     }
 
-    /**
-     * User get() instead.
-     *
-     * @deprecated 18-11-14
-     */
-    public DSIObject getObject() {
-        return object;
-    }
-
     public DSNode getParent() {
         return parent;
     }
@@ -288,7 +256,7 @@ public class DSInfo implements ApiObject, GroupListener {
     /**
      * True if the value of the info is an instance of the given class.
      */
-    public boolean is(Class clazz) {
+    public boolean is(Class<?> clazz) {
         if (object == null) {
             return false;
         }
@@ -328,7 +296,8 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     /**
-     * True if the info cannot be removed or renamed. Use for non-default nodes.
+     * True if the info cannot be removed or renamed.
+     * Intended for non-default children, default children are implicitly locked.
      */
     public boolean isLocked() {
         return getFlag(LOCKED);
@@ -348,7 +317,10 @@ public class DSInfo implements ApiObject, GroupListener {
         if (object == null) {
             return true;
         }
-        return object.isNull();
+        if (isValue()) {
+            return getValue().isNull();
+        }
+        return false;
     }
 
     /**
@@ -388,16 +360,16 @@ public class DSInfo implements ApiObject, GroupListener {
     }
 
     /**
-     * The next info in the parent node.
+     * The next info in the parent node, or null.
      */
     public DSInfo next() {
         return next;
     }
 
     /**
-     * The next DSInfo in the parent whose object is of the given type.
+     * The next DSInfo in the parent whose object is of the given type, or null.
      */
-    public DSInfo next(Class is) {
+    public DSInfo next(Class<?> is) {
         DSInfo cur = next;
         while (cur != null) {
             if (cur.is(is)) {
@@ -405,13 +377,13 @@ public class DSInfo implements ApiObject, GroupListener {
             }
             cur = cur.next();
         }
-        return cur;
+        return null;
     }
 
     /**
      * The next DSInfo in the parent that is an action, or null.
      */
-    public DSInfo nextAction() {
+    public DSInfo<DSAction> nextAction() {
         DSInfo cur = next;
         while (cur != null) {
             if (cur.isAction()) {
@@ -419,13 +391,13 @@ public class DSInfo implements ApiObject, GroupListener {
             }
             cur = cur.next();
         }
-        return cur;
+        return null;
     }
 
     /**
      * The next DSInfo in the parent that is a node, or null.
      */
-    public DSInfo nextNode() {
+    public DSInfo<DSNode> nextNode() {
         DSInfo cur = next;
         while (cur != null) {
             if (cur.isNode()) {
@@ -433,13 +405,13 @@ public class DSInfo implements ApiObject, GroupListener {
             }
             cur = cur.next();
         }
-        return cur;
+        return null;
     }
 
     /**
      * The next DSInfo in the parent that is a value, or null.
      */
-    public DSInfo nextValue() {
+    public DSInfo<DSIValue> nextValue() {
         DSInfo cur = next;
         while (cur != null) {
             if (cur.isValue()) {
@@ -447,14 +419,14 @@ public class DSInfo implements ApiObject, GroupListener {
             }
             cur = cur.next();
         }
-        return cur;
+        return null;
     }
 
     /**
      * False by default, set to true if you don't want the child to require admin level
      * permissions.
      */
-    public DSInfo setAdmin(boolean admin) {
+    public DSInfo<T> setAdmin(boolean admin) {
         setFlag(ADMIN, admin);
         return this;
     }
@@ -463,21 +435,21 @@ public class DSInfo implements ApiObject, GroupListener {
      * False by default, set to true to reset the target to it's default when the encapsulated node
      * is copied.
      */
-    public DSInfo setDefaultOnCopy(boolean defaultOnCopy) {
+    public DSInfo<T> setDefaultOnCopy(boolean defaultOnCopy) {
         setFlag(DEFAULT_ON_COPY, defaultOnCopy);
         return this;
     }
 
     /**
      * False by default, set to true if the info cannot be removed or renamed.
-     * Use for non-default nodes.
+     * Intended for non-default children, default children are implicitly locked.
      */
-    public DSInfo setLocked(boolean locked) {
+    public DSInfo<T> setLocked(boolean locked) {
         setFlag(LOCKED, locked);
         return this;
     }
 
-    public DSInfo setMetadata(DSMap map) {
+    public DSInfo<T> setMetadata(DSMap map) {
         map.setParent(this);
         metadata = map;
         return this;
@@ -486,7 +458,7 @@ public class DSInfo implements ApiObject, GroupListener {
     /**
      * False by default, set to true if you don't want the child to be sent to clients.
      */
-    public DSInfo setPrivate(boolean hidden) {
+    public DSInfo<T> setPrivate(boolean hidden) {
         setFlag(PRIVATE, hidden);
         return this;
     }
@@ -494,7 +466,7 @@ public class DSInfo implements ApiObject, GroupListener {
     /**
      * False by default, set to true if you don't want the child to be written by clients.
      */
-    public DSInfo setReadOnly(boolean readOnly) {
+    public DSInfo<T> setReadOnly(boolean readOnly) {
         setFlag(READONLY, readOnly);
         return this;
     }
@@ -502,7 +474,7 @@ public class DSInfo implements ApiObject, GroupListener {
     /**
      * False by default, set to true if you don't want the child persisted.
      */
-    public DSInfo setTransient(boolean trans) {
+    public DSInfo<T> setTransient(boolean trans) {
         setFlag(TRANSIENT, trans);
         return this;
     }
@@ -518,30 +490,45 @@ public class DSInfo implements ApiObject, GroupListener {
     // Package Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * This is only called by DSNode.copy.  Therefore, this will already
-     * be populated with the default value.
-     */
-    void copy(DSInfo info) {
+    DSInfo<T> copy() {
+        DSInfo<T> ret = new DSInfo<>();
+        ret.copyState(this);
+        if (isDefaultOnCopy()) {
+            DSIObject val = getDefaultObject();
+            if (val != null) {
+                ret.setObject((T) val.copy());
+                return ret;
+            }
+        }
+        if (object != null) {
+            ret.setObject((T) object.copy());
+        }
+        return ret;
+    }
+
+    void copy(DSInfo<T> info) {
         copyState(info);
         if (isDefaultOnCopy()) {
             return;
         }
         if (info.object != null) {
-            setObject(info.object.copy());
+            setObject((T) info.object.copy());
         }
     }
 
-    /**
-     * This is only called by DSNode.copy.  Therefore, this will already
-     * be populated with the default value.
-     */
-    void copyState(DSInfo info) {
+    void copyState(DSInfo<T> info) {
         flags = info.flags;
         name = info.name;
         if (info.metadata != null) {
             metadata = info.metadata.copy();
         }
+    }
+
+    /**
+     * If this is a proxy , this will return the original default instance.
+     */
+    T getDefaultObject() {
+        return get();
     }
 
     boolean getFlag(int position) {
@@ -566,28 +553,32 @@ public class DSInfo implements ApiObject, GroupListener {
         return false;
     }
 
-    DSInfo setFlag(int position, boolean on) {
+    DSInfo<T> newProxy() {
+        return new DSInfoProxy<>(this);
+    }
+
+    DSInfo<T> setFlag(int position, boolean on) {
         //modified?
         flags = DSUtil.setBit(flags, position, on);
         return this;
     }
 
-    DSInfo setName(String arg) {
+    DSInfo<T> setName(String arg) {
         this.name = arg;
         return this;
     }
 
-    DSInfo setObject(DSIObject arg) {
+    DSInfo<T> setObject(T arg) {
         this.object = arg;
         return this;
     }
 
-    DSInfo setParent(DSNode arg) {
+    DSInfo<T> setParent(DSNode arg) {
         this.parent = arg;
         return this;
     }
 
-    DSInfo setDeclared(boolean arg) {
+    DSInfo<T> setDeclared(boolean arg) {
         setFlag(DECLARED, arg);
         return this;
     }
