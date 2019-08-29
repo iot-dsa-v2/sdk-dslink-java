@@ -14,11 +14,16 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
      * here.  This method will be called often, it would be best to cache the info instance
      * rather then doing a name lookup each time.
      */
-    public abstract DSInfo getValueChild();
+    public abstract DSInfo<DSIValue> getValueChild();
 
     @Override
     public DSValueType getValueType() {
         return getValueChild().getValue().getValueType();
+    }
+
+    @Override
+    public boolean isNull() {
+        return getValueChild().isNull();
     }
 
     /**

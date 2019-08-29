@@ -715,14 +715,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     }
 
     /**
-     * Returns false.
-     */
-    @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    /**
      * A convenience for !isStopped().
      */
     public boolean isRunning() {
@@ -1288,8 +1280,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (obj == null) {
             return true;
         }
-        if (obj instanceof DSIObject) {
-            return ((DSIObject) obj).isNull();
+        if (obj instanceof DSIValue) {
+            return ((DSIValue) obj).isNull();
         } else if (obj instanceof DSInfo) {
             return ((DSInfo) obj).isNull();
         }

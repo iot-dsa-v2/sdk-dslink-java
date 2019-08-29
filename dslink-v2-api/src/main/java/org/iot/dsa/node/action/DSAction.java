@@ -287,14 +287,6 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
     public abstract ActionResult invoke(DSInfo target, ActionInvocation request);
 
     /**
-     * False
-     */
-    @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    /**
      * Called for each parameter as it is being sent to the requester. The intent is for
      * updating the default value to represent the current state of the target.  If you do not
      * need to prepare parameters, the inner class Parameterless implements this method to

@@ -60,14 +60,6 @@ public class DSEvent implements DSIObject {
     }
 
     /**
-     * False
-     */
-    @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    /**
      * Returns the event ID.
      */
     @Override

@@ -42,8 +42,8 @@ public class DS2LinkConnection extends DSBrokerConnection {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo brokerAuth = getInfo(BROKER_AUTH);
-    private DSInfo linkSalt = getInfo(LINK_SALT);
+    private DSInfo<DSBytes> brokerAuth = getInfo(BROKER_AUTH);
+    private DSInfo<DSBytes> linkSalt = getInfo(LINK_SALT);
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
