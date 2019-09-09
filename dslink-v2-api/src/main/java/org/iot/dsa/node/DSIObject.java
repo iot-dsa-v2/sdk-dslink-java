@@ -12,9 +12,4 @@ public interface DSIObject {
      */
     public DSIObject copy();
 
-    /**
-     * Whether or not this object represents a null instance.
-     */
-    public boolean isNull();
-
 }

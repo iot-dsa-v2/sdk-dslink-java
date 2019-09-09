@@ -60,8 +60,8 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
                     //since not a node, there must be a parent
                     DSIValue current = info.getValue();
                     if (current == null) {
-                        if (info.getDefaultObject() instanceof DSIValue) {
-                            current = (DSIValue) info.getDefaultObject();
+                        if (info.isValue()) {
+                            current = info.getValue();
                         }
                     }
                     if (current != null) {

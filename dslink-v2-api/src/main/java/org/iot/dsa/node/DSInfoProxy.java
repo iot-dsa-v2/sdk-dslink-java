@@ -7,50 +7,30 @@ import org.iot.dsa.util.DSUtil;
  *
  * @author Aaron Hansen
  */
-class DSInfoProxy extends DSInfo {
+class DSInfoProxy<T extends DSIObject> extends DSInfo<T> {
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo defaultInfo;
+    private DSInfo<T> defaultInfo;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    DSInfoProxy(DSInfo defaultInfo) {
+    DSInfoProxy(DSInfo<T> defaultInfo) {
         this.defaultInfo = defaultInfo;
         this.flags = defaultInfo.flags;
         this.name = defaultInfo.name;
         if (defaultInfo.get() != null) {
-            setObject(defaultInfo.get().copy());
+            setObject((T) defaultInfo.get().copy());
         }
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public DSInfo copy() {
-        DSInfoProxy ret = new DSInfoProxy(defaultInfo);
-        ret.flags = flags;
-        ret.name = name;
-        ret.defaultInfo = defaultInfo;
-        if (metadata != null) {
-            ret.metadata = metadata.copy();
-        }
-        if (isDefaultOnCopy()) {
-            DSIObject val = getDefaultObject();
-            if (val != null) {
-                ret.setObject(val.copy());
-            }
-        } else if (object != null) {
-            ret.setObject(object.copy());
-        }
-        return ret;
-    }
 
     @Override
     public boolean equalsDefault() {
@@ -92,11 +72,6 @@ class DSInfoProxy extends DSInfo {
     }
 
     @Override
-    public DSIObject getDefaultObject() {
-        return defaultInfo.get();
-    }
-
-    @Override
     public void getMetadata(DSMap bucket) {
         if (metadata != null) {
             bucket.putAll(metadata);
@@ -117,13 +92,38 @@ class DSInfoProxy extends DSInfo {
     }
 
     @Override
-    void copy(DSInfo info) {
+    DSInfo<T> copy() {
+        DSInfoProxy<T> ret = new DSInfoProxy<>(defaultInfo);
+        ret.flags = flags;
+        ret.name = name;
+        ret.defaultInfo = defaultInfo;
+        if (metadata != null) {
+            ret.metadata = metadata.copy();
+        }
+        if (isDefaultOnCopy()) {
+            DSIObject val = getDefaultObject();
+            if (val != null) {
+                ret.setObject((T) val.copy());
+            }
+        } else if (object != null) {
+            ret.setObject((T) object.copy());
+        }
+        return ret;
+    }
+
+    @Override
+    void copy(DSInfo<T> info) {
         if (info instanceof DSInfoProxy) {
             defaultInfo = ((DSInfoProxy) info).defaultInfo;
         } else {
             defaultInfo = info;
         }
         super.copy(info);
+    }
+
+    @Override
+    T getDefaultObject() {
+        return defaultInfo.get();
     }
 
     @Override

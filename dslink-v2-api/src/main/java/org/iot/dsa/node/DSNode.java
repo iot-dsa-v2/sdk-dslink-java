@@ -477,7 +477,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     /**
      * DSInfo for this node in its parent, or null if un-parented.
      */
-    public DSInfo getInfo() {
+    public DSInfo<DSNode> getInfo() {
         return infoInParent;
     }
 
@@ -712,14 +712,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      */
     public final boolean isDefaultInstance() {
         return defaultInstance == defaultDefaultInstance;
-    }
-
-    /**
-     * Returns false.
-     */
-    @Override
-    public boolean isNull() {
-        return false;
     }
 
     /**
@@ -1288,8 +1280,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (obj == null) {
             return true;
         }
-        if (obj instanceof DSIObject) {
-            return ((DSIObject) obj).isNull();
+        if (obj instanceof DSIValue) {
+            return ((DSIValue) obj).isNull();
         } else if (obj instanceof DSInfo) {
             return ((DSInfo) obj).isNull();
         }
@@ -1505,7 +1497,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             }
             DSInfo info = defaultInstance.firstChild;
             while (info != null) {
-                add(new DSInfoProxy(info));
+                add(info.newProxy());
                 info = info.next();
             }
         }
