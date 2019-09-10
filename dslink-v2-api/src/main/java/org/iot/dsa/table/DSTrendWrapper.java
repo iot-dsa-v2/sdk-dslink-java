@@ -39,8 +39,8 @@ public class DSTrendWrapper implements DSITrend {
     }
 
     @Override
-    public void getMetadata(int index, DSMap bucket) {
-        inner.getMetadata(index, bucket);
+    public void getColumnMetadata(int index, DSMap bucket) {
+        inner.getColumnMetadata(index, bucket);
     }
 
     @Override

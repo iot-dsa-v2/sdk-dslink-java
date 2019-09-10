@@ -1,11 +1,11 @@
 package com.acuity.iot.dsa.dslink.protocol;
 
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.iot.dsa.util.DSException;
 
 /**
@@ -85,10 +85,10 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
         declareDefault(BROKER_SALT, DSString.NULL).setTransient(true).setReadOnly(true);
         declareDefault(BROKER_URI, DSString.NULL).setTransient(true).setReadOnly(true);
         declareDefault(BROKER_VERSION, DSString.NULL).setTransient(true).setReadOnly(true);
-        declareDefault(RECONNECT, new DSAction.Parameterless() {
+        declareDefault(RECONNECT, new DSAction() {
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                ((DSBrokerConnection) target.get()).disconnect();
+            public ActionResults invoke(DSIActionRequest request) {
+                ((DSBrokerConnection) request.getTarget()).disconnect();
                 return null;
             }
         });

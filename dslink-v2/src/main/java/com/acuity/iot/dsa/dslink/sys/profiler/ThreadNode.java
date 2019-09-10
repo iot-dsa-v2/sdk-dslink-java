@@ -4,25 +4,22 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.iot.dsa.dslink.Action.ResultsType;
+import org.iot.dsa.dslink.ActionResults;
+import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
+import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionSpec;
-import org.iot.dsa.node.action.ActionSpec.ResultType;
-import org.iot.dsa.node.action.ActionValues;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.node.action.DSActionValues;
+import org.iot.dsa.node.action.DSIActionRequest;
 
 public class ThreadNode extends MXBeanNode {
 
@@ -30,14 +27,14 @@ public class ThreadNode extends MXBeanNode {
     private Map<Long, ThreadInfoNode> infoNodes = new HashMap<Long, ThreadInfoNode>();
     private ThreadMXBean mxbean;
 
-    public ActionResult findDeadlocked(DSAction action) {
+    public ActionResults findDeadlocked(DSIActionRequest req) {
         long[] ids = mxbean.findDeadlockedThreads();
-        return returnDeadlocked(action, ids != null ? ids : new long[0]);
+        return returnDeadlocked(req, ids != null ? ids : new long[0]);
     }
 
-    public ActionResult findMonitorDeadlocked(DSAction action) {
+    public ActionResults findMonitorDeadlocked(DSIActionRequest req) {
         long[] ids = mxbean.findMonitorDeadlockedThreads();
-        return returnDeadlocked(action, ids != null ? ids : new long[0]);
+        return returnDeadlocked(req, ids != null ? ids : new long[0]);
     }
 
     @Override
@@ -101,42 +98,42 @@ public class ThreadNode extends MXBeanNode {
     @Override
     protected void declareDefaults() {
         super.declareDefaults();
-        DSAction act = new DSAction.Parameterless() {
+        DSAction act = new DSAction() {
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                return ((ThreadNode) target.get()).findDeadlocked(this);
+            public ActionResults invoke(DSIActionRequest req) {
+                return ((ThreadNode) req.getTarget()).findDeadlocked(req);
             }
         };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
+        act.setResultsType(ResultsType.VALUES);
+        act.addColumnMetadata("Result", DSString.NULL);
         declareDefault("Find Deadlocked Threads", act);
-        act = new DSAction.Parameterless() {
+        act = new DSAction() {
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                return ((ThreadNode) target.getParent()).findMonitorDeadlocked(this);
+            public ActionResults invoke(DSIActionRequest req) {
+                return ((ThreadNode) req.getTarget()).findMonitorDeadlocked(req);
             }
         };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
+        act.setResultsType(ResultsType.VALUES);
+        act.addColumnMetadata("Result", DSString.NULL);
         declareDefault("Find Monitor Deadlocked Threads", act);
-        act = new DSAction.Parameterless() {
+        act = new DSAction() {
 
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                return ((ThreadNode) target.get())
-                        .getThreadDump(this, invocation.getParameters());
+            public ActionResults invoke(DSIActionRequest req) {
+                return ((ThreadNode) req.getTargetInfo().get()).getThreadDump(this, req);
             }
         };
-        act.addParameter("Dump Locked Monitors", DSValueType.BOOL,
+        act.addParameter("Dump Locked Monitors", DSBool.NULL,
                          "If true, dump all locked monitors");
-        act.addParameter("Dump Locked Synschronizers", DSValueType.BOOL,
+        act.addParameter("Dump Locked Synschronizers", DSBool.NULL,
                          "If true, dump all locked ownable synchronizers");
-        act.addColumnMetadata("Thread Dump", DSValueType.STRING).setEditor("textarea");
-        act.setResultType(ResultType.VALUES);
+        act.addColumnMetadata("Thread Dump", DSString.NULL).setEditor("textarea");
+        act.setResultsType(ResultsType.VALUES);
         declareDefault("Get Thread Dump", act);
     }
 
-    protected ActionResult getThreadDump(DSAction action, DSMap parameters) {
+    protected ActionResults getThreadDump(DSAction action, DSIActionRequest req) {
+        DSMap parameters = req.getParameters();
         boolean lockedMonitors = parameters.getBoolean("Dump Locked Monitors");
         boolean lockedSynchronizers = parameters.getBoolean("Dump Locked Synschronizers");
         ThreadInfo[] threads = mxbean.dumpAllThreads(lockedMonitors, lockedSynchronizers);
@@ -146,41 +143,16 @@ public class ThreadNode extends MXBeanNode {
             dump.append('\n');
             //ProfilerUtils.stackTraceToString(thread.getStackTrace());
         }
-        return new DSActionValues(action).addResult(DSString.valueOf(dump.toString()));
+        return action.makeResults(req, DSString.valueOf(dump.toString()));
     }
 
-    private ActionResult returnDeadlocked(final DSAction action, long[] deadlockedIds) {
-        DSList l = new DSList();
-        for (long id : deadlockedIds) {
-            l.add(id);
+    private ActionResults returnDeadlocked(final DSIActionRequest req, long[] deadlockedIds) {
+        int len = deadlockedIds.length;
+        DSIValue[] ary = new DSIValue[len];
+        for (int i = 0; i < len; i++) {
+            ary[i] = DSLong.valueOf(deadlockedIds[i]);
         }
-        final List<DSIValue> values = Collections.singletonList((DSIValue) l);
-        return new ActionValues() {
-
-            @Override
-            public ActionSpec getAction() {
-                return action;
-            }
-
-            @Override
-            public int getColumnCount() {
-                return values.size();
-            }
-
-            @Override
-            public void getMetadata(int idx, DSMap bucket) {
-                action.getColumnMetadata(idx, bucket);
-            }
-
-            @Override
-            public DSIValue getValue(int idx) {
-                return values.get(idx);
-            }
-
-            @Override
-            public void onClose() {
-            }
-        };
+        return req.getAction().makeResults(req, ary);
     }
 
     static {

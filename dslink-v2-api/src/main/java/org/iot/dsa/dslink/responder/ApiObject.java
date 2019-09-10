@@ -1,8 +1,8 @@
 package org.iot.dsa.dslink.responder;
 
 import java.util.Iterator;
+import org.iot.dsa.dslink.Action;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.action.ActionSpec;
 
 /**
  * Can be a node, value or an action.
@@ -14,7 +14,7 @@ public interface ApiObject {
     /**
      * The action, should only be called if isAction() returns true.
      */
-    public ActionSpec getAction();
+    public Action getAction();
 
     /**
      * Return the object representing the child with the given name.

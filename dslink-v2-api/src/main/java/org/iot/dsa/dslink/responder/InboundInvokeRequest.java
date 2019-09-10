@@ -1,15 +1,15 @@
 package org.iot.dsa.dslink.responder;
 
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.action.ActionInvocation;
+import org.iot.dsa.node.action.DSIActionRequest;
 
 /**
  * See ActionInvocation for the real meat.
  *
  * @author Aaron Hansen
- * @see ActionInvocation
+ * @see DSIActionRequest
  */
-public interface InboundInvokeRequest extends InboundRequest, ActionInvocation {
+public interface InboundInvokeRequest extends InboundRequest, DSIActionRequest {
 
     /**
      * The parameters supplied by the invoker, or null.

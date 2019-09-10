@@ -1,15 +1,15 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSJavaEnum;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 
 /**
  * @author Daniel Shapiro
@@ -61,16 +61,16 @@ public class HostnameWhitelist extends DSNode {
     }
 
     private DSAction getAddHostnameAction() {
-        DSAction act = new DSAction.Parameterless() {
+        DSAction act = new DSAction() {
 
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                ((HostnameWhitelist) target.get()).addHostname(invocation.getParameters());
+            public ActionResults invoke(DSIActionRequest request) {
+                ((HostnameWhitelist) request.getTarget()).addHostname(request.getParameters());
                 return null;
             }
 
         };
-        act.addParameter("Hostname", DSValueType.STRING, null);
+        act.addParameter("Hostname", DSString.NULL, null);
         act.addParameter("Status", DSJavaEnum.valueOf(WhitelistValue.ALLOWED),
                          "Whether this hostname should be whitelisted or blacklisted");
         return act;

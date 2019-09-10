@@ -9,15 +9,15 @@ import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.HashMap;
 import java.util.Map;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.iot.dsa.time.Time;
 import org.iot.dsa.util.DSException;
 
@@ -48,8 +48,8 @@ public class CertCollection extends DSNode {
 
     public static String certToName(X509Certificate cert) {
         return Time.encodeForFiles(Time.getCalendar(System.currentTimeMillis()),
-                                     new StringBuilder(cert.getIssuerX500Principal().getName()))
-                     .toString();
+                                   new StringBuilder(cert.getIssuerX500Principal().getName()))
+                   .toString();
     }
 
     public boolean containsCertificate(X509Certificate cert) {
@@ -145,14 +145,15 @@ public class CertCollection extends DSNode {
     }
 
     private DSAction makeAddCertAction() {
-        DSAction act = new DSAction.Parameterless() {
+        DSAction act = new DSAction() {
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation request) {
-                ((CertCollection) target.get()).addCert(request.getParameters());
+            public ActionResults invoke(DSIActionRequest request) {
+                ((CertCollection) request.getTarget()).addCert(request.getParameters());
                 return null;
             }
         };
-        act.addParameter(CERT, DSValueType.STRING, null).setEditor(DSMetadata.STR_EDITOR_TEXT_AREA);
+        act.addParameter(CERT, DSString.NULL, null)
+           .setEditor(DSMetadata.STR_EDITOR_TEXT_AREA);
         return act;
     }
 

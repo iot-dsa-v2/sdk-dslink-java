@@ -16,17 +16,15 @@ import java.util.Map.Entry;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
+import org.iot.dsa.dslink.Action.ResultsType;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionSpec.ResultType;
 import org.iot.dsa.node.action.DSAction;
-import org.iot.dsa.node.action.DSActionValues;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.iot.dsa.security.DSPasswordAes128;
 import org.iot.dsa.util.DSException;
 
@@ -308,67 +306,67 @@ public class SysCertService extends DSNode {
     }
 
     private DSAction getDeleteKSEntryAction() {
-        DSAction act = new DSAction.Parameterless() {
+        DSAction act = new DSAction() {
 
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                String result = ((SysCertService) target.get()).deleteKSEntry();
-                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            public ActionResults invoke(DSIActionRequest req) {
+                String result = ((SysCertService) req.getTargetInfo().get()).deleteKSEntry();
+                return makeResults(req, DSString.valueOf(result));
             }
 
         };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
+        act.setResultsType(ResultsType.VALUES);
+        act.addColumnMetadata("Result", DSString.NULL);
         return act;
     }
 
     private DSAction getGenerateCSRAction() {
-        DSAction act = new DSAction.Parameterless() {
+        DSAction act = new DSAction() {
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                String[] results = ((SysCertService) target.get()).generateCSR();
+            public ActionResults invoke(DSIActionRequest req) {
+                String[] results = ((SysCertService) req.getTargetInfo().get()).generateCSR();
                 if (results != null && results.length > 1) {
-                    return new DSActionValues(this)
-                            .addResult(DSString.valueOf(results[0]))
-                            .addResult(DSString.valueOf(results[1]));
+                    return makeResults(req,
+                                       DSString.valueOf(results[0]),
+                                       DSString.valueOf(results[1]));
                 } else {
                     return null;
                 }
             }
         };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
-        act.addColumnMetadata("CSR", DSValueType.STRING).setEditor("textarea");
+        act.setResultsType(ResultsType.VALUES);
+        act.addColumnMetadata("Result", DSString.NULL);
+        act.addColumnMetadata("CSR", DSString.NULL).setEditor("textarea");
         return act;
     }
 
     private DSAction getGenerateSelfSignedAction() {
-        DSAction act = new DSAction.Parameterless() {
+        DSAction act = new DSAction() {
 
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                String result = ((SysCertService) target.get()).keytoolGenkey();
-                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            public ActionResults invoke(DSIActionRequest req) {
+                String result = ((SysCertService) req.getTargetInfo().get()).keytoolGenkey();
+                return makeResults(req, DSString.valueOf(result));
             }
 
         };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
+        act.setResultsType(ResultsType.VALUES);
+        act.addColumnMetadata("Result", DSString.NULL);
         return act;
     }
 
     private DSAction getGetKSEntryAction() {
-        DSAction act = new DSAction.Parameterless() {
+        DSAction act = new DSAction() {
 
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                String result = ((SysCertService) target.get()).getKSEntry();
-                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            public ActionResults invoke(DSIActionRequest req) {
+                String result = ((SysCertService) req.getTargetInfo().get()).getKSEntry();
+                return makeResults(req, DSString.valueOf(result));
             }
 
         };
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Entry", DSValueType.STRING).setEditor("textarea");
+        act.setResultsType(ResultsType.VALUES);
+        act.addColumnMetadata("Entry", DSString.NULL).setEditor("textarea");
         return act;
     }
 
@@ -380,37 +378,39 @@ public class SysCertService extends DSNode {
     }
 
     private DSAction getImportCACertAction() {
-        DSAction act = new DSAction.Parameterless() {
+        DSAction act = new DSAction() {
 
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                DSMap parameters = invocation.getParameters();
-                String result = ((SysCertService) target.get()).importCACert(parameters);
-                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            public ActionResults invoke(DSIActionRequest req) {
+                DSMap parameters = req.getParameters();
+                String result = ((SysCertService) req.getTargetInfo().get())
+                        .importCACert(parameters);
+                return makeResults(req, DSString.valueOf(result));
             }
 
         };
-        act.addParameter("Alias", DSValueType.STRING, null);
-        act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
+        act.addParameter("Alias", DSString.NULL, null);
+        act.addParameter("Certificate", DSString.NULL, null).setEditor("textarea");
+        act.setResultsType(ResultsType.VALUES);
+        act.addColumnMetadata("Result", DSString.NULL);
         return act;
     }
 
     private DSAction getImportPrimaryCertAction() {
-        DSAction act = new DSAction.Parameterless() {
+        DSAction act = new DSAction() {
 
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                DSMap parameters = invocation.getParameters();
-                String result = ((SysCertService) target.get()).importPrimaryCert(parameters);
-                return new DSActionValues(this).addResult(DSString.valueOf(result));
+            public ActionResults invoke(DSIActionRequest req) {
+                DSMap parms = req.getParameters();
+                String result = ((SysCertService) req.getTargetInfo().get())
+                        .importPrimaryCert(parms);
+                return makeResults(req, DSString.valueOf(result));
             }
 
         };
-        act.addParameter("Certificate", DSValueType.STRING, null).setEditor("textarea");
-        act.setResultType(ResultType.VALUES);
-        act.addColumnMetadata("Result", DSValueType.STRING);
+        act.addParameter("Certificate", DSString.NULL, null).setEditor("textarea");
+        act.setResultsType(ResultsType.VALUES);
+        act.addColumnMetadata("Result", DSString.NULL);
         return act;
     }
 

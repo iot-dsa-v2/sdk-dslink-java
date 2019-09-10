@@ -12,6 +12,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.DSRuntime.Timer;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.io.NodeEncoder;
@@ -21,9 +22,8 @@ import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.time.Time;
 
@@ -254,11 +254,11 @@ public class SysBackupService extends DSNode implements Runnable {
         }
     }
 
-    private class SaveAction extends DSAction.Parameterless {
+    private class SaveAction extends DSAction {
 
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((SysBackupService) target.get()).save();
+        public ActionResults invoke(DSIActionRequest request) {
+            ((SysBackupService) request.getTarget()).save();
             return null;
         }
 

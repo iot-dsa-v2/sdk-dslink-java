@@ -62,7 +62,7 @@ public class SimpleTable extends AbstractTable {
         return this;
     }
 
-    public DSIRowCursor cursor() {
+    public DSIResultsCursor cursor() {
         return new MyCursor();
     }
 
@@ -70,7 +70,7 @@ public class SimpleTable extends AbstractTable {
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
-    private class MyCursor implements DSIRowCursor {
+    private class MyCursor implements DSIResultsCursor {
 
         private DSIValue[] row;
         private Iterator<DSIValue[]> rowIterator = rows.iterator();
@@ -81,7 +81,7 @@ public class SimpleTable extends AbstractTable {
         }
 
         @Override
-        public void getMetadata(int index, DSMap bucket) {
+        public void getColumnMetadata(int index, DSMap bucket) {
             bucket.putAll(columns.get(index));
         }
 

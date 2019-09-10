@@ -5,7 +5,7 @@ package org.iot.dsa.table;
  *
  * @author Aaron Hansen
  */
-public interface DSIRowCursor extends DSIRow {
+public interface DSIResultsCursor extends DSIResults {
 
     /**
      * Returns true when the cursor

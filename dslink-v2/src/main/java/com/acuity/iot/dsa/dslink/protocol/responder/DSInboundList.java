@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Iterator;
 import org.iot.dsa.DSRuntime;
+import org.iot.dsa.dslink.Action;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.dslink.responder.InboundListRequest;
@@ -24,9 +25,7 @@ import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionSpec;
-import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIAction;
 import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
@@ -50,7 +49,7 @@ public class DSInboundList extends DSInboundRequest
     private static final int STATE_INIT = 0;
     private static final int STATE_CHILDREN = 1;
     private static final int STATE_UPDATES = 2;
-    private static final int STATE_CLOSE_PENDING = 3;
+    private static final int STATE_CLOSE_PENDSING = 3;
     private static final int STATE_CLOSED = 4;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -87,7 +86,7 @@ public class DSInboundList extends DSInboundRequest
         if (!isOpen()) {
             return;
         }
-        state = STATE_CLOSE_PENDING;
+        state = STATE_CLOSE_PENDSING;
         enqueueResponse();
     }
 
@@ -110,7 +109,7 @@ public class DSInboundList extends DSInboundRequest
      */
     @Override
     public boolean isOpen() {
-        return (state != STATE_CLOSE_PENDING) && (state != STATE_CLOSED);
+        return (state != STATE_CLOSE_PENDSING) && (state != STATE_CLOSED);
     }
 
     @Override
@@ -241,7 +240,7 @@ public class DSInboundList extends DSInboundRequest
                 beginUpdates(writer);
                 writeChildren(response.getTarget(), writer);
                 break;
-            case STATE_CLOSE_PENDING:
+            case STATE_CLOSE_PENDSING:
             case STATE_UPDATES:
                 beginUpdates(writer);
                 writeUpdates(writer);
@@ -490,10 +489,10 @@ public class DSInboundList extends DSInboundRequest
      * Called by encodeTarget for actions.
      */
     private void encodeTargetAction(ApiObject object, MessageWriter writer) {
-        ActionSpec action = object.getAction();
-        DSAction dsAction = null;
-        if (action instanceof DSAction) {
-            dsAction = (DSAction) action;
+        Action action = object.getAction();
+        DSIAction daction = null;
+        if (action instanceof DSIAction) {
+            daction = (DSIAction) action;
         }
         DSElement e = cacheMap.remove("$invokable");
         if (e != null) {
@@ -507,40 +506,68 @@ public class DSInboundList extends DSInboundRequest
                 encode("$invokable", DSPermission.WRITE.toString(), writer);
             }
         }
-        e = cacheMap.remove("$params");
-        if (e != null) {
-            encode("$params", e, writer);
-        } else {
-            DSList list = new DSList();
-            for (int i = 0, len = action.getParameterCount(); i < len; i++) {
-                DSMap param = new DSMap();
-                action.getParameterMetadata(i, param);
-                if (dsAction != null) {
-                    dsAction.prepareParameter(target.getParentInfo(), param);
+        if (daction != null) {
+            DSInfo parent = target.getParentInfo();
+            e = cacheMap.remove("$params");
+            if (e != null) {
+                encode("$params", e, writer);
+            } else {
+                DSList list = new DSList();
+                for (int i = 0, len = daction.getParameterCount(parent); i < len; i++) {
+                    DSMap param = new DSMap();
+                    daction.getParameterMetadata(parent, i, param);
+                    daction.prepareParameter(parent, param);
+                    fixRangeTypes(param);
+                    list.add(param);
                 }
-                fixRangeTypes(param);
-                list.add(param);
+                encode("$params", list, writer);
             }
-            encode("$params", list, writer);
-        }
-        e = cacheMap.remove("$columns");
-        if (e != null) {
-            encode("$columns", e, writer);
-        } else if (action.getColumnCount() > 0) {
-            DSList list = new DSList();
-            for (int i = 0, len = action.getColumnCount(); i < len; i++) {
-                DSMap col = new DSMap();
-                action.getColumnMetadata(i, col);
-                fixRangeTypes(col);
-                list.add(col);
+            e = cacheMap.remove("$columns");
+            if (e != null) {
+                encode("$columns", e, writer);
+            } else if (daction.getColumnCount(parent) > 0) {
+                DSList list = new DSList();
+                for (int i = 0, len = daction.getColumnCount(parent); i < len; i++) {
+                    DSMap col = new DSMap();
+                    daction.getColumnMetadata(parent, i, col);
+                    fixRangeTypes(col);
+                    list.add(col);
+                }
+                encode("$columns", list, writer);
             }
-            encode("$columns", list, writer);
+        } else {
+            e = cacheMap.remove("$params");
+            if (e != null) {
+                encode("$params", e, writer);
+            } else {
+                DSList list = new DSList();
+                for (int i = 0, len = action.getParameterCount(); i < len; i++) {
+                    DSMap param = new DSMap();
+                    action.getParameterMetadata(i, param);
+                    fixRangeTypes(param);
+                    list.add(param);
+                }
+                encode("$params", list, writer);
+            }
+            e = cacheMap.remove("$columns");
+            if (e != null) {
+                encode("$columns", e, writer);
+            } else if (action.getColumnCount() > 0) {
+                DSList list = new DSList();
+                for (int i = 0, len = action.getColumnCount(); i < len; i++) {
+                    DSMap col = new DSMap();
+                    action.getColumnMetadata(i, col);
+                    fixRangeTypes(col);
+                    list.add(col);
+                }
+                encode("$columns", list, writer);
+            }
         }
         e = cacheMap.remove("$result");
         if (e != null) {
             encode("$result", e, writer);
-        } else if (!action.getResultType().isVoid()) {
-            encode("$result", action.getResultType().toString(), writer);
+        } else if (!action.getResultsType().isVoid()) {
+            encode("$result", action.getResultsType().toString(), writer);
         }
     }
 
@@ -594,7 +621,7 @@ public class DSInboundList extends DSInboundRequest
         } else {
             if ((type == null) && (value != null)) {
                 if (value instanceof DSIEnum) {
-                    meta.getMap().put(DSMetadata.TYPE, DSValueType.STRING.toString());
+                    meta.setType(DSString.NULL);
                 } else {
                     meta.setType(value);
                 }
@@ -691,7 +718,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     private boolean isClosePending() {
-        return state == STATE_CLOSE_PENDING;
+        return state == STATE_CLOSE_PENDSING;
     }
 
     private boolean isClosed() {

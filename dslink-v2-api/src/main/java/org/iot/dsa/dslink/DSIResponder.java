@@ -6,7 +6,6 @@ import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
-import org.iot.dsa.node.action.ActionResult;
 
 /**
  * Interface for nodes in the node tree to manually handle requests.  The first implementation
@@ -33,7 +32,7 @@ public interface DSIResponder {
      * @return The initial response and close notification mechanism, can be null if the if the
      * result type is void.
      */
-    public ActionResult onInvoke(InboundInvokeRequest request);
+    public ActionResults onInvoke(InboundInvokeRequest request);
 
     /**
      * The implementation should quickly create an object for responding to the request, but do no

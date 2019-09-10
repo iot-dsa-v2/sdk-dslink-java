@@ -1,5 +1,6 @@
 package org.iot.dsa.time;
 
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSInt;
@@ -9,8 +10,7 @@ import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValue;
 import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DSISetAction;
 
@@ -223,11 +223,12 @@ public class DSTime extends DSValue implements DSISetAction {
         public static final SetAction INSTANCE = new SetAction();
 
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            DSMap params = invocation.getParameters();
+        public ActionResults invoke(DSIActionRequest request) {
+            DSMap params = request.getParameters();
             int hr = params.get(HOUR, 0);
             int min = params.get(MINUTE, 0);
             int sec = params.get(SECOND, 0);
+            DSInfo target = request.getTargetInfo();
             target.getParent().put(target, valueOf(hr, min, sec));
             return null;
         }

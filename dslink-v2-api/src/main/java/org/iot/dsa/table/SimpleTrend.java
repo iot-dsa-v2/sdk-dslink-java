@@ -59,7 +59,7 @@ public class SimpleTrend extends AbstractTable {
         }
 
         @Override
-        public void getMetadata(int index, DSMap bucket) {
+        public void getColumnMetadata(int index, DSMap bucket) {
             bucket.putAll(columns.get(index));
         }
 

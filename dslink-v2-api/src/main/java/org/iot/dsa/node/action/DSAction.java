@@ -2,28 +2,26 @@ package org.iot.dsa.node.action;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIValue;
-import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
-import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.security.DSPermission;
 
 /**
- * Actions allow you to expose functionality much more complex than simple reads and writes.
+ * A convenience implementation of DSIAction.
  *
  * @author Aaron Hansen
  */
-public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
+public abstract class DSAction implements DSIAction, DSIMetadata, DSIObject {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Simple action stub that does nothing.  Intended for use by overriding DSNode.invoke
+     * Simple action stub that does nothing.  Intended for use by overriding DNode.invoke
      * and handling action there.
      */
     public static final DSAction.Noop DEFAULT = new Noop();
@@ -40,7 +38,7 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
     private List<DSMap> columns;
     private boolean immutable = false;
     private List<DSMap> parameters;
-    private ResultType result = ResultType.VOID;
+    private ResultsType result = ResultsType.VOID;
 
     ///////////////////////////////////////////////////////////////////////////
     // Methods in alphabetical order
@@ -59,7 +57,7 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
             throw new IllegalStateException("Action is immutable");
         }
         if (columns == null) {
-            columns = new ArrayList<DSMap>();
+            columns = new ArrayList<>();
         }
         validate(metadata, columns);
         columns.add(metadata);
@@ -79,30 +77,11 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
             throw new IllegalStateException("Action is immutable");
         }
         DSMetadata ret = new DSMetadata();
+        ret.setName(name)
+           .setType(value);
         if (value instanceof DSIMetadata) {
             ((DSIMetadata) value).getMetadata(ret.getMap());
         }
-        ret.setName(name)
-           .setType(value);
-        addColumnMetadata(ret.getMap());
-        return ret;
-    }
-
-    /**
-     * Creates a DSMetadata, calls setName and setType on it, adds the internal map to
-     * the results list and returns the metadata instance for further configuration.
-     *
-     * @param name Must not be null.
-     * @param type Must not be null.
-     * @return Metadata for further configuration.
-     */
-    public DSMetadata addColumnMetadata(String name, DSValueType type) {
-        if (immutable) {
-            throw new IllegalStateException("Action is immutable");
-        }
-        DSMetadata ret = new DSMetadata();
-        ret.setName(name)
-           .setType(type);
         addColumnMetadata(ret.getMap());
         return ret;
     }
@@ -169,27 +148,6 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
     }
 
     /**
-     * Does not capture metadata if the value implements DSIMetadata, it is safer to use
-     * the version of this method that takes a value (it does not set the default value).
-     *
-     * @param name        Must not be null.
-     * @param type        Must not be null.
-     * @param description Can be null.
-     * @return Metadata for further configuration.
-     */
-    public DSMetadata addParameter(String name, DSValueType type, String description) {
-        if (immutable) {
-            throw new IllegalStateException("Action is immutable");
-        }
-        DSMetadata ret = new DSMetadata();
-        ret.setName(name)
-           .setType(type)
-           .setDescription(description);
-        addParameter(ret.getMap());
-        return ret;
-    }
-
-    /**
      * Returns this.
      */
     @Override
@@ -224,7 +182,7 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
         if (columns != null) {
             return columns.size();
         }
-        return -1;
+        return 0;
     }
 
     @Override
@@ -255,47 +213,10 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
         bucket.putAll(parameters.get(idx));
     }
 
-    /**
-     * Not used.  Permissions are determined using info flags.  If the admin flag is set,
-     * the action requires admin level permissions. If the action is readonly, then only
-     * read permissions are required.  Otherwise the action will require write permissions.
-     */
     @Override
-    public DSPermission getPermission() {
-        return DSPermission.WRITE;
-    }
-
-    @Override
-    public ResultType getResultType() {
+    public ResultsType getResultsType() {
         return result;
     }
-
-    /**
-     * Execute the action invocation for the given target.  It is safe to use the calling thread
-     * for long lived operations.  If the return type is void, perform the full operation on the
-     * calling thread so that errors will be properly reported.
-     * <p>
-     * To report an error, simply throw a runtime exception from this method, or call
-     * ActionInvocation.close(Exception) when processing asynchronously.
-     *
-     * @param target  The info about the target of the action (its parent).
-     * @param request Details about the incoming invoke as well as the mechanism to
-     *                send async updates over an open stream.
-     * @return Can be null if the result type is void.
-     * @throws RuntimeException Throw a runtime exception to report an error and close the stream.
-     */
-    public abstract ActionResult invoke(DSInfo target, ActionInvocation request);
-
-    /**
-     * Called for each parameter as it is being sent to the requester. The intent is for
-     * updating the default value to represent the current state of the target.  If you do not
-     * need to prepare parameters, the inner class Parameterless implements this method to
-     * do nothing.
-     *
-     * @param target    The info about the target of the action (its parent).
-     * @param parameter Map representing a single parameter.
-     */
-    public abstract void prepareParameter(DSInfo target, DSMap parameter);
 
     /**
      * Sets the action group, which is null by default.
@@ -330,7 +251,7 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
     /**
      * Returns this, it is not necessary to set the result to void.
      */
-    public DSAction setResultType(ResultType result) {
+    public DSAction setResultsType(ResultsType result) {
         this.result = result;
         return this;
     }
@@ -360,24 +281,15 @@ public abstract class DSAction implements ActionSpec, DSIMetadata, DSIObject {
     }
 
     /**
-     * Implements invoke to simply return null.
+     * Implements invoke to do nothing and return null.
      */
-    public static class Noop extends Parameterless {
+    public static class Noop extends DSAction {
 
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+        public ActionResults invoke(DSIActionRequest request) {
             return null;
         }
-    }
 
-    /**
-     * Implements prepareParameter to do nothing.
-     */
-    public abstract static class Parameterless extends DSAction {
-
-        @Override
-        public void prepareParameter(DSInfo info, DSMap parameter) {
-        }
     }
 
 }

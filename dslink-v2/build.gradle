@@ -2,7 +2,7 @@ dependencies {
     api project(':dslink-v2-api')
     compileOnly 'org.glassfish.tyrus.bundles:tyrus-standalone-client:[1.15,)'
     testImplementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:[1.15,)'
-    testImplementation 'org.testng:testng:6.14.3'
+    testImplementation 'org.testng:testng:+'
 }
 
 artifacts {

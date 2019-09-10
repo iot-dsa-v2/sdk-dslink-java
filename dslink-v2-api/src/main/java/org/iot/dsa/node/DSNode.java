@@ -4,12 +4,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.iot.dsa.node.action.DSISetAction;
 import org.iot.dsa.node.action.DeleteAction;
 import org.iot.dsa.node.action.DuplicateAction;
@@ -280,7 +281,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (info != null) {
             throw new IllegalArgumentException("Name already in use: " + name);
         }
-        info = new DSInfo(name.intern(), object);
+        info = new DSInfo<>(name.intern(), object);
         add(info);
         if (isRunning()) {
             if (argIsNode) {
@@ -619,7 +620,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param target Could be the info for this node, or the info of a non-node value child.
      * @param name   The name of the action.
      * @return DSInfo for the desired action.
-     * @see #virtualInfo(String, DSAction)
+     * @see #virtualInfo(String, DSIAction)
      */
     public DSInfo getVirtualAction(DSInfo target, String name) {
         DSInfo info = null;
@@ -691,20 +692,21 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * Override point.  It is safe to use the calling thread for long lived operations.  By
      * default, this routes the request to the action's invoke method.
      *
-     * @param action  Info for the action being invoked.
-     * @param target  Info for the target (parent) of the action.  Could be this node,
-     *                or the info of a child that is a non-node value.
      * @param request Details about the incoming invoke as well as the mechanism to send updates
      *                over an open stream.
      * @return It is okay to return null if the action result type is void.
      * @throws IllegalStateException If the nothing handles an incoming request.
-     * @see DSAction#invoke(DSInfo, ActionInvocation)
+     * @see DSIAction#invoke(DSIActionRequest)
      */
-    public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
-        trace(trace() ? String
-                .format("action=%s, target=%s, params=%s", action, target, request.getParameters())
-                      : null);
-        return action.getAction().invoke(target, request);
+    public ActionResults invoke(DSIActionRequest request) {
+        if (trace()) {
+            trace(String.format("action=%s, target=%s, params=%s",
+                                request.getActionInfo(),
+                                request.getTargetInfo(),
+                                request.getParameters()));
+        }
+        DSIAction action = request.getActionInfo().getAction();
+        return action.invoke(request);
     }
 
     /**
@@ -903,6 +905,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
             ((DSGroup) object).setParent(this);
         }
         DSIObject old = info.get();
+        info.setObject(object);
         if (isNode(old)) {
             DSNode node = toNode(old);
             node.stop();
@@ -910,7 +913,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         } else if (old instanceof DSGroup) {
             ((DSGroup) object).setParent(null);
         }
-        info.setObject(object);
         if (argIsNode) {
             argAsNode.infoInParent = info;
         }
@@ -1427,7 +1429,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
     /**
      * Use to create DSInfos when overriding getVirtualAction(s).
      */
-    protected DSInfo virtualInfo(String name, DSAction target) {
+    protected DSInfo virtualInfo(String name, DSIAction target) {
         return new VirtualInfo(name, target).setParent(this);
     }
 

@@ -3,14 +3,12 @@ package org.iot.dsa.dslink;
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
-import org.iot.dsa.node.DSInfo;
+import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -74,7 +72,7 @@ public class RequesterInvokeTest {
         }
 
         @Override
-        public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
+        public ActionResults invoke(DSIActionRequest request) {
             return null;
         }
 
@@ -87,21 +85,21 @@ public class RequesterInvokeTest {
             declareDefault("anode", new ANode());
             declareDefault("simpleAction", DSAction.DEFAULT);
             DSAction action = new DSAction.Noop();
-            action.addParameter("param", DSValueType.BOOL, "a desc");
+            action.addParameter("param", DSBool.NULL, "a desc");
             declareDefault("simpleParam", action);
             declareDefault("exception", DSAction.DEFAULT);
         }
 
         @Override
-        public ActionResult invoke(DSInfo action, DSInfo target, ActionInvocation request) {
-            String name = action.getName();
+        public ActionResults invoke(DSIActionRequest request) {
+            String name = request.getActionInfo().getName();
             if (name.equals("simpleAction")) {
                 success = true;
             } else if (name.equals("simpleParam")) {
                 DSMap params = request.getParameters();
                 success = params.get("param", false);
             } else if (name.equals("exception")) {
-                throw new IllegalStateException("my message");
+                throw new IllegalStateException("Expected exception");
             }
             return null;
         }
