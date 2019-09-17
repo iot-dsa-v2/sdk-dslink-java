@@ -1,5 +1,7 @@
 package org.iot.dsa.node.action;
 
+import static org.iot.dsa.dslink.Action.ResultsType.VALUES;
+
 import org.iot.dsa.dslink.Action;
 import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSIObject;
@@ -72,22 +74,59 @@ public interface DSIAction extends Action, DSIObject {
      */
     public ActionResults invoke(DSIActionRequest request);
 
+
     /**
-     * Makes a single column, single row result. Uses the columns defined in the action.
+     * Calls the corresponding static toResults.
+     */
+    public default ActionResults makeResults(DSIActionRequest req, DSIValue... value) {
+        return toResults(req, value);
+    }
+
+    /**
+     * Calls the corresponding static toResults.
+     */
+    public default ActionResults makeResults(DSIActionRequest req, DSIResults res) {
+        return toResults(req, res);
+    }
+
+    /**
+     * Calls the corresponding static toResults.
+     */
+    public default ActionResults makeResults(DSIActionRequest req,
+                                             DSIResults res,
+                                             boolean autoClose) {
+        return toResults(req, res, autoClose);
+    }
+
+    /**
+     * Called for each parameter as it is being sent to the requester in response to a list
+     * request. The intent is to update the default value to represent the current state of the
+     * target.  Does nothing by default.
+     *
+     * @param target    The info about the target of the action (its parent).
+     * @param parameter Map representing a single parameter.
+     */
+    public default void prepareParameter(DSInfo target, DSMap parameter) {
+    }
+
+    /**
+     * Makes a single row result. Uses the columns defined in the action.
+     * The result type of the action must also be VALUES.
      * The request will be automatically closed.
      */
-    public default ActionResults makeResults(final DSIActionRequest req, final DSIValue... value) {
+    public static ActionResults toResults(final DSIActionRequest req, final DSIValue... value) {
         return new ActionResults() {
+
             boolean next = true;
 
             @Override
             public int getColumnCount() {
-                return DSIAction.this.getColumnCount();
+                return req.getAction().getColumnCount();
             }
 
             @Override
             public void getColumnMetadata(int idx, DSMap bucket) {
-                DSIAction.this.getColumnMetadata(idx, bucket);
+                req.getAction().getColumnMetadata(idx, bucket);
             }
 
             @Override
@@ -99,7 +138,7 @@ public interface DSIAction extends Action, DSIObject {
 
             @Override
             public ResultsType getResultsType() {
-                return ResultsType.VALUES;
+                return VALUES;
             }
 
             @Override
@@ -111,16 +150,36 @@ public interface DSIAction extends Action, DSIObject {
                 next = false;
                 return true;
             }
+
+            {
+                if (req.getAction().getResultsType() != VALUES) {
+                    throw new IllegalStateException("Action result type not VALUES");
+                }
+            }
         };
     }
 
     /**
-     * Makes an action result for the given parameter.  If the DIResult defines columns those will
-     * be used, otherwise the columns defined by the action will be used. The request will be
-     * automatically closed after the results are sent.  Note that the results can be a
-     * DIResultsCursor.
+     * Convenience for makeRequests(req,res,true) which auto closes tables and streams.
      */
-    public default ActionResults makeResults(final DSIActionRequest req, final DSIResults res) {
+    public static ActionResults toResults(final DSIActionRequest req,
+                                          final DSIResults res) {
+        return toResults(req, res, true);
+    }
+
+    /**
+     * Makes an action result for the given parameters.  If the DIResult defines columns those will
+     * be used, otherwise the columns defined by the action will be used.
+     *
+     * @param req       Be sure to call enqueueRequest or close if autoClose if false.
+     * @param res       Note that this can be a DIResultsCursor.
+     * @param autoClose Whether or not to close the request when the results has no more rows.  If
+     *                  the results is not a cursor, the request will be automatically closed
+     *                  no matter what.
+     */
+    public static ActionResults toResults(final DSIActionRequest req,
+                                          final DSIResults res,
+                                          final boolean autoClose) {
         return new ActionResults() {
 
             boolean next = true;
@@ -131,7 +190,7 @@ public interface DSIAction extends Action, DSIObject {
                 if (count > 0) {
                     return count;
                 }
-                return DSIAction.this.getColumnCount(req.getTargetInfo());
+                return req.getAction().getColumnCount(req.getTargetInfo());
             }
 
             @Override
@@ -139,7 +198,7 @@ public interface DSIAction extends Action, DSIObject {
                 if (res.getColumnCount() > 0) {
                     res.getColumnMetadata(idx, bucket);
                 } else {
-                    DSIAction.this.getColumnMetadata(req.getTargetInfo(), idx, bucket);
+                    req.getAction().getColumnMetadata(req.getTargetInfo(), idx, bucket);
                 }
             }
 
@@ -152,10 +211,7 @@ public interface DSIAction extends Action, DSIObject {
 
             @Override
             public ResultsType getResultsType() {
-                if (res instanceof DSIResultsCursor) {
-                    return ResultsType.TABLE;
-                }
-                return ResultsType.VALUES;
+                return req.getAction().getResultsType();
             }
 
             @Override
@@ -163,7 +219,7 @@ public interface DSIAction extends Action, DSIObject {
                 if (res instanceof DSIResultsCursor) {
                     DSIResultsCursor cur = (DSIResultsCursor) res;
                     next = cur.next();
-                    if (!next) {
+                    if (!next & autoClose) {
                         req.close();
                     }
                     return next;
@@ -176,64 +232,6 @@ public interface DSIAction extends Action, DSIObject {
                 return true;
             }
         };
-    }
-
-    /**
-     * Makes a stream action result for the given parameter.  If the DIResultsCursor defines
-     * columns those will be used, otherwise the columns defined by the action will be used.  The
-     * request will not be closed when cursor.next() returns false.
-     */
-    public default ActionResults makeStreamResults(final DSIActionRequest req,
-                                                   final DSIResultsCursor res) {
-        return new ActionResults() {
-
-            @Override
-            public int getColumnCount() {
-                int count = res.getColumnCount();
-                if (count > 0) {
-                    return count;
-                }
-                return DSIAction.this.getColumnCount(req.getTargetInfo());
-            }
-
-            @Override
-            public void getColumnMetadata(int idx, DSMap bucket) {
-                if (res.getColumnCount() > 0) {
-                    res.getColumnMetadata(idx, bucket);
-                } else {
-                    DSIAction.this.getColumnMetadata(req.getTargetInfo(), idx, bucket);
-                }
-            }
-
-            @Override
-            public void getResults(DSList bucket) {
-                for (int i = 0, len = getColumnCount(); i < len; i++) {
-                    bucket.add(res.getValue(i).toElement());
-                }
-            }
-
-            @Override
-            public ResultsType getResultsType() {
-                return ResultsType.STREAM;
-            }
-
-            @Override
-            public boolean next() {
-                return res.next();
-            }
-
-        };
-    }
-
-    /**
-     * Called for each parameter as it is being sent to the requester in response to a list
-     * request. The intent is to update the default value to represent the current state of the
-     * target.  Does nothing by default.
-     *
-     * @param target    The info about the target of the action (its parent).
-     * @param parameter Map representing a single parameter.
-     */
-    public default void prepareParameter(DSInfo target, DSMap parameter) {
     }
 
 

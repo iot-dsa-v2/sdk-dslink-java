@@ -84,7 +84,7 @@ public class RequesterInvokeTest {
         public void declareDefaults() {
             declareDefault("anode", new ANode());
             declareDefault("simpleAction", DSAction.DEFAULT);
-            DSAction action = new DSAction.Noop();
+            DSAction action = new DSAction();
             action.addParameter("param", DSBool.NULL, "a desc");
             declareDefault("simpleParam", action);
             declareDefault("exception", DSAction.DEFAULT);

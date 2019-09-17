@@ -14,7 +14,7 @@ import org.iot.dsa.node.DSMetadata;
  *
  * @author Aaron Hansen
  */
-public abstract class DSAction implements DSIAction, DSIMetadata, DSIObject {
+public class DSAction implements DSIAction, DSIMetadata, DSIObject {
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -24,7 +24,7 @@ public abstract class DSAction implements DSIAction, DSIMetadata, DSIObject {
      * Simple action stub that does nothing.  Intended for use by overriding DNode.invoke
      * and handling action there.
      */
-    public static final DSAction.Noop DEFAULT = new Noop();
+    public static final DSAction DEFAULT = new DSAction();
 
     public static final String EDIT_GROUP = "Edit";
     public static final String NEW_GROUP = "New";
@@ -219,6 +219,16 @@ public abstract class DSAction implements DSIAction, DSIMetadata, DSIObject {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
+     * Does nothing by default.
+     */
+    @Override
+    public ActionResults invoke(DSIActionRequest request) {
+        return null;
+    }
+
+    /**
      * Sets the action group, which is null by default.
      */
     public DSAction setActionGroup(String name) {
@@ -278,18 +288,6 @@ public abstract class DSAction implements DSIAction, DSIMetadata, DSIObject {
                 throw new IllegalArgumentException("Duplicate name: " + name);
             }
         }
-    }
-
-    /**
-     * Implements invoke to do nothing and return null.
-     */
-    public static class Noop extends DSAction {
-
-        @Override
-        public ActionResults invoke(DSIActionRequest request) {
-            return null;
-        }
-
     }
 
 }

@@ -363,7 +363,7 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
     /**
      * The next info in the parent node, or null.
      */
-    public DSInfo next() {
+    public DSInfo<?> next() {
         return next;
     }
 

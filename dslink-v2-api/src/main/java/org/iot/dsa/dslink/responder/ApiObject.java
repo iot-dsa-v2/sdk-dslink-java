@@ -29,22 +29,12 @@ public interface ApiObject {
     public void getMetadata(DSMap bucket);
 
     /**
-     * The display name.
-     public String getName();
-     */
-
-    /**
-     * Value of the object, should only be called if isValue() returns true.
-     public DSIValue getValue();
-     */
-
-    /**
      * True if the object is an action.
      */
     public boolean isAction();
 
     /**
-     * Whether or not this object requires configuration permission to read/write.
+     * Whether or not this object requires admin permission to read/write.
      */
     public boolean isAdmin();
 
@@ -59,7 +49,7 @@ public interface ApiObject {
     public boolean isReadOnly();
 
     /**
-     * True if getValue() can be called.
+     * True if the object is a value.
      */
     public boolean isValue();
 

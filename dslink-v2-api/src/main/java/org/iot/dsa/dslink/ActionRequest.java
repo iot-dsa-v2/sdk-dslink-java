@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink;
 
+import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.security.DSPermission;
 
@@ -32,6 +33,13 @@ public interface ActionRequest {
      * The parameters supplied by the invoker, or null.
      */
     public DSMap getParameters();
+
+    /**
+     * A convenience for getting a single parameter out of the parameters map.
+     */
+    public default DSElement getParameter(String key) {
+        return getParameters().get(key);
+    }
 
     /**
      * The permission level of the invoker.

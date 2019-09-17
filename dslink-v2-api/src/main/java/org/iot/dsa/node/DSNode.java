@@ -456,6 +456,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
 
     public DSInfo getFirstInfo(Class type) {
         DSInfo info = getFirstInfo();
+        if (info == null) {
+            return null;
+        }
         if (info.is(type)) {
             return info;
         }

@@ -78,7 +78,7 @@ public class StreamTableTest {
             return virtualInfo(name, new DSAction() {
                 @Override
                 public ActionResults invoke(DSIActionRequest req) {
-                    return makeStreamResults(req, new Stream(req));
+                    return makeResults(req, new Stream(req), false);
                 }
             }.setResultsType(ResultsType.STREAM));
         }

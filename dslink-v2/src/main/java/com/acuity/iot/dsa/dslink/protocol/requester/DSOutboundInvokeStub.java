@@ -40,8 +40,8 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
     @Override
     public void handleResponse(DSMap response) {
         try {
-            if (handler instanceof RawHandler) {
-                ((RawHandler) handler).handleRaw(response);
+            if (handler instanceof PassThruHandler) {
+                ((PassThruHandler) handler).handlePassThru(response);
                 return;
             }
             DSList updates = response.getList("updates");
@@ -116,9 +116,9 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
         return params;
     }
 
-    public interface RawHandler {
+    public interface PassThruHandler {
 
-        public void handleRaw(DSMap response);
+        public void handlePassThru(DSMap response);
 
     }
 
