@@ -6,6 +6,9 @@ import com.acuity.iot.dsa.dslink.protocol.message.DSTarget;
 import com.acuity.iot.dsa.dslink.protocol.message.MessageWriter;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import org.iot.dsa.DSRuntime;
+import org.iot.dsa.dslink.Action;
+import org.iot.dsa.dslink.Action.ResultsType;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
@@ -14,13 +17,7 @@ import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionSpec;
-import org.iot.dsa.node.action.ActionTable;
-import org.iot.dsa.node.action.ActionValues;
 import org.iot.dsa.security.DSPermission;
-import org.iot.dsa.table.DSIRow;
-import org.iot.dsa.table.DSIRowCursor;
 
 /**
  * Invoke implementation for a responder.
@@ -44,15 +41,17 @@ public class DSInboundInvoke extends DSInboundRequest
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
+    private DSInfo action;
     private Exception closeReason;
     private boolean enqueued = false;
     private DSMap parameters;
     private DSPermission permission;
-    private ActionResult result;
+    private ActionResults results;
     private int state = STATE_INIT;
     private boolean stream = true;
-    private Update updateHead;
-    private Update updateTail;
+    private DSInfo target;
+    private PassThruUpdate updateHead;
+    private PassThruUpdate updateTail;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -70,11 +69,6 @@ public class DSInboundInvoke extends DSInboundRequest
     @Override
     public boolean canWrite(DSSession session) {
         return true;
-    }
-
-    @Override
-    public void clearAllRows() {
-        enqueueUpdate(new Update(null, UpdateType.REFRESH));
     }
 
     @Override
@@ -96,8 +90,29 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     /**
-     * Any parameters supplied by the requester for the invocation, or null.
+     * For a broker to use as a pass-through mechanism.
      */
+    public void enqueuePassThru(DSMap raw) {
+        state = STATE_UPDATES;
+        enqueuePassThru(new PassThruUpdate(raw));
+    }
+
+    @Override
+    public void enqueueResults() {
+        synchronized (this) {
+            if (enqueued) {
+                return;
+            }
+            enqueued = true;
+        }
+        getResponder().sendResponse(this);
+    }
+
+    @Override
+    public DSInfo getActionInfo() {
+        return action;
+    }
+
     @Override
     public DSMap getParameters() {
         return parameters;
@@ -109,8 +124,8 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     @Override
-    public void insert(int index, DSList[] rows) {
-        enqueueUpdate(new Update(rows, index, -1, UpdateType.INSERT));
+    public DSInfo getTargetInfo() {
+        return target;
     }
 
     public boolean isClosed() {
@@ -134,14 +149,6 @@ public class DSInboundInvoke extends DSInboundRequest
         doClose();
     }
 
-    @Override
-    public void replace(int index, int len, DSList... rows) {
-        if (len < 1) {
-            throw new IllegalArgumentException("Invalid length: " + len);
-        }
-        enqueueUpdate(new Update(rows, index, len, UpdateType.REPLACE));
-    }
-
     /**
      * Invokes the action and will then enqueueUpdate the outgoing response.
      */
@@ -151,8 +158,8 @@ public class DSInboundInvoke extends DSInboundRequest
             if (path.isResponder()) {
                 DSIResponder responder = (DSIResponder) path.getTarget();
                 setPath(path.getPath());
-                result = responder.onInvoke(this);
-                if (result instanceof RawActionResult) {
+                results = responder.onInvoke(this);
+                if (results instanceof PassThruResults) {
                     state = STATE_UPDATES;
                     return;
                 }
@@ -174,31 +181,20 @@ public class DSInboundInvoke extends DSInboundRequest
                         throw new DSPermissionException("Read permission required");
                     }
                 }
-                result = path.getNode().invoke(info, path.getParentInfo(), this);
+                action = info;
+                target = path.getParentInfo();
+                results = path.getNode().invoke(this);
             }
         } catch (Exception x) {
             error(getPath(), x);
             close(x);
             return;
         }
-        if (result == null) {
+        if (results == null) {
             close();
         } else {
             enqueueResponse();
         }
-    }
-
-    @Override
-    public void send(DSList row) {
-        enqueueUpdate(new Update(row));
-    }
-
-    /**
-     * For the broker to use as a pass-thru mechanism.
-     */
-    public void sendRaw(DSMap raw) {
-        state = STATE_UPDATES;
-        enqueueUpdate(new Update(raw));
     }
 
     /**
@@ -221,18 +217,20 @@ public class DSInboundInvoke extends DSInboundRequest
             return false;
         }
         writeBegin(writer);
-        switch (state) {
-            case STATE_INIT:
-                writeColumns(writer);
-                writeInitialResults(writer);
-                break;
-            case STATE_ROWS:
-                writeInitialResults(writer);
-                break;
-            case STATE_CLOSE_PENDING:
-            case STATE_UPDATES:
-                writeUpdates(writer);
-                break;
+        if (results != null) {
+            switch (state) {
+                case STATE_INIT:
+                    writeColumns(writer);
+                    writeInitialResults(writer);
+                    break;
+                case STATE_ROWS:
+                    writeInitialResults(writer);
+                    break;
+                case STATE_CLOSE_PENDING:
+                case STATE_UPDATES:
+                    writeUpdates(writer);
+                    break;
+            }
         }
         if (isClosePending() && (updateHead == null)) {
             if (closeReason != null) {
@@ -282,11 +280,11 @@ public class DSInboundInvoke extends DSInboundRequest
     // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    private synchronized Update dequeueUpdate() {
+    private synchronized PassThruUpdate dequeuePassThru() {
         if (updateHead == null) {
             return null;
         }
-        Update ret = updateHead;
+        PassThruUpdate ret = updateHead;
         if (updateHead == updateTail) {
             updateHead = null;
             updateTail = null;
@@ -303,12 +301,12 @@ public class DSInboundInvoke extends DSInboundRequest
     private void doClose() {
         state = STATE_CLOSED;
         getResponder().removeRequest(getRequestId());
-        if (result == null) {
+        if (results == null) {
             return;
         }
         DSRuntime.run(() -> {
             try {
-                result.onClose();
+                results.onClose();
             } catch (Exception x) {
                 error(getPath(), x);
             }
@@ -328,17 +326,17 @@ public class DSInboundInvoke extends DSInboundRequest
         getResponder().sendResponse(this);
     }
 
-    private void enqueueUpdate(Update update) {
+    private void enqueuePassThru(PassThruUpdate passThruUpdate) {
         if (!isOpen()) {
             return;
         }
         synchronized (this) {
             if (updateHead == null) {
-                updateHead = update;
-                updateTail = update;
+                updateHead = passThruUpdate;
+                updateTail = passThruUpdate;
             } else {
-                updateTail.next = update;
-                updateTail = update;
+                updateTail.next = passThruUpdate;
+                updateTail = passThruUpdate;
             }
             if (enqueued) {
                 return;
@@ -360,35 +358,22 @@ public class DSInboundInvoke extends DSInboundRequest
 
     private void writeColumns(MessageWriter writer) {
         DSIWriter out = writer.getWriter();
-        if (result instanceof ActionTable) {
-            DSMap tableMeta = ((ActionTable) result).getMetadata();
-            if (tableMeta == null) {
-                tableMeta = new DSMap();
-            }
-            ActionSpec action = result.getAction();
+        Action.ResultsType type = results.getResultsType();
+        if (type.isTable() || type.isStream()) {
             out.key("meta")
                .beginMap()
-               .key("mode").value(action.getResultType().isStream() ? "stream" : "append")
-               .key("meta").value(tableMeta)
+               .key("mode").value(type.isStream() ? "stream" : "append")
+               .key("meta").beginMap().endMap()
                .endMap();
+        }
+        if (results.getColumnCount() > 0) {
             out.key("columns").beginList();
-            ActionTable tbl = (ActionTable) result;
             DSMap col = new DSMap();
-            for (int i = 0, len = tbl.getColumnCount(); i < len; i++) {
-                tbl.getMetadata(i, col.clear());
+            for (int i = 0, len = results.getColumnCount(); i < len; i++) {
+                results.getColumnMetadata(i, col.clear());
                 out.value(col);
             }
             out.endList();
-        } else if (result instanceof ActionValues) {
-            out.key("columns").beginList();
-            ActionValues vals = (ActionValues) result;
-            DSMap col = new DSMap();
-            for (int i = 0, len = vals.getColumnCount(); i < len; i++) {
-                vals.getMetadata(i, col.clear());
-                out.value(col);
-            }
-            out.endList();
-
         } else {
             out.key("columns").beginList().endList();
         }
@@ -398,33 +383,21 @@ public class DSInboundInvoke extends DSInboundRequest
         DSIWriter out = writer.getWriter();
         state = STATE_ROWS;
         out.key(getRowsName()).beginList();
-        if (result instanceof DSIRowCursor) {
+        if (results != null) {
+            DSList bucket = new DSList();
             DSResponder session = getResponder();
-            DSIRowCursor cur = (DSIRowCursor) result;
-            int cols = cur.getColumnCount();
-            while (cur.next()) {
-                out.beginList();
-                for (int i = 0; i < cols; i++) {
-                    out.value(cur.getValue(i).toElement());
-                }
-                out.endList();
+            while (results.next()) {
+                results.getResults(bucket.clear());
+                out.value(bucket);
                 if (session.shouldEndMessage()) {
                     out.endList();
                     enqueueResponse();
                     return;
                 }
             }
-        } else if (result instanceof DSIRow) {
-            DSIRow row = (DSIRow) result;
-            int cols = row.getColumnCount();
-            out.beginList();
-            for (int i = 0; i < cols; i++) {
-                out.value(row.getValue(i).toElement());
-            }
-            out.endList();
         }
         out.endList();
-        if ((result == null) || !result.getAction().getResultType().isOpen() || !stream) {
+        if ((results == null) || results.getResultsType().isVoid() || !stream) {
             writeClose(writer);
             state = STATE_CLOSED;
             doClose();
@@ -437,10 +410,14 @@ public class DSInboundInvoke extends DSInboundRequest
     /**
      * Only called by writeUpdates.
      */
-    private void writeRaw(Update update, MessageWriter writer) {
+    private void writePassThru(MessageWriter writer) {
+        PassThruUpdate passThruUpdate = dequeuePassThru();
+        if (passThruUpdate == null) {
+            return;
+        }
         DSIWriter out = writer.getWriter();
         DSMap map;
-        map = update.raw;
+        map = passThruUpdate.raw;
         map.remove("rid");
         for (DSMap.Entry e : map) {
             out.key(e.getKey());
@@ -453,43 +430,26 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     private void writeUpdates(MessageWriter writer) {
-        Update update = updateHead; //peak ahead
-        if (update == null) {
-            return;
-        }
-        if (update.isRaw()) {
-            writeRaw(update, writer);
-            return;
-        }
         DSIWriter out = writer.getWriter();
-        if (update.type != null) {
-            out.key("meta")
-               .beginMap()
-               .key(update.typeKey()).value(update.typeValue())
-               .key("meta").beginMap().endMap()
-               .endMap();
+        if (updateHead != null) {
+            writePassThru(writer);
+            return;
         }
-        out.key(getRowsName()).beginList();
-        DSResponder responder = getResponder();
-        while (true) {
-            update = dequeueUpdate();
-            if (update.rows != null) {
-                for (DSList row : update.rows) {
-                    out.value(row);
+        if (results.next()) {
+            DSList bucket = new DSList();
+            DSResponder session = getResponder();
+            out.key(getRowsName()).beginList();
+            do {
+                results.getResults(bucket.clear());
+                out.value(bucket);
+                if (session.shouldEndMessage()) {
+                    out.endList();
+                    enqueueResponse();
+                    return;
                 }
-            } else if (update.row != null) {
-                out.value(update.row);
-            }
-            if ((updateHead == null) || (updateHead.type != null)) {
-                break;
-            }
-            //raw messaging won't be mixed with normal messaging, but best to be safe
-            if (updateHead.isRaw() || responder.shouldEndMessage()) {
-                enqueueResponse();
-                break;
-            }
+            } while (results.next());
+            out.endList();
         }
-        out.endList();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -497,89 +457,49 @@ public class DSInboundInvoke extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Used to described more complex updates.
-     */
-    protected enum UpdateType {
-        INSERT("insert"),
-        REFRESH("refresh"),
-        REPLACE("replace"),
-        RAW("raw");
-
-        private String display;
-
-        UpdateType(String display) {
-            this.display = display;
-        }
-
-        public String toString() {
-            return display;
-        }
-    }
-
-    /**
      * Used as a pass through on the broker.
      */
-    public interface RawActionResult extends ActionResult {
+    public interface PassThruResults extends ActionResults {
+
+        @Override
+        default int getColumnCount() {
+            throw new IllegalStateException("Should never be called");
+        }
+
+        @Override
+        default void getColumnMetadata(int idx, DSMap bucket) {
+            throw new IllegalStateException("Should never be called");
+        }
+
+        @Override
+        default void getResults(DSList bucket) {
+            throw new IllegalStateException("Should never be called");
+        }
+
+        @Override
+        default ResultsType getResultsType() {
+            throw new IllegalStateException("Should never be called");
+        }
+
+        @Override
+        default boolean next() {
+            throw new IllegalStateException("Should never be called");
+        }
 
     }
 
     /**
      * Describes an update to be sent to the requester.
      */
-    protected static class Update {
+    protected static class PassThruUpdate {
 
-        int beginIndex = -1;
-        int endIndex = -1;
-        Update next;
+        PassThruUpdate next;
         DSMap raw;
-        DSList row;
-        DSList[] rows;
-        UpdateType type;
 
-        Update(DSMap raw) {
+        PassThruUpdate(DSMap raw) {
             this.raw = raw;
-            this.type = UpdateType.RAW;
         }
 
-        Update(DSList row) {
-            this.row = row;
-        }
-
-        Update(DSList row, UpdateType type) {
-            this.row = row;
-            this.type = type;
-        }
-
-        Update(DSList[] rows, int index, int len, UpdateType type) {
-            this.rows = rows;
-            this.beginIndex = index;
-            if (len > 0) {
-                this.endIndex = index + len - 1; //inclusive end
-            }
-            this.type = type;
-        }
-
-        boolean isRaw() {
-            return type == UpdateType.RAW;
-        }
-
-        String typeKey() {
-            if ((type == UpdateType.INSERT) || (type == UpdateType.REPLACE)) {
-                return "modify";
-            } else {
-                return "mode";
-            }
-        }
-
-        String typeValue() {
-            if (type == UpdateType.REFRESH) {
-                return type.toString();
-            }
-            if (type == UpdateType.INSERT) {
-                return type.toString() + " " + beginIndex;
-            }
-            return type.toString() + " " + beginIndex + "-" + endIndex;
-        }
     }
 
 }

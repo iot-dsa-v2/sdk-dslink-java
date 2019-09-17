@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIAction;
 import org.iot.dsa.node.action.DSISetAction;
 import org.iot.dsa.util.DSUtil;
 
@@ -148,8 +149,8 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
     }
 
     @Override
-    public DSAction getAction() {
-        return (DSAction) get();
+    public DSIAction getAction() {
+        return (DSIAction) get();
     }
 
     @Override
@@ -362,7 +363,7 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
     /**
      * The next info in the parent node, or null.
      */
-    public DSInfo next() {
+    public DSInfo<?> next() {
         return next;
     }
 
@@ -432,7 +433,7 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
     }
 
     /**
-     * False by default, set to true to reset the target to it's default when the encapsulated node
+     * False by default, set to true to reset the target to it's default when the parent node
      * is copied.
      */
     public DSInfo<T> setDefaultOnCopy(boolean defaultOnCopy) {
@@ -569,6 +570,12 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
     }
 
     DSInfo<T> setObject(T arg) {
+        if (isDeclared()) {
+            if (!getDefaultObject().getClass().isInstance(arg)) {
+                throw new IllegalArgumentException(arg + " not an instanceof the declared type " +
+                                                           getDefaultObject().getClass().getName());
+            }
+        }
         this.object = arg;
         return this;
     }

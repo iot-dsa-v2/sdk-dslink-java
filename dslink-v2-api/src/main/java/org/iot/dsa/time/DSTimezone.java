@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSFlexEnum;
 import org.iot.dsa.node.DSInfo;
@@ -14,8 +15,7 @@ import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValue;
 import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DSISetAction;
 
@@ -181,11 +181,12 @@ public class DSTimezone extends DSValue implements DSISetAction {
         public static final String ZONEID = "Zone ID";
 
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            String id = invocation.getParameters().getString(ZONEID);
+        public ActionResults invoke(DSIActionRequest request) {
+            String id = request.getParameters().getString(ZONEID);
             if (id == null) {
                 throw new IllegalArgumentException("Missing Zone ID");
             }
+            DSInfo target = request.getTargetInfo();
             target.getParent().put(target, DSTimezone.valueOf(id));
             return null;
         }

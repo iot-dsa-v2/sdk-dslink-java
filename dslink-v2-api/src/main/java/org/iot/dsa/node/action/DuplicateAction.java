@@ -1,8 +1,10 @@
 package org.iot.dsa.node.action;
 
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValueType;
 
 /**
@@ -29,7 +31,7 @@ public class DuplicateAction extends DSAction {
     ///////////////////////////////////////////////////////////////////////////
 
     public DuplicateAction() {
-        addParameter(NEW_NAME, DSValueType.STRING, null);
+        addParameter(NEW_NAME, DSString.NULL, null);
         setImmutable(true);
     }
 
@@ -38,9 +40,9 @@ public class DuplicateAction extends DSAction {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-        String newName = invocation.getParameters().get(NEW_NAME, null);
-        target.getParent().add(newName, target.get().copy());
+    public ActionResults invoke(DSIActionRequest request) {
+        String newName = request.getParameters().get(NEW_NAME, null);
+        request.getTargetInfo().getParent().add(newName, request.getTarget().copy());
         return null;
     }
 

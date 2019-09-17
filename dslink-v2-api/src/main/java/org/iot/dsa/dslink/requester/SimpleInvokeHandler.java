@@ -18,9 +18,7 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private boolean closed = false;
     private DSList columns;
-    private RuntimeException error;
     private Mode mode;
     private DSMap tableMeta;
     private ArrayList<DSList> updates;
@@ -79,7 +77,7 @@ public class SimpleInvokeHandler extends AbstractInvokeHandler {
                 timeout = end - System.currentTimeMillis();
             }
             if (isError()) {
-                throw error;
+                throw getError();
             }
             if (hasUpdates()) {
                 return updates.remove(0);

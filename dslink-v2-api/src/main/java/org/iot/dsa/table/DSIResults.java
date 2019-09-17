@@ -8,7 +8,7 @@ import org.iot.dsa.node.DSMap;
  *
  * @author Aaron Hansen
  */
-public interface DSIRow {
+public interface DSIResults {
 
     /**
      * The number of columns in the row.
@@ -22,7 +22,7 @@ public interface DSIRow {
      * @param index  0 based column identifier.
      * @param bucket Must not be null and the caller is responsible for clearing it.
      */
-    public void getMetadata(int index, DSMap bucket);
+    public void getColumnMetadata(int index, DSMap bucket);
 
     /**
      * Retrieves the value at the given index.  In the cursor subclass, this must only

@@ -41,9 +41,15 @@ public class SerializationTest {
     public void differentTypeThanDefault() throws Exception {
         DSNode node = new MyNode();
         node.put("tmp", DSElement.make(10));
-        node.put("string", DSLong.valueOf(6));
+        boolean success = false;
+        try {
+            node.put("string", DSLong.valueOf(6));
+        } catch (Exception x) {
+            success = true;
+        }
+        Assert.assertTrue(success);
         node = decode(encode(node));
-        DSIObject obj = node.get("string");
+        Assert.assertEquals(node.get("string"), DSString.EMPTY);
         Assert.assertEquals(node.get("tmp"), DSElement.make(10));
     }
 

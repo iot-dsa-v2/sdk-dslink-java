@@ -5,18 +5,12 @@ import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
-import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSLong;
-import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
-import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionSpec;
-import org.iot.dsa.node.action.ActionValues;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -70,9 +64,9 @@ public class ActionValuesTest {
         ArrayList<DSList> updates = res.getUpdates();
         Assert.assertTrue(updates.size() == 1);
         DSList row = updates.get(0);
-        Assert.assertTrue(row.get(0).toInt() == 0);
-        Assert.assertTrue(row.get(1).toInt() == 1);
-        Assert.assertTrue(row.get(2).toInt() == 2);
+        Assert.assertTrue(row.get(0).toLong() == 0);
+        Assert.assertTrue(row.get(1).toLong() == 1);
+        Assert.assertTrue(row.get(2).toLong() == 2);
         link.shutdown();
     }
 
@@ -83,14 +77,18 @@ public class ActionValuesTest {
 
         @Override
         public DSInfo getVirtualAction(DSInfo target, String name) {
-            return virtualInfo(name, new DSAction.Parameterless() {
+            return virtualInfo(name, new DSAction() {
                 @Override
-                public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                    return new Values(this);
+                public ActionResults invoke(DSIActionRequest req) {
+                    return makeResults(req, DSLong.valueOf(0), DSLong.valueOf(1),
+                                       DSLong.valueOf(2));
                 }
 
                 {//can't have constructor, so use initializer
-                    setResultType(ResultType.VALUES);
+                    addColumnMetadata("column0", DSLong.NULL);
+                    addColumnMetadata("column1", DSLong.NULL);
+                    addColumnMetadata("column2", DSLong.NULL);
+                    setResultsType(ResultsType.VALUES);
                 }
             });
         }
@@ -100,41 +98,6 @@ public class ActionValuesTest {
             bucket.add("getValues");
         }
 
-    }
-
-    static class Values implements ActionValues {
-
-        private DSAction action;
-        boolean closed = false;
-
-        Values(DSAction action) {
-            this.action = action;
-        }
-
-        @Override
-        public ActionSpec getAction() {
-            return action;
-        }
-
-        @Override
-        public int getColumnCount() {
-            return 3;
-        }
-
-        @Override
-        public void getMetadata(int index, DSMap bucket) {
-            new DSMetadata(bucket).setName("column" + index).setType(DSString.NULL);
-        }
-
-        @Override
-        public DSIValue getValue(int index) {
-            return DSLong.valueOf(index);
-        }
-
-        @Override
-        public void onClose() {
-            closed = true;
-        }
     }
 
 }
