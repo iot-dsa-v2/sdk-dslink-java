@@ -1,5 +1,6 @@
 package org.iot.dsa.node.action;
 
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
 
@@ -34,13 +35,9 @@ public class DeleteAction extends DSAction {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-        target.getParent().remove(target);
+    public ActionResults invoke(DSIActionRequest request) {
+        request.getTargetInfo().getParent().remove(request.getTargetInfo());
         return null;
-    }
-
-    @Override
-    public void prepareParameter(DSInfo target, DSMap parameter) {
     }
 
     ///////////////////////////////////////////////////////////////////////////

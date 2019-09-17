@@ -4,6 +4,7 @@ import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import java.util.ArrayList;
 import java.util.Collection;
+import org.iot.dsa.dslink.Action.ResultsType;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
@@ -11,11 +12,9 @@ import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionSpec;
-import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
+import org.iot.dsa.table.DSIResultsCursor;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -87,20 +86,9 @@ public class ClosedTableTest {
     // Inner Classes
     // -------------
 
-    static class ClosedTable implements ActionTable {
+    static class ClosedTable implements DSIResultsCursor {
 
-        private DSAction action;
-        boolean closed = false;
         int count = 0;
-
-        ClosedTable(DSAction action) {
-            this.action = action;
-        }
-
-        @Override
-        public ActionSpec getAction() {
-            return action;
-        }
 
         @Override
         public int getColumnCount() {
@@ -108,7 +96,7 @@ public class ClosedTableTest {
         }
 
         @Override
-        public void getMetadata(int index, DSMap bucket) {
+        public void getColumnMetadata(int index, DSMap bucket) {
             new DSMetadata(bucket).setName("column" + index).setType(DSString.NULL);
         }
 
@@ -122,26 +110,18 @@ public class ClosedTableTest {
             return ++count < 4;
         }
 
-        @Override
-        public void onClose() {
-            closed = true;
-        }
     }
 
     public static class MyMain extends DSMainNode {
 
         @Override
         public DSInfo getVirtualAction(DSInfo target, String name) {
-            return virtualInfo(name, new DSAction.Parameterless() {
+            return virtualInfo(name, new DSAction() {
                 @Override
-                public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                    return new ClosedTable(this);
+                public ActionResults invoke(DSIActionRequest req) {
+                    return makeResults(req, new ClosedTable());
                 }
-
-                { //can't have constructor so use initializer
-                    setResultType(ResultType.CLOSED_TABLE);
-                }
-            });
+            }.setResultsType(ResultsType.TABLE));
         }
 
         @Override

@@ -5,20 +5,19 @@ import java.lang.reflect.Method;
 import java.util.List;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.DSRuntime.Timer;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSIObject;
-import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 
 public abstract class MXBeanNode extends DSNode implements Runnable {
 
-    private static DSAction refreshAction = new DSAction.Parameterless() {
+    private static DSAction refreshAction = new DSAction() {
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((MXBeanNode) target.get()).refresh();
+        public ActionResults invoke(DSIActionRequest request) {
+            ((MXBeanNode) request.getTarget()).refresh();
             return null;
         }
 

@@ -4,13 +4,13 @@ import com.acuity.iot.dsa.dslink.sys.backup.SysBackupService;
 import com.acuity.iot.dsa.dslink.sys.cert.SysCertService;
 import com.acuity.iot.dsa.dslink.sys.logging.SysLogService;
 import com.acuity.iot.dsa.dslink.sys.profiler.SysProfiler;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 
 /**
  * The root of the system nodes.
@@ -90,24 +90,24 @@ public class DSSysNode extends DSNode {
         profilerToggle = put(CLOSE_PROFILER, new ToggleAction()).setTransient(true);
     }
 
-    private class StopAction extends DSAction.Parameterless {
+    private class StopAction extends DSAction {
 
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((DSSysNode) target.get()).getLink().shutdown();
+        public ActionResults invoke(DSIActionRequest req) {
+            ((DSSysNode) req.getTarget()).getLink().shutdown();
             return null;
         }
 
     }
 
-    private class ToggleAction extends DSAction.Parameterless {
+    private class ToggleAction extends DSAction {
 
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
+        public ActionResults invoke(DSIActionRequest req) {
             if (profiler == null) {
-                ((DSSysNode) target.get()).openProfiler();
+                ((DSSysNode) req.getTarget()).openProfiler();
             } else {
-                ((DSSysNode) target.get()).closeProfiler();
+                ((DSSysNode) req.getTarget()).closeProfiler();
             }
             return null;
         }

@@ -2,9 +2,9 @@ package org.iot.dsa.time;
 
 import java.util.Calendar;
 import java.util.TimeZone;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
@@ -12,9 +12,8 @@ import org.iot.dsa.node.DSRegistry;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValue;
 import org.iot.dsa.node.DSValueType;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.iot.dsa.node.action.DSISetAction;
 
 /**
@@ -562,8 +561,8 @@ public class DSDateTime extends DSValue implements DSISetAction {
         public static final SetAction INSTANCE = new SetAction();
 
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            DSMap params = invocation.getParameters();
+        public ActionResults invoke(DSIActionRequest request) {
+            DSMap params = request.getParameters();
             int year = params.get(YEAR, 1970);
             int month = params.get(MONTH, 0);
             int day = params.get(DAY, 0);
@@ -571,7 +570,8 @@ public class DSDateTime extends DSValue implements DSISetAction {
             int min = params.get(MINUTE, 0);
             int sec = params.get(SECOND, 0);
             DSTimezone tz = DSTimezone.NULL.valueOf(params.get(TIMEZONE));
-            target.getParent().put(target, valueOf(year, month, day, hr, min, sec, tz));
+            DSInfo info = request.getTargetInfo();
+            info.getParent().put(info, valueOf(year, month, day, hr, min, sec, tz));
             return null;
         }
 

@@ -7,15 +7,15 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.logging.DSLevel;
 import org.iot.dsa.node.DSFlexEnum;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 
 /**
  * @author Daniel Shapiro
@@ -64,8 +64,8 @@ public class SysLogService extends StreamableLogNode {
         DSAction act = new DSAction() {
 
             @Override
-            public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                ((SysLogService) target.get()).addLog(invocation.getParameters());
+            public ActionResults invoke(DSIActionRequest request) {
+                ((SysLogService) request.getTarget()).addLog(request.getParameters());
                 return null;
             }
 

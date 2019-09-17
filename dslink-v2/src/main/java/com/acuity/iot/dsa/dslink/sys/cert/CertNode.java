@@ -1,12 +1,12 @@
 package com.acuity.iot.dsa.dslink.sys.cert;
 
 import java.util.Collection;
+import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValueNode;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
 import org.iot.dsa.node.action.DeleteAction;
 import org.iot.dsa.node.action.DuplicateAction;
 import org.iot.dsa.node.action.RenameAction;
@@ -65,21 +65,21 @@ public class CertNode extends DSValueNode {
         getParent().remove(getInfo());
     }
 
-    private static class AllowAction extends DSAction.Parameterless {
+    private static class AllowAction extends DSAction {
 
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((CertNode) target.get()).allow();
+        public ActionResults invoke(DSIActionRequest request) {
+            ((CertNode) request.getTarget()).allow();
             return null;
         }
 
     }
 
-    private static class RemoveAction extends DSAction.Parameterless {
+    private static class RemoveAction extends DSAction {
 
         @Override
-        public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-            ((CertNode) target.get()).remove();
+        public ActionResults invoke(DSIActionRequest request) {
+            ((CertNode) request.getTarget()).remove();
             return null;
         }
 

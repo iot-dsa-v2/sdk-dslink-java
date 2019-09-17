@@ -4,6 +4,7 @@ import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import java.util.Collection;
 import org.iot.dsa.DSRuntime;
+import org.iot.dsa.dslink.Action.ResultsType;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
@@ -11,11 +12,9 @@ import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.action.ActionInvocation;
-import org.iot.dsa.node.action.ActionResult;
-import org.iot.dsa.node.action.ActionSpec;
-import org.iot.dsa.node.action.ActionTable;
 import org.iot.dsa.node.action.DSAction;
+import org.iot.dsa.node.action.DSIActionRequest;
+import org.iot.dsa.table.DSIResultsCursor;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -76,16 +75,12 @@ public class StreamTableTest {
 
         @Override
         public DSInfo getVirtualAction(DSInfo target, String name) {
-            return virtualInfo(name, new DSAction.Parameterless() {
+            return virtualInfo(name, new DSAction() {
                 @Override
-                public ActionResult invoke(DSInfo target, ActionInvocation invocation) {
-                    return new OpenTable(this, invocation);
+                public ActionResults invoke(DSIActionRequest req) {
+                    return makeResults(req, new Stream(req), false);
                 }
-
-                {//can't have constructor, so use initializer
-                    setResultType(ResultType.STREAM_TABLE);
-                }
-            });
+            }.setResultsType(ResultsType.STREAM));
         }
 
         @Override
@@ -95,21 +90,13 @@ public class StreamTableTest {
 
     }
 
-    static class OpenTable implements ActionTable {
+    static class Stream implements DSIResultsCursor {
 
-        private DSAction action;
-        boolean closed = false;
-        int count = 0;
-        private ActionInvocation invocation;
+        private DSIActionRequest req;
+        DSList row = new DSList();
 
-        OpenTable(DSAction action, ActionInvocation invocation) {
-            this.action = action;
-            this.invocation = invocation;
-        }
-
-        @Override
-        public ActionSpec getAction() {
-            return action;
+        Stream(DSIActionRequest req) {
+            this.req = req;
         }
 
         @Override
@@ -118,45 +105,40 @@ public class StreamTableTest {
         }
 
         @Override
-        public void getMetadata(int index, DSMap bucket) {
+        public void getColumnMetadata(int index, DSMap bucket) {
             new DSMetadata(bucket).setName("column" + index).setType(DSString.NULL);
         }
 
         @Override
         public DSIValue getValue(int index) {
-            return null;
+            return row.removeFirst();
         }
 
         @Override
         public boolean next() {
-            DSRuntime.run(() -> {
-                DSList row = new DSList();
+            return !row.isEmpty();
+        }
+
+        {
+            DSRuntime.runDelayed(() -> {
                 row.add("1_0");
                 row.add("1_1");
                 row.add("1_2");
-                invocation.send(row);
-            });
+                req.enqueueResults();
+            }, 100);
             DSRuntime.runDelayed(() -> {
-                DSList row = new DSList();
                 row.add("2_0");
                 row.add("2_1");
                 row.add("2_2");
-                invocation.send(row);
-            }, 10);
+                req.enqueueResults();
+            }, 200);
             DSRuntime.runDelayed(() -> {
-                DSList row = new DSList();
                 row.add("3_0");
                 row.add("3_1");
                 row.add("3_2");
-                invocation.send(row);
-                invocation.close();
-            }, 100);
-            return false;
-        }
-
-        @Override
-        public void onClose() {
-            closed = true;
+                req.enqueueResults();
+                req.close();
+            }, 300);
         }
     }
 
