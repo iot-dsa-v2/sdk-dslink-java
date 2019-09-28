@@ -1,10 +1,16 @@
 package org.iot.dsa.dslink.responder;
 
+import org.iot.dsa.dslink.Action;
 import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.Node;
+import org.iot.dsa.dslink.Value;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
 
 /**
- * The mechanism by which a responder and provide updates to a list request.
+ * How to respond to a list request.  Implementations must first send the target of the
+ * request.  Then any children and finally open the stream for updates.  If the target is
+ * resent, that will clear all prior state so children should be resent.
  *
  * @author Aaron Hansen
  * @see DSIResponder#onList(InboundListRequest)
@@ -17,7 +23,7 @@ public interface InboundListRequest extends InboundRequest {
     public void close();
 
     /**
-     * Allows the responder to forcefully close the list stream.
+     * Allows the responder to forcefully close the list stream with an error.
      */
     public void close(Exception reason);
 
@@ -27,18 +33,65 @@ public interface InboundListRequest extends InboundRequest {
     public boolean isOpen();
 
     /**
-     * The responder should call this whenever a child is removed.
+     * Call after the initial state of the target and it's children has been sent.
      */
-    public void remove(String name);
+    public void openStream();
 
     /**
-     * The responder should call this whenever a child changes or is added.
+     * Add or update a child action to the list.
+     *
+     * @param name        Will be encoded, it's not usually necessary to have a display name.
+     * @param displayName Can be null.
+     * @param admin       Whether or not the action requires admin level permission.
+     * @param readonly    Whether or not the action requires write permission.
      */
-    public void update(String name, ApiObject child);
+    public void sendAction(String name, String displayName, boolean admin, boolean readonly);
 
     /**
-     * The responder should call this whenever metadata changes or is added.
+     * Add or change any metadata on the target of the request after beginUpdates.
      */
-    public void update(String name, DSElement value);
+    public void sendMetadata(String name, DSElement value);
+
+    /**
+     * Add or update a child node to the list.
+     *
+     * @param name        Will be encoded, it's not usually necessary to have a display name.
+     * @param displayName Can be null.
+     * @param admin       Whether or not admin level required to see node.
+     */
+    public void sendNode(String name, String displayName, boolean admin);
+
+    /**
+     * The responder should call this whenever a child or metadata is removed.
+     */
+    public void sendRemove(String name);
+
+    /**
+     * This should be called first to provide details about the target and should be an
+     * action, node or value.  Subsequent calls will reset the state of the list such that
+     * children will need to be resent as well.
+     *
+     * @param object Cannot be the generic ApiObject interface, must be one of the subtypes; action,
+     *               node or value.
+     * @see Action
+     * @see Node
+     * @see Value
+     */
+    public void sendTarget(Node object);
+
+    /**
+     * Add or update a child value to the list.
+     *
+     * @param name        Will be encoded, it's not usually necessary to have a display name.
+     * @param displayName Can be null.
+     * @param type        Used for encoding the type only.
+     * @param admin       Whether or not admin level required to see node.
+     * @param readonly    Whether or not the value is writable.
+     */
+    public void sendValue(String name,
+                          String displayName,
+                          DSIValue type,
+                          boolean admin,
+                          boolean readonly);
 
 }

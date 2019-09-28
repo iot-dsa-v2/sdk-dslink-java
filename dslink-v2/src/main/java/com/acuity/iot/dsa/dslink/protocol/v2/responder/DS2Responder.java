@@ -137,6 +137,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         int rid = msg.getRequestId();
         String path = (String) msg.getHeader(HDR_TARGET_PATH);
         boolean stream = msg.getHeader(HDR_NO_STREAM) == null;
+        /* TODO
         DS2InboundList listImpl = new DS2InboundList();
         listImpl.setStream(stream)
                 .setPath(path)
@@ -145,6 +146,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
                 .setResponder(this);
         putRequest(listImpl.getRequestId(), listImpl);
         DSRuntime.run(listImpl);
+        */
     }
 
     /**

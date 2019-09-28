@@ -8,14 +8,18 @@ import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.Action;
 import org.iot.dsa.dslink.DSIResponder;
-import org.iot.dsa.dslink.responder.ApiObject;
+import org.iot.dsa.dslink.Node;
+import org.iot.dsa.dslink.Value;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.OutboundListResponse;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIEnum;
+import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
@@ -25,11 +29,9 @@ import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.action.DSIAction;
 import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
-import org.iot.dsa.security.DSPermission;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
 
@@ -47,10 +49,9 @@ public class DSInboundList extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int STATE_INIT = 0;
-    private static final int STATE_CHILDREN = 1;
-    private static final int STATE_UPDATES = 2;
-    private static final int STATE_CLOSE_PENDSING = 3;
-    private static final int STATE_CLOSED = 4;
+    private static final int STATE_UPDATES = 1;
+    private static final int STATE_CLOSE_PENDING = 2;
+    private static final int STATE_CLOSED = 3;
 
     ///////////////////////////////////////////////////////////////////////////
     // Class Fields
@@ -59,18 +60,14 @@ public class DSInboundList extends DSInboundRequest
     private StringBuilder cacheBuf = new StringBuilder();
     private DSMap cacheMap = new DSMap();
     private DSMetadata cacheMeta = new DSMetadata(cacheMap);
-    private Iterator<String> children;
     private Exception closeReason;
     private boolean enqueued = false;
-    private DSInfo info;
-    private DSNode node;
     private OutboundListResponse response;
+    private boolean sendOpen = false;
     private int state = STATE_INIT;
-    private boolean stream = true;
     private DSISubscription subscription;
     private DSTarget target;
-    private Update updateHead;
-    private Update updateTail;
+    private List<DSElement> updates = new LinkedList<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -86,7 +83,7 @@ public class DSInboundList extends DSInboundRequest
         if (!isOpen()) {
             return;
         }
-        state = STATE_CLOSE_PENDSING;
+        state = STATE_CLOSE_PENDING;
         enqueueResponse();
     }
 
@@ -99,17 +96,12 @@ public class DSInboundList extends DSInboundRequest
         close();
     }
 
-    @Override
-    public ApiObject getTarget() {
-        return info;
-    }
-
     /**
      * Not closed or closed pending.
      */
     @Override
     public boolean isOpen() {
-        return (state != STATE_CLOSE_PENDSING) && (state != STATE_CLOSED);
+        return (state != STATE_CLOSE_PENDING) && (state != STATE_CLOSED);
     }
 
     @Override
@@ -126,9 +118,6 @@ public class DSInboundList extends DSInboundRequest
             return;
         }
         state = STATE_CLOSED;
-        synchronized (this) {
-            updateHead = updateTail = null;
-        }
         doClose();
     }
 
@@ -140,25 +129,24 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+        if (!isOpen()) {
+            return;
+        }
         switch (event.getEventId()) {
-            case DSNode.CHILD_ADDED:
-                update(child.getName(), child);
-                break;
             case DSNode.CHILD_RENAMED:
-                remove(data.toString());
-                update(child.getName(), child);
+                sendRemove(data.toString());
+            case DSNode.CHILD_ADDED:
+                encodeChild(child);
                 break;
             case DSNode.CHILD_REMOVED:
-                remove(child.getName());
+                sendRemove(child.getName());
                 break;
         }
     }
 
     @Override
-    public void remove(String name) {
-        if (!isClosed()) {
-            enqueue(new RemoveUpdate(name));
-        }
+    public void openStream() {
+        sendOpen = true;
     }
 
     @Override
@@ -169,51 +157,124 @@ public class DSInboundList extends DSInboundRequest
                 DSIResponder responder = (DSIResponder) target.getTarget();
                 setPath(target.getPath());
                 response = responder.onList(this);
-                response.getTarget();
+                state = STATE_UPDATES;
             } else {
-                info = target.getTargetInfo();
-                if (info == null) {
-                    info = new RootInfo((DSNode) target.getTarget());
-                }
-                if (info.isNode()) {
-                    node = info.getNode();
-                    this.subscription = node.subscribe(this);
-                }
                 response = this;
+                encodeTarget(target.getTargetInfo());
+                encodeChildren(target.getTargetInfo());
+                subscription = target.getNode().subscribe(this);
+                openStream();
             }
         } catch (Exception x) {
-            update("$disconnectedTs", DSDateTime.now().toElement());
+            sendMetadata("$disconnectedTs", DSDateTime.now().toElement());
             error(getPath(), x);
             close(x);
             return;
         }
-        if (response == null) {
-            close();
+    }
+
+    @Override
+    public void sendAction(String name, String displayName, boolean admin, boolean readonly) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
+        }
+        DSMap map = new DSMap();
+        map.put("$is", "node");
+        if ((displayName != null) && !displayName.isEmpty()) {
+            map.put("$name", displayName);
+        }
+        if (admin) {
+            map.put("$invokable", "config");
+        } else if (!readonly) {
+            map.put("$invokable", "write");
         } else {
-            enqueueResponse();
+            map.put("$invokable", "read");
         }
-    }
-
-    /**
-     * V2 only, set to false to auto close after sending the initial state.
-     */
-    public DSInboundList setStream(boolean stream) {
-        this.stream = stream;
-        return this;
+        enqueue(encodeName(name, cacheBuf), map);
     }
 
     @Override
-    public void update(String name, ApiObject child) {
-        if (!isClosed()) {
-            enqueue(new AddUpdate(name, child));
+    public void sendMetadata(String name, DSElement value) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
+        }
+        enqueue(encodeName(name, cacheBuf), value);
+    }
+
+    @Override
+    public void sendNode(String name, String displayName, boolean admin) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
+        }
+        DSMap map = new DSMap();
+        map.put("$is", "node");
+        if ((displayName != null) && !displayName.isEmpty()) {
+            map.put("$name", displayName);
+        }
+        if (admin) {
+            map.put("$permission", "config");
+        }
+        enqueue(encodeName(name, cacheBuf), map);
+    }
+
+    @Override
+    public void sendRemove(String name) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
+        }
+        DSMap map = new DSMap();
+        map.put("name", encodeName(name, cacheBuf));
+        map.put("change", "remove");
+        enqueueResponse(map);
+    }
+
+    @Override
+    public void sendTarget(Node object) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
+        }
+        if (object instanceof Action) {
+            encodeAction((Action) object);
+        } else if (object instanceof Value) {
+            encodeValue((Value) object);
+        } else {
+            encodeNode(object);
         }
     }
 
     @Override
-    public void update(String name, DSElement value) {
-        if (!isClosed()) {
-            enqueue(new ChangeUpdate(name, value));
+    public void sendValue(String name,
+                          String displayName,
+                          DSIValue type,
+                          boolean admin,
+                          boolean readonly) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
         }
+        DSMap map = new DSMap();
+        map.put("$is", "node");
+        if ((displayName != null) && !displayName.isEmpty()) {
+            map.put("$name", displayName);
+        }
+        cacheMeta.clear();
+        if (type instanceof DSIMetadata) {
+            ((DSIMetadata) type).getMetadata(cacheMeta.getMap());
+        }
+        map.put("$type", encodeType(type, cacheMeta));
+        if (readonly) {
+            if (admin) {
+                map.put("$permission", "config");
+            } else {
+                map.put("$permission", "read");
+            }
+        } else {
+            if (admin) {
+                map.put("$writable", "config");
+            } else {
+                map.put("$writable", "write");
+            }
+        }
+        enqueue(encodeName(name, cacheBuf), map);
     }
 
     @Override
@@ -224,49 +285,37 @@ public class DSInboundList extends DSInboundRequest
         if (isClosed()) {
             return false;
         }
-        if (isClosePending() && (updateHead == null) && (closeReason != null)) {
+        boolean hasUpdates = false;
+        synchronized (updates) {
+            hasUpdates = !updates.isEmpty();
+        }
+        if (!isOpen() && (closeReason != null) && !hasUpdates) {
             getResponder().sendError(this, closeReason);
             doClose();
             return false;
         }
-        int last = state;
         beginMessage(writer);
-        switch (state) {
-            case STATE_INIT:
-                beginUpdates(writer);
-                writeInit(writer);
-                break;
-            case STATE_CHILDREN:
-                beginUpdates(writer);
-                writeChildren(response.getTarget(), writer);
-                break;
-            case STATE_CLOSE_PENDSING:
-            case STATE_UPDATES:
-                beginUpdates(writer);
-                writeUpdates(writer);
-                break;
+        if (hasUpdates) {
+            beginUpdates(writer);
+            writeUpdates(writer);
+            endUpdates(writer);
         }
-        endUpdates(writer);
-        if (state != last) {
-            if (state == STATE_UPDATES) {
-                if (stream) {
-                    endMessage(writer, Boolean.TRUE);
-                } else {
-                    endMessage(writer, Boolean.FALSE);
-                    doClose();
-                }
+        synchronized (updates) {
+            hasUpdates = !updates.isEmpty();
+        }
+        if (hasUpdates) {
+            endMessage(writer, null);
+            enqueueResponse();
+        } else if (!isOpen()) {
+            endMessage(writer, Boolean.FALSE);
+            doClose();
+        } else {
+            if (sendOpen) {
+                sendOpen = false;
+                endMessage(writer, Boolean.TRUE);
             } else {
                 endMessage(writer, null);
             }
-        } else if (isClosePending() && (updateHead == null)) {
-            if (closeReason != null) {
-                getResponder().sendError(this, closeReason);
-            } else {
-                endMessage(writer, Boolean.FALSE);
-            }
-            doClose();
-        } else {
-            endMessage(writer, null);
         }
         return true;
     }
@@ -292,97 +341,12 @@ public class DSInboundList extends DSInboundRequest
     /**
      * Override point for v2.
      */
-    protected void encode(String key, DSElement value, MessageWriter writer) {
-        writer.getWriter().beginList().value(key).value(value).endList();
-    }
-
-    /**
-     * Override point for v2.
-     */
-    protected void encode(String key, String value, MessageWriter writer) {
-        writer.getWriter().beginList().value(key).value(value).endList();
-    }
-
-    protected void encodeChild(String name, ApiObject child, MessageWriter writer) {
-        String safeName = encodeName(name, cacheBuf);
-        DSMap map = new DSMap();
-        child.getMetadata(cacheMap.clear());
-        DSElement e = cacheMap.remove("$name");
-        if (e == null) {
-            e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
-        }
-        if (e != null) {
-            map.put("$name", e);
-        } else if (!safeName.equals(name)) {
-            map.put("$name", name);
-        }
-        e = cacheMap.remove("$is");
-        if (e != null) {
-            map.put("$is", e);
-        } else {
-            map.put("$is", "node");
-        }
-        e = cacheMap.remove("$invokable");
-        if (e != null) {
-            map.put("$invokable", e);
-        } else if (child.isAction()) {
-            if (child.isAdmin()) {
-                map.put("$invokable", DSPermission.CONFIG.toString());
-            } else if (child.isReadOnly()) {
-                map.put("$invokable", DSPermission.READ.toString());
-            } else {
-                map.put("$invokable", DSPermission.WRITE.toString());
-            }
-        }
-        e = cacheMap.remove("$type");
-        if (e != null) {
-            map.put("$type", e);
-        } else if ((child instanceof DSInfo) && child.isValue()) {
-            map.put("$type", encodeType(((DSInfo) child).getValue(), cacheMeta));
-        }
-        e = cacheMap.remove("$writable");
-        if (e != null) {
-            map.put("$writable", e);
-        } else if (child.isValue() && !child.isReadOnly()) {
-            map.put("$writable", child.isAdmin() ? "config" : "write");
-        }
-        e = cacheMap.remove("$permission");
-        if (e != null) {
-            map.put("$permission", e);
-        } else if (child.isAdmin()) {
-            map.put("$permission", "config");
-        }
-        encode(safeName, map, writer);
-        cacheMap.clear();
-    }
-
-    /**
-     * Override point for v2.
-     */
     protected String encodeName(String name, StringBuilder buf) {
         buf.setLength(0);
         if (DSPath.encodeNameV1(name, buf)) {
             return buf.toString();
         }
         return name;
-    }
-
-    /**
-     * Override point for v2.
-     */
-    protected void encodeUpdate(Update update, MessageWriter writer, StringBuilder buf) {
-        if (update instanceof AddUpdate) {
-            AddUpdate au = (AddUpdate) update;
-            encodeChild(au.name, au.child, writer);
-        } else if (update instanceof ChangeUpdate) {
-            ChangeUpdate cu = (ChangeUpdate) update;
-            encode(encodeName(cu.name, cacheBuf), cu.value, writer);
-        } else {
-            writer.getWriter().beginMap()
-                  .key("name").value(encodeName(((RemoveUpdate) update).name, buf))
-                  .key("change").value("remove")
-                  .endMap();
-        }
     }
 
     /**
@@ -402,6 +366,30 @@ public class DSInboundList extends DSInboundRequest
         writer.getWriter().endList();
     }
 
+    /**
+     * Override point for v2.
+     */
+    protected void enqueue(String key, DSElement value) {
+        enqueueResponse(new DSList().add(key).add(value));
+    }
+
+    /**
+     * Override point for v2.
+     */
+    protected void enqueue(String key, String value) {
+        enqueueResponse(new DSList().add(key).add(value));
+    }
+
+    /**
+     * Adds an update to be sent to the requester.
+     */
+    protected void enqueueResponse(DSElement update) {
+        synchronized (updates) {
+            updates.add(update);
+        }
+        enqueueResponse();
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
@@ -409,19 +397,13 @@ public class DSInboundList extends DSInboundRequest
     /**
      * Remove an update from the queue.
      */
-    private synchronized Update dequeue() {
-        if (updateHead == null) {
-            return null;
+    private DSElement dequeue() {
+        synchronized (updates) {
+            if (updates.isEmpty()) {
+                return null;
+            }
+            return updates.remove(0);
         }
-        Update ret = updateHead;
-        if (updateHead == updateTail) {
-            updateHead = null;
-            updateTail = null;
-        } else {
-            updateHead = updateHead.next;
-        }
-        ret.next = null;
-        return ret;
     }
 
     private void doClose() {
@@ -439,142 +421,161 @@ public class DSInboundList extends DSInboundRequest
         });
     }
 
-    /**
-     * Encode all the meta data about the root target of a list request.
-     */
-    private void encodeTarget(ApiObject object, MessageWriter writer) {
-        if (object instanceof DSInfo) {
-            DSMetadata.getMetadata((DSInfo) object, cacheMap.clear());
-        } else {
-            object.getMetadata(cacheMap.clear());
+    private void encodeAction(Action action) {
+        action.getMetadata(cacheMap.clear());
+        encodeAction(action, cacheMap);
+    }
+
+    private void encodeAction(DSInfo action) {
+        DSMetadata.getMetadata(action, cacheMap.clear());
+        encodeAction(action.getAction(), cacheMap);
+    }
+
+    private void encodeAction(Action action, DSMap cacheMap) {
+        DSElement e = cacheMap.remove("$name");
+        if (e == null) {
+            e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
         }
+        if (e != null) {
+            enqueue("$name", e);
+        }
+        e = cacheMap.remove("$invokable");
+        if (e != null) {
+            enqueue("$invokable", e);
+        } else {
+            if (action.isAdmin()) {
+                enqueue("$invokable", "config");
+            } else if (!action.isReadOnly()) {
+                enqueue("$invokable", "write");
+            } else {
+                enqueue("$invokable", "read");
+            }
+        }
+        e = cacheMap.remove("$params");
+        if (e != null) {
+            enqueue("$params", e);
+        } else {
+            DSList list = new DSList();
+            for (int i = 0, len = action.getParameterCount(); i < len; i++) {
+                DSMap param = new DSMap();
+                action.getParameterMetadata(i, param);
+                fixRangeTypes(param);
+                list.add(param);
+            }
+            enqueue("$params", list);
+        }
+        e = cacheMap.remove("$columns");
+        if (e != null) {
+            enqueue("$columns", e);
+        } else if (action.getColumnCount() > 0) {
+            DSList list = new DSList();
+            for (int i = 0, len = action.getColumnCount(); i < len; i++) {
+                DSMap col = new DSMap();
+                action.getColumnMetadata(i, col);
+                fixRangeTypes(col);
+                list.add(col);
+            }
+            enqueue("$columns", list);
+        }
+        e = cacheMap.remove("$result");
+        if (e != null) {
+            enqueue("$result", e);
+        } else if (!action.getResultsType().isVoid()) {
+            enqueue("$result", action.getResultsType().toString());
+        }
+        encodeTargetMetadata(cacheMap);
+        cacheMap.clear();
+    }
+
+    private void encodeChild(DSInfo child) {
+        if (child.isAction()) {
+            sendAction(child.getName(), child.getMetadata().getDisplayName(),
+                       child.isAdmin(), child.isReadOnly());
+        } else if (child.isValue()) {
+            sendValue(child.getName(), child.getMetadata().getDisplayName(),
+                      child.getValue(), child.isAdmin(), child.isReadOnly());
+        } else {
+            sendNode(child.getName(), child.getMetadata().getDisplayName(),
+                     child.isAdmin());
+        }
+
+    }
+
+    private void encodeChildren(DSInfo info) {
+        Iterator<String> it = info.getChildren();
+        DSInfo child;
+        while (it.hasNext()) {
+            child = info.getChild(it.next());
+            if (!child.isPrivate()) {
+                encodeChild(child);
+            }
+        }
+    }
+
+    private void encodeNode(DSInfo object) {
+        DSMetadata.getMetadata(object, cacheMap.clear());
         DSElement e = cacheMap.remove("$is");
         if (e == null) {
-            encode("$is", "node", writer);
+            enqueue("$is", "node");
         } else {
-            encode("$is", e, writer);
+            enqueue("$is", e);
         }
         e = cacheMap.remove("$name");
         if (e == null) {
             e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
         }
         if (e != null) {
-            encode("$name", e, writer);
-        }
-        /* TODO, maybe stricter encoding in dspath
-        else {
-            String name = object.getName();
-            String safe = encodeName(name, cacheBuf);
-            if (!safe.equals(name)) {
-                encode("$name", name, writer);
-            }
-        }
-        */
-        if (object.isAction()) {
-            encodeTargetAction(object, writer);
-        } else if (object.isValue()) {
-            encodeTargetValue(object, writer);
+            enqueue("$name", e);
         }
         e = cacheMap.remove("$permission");
         if (e != null) {
-            encode("$permission", e, writer);
+            enqueue("$permission", e);
         } else if (object.isAdmin()) {
-            encode("$permission", "config", writer);
+            enqueue("$permission", "config");
         }
-        encodeTargetMetadata(cacheMap, writer);
+        encodeTargetMetadata(cacheMap);
         cacheMap.clear();
     }
 
-    /**
-     * Called by encodeTarget for actions.
-     */
-    private void encodeTargetAction(ApiObject object, MessageWriter writer) {
-        Action action = object.getAction();
-        DSIAction daction = null;
-        if (action instanceof DSIAction) {
-            daction = (DSIAction) action;
-        }
-        DSElement e = cacheMap.remove("$invokable");
-        if (e != null) {
-            encode("$invokable", e, writer);
+    private void encodeNode(Node object) {
+        object.getMetadata(cacheMap.clear());
+        DSElement e = cacheMap.remove("$is");
+        if (e == null) {
+            enqueue("$is", "node");
         } else {
-            if (object.isAdmin()) {
-                encode("$invokable", DSPermission.CONFIG.toString(), writer);
-            } else if (object.isReadOnly()) {
-                encode("$invokable", DSPermission.READ.toString(), writer);
-            } else {
-                encode("$invokable", DSPermission.WRITE.toString(), writer);
-            }
+            enqueue("$is", e);
         }
-        if (daction != null) {
-            DSInfo parent = target.getParentInfo();
-            e = cacheMap.remove("$params");
-            if (e != null) {
-                encode("$params", e, writer);
-            } else {
-                DSList list = new DSList();
-                for (int i = 0, len = daction.getParameterCount(parent); i < len; i++) {
-                    DSMap param = new DSMap();
-                    daction.getParameterMetadata(parent, i, param);
-                    daction.prepareParameter(parent, param);
-                    fixRangeTypes(param);
-                    list.add(param);
-                }
-                encode("$params", list, writer);
-            }
-            e = cacheMap.remove("$columns");
-            if (e != null) {
-                encode("$columns", e, writer);
-            } else if (daction.getColumnCount(parent) > 0) {
-                DSList list = new DSList();
-                for (int i = 0, len = daction.getColumnCount(parent); i < len; i++) {
-                    DSMap col = new DSMap();
-                    daction.getColumnMetadata(parent, i, col);
-                    fixRangeTypes(col);
-                    list.add(col);
-                }
-                encode("$columns", list, writer);
-            }
-        } else {
-            e = cacheMap.remove("$params");
-            if (e != null) {
-                encode("$params", e, writer);
-            } else {
-                DSList list = new DSList();
-                for (int i = 0, len = action.getParameterCount(); i < len; i++) {
-                    DSMap param = new DSMap();
-                    action.getParameterMetadata(i, param);
-                    fixRangeTypes(param);
-                    list.add(param);
-                }
-                encode("$params", list, writer);
-            }
-            e = cacheMap.remove("$columns");
-            if (e != null) {
-                encode("$columns", e, writer);
-            } else if (action.getColumnCount() > 0) {
-                DSList list = new DSList();
-                for (int i = 0, len = action.getColumnCount(); i < len; i++) {
-                    DSMap col = new DSMap();
-                    action.getColumnMetadata(i, col);
-                    fixRangeTypes(col);
-                    list.add(col);
-                }
-                encode("$columns", list, writer);
-            }
+        e = cacheMap.remove("$name");
+        if (e == null) {
+            e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
         }
-        e = cacheMap.remove("$result");
         if (e != null) {
-            encode("$result", e, writer);
-        } else if (!action.getResultsType().isVoid()) {
-            encode("$result", action.getResultsType().toString(), writer);
+            enqueue("$name", e);
+        }
+        e = cacheMap.remove("$permission");
+        if (e != null) {
+            enqueue("$permission", e);
+        } else if (object.isAdmin()) {
+            enqueue("$permission", "config");
+        }
+        encodeTargetMetadata(cacheMap);
+        cacheMap.clear();
+    }
+
+    private void encodeTarget(DSInfo target) {
+        if (target.isAction()) {
+            encodeAction(target);
+        } else if (target.isValue()) {
+            encodeValue(target);
+        } else {
+            encodeNode(target);
         }
     }
 
     /**
      * Called by encodeTarget, encodes meta-data as configs.
      */
-    private void encodeTargetMetadata(DSMap metadata, MessageWriter writer) {
+    private void encodeTargetMetadata(DSMap metadata) {
         String name;
         Entry entry = metadata.firstEntry();
         while (entry != null) {
@@ -585,30 +586,12 @@ public class DSInboundList extends DSInboundRequest
                     break;
                 default:
                     encodeName(name, cacheBuf);
-                    cacheBuf.insert(0, '$');
+                    cacheBuf.insert(0, '@');
                     name = cacheBuf.toString();
 
             }
-            encode(name, entry.getValue(), writer);
+            enqueue(name, entry.getValue());
             entry = entry.next();
-        }
-    }
-
-    /**
-     * Called by encodeTarget for values.
-     */
-    private void encodeTargetValue(ApiObject object, MessageWriter writer) {
-        DSElement e = cacheMap.remove("$type");
-        if (e != null) {
-            encode("$type", e, writer);
-        } else if (object instanceof DSInfo) {
-            encode("$type", encodeType(((DSInfo) object).getValue(), cacheMeta), writer);
-        }
-        e = cacheMap.remove("$writable");
-        if (e != null) {
-            encode("$writable", e, writer);
-        } else if (!object.isReadOnly()) {
-            encode("$writable", object.isAdmin() ? "config" : "write", writer);
         }
     }
 
@@ -635,23 +618,84 @@ public class DSInboundList extends DSInboundRequest
         return e;
     }
 
-    private void enqueue(Update update) {
-        if (!isOpen()) {
-            return;
+    /**
+     * Encode all the meta data about the root target of a list request.
+     */
+    private void encodeValue(DSInfo object) {
+        DSMetadata.getMetadata(object, cacheMap.clear());
+        DSElement e = cacheMap.remove("$is");
+        if (e == null) {
+            enqueue("$is", "node");
+        } else {
+            enqueue("$is", e);
         }
-        synchronized (this) {
-            if (updateHead == null) {
-                updateHead = update;
-                updateTail = update;
-            } else {
-                updateTail.next = update;
-                updateTail = update;
-            }
-            if (enqueued) {
-                return;
-            }
+        e = cacheMap.remove("$name");
+        if (e == null) {
+            e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
         }
-        getResponder().sendResponse(this);
+        if (e != null) {
+            enqueue("$name", e);
+        }
+        e = cacheMap.remove("$type");
+        if (e != null) {
+            enqueue("$type", e);
+        } else {
+            enqueue("$type", encodeType(object.getValue(), cacheMeta));
+        }
+        e = cacheMap.remove("$writable");
+        if (e != null) {
+            enqueue("$writable", e);
+        } else if (!object.isReadOnly()) {
+            enqueue("$writable", object.isAdmin() ? "config" : "write");
+        }
+        e = cacheMap.remove("$permission");
+        if (e != null) {
+            enqueue("$permission", e);
+        } else if (object.isAdmin()) {
+            enqueue("$permission", "config");
+        }
+        encodeTargetMetadata(cacheMap);
+        cacheMap.clear();
+    }
+
+    /**
+     * Encode all the meta data about the root target of a list request.
+     */
+    private void encodeValue(Value object) {
+        object.getMetadata(cacheMap.clear());
+        DSElement e = cacheMap.remove("$is");
+        if (e == null) {
+            enqueue("$is", "node");
+        } else {
+            enqueue("$is", e);
+        }
+        e = cacheMap.remove("$name");
+        if (e == null) {
+            e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
+        }
+        if (e != null) {
+            enqueue("$name", e);
+        }
+        e = cacheMap.remove("$type");
+        if (e != null) {
+            enqueue("$type", e);
+        } else {
+            enqueue("$type", encodeType(object.toElement(), cacheMeta));
+        }
+        e = cacheMap.remove("$writable");
+        if (e != null) {
+            enqueue("$writable", e);
+        } else if (!object.isReadOnly()) {
+            enqueue("$writable", object.isAdmin() ? "config" : "write");
+        }
+        e = cacheMap.remove("$permission");
+        if (e != null) {
+            enqueue("$permission", e);
+        } else if (object.isAdmin()) {
+            enqueue("$permission", "config");
+        }
+        encodeTargetMetadata(cacheMap);
+        cacheMap.clear();
     }
 
     /**
@@ -717,109 +761,23 @@ public class DSInboundList extends DSInboundRequest
         }
     }
 
-    private boolean isClosePending() {
-        return state == STATE_CLOSE_PENDSING;
-    }
-
     private boolean isClosed() {
         return state == STATE_CLOSED;
     }
 
-    private void writeChildren(ApiObject target, MessageWriter writer) {
-        if (children != null) {
-            String name;
-            ApiObject child;
-            while (children.hasNext()) {
-                name = children.next();
-                child = target.getChild(name);
-                if (child != null) {
-                    if (!child.isPrivate()) {
-                        encodeChild(name, child, writer);
-                    }
-                }
-                if (getResponder().shouldEndMessage()) {
-                    enqueueResponse();
-                    return;
-                }
-            }
-        }
-        children = null;
-        state = STATE_UPDATES;
-    }
-
-    private void writeInit(MessageWriter writer) {
-        ApiObject target = response.getTarget();
-        encodeTarget(target, writer);
-        state = STATE_CHILDREN;
-        children = target.getChildren();
-        writeChildren(target, writer);
-    }
-
     private void writeUpdates(MessageWriter writer) {
         DSResponder responder = getResponder();
-        Update update;
+        DSElement update;
         while (isOpen()) {
             update = dequeue();
             if (update == null) {
                 break;
             }
-            encodeUpdate(update, writer, cacheBuf);
+            writer.getWriter().value(update);
             if (responder.shouldEndMessage()) {
-                enqueueResponse();
                 break;
             }
         }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Inner Classes
-    ///////////////////////////////////////////////////////////////////////////
-
-    protected static class AddUpdate extends Update {
-
-        public ApiObject child;
-        public String name;
-
-        AddUpdate(String name, ApiObject child) {
-            this.name = name;
-            this.child = child;
-        }
-
-    }
-
-    protected static class ChangeUpdate extends Update {
-
-        public String name;
-        public DSElement value;
-
-        ChangeUpdate(String name, DSElement value) {
-            this.name = name;
-            this.value = value;
-        }
-
-    }
-
-    protected static class RemoveUpdate extends Update {
-
-        public String name;
-
-        RemoveUpdate(String name) {
-            this.name = name;
-        }
-
-    }
-
-    private static class RootInfo extends DSInfo {
-
-        RootInfo(DSNode node) {
-            super(null, node);
-        }
-    }
-
-    protected static class Update {
-
-        public Update next;
-
     }
 
 }

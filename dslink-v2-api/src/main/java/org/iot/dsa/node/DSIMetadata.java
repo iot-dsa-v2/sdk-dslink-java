@@ -8,9 +8,7 @@ package org.iot.dsa.node;
 public interface DSIMetadata {
 
     /**
-     * The entity should add any metadata about itself to the given map.  DSIMetadata instances will
-     * first populate the bucket, then parent nodes will be given a chance the modify the bucket via
-     * DSNode.getMetadata(DSInfo,DSMap).
+     * The entity should add any metadata about itself to the given map.
      */
     public void getMetadata(DSMap bucket);
 

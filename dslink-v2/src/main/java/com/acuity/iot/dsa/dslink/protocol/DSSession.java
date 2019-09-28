@@ -44,7 +44,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     protected static final String REQUESTER_ALLOWED = "Requester Allowed";
     protected static final String RESPONDER = "Responder";
 
-    private static final int MAX_MISSING_ACKS = 8;
+    private static final int MAX_MISSING_ACKS = 10;
     private static final int MAX_MSG_ID = Integer.MAX_VALUE;
     private static final long MSG_TIMEOUT = 90000;
 
@@ -60,6 +60,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     private long lastTimeRecv;
     private long lastTimeSend;
     private long lastUpdateStats;
+    private int maxMissingAcks;
     private int midRcvd = 0;
     private int midSent = 0;
     private int nextMessage = 1;
@@ -365,7 +366,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     protected void onDisconnected() {
         reqQueue.clear();
         resQueue.clear();
-        sendMessage(); //todo why is this here?
+        sendMessage();
     }
 
     /**
@@ -448,9 +449,15 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     }
 
     protected boolean waitingForAcks() {
-        boolean ret = getMissingAcks() > MAX_MISSING_ACKS;
+        int missing = getMissingAcks();
+        boolean ret = missing > MAX_MISSING_ACKS;
         if (ret) {
-            debug(debug() ? "Waiting for " + getMissingAcks() + " acks" : null);
+            if (missing > maxMissingAcks) {
+                maxMissingAcks = missing;
+                debug(debug() ? "Waiting for " + missing + " acks" : null);
+            }
+        } else {
+            maxMissingAcks = 0;
         }
         return ret;
     }
