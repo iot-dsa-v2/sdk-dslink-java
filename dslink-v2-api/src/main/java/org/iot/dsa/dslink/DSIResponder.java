@@ -4,7 +4,7 @@ import org.iot.dsa.dslink.responder.InboundInvokeRequest;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
-import org.iot.dsa.dslink.responder.OutboundListResponse;
+import org.iot.dsa.dslink.responder.ListCloseHandler;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 
 /**
@@ -42,7 +42,7 @@ public interface DSIResponder {
      * @param request The details of the request and the mechanism for providing updates.
      * @return The initial response and close mechanism.
      */
-    public OutboundListResponse onList(InboundListRequest request);
+    public ListCloseHandler onList(InboundListRequest request);
 
     /**
      * The implementation should do no processing of it on the calling thread. Simply throw a

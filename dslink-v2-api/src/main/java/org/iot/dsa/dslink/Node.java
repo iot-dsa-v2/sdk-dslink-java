@@ -10,7 +10,7 @@ import org.iot.dsa.node.DSMap;
 public interface Node {
 
     /**
-     * Add all metadata for the given object.  Does nothing by default.
+     * Add all metadata for the object.  Does nothing by default.
      */
     public default void getMetadata(DSMap bucket) {
     }

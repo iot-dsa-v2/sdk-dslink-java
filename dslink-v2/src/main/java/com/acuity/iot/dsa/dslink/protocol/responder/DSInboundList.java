@@ -16,7 +16,7 @@ import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.Node;
 import org.iot.dsa.dslink.Value;
 import org.iot.dsa.dslink.responder.InboundListRequest;
-import org.iot.dsa.dslink.responder.OutboundListResponse;
+import org.iot.dsa.dslink.responder.ListCloseHandler;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIEnum;
 import org.iot.dsa.node.DSIMetadata;
@@ -42,7 +42,7 @@ import org.iot.dsa.util.DSException;
  */
 public class DSInboundList extends DSInboundRequest
         implements DSISubscriber, DSStream, InboundListRequest, OutboundMessage,
-        OutboundListResponse, Runnable {
+        ListCloseHandler, Runnable {
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -62,7 +62,7 @@ public class DSInboundList extends DSInboundRequest
     private DSMetadata cacheMeta = new DSMetadata(cacheMap);
     private Exception closeReason;
     private boolean enqueued = false;
-    private OutboundListResponse response;
+    private ListCloseHandler response;
     private boolean sendOpen = false;
     private int state = STATE_INIT;
     private DSISubscription subscription;
