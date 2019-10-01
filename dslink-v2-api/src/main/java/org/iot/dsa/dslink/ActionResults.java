@@ -6,14 +6,10 @@ import org.iot.dsa.node.DSMap;
 
 /**
  * The results of an action request.  This is implemented as a cursor for all result types.
- * The implementation can return false from next() and resume later.  After returning
- * false from next(), the implementation must call ActionRequest.close() or
- * ActionRequest.enqueueResults().
- * <p>
- * If the result type is VALUES, next() will only be called once.  The implementation does not
- * need to call any other methods on ActionRequest.
+ * For async results, implement AsyncActionResults instead.
  *
  * @author Aaron Hansen
+ * @see AsyncActionResults
  */
 public interface ActionResults {
 
@@ -23,14 +19,13 @@ public interface ActionResults {
     public int getColumnCount();
 
     /**
-     * Only needed if the column count is greater than 0.  Throws an IllegalStateException by
-     * default.
+     * Only needed if the column count is greater than 0.
      */
     public void getColumnMetadata(int idx, DSMap bucket);
 
     /**
-     * The implementation should add the values of the current result set to the given bucket.  The
-     * bucket may be reused across calls, the implementation should not cache references to it.
+     * The implementation should add the values of the current row to the given bucket.  The
+     * bucket can be reused across calls, the implementation should not cache references to it.
      */
     public void getResults(DSList bucket);
 
@@ -41,9 +36,11 @@ public interface ActionResults {
 
     /**
      * Initially, this cursor must be positioned before the first set of results. Return true to
-     * advance the next set of results.  The implementation is responsible for calling
-     * DIActionRequest.enqueueResults() or DIActionRequest.close().  This will only
-     * be called once for a result type of VALUES.
+     * advance the next set of results.  If the implementation is a stream or AsyncActionResults,
+     * this can return false and later have more rows, the implementor is responsible for calling
+     * ActionRequest.sendResults() or ActionRequest.close().  If not a stream or async, the request
+     * will be closed once this returns false.  This will only be called once for a results
+     * type of VALUES.
      */
     public boolean next();
 

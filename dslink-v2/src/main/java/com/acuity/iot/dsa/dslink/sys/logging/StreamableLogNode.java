@@ -55,7 +55,7 @@ public abstract class StreamableLogNode extends DSNode {
                         lines.remove(0);
                     }
                     lines.add(line);
-                    req.enqueueResults();
+                    req.sendResults();
                 }
             }
         };
