@@ -9,8 +9,8 @@ import org.iot.dsa.node.DSIValue;
 
 /**
  * How to respond to a list request.  Implementations must first send the target of the
- * request.  Then any children and finally open the stream for updates.  If the target is
- * resent, that will clear all prior state so children should be resent.
+ * request.  Then any children, listInitialized and finally changes.  If the target is
+ * resent, that will clear all prior state so children should be also resent.
  *
  * @author Aaron Hansen
  * @see DSIResponder#onList(InboundListRequest)
@@ -35,7 +35,13 @@ public interface InboundListRequest extends InboundRequest {
     /**
      * Call after the initial state of the target and it's children has been sent.
      */
-    public void openStream();
+    public void listInitialized();
+
+    /**
+     * Add or change any metadata on the target of the request after beginUpdates.  Can also be
+     * used as a pass-thru mechanism.
+     */
+    public void send(String name, DSElement value);
 
     /**
      * Add or update a child action to the list.
@@ -46,11 +52,6 @@ public interface InboundListRequest extends InboundRequest {
      * @param readonly    Whether or not the action requires write permission.
      */
     public void sendAction(String name, String displayName, boolean admin, boolean readonly);
-
-    /**
-     * Add or change any metadata on the target of the request after beginUpdates.
-     */
-    public void sendMetadata(String name, DSElement value);
 
     /**
      * Add or update a child node to the list.

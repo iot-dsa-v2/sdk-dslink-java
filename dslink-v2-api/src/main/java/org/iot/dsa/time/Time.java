@@ -793,17 +793,17 @@ public class Time {
     }
 
     /**
-     * 0-59
-     */
-    public static int getMinute(Calendar calendar) {
-        return calendar.get(Calendar.MINUTE);
-    }
-
-    /**
      * 0-999
      */
     public static int getMillisecond(Calendar calendar) {
         return calendar.get(Calendar.MILLISECOND);
+    }
+
+    /**
+     * 0-59
+     */
+    public static int getMinute(Calendar calendar) {
+        return calendar.get(Calendar.MINUTE);
     }
 
     /**

@@ -1,7 +1,6 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
-import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import org.iot.dsa.dslink.requester.SimpleListHandler;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInt;

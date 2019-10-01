@@ -105,6 +105,11 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
+    public void listInitialized() {
+        sendOpen = true;
+    }
+
+    @Override
     public void onClose() {
         if (subscription != null) {
             subscription.close();
@@ -145,11 +150,6 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void openStream() {
-        sendOpen = true;
-    }
-
-    @Override
     public void run() {
         try {
             target = new DSTarget(getPath(), getLink().getRootNode());
@@ -163,14 +163,22 @@ public class DSInboundList extends DSInboundRequest
                 encodeTarget(target.getTargetInfo());
                 encodeChildren(target.getTargetInfo());
                 subscription = target.getNode().subscribe(this);
-                openStream();
+                listInitialized();
             }
         } catch (Exception x) {
-            sendMetadata("$disconnectedTs", DSDateTime.now().toElement());
+            send("$disconnectedTs", DSDateTime.now().toElement());
             error(getPath(), x);
             close(x);
             return;
         }
+    }
+
+    @Override
+    public void send(String name, DSElement value) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
+        }
+        enqueue(encodeName(name, cacheBuf), value);
     }
 
     @Override
@@ -191,14 +199,6 @@ public class DSInboundList extends DSInboundRequest
             map.put("$invokable", "read");
         }
         enqueue(encodeName(name, cacheBuf), map);
-    }
-
-    @Override
-    public void sendMetadata(String name, DSElement value) {
-        if (!isOpen()) {
-            throw new IllegalStateException("List stream closed");
-        }
-        enqueue(encodeName(name, cacheBuf), value);
     }
 
     @Override
@@ -370,7 +370,7 @@ public class DSInboundList extends DSInboundRequest
      * Override point for v2.
      */
     protected void enqueue(String key, DSElement value) {
-        enqueueResponse(new DSList().add(key).add(value));
+        enqueueResponse(new DSList().add(key).add(ensureUnparented(value)));
     }
 
     /**
@@ -709,6 +709,17 @@ public class DSInboundList extends DSInboundRequest
             enqueued = true;
         }
         getResponder().sendResponse(this);
+    }
+
+    private DSElement ensureUnparented(DSElement value) {
+        if (value.isGroup()) {
+            if (value.isList() && value.toList().hasParent()) {
+                value = value.copy();
+            } else if (value.isMap() && value.toMap().hasParent()) {
+                value = value.copy();
+            }
+        }
+        return value;
     }
 
     /**
