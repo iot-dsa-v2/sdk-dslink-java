@@ -662,7 +662,12 @@ public class DSInboundList extends DSInboundRequest
      * Encode all the meta data about the root target of a list request.
      */
     private void encodeValue(Value object) {
-        object.getMetadata(cacheMap.clear());
+        cacheMap.clear();
+        DSIValue val = object.toValue();
+        if (val instanceof DSIMetadata) {
+            ((DSIMetadata)val).getMetadata(cacheMap);
+        }
+        object.getMetadata(cacheMap);
         DSElement e = cacheMap.remove("$is");
         if (e == null) {
             enqueue("$is", "node");
@@ -680,7 +685,7 @@ public class DSInboundList extends DSInboundRequest
         if (e != null) {
             enqueue("$type", e);
         } else {
-            enqueue("$type", encodeType(object.toElement(), cacheMeta));
+            enqueue("$type", encodeType(val, cacheMeta));
         }
         e = cacheMap.remove("$writable");
         if (e != null) {

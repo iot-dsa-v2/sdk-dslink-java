@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
 
 /**
  * Used in DSIResponder list responses.
@@ -17,7 +17,8 @@ public interface Value extends Node {
     /**
      * Does not have to be the current value, used to determine the type
      * of the value.
+     * @return
      */
-    public DSElement toElement();
+    public DSIValue toValue();
 
 }

@@ -5,7 +5,7 @@ package org.iot.dsa.node;
  *
  * @author Aaron Hansen
  */
-public interface DSIEnum {
+public interface DSIEnum extends DSIMetadata {
 
     /**
      * Adds the range of possible values to the given bucket.
@@ -15,6 +15,14 @@ public interface DSIEnum {
      * @return The list argument, or if it was null, a new list.
      */
     public DSList getEnums(DSList bucket);
+
+    /**
+     * Adds the enum range to the bucket.
+     */
+    @Override
+    public default void getMetadata(DSMap bucket) {
+        bucket.put(DSMetadata.ENUM_RANGE, getEnums(new DSList()));
+    }
 
     /**
      * The string representation of the the enum value.

@@ -230,7 +230,8 @@ public class DSMetadata {
     }
 
     /**
-     * The list must be size 2 and the entries must not be null.
+     * The list must be size 2, index 0 should be the false text and 1 the true text, and the
+     * entries must not be null.
      */
     public DSMetadata setBooleanRange(DSList range) {
         if (range.size() != 2) {
@@ -366,14 +367,14 @@ public class DSMetadata {
     }
 
     /**
-     * Sets the type and if the given is an enum, sets the enum range as well.
+     * Sets the type and if the given implements DSIMetadata, adds it's metadata as well.
      */
     public DSMetadata setType(DSIValue arg) {
         if (arg != null) {
             map.put(TYPE, arg.getValueType().toString());
         }
-        if (arg instanceof DSIEnum) {
-            setEnumRange(((DSIEnum) arg).getEnums(new DSList()));
+        if (arg instanceof DSIMetadata) {
+            ((DSIMetadata)arg).getMetadata(map);
         }
         return this;
     }
