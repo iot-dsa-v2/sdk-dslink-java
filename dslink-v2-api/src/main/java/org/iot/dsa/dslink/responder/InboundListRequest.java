@@ -9,7 +9,7 @@ import org.iot.dsa.node.DSIValue;
 
 /**
  * How to respond to a list request.  Implementations must first send the target of the
- * request.  Then any children, listInitialized and finally changes.  If the target is
+ * request.  Then any children, listComplete and finally changes as they happen.  If the target is
  * resent, that will clear all prior state so children should be also resent.
  *
  * @author Aaron Hansen
@@ -35,7 +35,7 @@ public interface InboundListRequest extends InboundRequest {
     /**
      * Call after the initial state of the target and it's children has been sent.
      */
-    public void listInitialized();
+    public void listComplete();
 
     /**
      * Add or change any metadata on the target of the request after beginUpdates.  Can also be
@@ -70,7 +70,7 @@ public interface InboundListRequest extends InboundRequest {
     /**
      * This should be called first to provide details about the target and should be an
      * action, node or value.  Subsequent calls will reset the state of the list such that
-     * children will need to be resent as well.
+     * children will need to be resent as well as sendBeginUpdates.
      *
      * @param object Cannot be the generic ApiObject interface, must be one of the subtypes; action,
      *               node or value.

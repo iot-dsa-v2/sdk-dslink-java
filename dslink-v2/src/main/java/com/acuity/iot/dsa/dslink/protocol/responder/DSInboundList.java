@@ -105,7 +105,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void listInitialized() {
+    public void listComplete() {
         sendOpen = true;
     }
 
@@ -163,7 +163,7 @@ public class DSInboundList extends DSInboundRequest
                 encodeTarget(target.getTargetInfo());
                 encodeChildren(target.getTargetInfo());
                 subscription = target.getNode().subscribe(this);
-                listInitialized();
+                listComplete();
             }
         } catch (Exception x) {
             send("$disconnectedTs", DSDateTime.now().toElement());
