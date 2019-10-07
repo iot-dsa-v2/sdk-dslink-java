@@ -78,7 +78,7 @@ public class StreamTableTest {
             return virtualInfo(name, new DSAction() {
                 @Override
                 public ActionResults invoke(DSIActionRequest req) {
-                    return makeResults(req, new Stream(req), false);
+                    return makeResults(req, new Stream(req));
                 }
             }.setResultsType(ResultsType.STREAM));
         }
@@ -124,19 +124,19 @@ public class StreamTableTest {
                 row.add("1_0");
                 row.add("1_1");
                 row.add("1_2");
-                req.enqueueResults();
+                req.sendResults();
             }, 100);
             DSRuntime.runDelayed(() -> {
                 row.add("2_0");
                 row.add("2_1");
                 row.add("2_2");
-                req.enqueueResults();
+                req.sendResults();
             }, 200);
             DSRuntime.runDelayed(() -> {
                 row.add("3_0");
                 row.add("3_1");
                 row.add("3_2");
-                req.enqueueResults();
+                req.sendResults();
                 req.close();
             }, 300);
         }

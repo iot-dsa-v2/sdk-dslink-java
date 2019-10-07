@@ -1,7 +1,6 @@
 package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
-import com.acuity.iot.dsa.dslink.test.V2TestLink;
 import org.iot.dsa.dslink.requester.SimpleListHandler;
 import org.iot.dsa.node.DSBool;
 import org.iot.dsa.node.DSInt;
@@ -26,8 +25,8 @@ public class ListTest {
     public void test() throws Exception {
         link = new V1TestLink(new MyMain());
         doit();
-        link = new V2TestLink(new MyMain());
-        doit();
+        //link = new V2TestLink(new MyMain());
+        //doit();
     }
 
     private void doit() throws Exception {
