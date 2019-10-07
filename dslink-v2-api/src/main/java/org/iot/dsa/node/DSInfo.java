@@ -3,7 +3,6 @@ package org.iot.dsa.node;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.iot.dsa.dslink.responder.ApiObject;
 import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DSIAction;
 import org.iot.dsa.node.action.DSISetAction;
@@ -23,7 +22,7 @@ import org.iot.dsa.util.DSUtil;
  *
  * @author Aaron Hansen
  */
-public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
+public class DSInfo<T extends DSIObject> implements GroupListener {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constants
@@ -148,20 +147,17 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
         return object;
     }
 
-    @Override
     public DSIAction getAction() {
         return (DSIAction) get();
     }
 
-    @Override
-    public ApiObject getChild(String name) {
+    public DSInfo getChild(String name) {
         if (isNode()) {
             return getNode().getInfo(name);
         }
         return getParent().getVirtualAction(this, name);
     }
 
-    @Override
     public Iterator<String> getChildren() {
         List<String> bucket = new ArrayList<>();
         if (isNode()) {
@@ -197,7 +193,9 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
         return ((DSIValue) obj).toElement();
     }
 
-    @Override
+    /**
+     * Adds only the metadata stored here.
+     */
     public void getMetadata(DSMap bucket) {
         if (metadata != null) {
             bucket.putAll(metadata);
@@ -264,12 +262,10 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
         return clazz.isAssignableFrom(object.getClass());
     }
 
-    @Override
     public boolean isAction() {
         return object instanceof DSAction;
     }
 
-    @Override
     public boolean isAdmin() {
         return getFlag(ADMIN);
     }
@@ -327,13 +323,13 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
     /**
      * Whether or not an object is exposed outside of the process.
      */
-    @Override
     public boolean isPrivate() {
         return getFlag(PRIVATE);
     }
 
     /**
-     * Whether or not an object can be written by a client.
+     * Whether or not an object is a writable value, or an action that mutates anything.  If an
+     * action is not read only, it will require write level permissions.
      */
     public boolean isReadOnly() {
         return getFlag(READONLY) || (object instanceof DSISetAction);
@@ -346,17 +342,22 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
         return getFlag(TRANSIENT);
     }
 
-    @Override
+    /**
+     * Whether or not the object is a value.
+     */
     public boolean isValue() {
         return object instanceof DSIValue;
     }
 
     /**
-     * Fires a metadata changed event.
+     * Fires a metadata changed event on the parent node.
      */
     public void modified(DSGroup map) {
-        if ((parent != null) && (parent.isRunning())) {
-            parent.fire(DSNode.METADATA_CHANGED_EVENT, this, null);
+        if (isNode()) {
+            getNode().fire(DSNode.METADATA_CHANGED_EVENT, null, metadata);
+        }
+        if (parent != null) {
+            parent.fire(DSNode.METADATA_CHANGED_EVENT, this, metadata);
         }
     }
 
@@ -465,7 +466,8 @@ public class DSInfo<T extends DSIObject> implements ApiObject, GroupListener {
     }
 
     /**
-     * False by default, set to true if you don't want the child to be written by clients.
+     * False by default, set to true if the object is a writable value, or an action that
+     * doesn't require write permission.
      */
     public DSInfo<T> setReadOnly(boolean readOnly) {
         setFlag(READONLY, readOnly);

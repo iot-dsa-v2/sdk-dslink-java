@@ -1,14 +1,13 @@
 package org.iot.dsa.dslink;
 
 import org.iot.dsa.node.DSMap;
-import org.iot.dsa.security.DSPermission;
 
 /**
  * Defines an invokable node in the DSA model.
  *
  * @author Aaron Hansen
  */
-public interface Action {
+public interface Action extends Node {
 
     /**
      * Only needed for a VALUES type actions, and optional even then.
@@ -41,17 +40,17 @@ public interface Action {
     }
 
     /**
-     * Minimum permission level required to invoke, returns WRITE by default.
-     */
-    public default DSPermission getPermission() {
-        return DSPermission.WRITE;
-    }
-
-    /**
      * What the action returns, returns VOID by default.
      */
     public default ResultsType getResultsType() {
         return ResultsType.VOID;
+    }
+
+    /**
+     * Whether or not the action the action requires write permission.  Returns false by default.
+     */
+    public default boolean isReadOnly() {
+        return false;
     }
 
     /**

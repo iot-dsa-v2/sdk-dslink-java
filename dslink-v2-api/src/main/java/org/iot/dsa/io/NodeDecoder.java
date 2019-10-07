@@ -165,7 +165,7 @@ public class NodeDecoder {
                     if (in.next() == Token.BEGIN_MAP) {
                         obj = new DSNode();
                         info = parent.put(name, obj);
-                        readChildren((DSNode)obj);
+                        readChildren((DSNode) obj);
                     } else {
                         obj = in.getElement();
                         info = parent.put(name, obj);

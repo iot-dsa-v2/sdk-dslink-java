@@ -232,6 +232,9 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
      * Sets the action group, which is null by default.
      */
     public DSAction setActionGroup(String name) {
+        if (immutable) {
+            throw new IllegalStateException("Action is immutable");
+        }
         this.actionGroup = name;
         return this;
     }
@@ -240,6 +243,9 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
      * Display name in the group menu, usually null.  Not used if the group is null.
      */
     public DSAction setActionGroupDisplay(String name) {
+        if (immutable) {
+            throw new IllegalStateException("Action is immutable");
+        }
         this.actionGroupDisplay = name;
         return this;
     }
@@ -262,6 +268,9 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
      * Returns this, it is not necessary to set the result to void.
      */
     public DSAction setResultsType(ResultsType result) {
+        if (immutable) {
+            throw new IllegalStateException("Action is immutable");
+        }
         this.result = result;
         return this;
     }

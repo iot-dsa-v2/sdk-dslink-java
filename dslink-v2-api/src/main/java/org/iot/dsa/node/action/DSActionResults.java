@@ -94,7 +94,7 @@ public class DSActionResults implements ActionResults {
         synchronized (rows) {
             rows.add(row);
         }
-        req.enqueueResults();
+        req.sendResults();
     }
 
     /**

@@ -684,7 +684,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
         if (!target.isFrozen()) {
             bucket.add(DeleteAction.DELETE);
             bucket.add(RenameAction.RENAME);
-            bucket.add(DuplicateAction.DUPLICATE);
         }
         if (canDuplicate(target)) {
             bucket.add(DuplicateAction.DUPLICATE);
@@ -1236,6 +1235,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo> {
      * @param data  Can be null.
      */
     protected void fire(DSEvent event, DSInfo child, DSIValue data) {
+        if (!isRunning()) {
+            return;
+        }
         if (event == null) {
             throw new NullPointerException("Null event");
         }

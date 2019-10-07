@@ -1,8 +1,6 @@
 package org.iot.dsa.node.action;
 
 import org.iot.dsa.dslink.ActionResults;
-import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSMap;
 
 /**
  * Renames a dynamic child of a node.

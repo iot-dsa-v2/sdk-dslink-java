@@ -9,6 +9,7 @@ import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.Action;
 import org.iot.dsa.dslink.Action.ResultsType;
 import org.iot.dsa.dslink.ActionResults;
+import org.iot.dsa.dslink.AsyncActionResults;
 import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.DSPermissionException;
 import org.iot.dsa.dslink.DSRequestException;
@@ -32,10 +33,9 @@ public class DSInboundInvoke extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int STATE_INIT = 0;
-    private static final int STATE_ROWS = 1;
-    private static final int STATE_UPDATES = 2;
-    private static final int STATE_CLOSE_PENDING = 3;
-    private static final int STATE_CLOSED = 4;
+    private static final int STATE_UPDATES = 1;
+    private static final int STATE_CLOSE_PENDING = 2;
+    private static final int STATE_CLOSED = 3;
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -48,7 +48,6 @@ public class DSInboundInvoke extends DSInboundRequest
     private DSPermission permission;
     private ActionResults results;
     private int state = STATE_INIT;
-    private boolean stream = true;
     private DSInfo target;
     private PassThruUpdate updateHead;
     private PassThruUpdate updateTail;
@@ -77,7 +76,7 @@ public class DSInboundInvoke extends DSInboundRequest
             return;
         }
         state = STATE_CLOSE_PENDING;
-        enqueueResponse();
+        sendResults();
     }
 
     @Override
@@ -95,17 +94,6 @@ public class DSInboundInvoke extends DSInboundRequest
     public void enqueuePassThru(DSMap raw) {
         state = STATE_UPDATES;
         enqueuePassThru(new PassThruUpdate(raw));
-    }
-
-    @Override
-    public void enqueueResults() {
-        synchronized (this) {
-            if (enqueued) {
-                return;
-            }
-            enqueued = true;
-        }
-        getResponder().sendResponse(this);
     }
 
     @Override
@@ -150,7 +138,7 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     /**
-     * Invokes the action and will then enqueueUpdate the outgoing response.
+     * Invokes the action and send the results unless they are AsyncActionResults.
      */
     public void run() {
         try {
@@ -192,16 +180,28 @@ public class DSInboundInvoke extends DSInboundRequest
         }
         if (results == null) {
             close();
-        } else {
-            enqueueResponse();
         }
+        if (results instanceof AsyncActionResults) {
+            return;
+        }
+        sendResults();
+    }
+
+    @Override
+    public void sendResults() {
+        synchronized (this) {
+            if (enqueued) {
+                return;
+            }
+            enqueued = true;
+        }
+        getResponder().sendResponse(this);
     }
 
     /**
      * For v2 only, set to false to auto close the stream after sending the initial state.
      */
     public DSInboundInvoke setStream(boolean stream) {
-        this.stream = stream;
         return this;
     }
 
@@ -221,14 +221,9 @@ public class DSInboundInvoke extends DSInboundRequest
             switch (state) {
                 case STATE_INIT:
                     writeColumns(writer);
-                    writeInitialResults(writer);
-                    break;
-                case STATE_ROWS:
-                    writeInitialResults(writer);
-                    break;
                 case STATE_CLOSE_PENDING:
                 case STATE_UPDATES:
-                    writeUpdates(writer);
+                    writeRows(writer);
                     break;
             }
         }
@@ -313,19 +308,6 @@ public class DSInboundInvoke extends DSInboundRequest
         });
     }
 
-    /**
-     * Enqueues in the session.
-     */
-    private void enqueueResponse() {
-        synchronized (this) {
-            if (enqueued) {
-                return;
-            }
-            enqueued = true;
-        }
-        getResponder().sendResponse(this);
-    }
-
     private void enqueuePassThru(PassThruUpdate passThruUpdate) {
         if (!isOpen()) {
             return;
@@ -377,34 +359,7 @@ public class DSInboundInvoke extends DSInboundRequest
         } else {
             out.key("columns").beginList().endList();
         }
-    }
-
-    private void writeInitialResults(MessageWriter writer) {
-        DSIWriter out = writer.getWriter();
-        state = STATE_ROWS;
-        out.key(getRowsName()).beginList();
-        if (results != null) {
-            DSList bucket = new DSList();
-            DSResponder session = getResponder();
-            while (results.next()) {
-                results.getResults(bucket.clear());
-                out.value(bucket);
-                if (session.shouldEndMessage()) {
-                    out.endList();
-                    enqueueResponse();
-                    return;
-                }
-            }
-        }
-        out.endList();
-        if ((results == null) || results.getResultsType().isVoid() || !stream) {
-            writeClose(writer);
-            state = STATE_CLOSED;
-            doClose();
-        } else {
-            writeOpen(writer);
-            state = STATE_UPDATES;
-        }
+        state = STATE_UPDATES;
     }
 
     /**
@@ -429,7 +384,7 @@ public class DSInboundInvoke extends DSInboundRequest
         }
     }
 
-    private void writeUpdates(MessageWriter writer) {
+    private void writeRows(MessageWriter writer) {
         DSIWriter out = writer.getWriter();
         if (updateHead != null) {
             writePassThru(writer);
@@ -442,13 +397,19 @@ public class DSInboundInvoke extends DSInboundRequest
             do {
                 results.getResults(bucket.clear());
                 out.value(bucket);
+                if (results.getResultsType().isValues()) {
+                    break;
+                }
                 if (session.shouldEndMessage()) {
                     out.endList();
-                    enqueueResponse();
+                    sendResults();
                     return;
                 }
             } while (results.next());
             out.endList();
+        }
+        if (!results.getResultsType().isStream()) {
+            close();
         }
     }
 

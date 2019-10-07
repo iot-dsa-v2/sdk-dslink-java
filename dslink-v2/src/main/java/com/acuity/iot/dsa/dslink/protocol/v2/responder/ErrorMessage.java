@@ -38,8 +38,8 @@ class ErrorMessage implements MessageConstants, OutboundMessage {
         out.init(req.getRequestId(), req.getSession().getAckToSend());
         if (req instanceof DS2InboundInvoke) {
             out.setMethod(MSG_INVOKE_RES);
-        } else if (req instanceof DS2InboundList) {
-            out.setMethod(MSG_LIST_RES);
+            //} else if (req instanceof DS2InboundList) { //TODO
+            //out.setMethod(MSG_LIST_RES);
         } else if (req instanceof DS2InboundSet) {
             out.setMethod(MSG_SET_RES);
         } else {

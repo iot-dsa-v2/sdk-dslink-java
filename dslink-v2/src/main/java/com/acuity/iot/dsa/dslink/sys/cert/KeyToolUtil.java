@@ -88,7 +88,7 @@ public class KeyToolUtil extends DSLogger {
     public static String importCACert(String keystore, String certStr, String alias,
                                       String password) throws IOException {
         String filename = Time.encodeForFiles(Time.getCalendar(System.currentTimeMillis()),
-                                                new StringBuilder("tempCACert")).toString();
+                                              new StringBuilder("tempCACert")).toString();
         Files.write(Paths.get(filename), certStr.getBytes());
         String[] cmd = new String[]{
                 "keytool",
@@ -108,7 +108,7 @@ public class KeyToolUtil extends DSLogger {
     public static String importPrimaryCert(String keystore, String certStr, String password)
             throws IOException {
         String filename = Time.encodeForFiles(Time.getCalendar(System.currentTimeMillis()),
-                                                new StringBuilder("tempCert")).toString();
+                                              new StringBuilder("tempCert")).toString();
         Files.write(Paths.get(filename), certStr.getBytes());
         String[] cmd = new String[]{
                 "keytool",

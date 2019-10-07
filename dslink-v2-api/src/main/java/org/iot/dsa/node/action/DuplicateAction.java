@@ -5,7 +5,6 @@ import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.node.DSValueType;
 
 /**
  * Renames a dynamic child of a node.
