@@ -29,6 +29,7 @@ import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.action.DSIAction;
 import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
@@ -426,9 +427,63 @@ public class DSInboundList extends DSInboundRequest
         encodeAction(action, cacheMap);
     }
 
-    private void encodeAction(DSInfo action) {
-        DSMetadata.getMetadata(action, cacheMap.clear());
-        encodeAction(action.getAction(), cacheMap);
+    private void encodeAction(DSInfo info) {
+        DSMetadata.getMetadata(info, cacheMap.clear());
+        DSIAction action = info.getAction();
+        DSElement e = cacheMap.remove("$name");
+        if (e == null) {
+            e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
+        }
+        if (e != null) {
+            enqueue("$name", e);
+        }
+        e = cacheMap.remove("$invokable");
+        if (e != null) {
+            enqueue("$invokable", e);
+        } else {
+            if (action.isAdmin()) {
+                enqueue("$invokable", "config");
+            } else if (!action.isReadOnly()) {
+                enqueue("$invokable", "write");
+            } else {
+                enqueue("$invokable", "read");
+            }
+        }
+        e = cacheMap.remove("$params");
+        if (e != null) {
+            enqueue("$params", e);
+        } else {
+            DSList list = new DSList();
+            for (int i = 0, len = action.getParameterCount(); i < len; i++) {
+                DSMap param = new DSMap();
+                action.getParameterMetadata(info, i, param);
+                fixRangeTypes(param);
+                action.prepareParameter(info, param);
+                list.add(param);
+            }
+            enqueue("$params", list);
+        }
+        e = cacheMap.remove("$columns");
+        if (e != null) {
+            enqueue("$columns", e);
+        } else if (action.getColumnCount() > 0) {
+            DSList list = new DSList();
+            for (int i = 0, len = action.getColumnCount(); i < len; i++) {
+                DSMap col = new DSMap();
+                action.getColumnMetadata(info, i, col);
+                fixRangeTypes(col);
+                list.add(col);
+            }
+            enqueue("$columns", list);
+        }
+        e = cacheMap.remove("$result");
+        if (e != null) {
+            enqueue("$result", e);
+        } else if (!action.getResultsType().isVoid()) {
+            enqueue("$result", action.getResultsType().toString());
+        }
+        encodeTargetMetadata(cacheMap);
+        cacheMap.clear();
     }
 
     private void encodeAction(Action action, DSMap cacheMap) {
