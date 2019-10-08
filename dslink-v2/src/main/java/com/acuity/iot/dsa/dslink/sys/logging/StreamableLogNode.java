@@ -43,7 +43,7 @@ public abstract class StreamableLogNode extends DSNode {
         if (isRoot) {
             act.addParameter("Log Name", DSString.NULL, "Optional log name to filter by");
         }
-        act.addDefaultParameter("Log Level", LoggerNodeLevel.ALL, "Log level filter");
+        act.addDefaultParameter("Log Level", DSLevel.ALL, "Log level filter");
         act.addParameter("Filter", DSString.NULL, "Optional regex filter");
         act.setResultsType(ResultsType.STREAM);
         act.addColumnMetadata("Timestamp", DSDateTime.NULL);
