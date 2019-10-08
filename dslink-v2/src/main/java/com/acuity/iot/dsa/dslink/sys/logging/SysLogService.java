@@ -22,7 +22,7 @@ import org.iot.dsa.node.action.DSIActionRequest;
  */
 public class SysLogService extends StreamableLogNode {
 
-    private DSInfo levelInfo = getInfo("Default Log Level");
+    private DSInfo<?> levelInfo = getInfo("Default Log Level");
 
     public SysLogService() {
     }
@@ -40,7 +40,7 @@ public class SysLogService extends StreamableLogNode {
     protected void declareDefaults() {
         super.declareDefaults();
         declareDefault("Add Log", getAddLogAction());
-        declareDefault("Stream All", getStreamLogAction());
+        declareDefault("Stream All", getStreamLogAction(true));
         declareDefault("Default Log Level", DSLevel.valueOf(getRootLevel()))
                 .setTransient(true);
     }
