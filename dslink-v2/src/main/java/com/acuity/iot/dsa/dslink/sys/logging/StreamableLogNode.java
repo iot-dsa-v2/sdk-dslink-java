@@ -1,5 +1,7 @@
 package com.acuity.iot.dsa.dslink.sys.logging;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Handler;
@@ -27,24 +29,26 @@ public abstract class StreamableLogNode extends DSNode {
 
     private static DSList levelRange;
 
-    public abstract DSInfo getLevelInfo();
+    public abstract DSInfo<?> getLevelInfo();
 
     public abstract Logger getLoggerObj();
 
-    protected DSAction getStreamLogAction() {
+    protected DSAction getStreamLogAction(boolean isRoot) {
         DSAction act = new DSAction() {
             @Override
             public ActionResults invoke(DSIActionRequest req) {
                 return ((StreamableLogNode) req.getTarget()).startLogStream(req);
             }
         };
-        act.addParameter("Log Name", DSString.NULL, "Optional log name to filter by");
+        if (isRoot) {
+            act.addParameter("Log Name", DSString.NULL, "Optional log name to filter by");
+        }
         act.addDefaultParameter("Log Level", LoggerNodeLevel.ALL, "Log level filter");
         act.addParameter("Filter", DSString.NULL, "Optional regex filter");
         act.setResultsType(ResultsType.STREAM);
         act.addColumnMetadata("Timestamp", DSDateTime.NULL);
         act.addColumnMetadata("Log Name", DSString.NULL);
-        act.addColumnMetadata("Level", LoggerNodeLevel.ALL);
+        act.addColumnMetadata("Level", DSLevel.ALL);
         act.addColumnMetadata("Message", DSString.NULL).setEditor("textarea");
         return act;
     }
@@ -52,7 +56,7 @@ public abstract class StreamableLogNode extends DSNode {
     private ActionResults startLogStream(final DSIActionRequest req) {
         final Logger loggerObj = getLoggerObj();
         final String name = req.getParameters().getString("Log Name");
-        final LoggerNodeLevel level = LoggerNodeLevel.make(req.getParameters().getString("Log Level"));
+        final DSLevel level = DSLevel.make(req.getParameters().getString("Log Level"));
         final String filter = req.getParameters().getString("Filter");
         final List<DSList> lines = new LinkedList<>();
         final Handler handler = new DSLogHandler() {
@@ -60,7 +64,7 @@ public abstract class StreamableLogNode extends DSNode {
             protected void write(LogRecord record) {
             	String recordName = record.getLoggerName();
             	Level recordLevel = record.getLevel();
-            	String recordMsg = record.getMessage();
+            	String recordMsg = encodeLogRecord(record);
                 DSDateTime ts = DSDateTime.valueOf(record.getMillis());
                 if (levelMatches(recordLevel, level.toLevel()) && 
                         (name == null || name.isEmpty() || name.equals(recordName)) &&
@@ -69,7 +73,7 @@ public abstract class StreamableLogNode extends DSNode {
                     while (lines.size() > 1000) {
                         lines.remove(0);
                     }
-                    lines.add(DSList.valueOf(ts.toString(), recordName, LoggerNodeLevel.valueOf(recordLevel).toString(), recordMsg));
+                    lines.add(DSList.valueOf(ts.toString(), recordName, DSLevel.valueOf(recordLevel).toString(), recordMsg));
                     req.sendResults();
                 }
             }
@@ -88,7 +92,7 @@ public abstract class StreamableLogNode extends DSNode {
                 } else if (idx == 1) {
                     new DSMetadata(bucket).setName("Log Name").setType(DSString.NULL);
                 } else if (idx == 2) {
-                    new DSMetadata(bucket).setName("Level").setType(LoggerNodeLevel.ALL);
+                    new DSMetadata(bucket).setName("Level").setType(DSLevel.ALL);
                 } else if (idx == 3) {
                     new DSMetadata(bucket).setName("Message").setType(DSString.NULL);
                 }
@@ -115,6 +119,40 @@ public abstract class StreamableLogNode extends DSNode {
                 loggerObj.removeHandler(handler);
             }
         };
+    }
+    
+    private static String encodeLogRecord(LogRecord record) {
+        StringBuilder builder = new StringBuilder();
+       // class
+        if (record.getSourceClassName() != null) {
+            builder.append(record.getSourceClassName());
+            builder.append(" - ");
+        }
+        // method
+        if (record.getSourceMethodName() != null) {
+            builder.append(record.getSourceMethodName());
+            builder.append(" - ");
+        }
+        // message
+        String msg = record.getMessage();
+        if ((msg != null) && (msg.length() > 0)) {
+            Object[] params = record.getParameters();
+            if (params != null) {
+                msg = String.format(msg, params);
+            }
+            builder.append(msg);
+        }
+        // exception
+        Throwable thrown = record.getThrown();
+        if (thrown != null) {
+            builder.append("\n");
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            thrown.printStackTrace(pw);
+            pw.close();
+            builder.append(sw.toString());
+        }
+        return builder.toString();
     }
     
     public static boolean levelMatches(Level msgLevel, Level desiredLevel) {
