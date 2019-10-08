@@ -18,6 +18,7 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.action.DSAction;
 import org.iot.dsa.node.action.DSIActionRequest;
+import org.iot.dsa.time.DSDateTime;
 
 /**
  * @author Daniel Shapiro
@@ -41,7 +42,10 @@ public abstract class StreamableLogNode extends DSNode {
         act.addDefaultParameter("Log Level", LoggerNodeLevel.ALL, "Log level filter");
         act.addParameter("Filter", DSString.NULL, "Optional regex filter");
         act.setResultsType(ResultsType.STREAM);
-        act.addColumnMetadata("Log", DSString.NULL).setEditor("textarea");
+        act.addColumnMetadata("Timestamp", DSDateTime.NULL);
+        act.addColumnMetadata("Log Name", DSString.NULL);
+        act.addColumnMetadata("Level", LoggerNodeLevel.ALL);
+        act.addColumnMetadata("Message", DSString.NULL).setEditor("textarea");
         return act;
     }
 
@@ -50,20 +54,22 @@ public abstract class StreamableLogNode extends DSNode {
         final String name = req.getParameters().getString("Log Name");
         final LoggerNodeLevel level = LoggerNodeLevel.make(req.getParameters().getString("Log Level"));
         final String filter = req.getParameters().getString("Filter");
-        final List<String> lines = new LinkedList<>();
+        final List<DSList> lines = new LinkedList<>();
         final Handler handler = new DSLogHandler() {
             @Override
             protected void write(LogRecord record) {
-            	record.getLoggerName();
-            	Level lvl = record.getLevel();
-            	String msg = record.getMessage();
-            	//
-                String line = toString(this, record);
-                if (filter == null || line.matches(filter)) {
+            	String recordName = record.getLoggerName();
+            	Level recordLevel = record.getLevel();
+            	String recordMsg = record.getMessage();
+                DSDateTime ts = DSDateTime.valueOf(record.getMillis());
+                if (levelMatches(recordLevel, level.toLevel()) && 
+                        (name == null || name.isEmpty() || name.equals(recordName)) &&
+                        (filter == null || filter.isEmpty() || recordMsg.matches(filter))) {
+                    
                     while (lines.size() > 1000) {
                         lines.remove(0);
                     }
-                    lines.add(line);
+                    lines.add(DSList.valueOf(ts.toString(), recordName, LoggerNodeLevel.valueOf(recordLevel).toString(), recordMsg));
                     req.sendResults();
                 }
             }
@@ -72,17 +78,25 @@ public abstract class StreamableLogNode extends DSNode {
         return new ActionResults() {
             @Override
             public int getColumnCount() {
-                return 1;
+                return 4;
             }
 
             @Override
             public void getColumnMetadata(int idx, DSMap bucket) {
-                new DSMetadata(bucket).setName("Record").setType(DSString.NULL);
+                if (idx == 0) {
+                    new DSMetadata(bucket).setName("Timestamp").setType(DSDateTime.NULL);
+                } else if (idx == 1) {
+                    new DSMetadata(bucket).setName("Log Name").setType(DSString.NULL);
+                } else if (idx == 2) {
+                    new DSMetadata(bucket).setName("Level").setType(LoggerNodeLevel.ALL);
+                } else if (idx == 3) {
+                    new DSMetadata(bucket).setName("Message").setType(DSString.NULL);
+                }
             }
 
             @Override
             public void getResults(DSList bucket) {
-                bucket.add(DSString.valueOf(lines.remove(0)));
+                bucket.addAll(lines.remove(0));
             }
 
             @Override
@@ -101,6 +115,10 @@ public abstract class StreamableLogNode extends DSNode {
                 loggerObj.removeHandler(handler);
             }
         };
+    }
+    
+    public static boolean levelMatches(Level msgLevel, Level desiredLevel) {
+        return msgLevel.intValue() >= desiredLevel.intValue();
     }
 
     static {
