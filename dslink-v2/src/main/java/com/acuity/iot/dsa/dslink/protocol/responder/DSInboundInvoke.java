@@ -48,6 +48,7 @@ public class DSInboundInvoke extends DSInboundRequest
     private DSPermission permission;
     private ActionResults results;
     private int state = STATE_INIT;
+    private boolean streamOpen = false;
     private DSInfo target;
     private PassThruUpdate updateHead;
     private PassThruUpdate updateTail;
@@ -234,6 +235,16 @@ public class DSInboundInvoke extends DSInboundRequest
                 writeClose(writer);
             }
             doClose();
+        } else {
+            switch (results.getResultsType()) {
+                case STREAM:
+                case TABLE:
+                    if (!streamOpen) {
+                        streamOpen = true;
+                        writeOpen(writer);
+                    }
+                default:
+            }
         }
         writeEnd(writer);
         return true;
