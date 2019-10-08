@@ -3,6 +3,7 @@ package com.acuity.iot.dsa.dslink.sys.logging;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.iot.dsa.dslink.Action.ResultsType;
@@ -36,6 +37,8 @@ public abstract class StreamableLogNode extends DSNode {
                 return ((StreamableLogNode) req.getTarget()).startLogStream(req);
             }
         };
+        act.addParameter("Log Name", DSString.NULL, "Optional log name to filter by");
+        act.addDefaultParameter("Log Level", LoggerNodeLevel.ALL, "Log level filter");
         act.addParameter("Filter", DSString.NULL, "Optional regex filter");
         act.setResultsType(ResultsType.STREAM);
         act.addColumnMetadata("Log", DSString.NULL).setEditor("textarea");
@@ -44,11 +47,17 @@ public abstract class StreamableLogNode extends DSNode {
 
     private ActionResults startLogStream(final DSIActionRequest req) {
         final Logger loggerObj = getLoggerObj();
+        final String name = req.getParameters().getString("Log Name");
+        final LoggerNodeLevel level = LoggerNodeLevel.make(req.getParameters().getString("Log Level"));
         final String filter = req.getParameters().getString("Filter");
         final List<String> lines = new LinkedList<>();
         final Handler handler = new DSLogHandler() {
             @Override
             protected void write(LogRecord record) {
+            	record.getLoggerName();
+            	Level lvl = record.getLevel();
+            	String msg = record.getMessage();
+            	//
                 String line = toString(this, record);
                 if (filter == null || line.matches(filter)) {
                     while (lines.size() > 1000) {
