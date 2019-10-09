@@ -101,17 +101,6 @@ public interface DSIAction extends Action, DSIObject {
     }
 
     /**
-     * Called for each parameter as it is being sent to the requester in response to a list
-     * request. The intent is to update the default value to represent the current state of the
-     * target.  Does nothing by default.
-     *
-     * @param target    The info about the target of the action (its parent).
-     * @param parameter Map representing a single parameter.
-     */
-    public default void prepareParameter(DSInfo target, DSMap parameter) {
-    }
-
-    /**
      * Makes an aync action result for the given parameters.  If the DIResult defines columns those
      * will be used, otherwise the columns defined by the action will be used.
      *
