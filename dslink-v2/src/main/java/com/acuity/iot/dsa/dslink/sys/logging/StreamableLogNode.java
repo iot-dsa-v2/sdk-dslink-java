@@ -67,7 +67,7 @@ public abstract class StreamableLogNode extends DSNode {
             	String recordMsg = encodeLogRecord(record);
                 DSDateTime ts = DSDateTime.valueOf(record.getMillis());
                 if (levelMatches(recordLevel, level.toLevel()) && 
-                        (name == null || name.isEmpty() || name.equals(recordName)) &&
+                        (name == null || name.isEmpty() || logNameMatches(recordName, name)) &&
                         (filter == null || filter.isEmpty() || recordMsg.matches(filter))) {
                     
                     while (lines.size() > 1000) {
@@ -157,6 +157,10 @@ public abstract class StreamableLogNode extends DSNode {
     
     public static boolean levelMatches(Level msgLevel, Level desiredLevel) {
         return msgLevel.intValue() >= desiredLevel.intValue();
+    }
+    
+    public static boolean logNameMatches(String msgLogName, String desiredLogName) {
+        return msgLogName != null && msgLogName.startsWith(desiredLogName);
     }
 
     static {
