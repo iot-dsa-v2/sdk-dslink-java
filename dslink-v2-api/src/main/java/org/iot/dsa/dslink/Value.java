@@ -17,7 +17,6 @@ public interface Value extends Node {
     /**
      * Does not have to be the current value, used to determine the type
      * of the value.
-     * @return
      */
     public DSIValue toValue();
 

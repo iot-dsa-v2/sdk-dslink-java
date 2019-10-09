@@ -6,6 +6,7 @@ import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSMap;
 import org.iot.dsa.node.DSMetadata;
 
@@ -208,9 +209,15 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
         return -1;
     }
 
+    /**
+     * Puts the metadata from an already added parameter into the bucket, and calls prepareParameter
+     * so that is can be updated for any current state.
+     * @see #prepareParameter(DSInfo, DSMap)
+     */
     @Override
-    public void getParameterMetadata(int idx, DSMap bucket) {
+    public void getParameterMetadata(DSInfo target, int idx, DSMap bucket) {
         bucket.putAll(parameters.get(idx));
+        prepareParameter(target, bucket);
     }
 
     @Override
@@ -226,6 +233,17 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
     @Override
     public ActionResults invoke(DSIActionRequest request) {
         return null;
+    }
+
+    /**
+     * Called for each parameter as it is being sent to the requester in response to a list
+     * request. The intent is to update the default value to represent the current state of the
+     * target.  Does nothing by default.
+     *
+     * @param target    The target of the action.
+     * @param parameter Map representing a single parameter.
+     */
+    public void prepareParameter(DSInfo target, DSMap parameter) {
     }
 
     /**
