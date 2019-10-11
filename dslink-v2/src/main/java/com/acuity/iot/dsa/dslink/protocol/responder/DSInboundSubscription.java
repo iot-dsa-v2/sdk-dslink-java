@@ -12,8 +12,10 @@ import org.iot.dsa.node.DSIStatus;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
+import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.event.DSEvent;
+import org.iot.dsa.node.event.DSEventFilter;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.time.DSDateTime;
@@ -110,17 +112,20 @@ public class DSInboundSubscription extends DSInboundRequest
 
     @Override
     public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
-        DSIValue value;
-        if (child != null) {
-            value = child.getValue();
-        } else {
-            value = (DSIValue) node;
+        if (data == null) {
+            if ((child != null) && child.isValue()) {
+                data = child.getValue();
+            } else if (node instanceof DSIValue) {
+                data = (DSIValue) node;
+            } else {
+                data = DSNull.NULL;
+            }
         }
         DSStatus status = DSStatus.ok;
-        if (value instanceof DSIStatus) {
-            status = ((DSIStatus) value).getStatus();
+        if (data instanceof DSIStatus) {
+            status = ((DSIStatus) data).getStatus();
         }
-        update(DSDateTime.now(), value, status);
+        update(DSDateTime.now(), data, status);
     }
 
     /**
@@ -219,11 +224,18 @@ public class DSInboundSubscription extends DSInboundRequest
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
                 node = (DSNode) obj;
-                this.subscription = node.subscribe(this, DSNode.VALUE_CHANGED_EVENT, null);
+                this.subscription = node.subscribe(new DSISubscriber() {
+                    @Override
+                    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+                        if (child == null) {
+                            DSInboundSubscription.this.onEvent(event, node, null, data);
+                        }
+                    }
+                });
                 onEvent(DSNode.VALUE_CHANGED_EVENT, node, null, null);
             } else {
                 DSInfo info = path.getTargetInfo();
-                node = path.getNode();
+                node = info.getParent();
                 child = info;
                 this.subscription = node.subscribe(this, DSNode.VALUE_CHANGED_EVENT, info);
                 onEvent(DSNode.VALUE_CHANGED_EVENT, node, info, null);

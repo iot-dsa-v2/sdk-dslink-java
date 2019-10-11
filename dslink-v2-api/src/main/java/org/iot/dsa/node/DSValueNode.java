@@ -36,7 +36,7 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
     public void onChildChanged(DSInfo child) {
         DSInfo info = getValueChild();
         if (child == info) {
-            fire(VALUE_CHANGED_EVENT, child, child.getValue());
+            fire(VALUE_CHANGED_EVENT, null, child.getValue());
             DSNode parent = getParent();
             if (parent != null) {
                 parent.fire(VALUE_CHANGED_EVENT, getInfo(), child.getValue());
