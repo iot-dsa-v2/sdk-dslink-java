@@ -215,7 +215,7 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
      * @see #prepareParameter(DSInfo, DSMap)
      */
     @Override
-    public void getParameterMetadata(DSInfo target, int idx, DSMap bucket) {
+    public void getParameterMetadata(DSInfo<?> target, int idx, DSMap bucket) {
         bucket.putAll(parameters.get(idx));
         prepareParameter(target, bucket);
     }
@@ -243,7 +243,7 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
      * @param target    The target of the action.
      * @param parameter Map representing a single parameter.
      */
-    public void prepareParameter(DSInfo target, DSMap parameter) {
+    public void prepareParameter(DSInfo<?> target, DSMap parameter) {
     }
 
     /**

@@ -46,7 +46,7 @@ public class DuplicateAction extends DSAction {
     }
 
     @Override
-    public void prepareParameter(DSInfo target, DSMap parameter) {
+    public void prepareParameter(DSInfo<?> target, DSMap parameter) {
         parameter.put(DSMetadata.DEFAULT, target.getName());
     }
 
