@@ -574,6 +574,11 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     DSInfo<T> setObject(T arg) {
         if (isDeclared()) {
             if (!getDefaultObject().getClass().isInstance(arg)) {
+                if (isValue() && (arg instanceof DSIValue)) {
+                    DSIValue v = (DSIValue) arg;
+                    this.object = (T) getValue().valueOf(v.toElement());
+                    return this;
+                }
                 throw new IllegalArgumentException(arg + " not an instanceof the declared type " +
                                                            getDefaultObject().getClass().getName());
             }
