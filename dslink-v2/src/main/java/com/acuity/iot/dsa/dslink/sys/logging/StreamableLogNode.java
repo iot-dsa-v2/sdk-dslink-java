@@ -8,6 +8,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import org.iot.dsa.dslink.Action.ResultsType;
 import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.logging.DSLevel;
@@ -68,7 +69,7 @@ public abstract class StreamableLogNode extends DSNode {
                 DSDateTime ts = DSDateTime.valueOf(record.getMillis());
                 if (levelMatches(recordLevel, level.toLevel()) && 
                         (name == null || name.isEmpty() || logNameMatches(recordName, name)) &&
-                        (filter == null || filter.isEmpty() || recordMsg.matches(filter))) {
+                        (filter == null || filter.isEmpty() || logTextMatches(recordMsg, filter))) {
                     
                     while (lines.size() > 1000) {
                         lines.remove(0);
@@ -161,6 +162,11 @@ public abstract class StreamableLogNode extends DSNode {
     
     public static boolean logNameMatches(String msgLogName, String desiredLogName) {
         return msgLogName != null && msgLogName.startsWith(desiredLogName);
+    }
+    
+    public static boolean logTextMatches(String text, String filter) {
+        Pattern p = Pattern.compile(filter);
+        return p.matcher(text).find();
     }
 
     static {
