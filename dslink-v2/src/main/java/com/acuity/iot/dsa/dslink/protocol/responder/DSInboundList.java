@@ -617,30 +617,29 @@ public class DSInboundList extends DSInboundRequest
             meta.setType(value);
             type = meta.getType();
         }
-        if (DSElementType.isValid(type)) {
-            DSElementType et = DSElementType.valueOf(type);
-            switch (et) {
-                case BOOLEAN:
-                    type = "bool";
-                    break;
-                case DOUBLE:
-                case LONG:
-                    type = "number";
-                    break;
-                case LIST:
-                    type = "array";
-                    break;
-                case MAP:
-                    type = "map";
-                    break;
-                case BYTES:
-                    type = "binary";
-                    break;
-                case NULL:
-                    type = "dynamic";
-            }
-        } else {
-            type = "dynamic";
+        DSElementType et = DSElementType.valueFor(type);
+        switch (et) {
+            case BOOLEAN:
+                type = "bool";
+                break;
+            case DOUBLE:
+            case LONG:
+                type = "number";
+                break;
+            case LIST:
+                type = "array";
+                break;
+            case MAP:
+                type = "map";
+                break;
+            case BYTES:
+                type = "binary";
+                break;
+            case STRING:
+                type = "string";
+                break;
+            default:
+                type = "dynamic";
         }
         if (!DSUtil.equal(orig, type)) {
             cacheMap.put(DSMetadata.TYPE, DSString.valueOf(type));
@@ -700,7 +699,7 @@ public class DSInboundList extends DSInboundRequest
         cacheMap.clear();
         DSIValue val = object.toValue();
         if (val instanceof DSIMetadata) {
-            ((DSIMetadata)val).getMetadata(cacheMap);
+            ((DSIMetadata) val).getMetadata(cacheMap);
         }
         object.getMetadata(cacheMap);
         DSElement e = cacheMap.remove("$is");

@@ -19,8 +19,8 @@ public enum DSElementType implements DSIEnum, DSIValue {
     NULL,
     STRING;
 
-    private DSString display;
     private static Map<String, DSElementType> nameMap;
+    private DSString display;
 
     @Override
     public DSIObject copy() {
@@ -49,16 +49,6 @@ public enum DSElementType implements DSIEnum, DSIValue {
     }
 
     /**
-     * Whether or not the given type string can be converted to an element type.
-     */
-    public static boolean isValid(String type) {
-        if (type == null) {
-            return false;
-        }
-        return nameMap.containsKey(type);
-    }
-
-    /**
      * Returns a DSString representation of the name() in lowercase.
      */
     @Override
@@ -69,13 +59,22 @@ public enum DSElementType implements DSIEnum, DSIValue {
         return display;
     }
 
-    @Override
-    public DSElementType valueOf(DSElement element) {
-        return nameMap.get(element.toString());
-    }
-
     public String toString() {
         return toElement().toString();
+    }
+
+    /**
+     * Unlike Enum.valueOf, this will handle the lowercase display.
+     */
+    public static DSElementType valueFor(String type) {
+        DSElementType ret = nameMap.get(type);
+        return ret == null ? NULL : ret;
+    }
+
+    @Override
+    public DSElementType valueOf(DSElement element) {
+        DSElementType ret = nameMap.get(element.toString());
+        return ret == null ? NULL : ret;
     }
 
     static {
@@ -85,6 +84,11 @@ public enum DSElementType implements DSIEnum, DSIValue {
             nameMap.put(e.name(), e);
             nameMap.put(e.toString(), e);
         }
+        //DSA types
+        nameMap.put("bool", BOOLEAN);
+        nameMap.put("number", DOUBLE);
+        nameMap.put("array", LIST);
+        nameMap.put("binary", BYTES);
+        nameMap.put("dynamic", NULL);
     }
-
 }
