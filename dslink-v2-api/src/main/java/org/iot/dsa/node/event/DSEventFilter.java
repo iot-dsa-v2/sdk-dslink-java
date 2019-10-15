@@ -43,7 +43,7 @@ public class DSEventFilter implements DSISubscriber {
      * @param child      Optional.
      */
     public DSEventFilter(DSISubscriber subscriber, DSEvent event, DSInfo child) {
-        this.subscriber = subscriber;
+        this(subscriber);
         this.event = event;
         this.child = child;
     }

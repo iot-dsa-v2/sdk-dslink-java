@@ -41,7 +41,6 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
                 setPath(path.getPath());
                 responder.onSet(this);
             } else {
-                DSNode parent = path.getNode();
                 DSInfo info = path.getTargetInfo();
                 if ((info != null) && info.isReadOnly()) {
                     throw new DSRequestException("Not writable: " + getPath());
@@ -58,6 +57,7 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
                     ((DSNode) obj).onSet(value);
                 } else {
                     //since not a node, there must be a parent
+                    DSNode parent = info.getParent();
                     DSIValue current = info.getValue();
                     if (current == null) {
                         if (info.isValue()) {

@@ -36,22 +36,6 @@ public class SerializationTest {
     // Methods
     // -------
 
-    @Test
-    public void differentTypeThanDefault() throws Exception {
-        DSNode node = new MyNode();
-        node.put("tmp", DSElement.make(10));
-        boolean success = false;
-        try {
-            node.put("string", DSLong.valueOf(6));
-        } catch (Exception x) {
-            success = true;
-        }
-        Assert.assertTrue(success);
-        node = decode(encode(node));
-        Assert.assertEquals(node.get("string"), DSString.EMPTY);
-        Assert.assertEquals(node.get("tmp"), DSElement.make(10));
-    }
-
     /**
      * Testing an "Already parented" bug that cropped up.
      */
