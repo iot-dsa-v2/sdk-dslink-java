@@ -26,7 +26,7 @@ public interface DSIAction extends Action, DSIObject {
      *
      * @see Action#getColumnCount()
      */
-    public default int getColumnCount(DSInfo target) {
+    public default int getColumnCount(DSInfo<?> target) {
         return getColumnCount();
     }
 
@@ -36,7 +36,7 @@ public interface DSIAction extends Action, DSIObject {
      *
      * @see Action#getColumnMetadata(int, DSMap)
      */
-    public default void getColumnMetadata(DSInfo target, int idx, DSMap bucket) {
+    public default void getColumnMetadata(DSInfo<?> target, int idx, DSMap bucket) {
         getColumnMetadata(idx, bucket);
     }
 
@@ -46,7 +46,7 @@ public interface DSIAction extends Action, DSIObject {
      *
      * @see Action#getParameterCount()
      */
-    public default int getParameterCount(DSInfo target) {
+    public default int getParameterCount(DSInfo<?> target) {
         return getParameterCount();
     }
 
@@ -56,7 +56,7 @@ public interface DSIAction extends Action, DSIObject {
      *
      * @see Action#getParameterMetadata(int, DSMap)
      */
-    public default void getParameterMetadata(DSInfo target, int idx, DSMap bucket) {
+    public default void getParameterMetadata(DSInfo<?> target, int idx, DSMap bucket) {
         getParameterMetadata(idx, bucket);
     }
 

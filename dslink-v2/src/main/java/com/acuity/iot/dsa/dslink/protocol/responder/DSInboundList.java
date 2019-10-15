@@ -18,6 +18,7 @@ import org.iot.dsa.dslink.Value;
 import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.ListCloseHandler;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSElementType;
 import org.iot.dsa.node.DSIEnum;
 import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIValue;
@@ -35,6 +36,7 @@ import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
+import org.iot.dsa.util.DSUtil;
 
 /**
  * List implementation for a responder.
@@ -609,19 +611,38 @@ public class DSInboundList extends DSInboundRequest
     }
 
     private DSElement encodeType(DSIValue value, DSMetadata meta) {
-        String type = meta.getType();
-        if (getResponder().isV1()) {
-            if ((type == null) && (value != null)) {
-                meta.setType(value);
-            }
-        } else {
-            if ((type == null) && (value != null)) {
-                if (value instanceof DSIEnum) {
-                    meta.setType(DSString.NULL);
-                } else {
-                    meta.setType(value);
-                }
-            }
+        String orig = meta.getType();
+        String type = orig;
+        if ((type == null) && (value != null)) {
+            meta.setType(value);
+            type = meta.getType();
+        }
+        DSElementType et = DSElementType.valueFor(type);
+        switch (et) {
+            case BOOLEAN:
+                type = "bool";
+                break;
+            case DOUBLE:
+            case LONG:
+                type = "number";
+                break;
+            case LIST:
+                type = "array";
+                break;
+            case MAP:
+                type = "map";
+                break;
+            case BYTES:
+                type = "binary";
+                break;
+            case STRING:
+                type = "string";
+                break;
+            default:
+                type = "dynamic";
+        }
+        if (!DSUtil.equal(orig, type)) {
+            cacheMap.put(DSMetadata.TYPE, DSString.valueOf(type));
         }
         fixRangeTypes(meta.getMap());
         DSElement e = cacheMap.remove(DSMetadata.TYPE);
@@ -678,7 +699,7 @@ public class DSInboundList extends DSInboundRequest
         cacheMap.clear();
         DSIValue val = object.toValue();
         if (val instanceof DSIMetadata) {
-            ((DSIMetadata)val).getMetadata(cacheMap);
+            ((DSIMetadata) val).getMetadata(cacheMap);
         }
         object.getMetadata(cacheMap);
         DSElement e = cacheMap.remove("$is");

@@ -370,11 +370,9 @@ public class DSMetadata {
      * Sets the type and if the given implements DSIMetadata, adds it's metadata as well.
      */
     public DSMetadata setType(DSIValue arg) {
-        if (arg != null) {
-            map.put(TYPE, arg.getValueType().toString());
-        }
+        map.put(DSMetadata.TYPE, arg.toElement().getElementType().toString());
         if (arg instanceof DSIMetadata) {
-            ((DSIMetadata)arg).getMetadata(map);
+            ((DSIMetadata) arg).getMetadata(map);
         }
         return this;
     }
@@ -383,9 +381,7 @@ public class DSMetadata {
      * The type for action parameters, can be used to override types in the responder api.
      */
     public DSMetadata setType(DSValueType arg) {
-        if (arg != null) {
-            map.put(TYPE, arg.toString());
-        }
+        map.put(TYPE, arg.toString());
         return this;
     }
 

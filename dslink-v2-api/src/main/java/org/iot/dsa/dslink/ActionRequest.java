@@ -27,7 +27,11 @@ public interface ActionRequest {
      * A convenience for getting a single parameter out of the parameters map.
      */
     public default DSElement getParameter(String key) {
-        return getParameters().get(key);
+        DSMap map = getParameters();
+        if (map == null) {
+            return null;
+        }
+        return map.get(key);
     }
 
     /**

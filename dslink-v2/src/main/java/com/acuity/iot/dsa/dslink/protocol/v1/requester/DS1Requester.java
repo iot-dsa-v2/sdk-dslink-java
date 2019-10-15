@@ -73,15 +73,13 @@ public class DS1Requester extends DSRequester {
                 String detail = null;
                 DSMap map = details.toMap();
                 String tmp = map.getString("type");
-                if (tmp == null) {
-                    type = ErrorType.internalError;
-                } else if (tmp.equals("permissionDenied")) {
+                if ("permissionDenied".equals(tmp)) {
                     type = ErrorType.permissionDenied;
-                } else if (tmp.equals("invalidRequest")) {
+                } else if ("invalidRequest".equals(tmp)) {
                     type = ErrorType.badRequest;
-                } else if (tmp.equals("invalidPath")) {
+                } else if ("invalidPath".equals(tmp)) {
                     type = ErrorType.badRequest;
-                } else if (tmp.equals("notSupported")) {
+                } else if ("notSupported".equals(tmp)) {
                     type = ErrorType.notSupported;
                 } else {
                     type = ErrorType.internalError;
