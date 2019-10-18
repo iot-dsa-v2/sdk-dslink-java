@@ -83,11 +83,6 @@ public class NodeEncoder {
     }
 
     void write(DSNode arg) {
-        DSInfo info = arg.getInfo();
-        if (info != null) {
-            writeNode(info);
-            return;
-        }
         out.beginMap();
         out.key("t").value(getToken(arg));
         writeChildren(arg);

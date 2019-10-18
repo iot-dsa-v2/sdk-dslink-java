@@ -163,7 +163,7 @@ public class DSBoolRange extends DSValue implements DSIBoolean, DSIMetadata, DSI
             if (DSUtil.equal(element, val)) {
                 return this;
             }
-            return valueOf((DSBool)element, range);
+            return valueOf((DSBool) element, range);
         }
         return valueOf(element.toString());
     }

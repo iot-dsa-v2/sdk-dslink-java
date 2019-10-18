@@ -15,7 +15,6 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.event.DSEvent;
-import org.iot.dsa.node.event.DSEventFilter;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.time.DSDateTime;

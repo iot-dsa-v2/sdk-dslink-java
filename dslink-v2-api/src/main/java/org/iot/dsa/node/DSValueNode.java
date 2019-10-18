@@ -1,7 +1,5 @@
 package org.iot.dsa.node;
 
-import org.iot.dsa.node.event.DSEvent;
-
 /**
  * A convenience implementation of a node that is also a value.  The value of the node must be
  * stored as a child.  Subclasses only need to override is getValueChild()

@@ -5,7 +5,7 @@ import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.Node;
 import org.iot.dsa.dslink.Value;
 import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSElementType;
 
 /**
  * How to respond to a list request.  Implementations must first send the target of the
@@ -85,13 +85,13 @@ public interface InboundListRequest extends InboundRequest {
      *
      * @param name        Will be encoded, it's not usually necessary to have a display name.
      * @param displayName Can be null.
-     * @param type        Used for encoding the type only.
+     * @param type        Required.
      * @param admin       Whether or not admin level required to see node.
      * @param readonly    Whether or not the value is writable.
      */
     public void sendValue(String name,
                           String displayName,
-                          DSIValue type,
+                          DSElementType type,
                           boolean admin,
                           boolean readonly);
 

@@ -8,7 +8,7 @@ import java.util.Map;
  *
  * @author Aaron Hansen
  */
-public enum DSElementType implements DSIEnum, DSIValue {
+public enum DSElementType {
 
     BOOLEAN,
     BYTES,
@@ -22,43 +22,17 @@ public enum DSElementType implements DSIEnum, DSIValue {
     private static Map<String, DSElementType> nameMap;
     private DSString display;
 
-    @Override
-    public DSIObject copy() {
-        return this;
-    }
-
-    @Override
-    public DSList getEnums(DSList bucket) {
-        if (bucket == null) {
-            bucket = new DSList();
-        }
-        for (DSElementType e : values()) {
-            bucket.add(e.toElement());
-        }
-        return bucket;
-    }
-
-    @Override
-    public DSValueType getValueType() {
-        return DSValueType.ENUM;
-    }
-
-    @Override
-    public boolean isNull() {
-        return false;
-    }
-
     /**
-     * Returns a DSString representation of the name() in lowercase.
+     * Returns the DSString representation of the type name.
      */
-    @Override
-    public DSElement toElement() {
+    public DSString toElement() {
         if (display == null) {
             display = DSString.valueOf(name().toLowerCase());
         }
         return display;
     }
 
+    @Override
     public String toString() {
         return toElement().toString();
     }
@@ -71,14 +45,7 @@ public enum DSElementType implements DSIEnum, DSIValue {
         return ret == null ? NULL : ret;
     }
 
-    @Override
-    public DSElementType valueOf(DSElement element) {
-        DSElementType ret = nameMap.get(element.toString());
-        return ret == null ? NULL : ret;
-    }
-
     static {
-        DSRegistry.registerDecoder(DSElementType.class, BOOLEAN);
         nameMap = new HashMap<>();
         for (DSElementType e : values()) {
             nameMap.put(e.name(), e);
