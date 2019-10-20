@@ -44,23 +44,28 @@ public interface InboundListRequest extends InboundRequest {
     public void send(String name, DSElement value);
 
     /**
-     * Add or update a child action to the list.
-     *
-     * @param name        Will be encoded, it's not usually necessary to have a display name.
-     * @param displayName Can be null.
-     * @param admin       Whether or not the action requires admin level permission.
-     * @param readonly    Whether or not the action requires write permission.
-     */
-    public void sendAction(String name, String displayName, boolean admin, boolean readonly);
-
-    /**
      * Add or update a child node to the list.
      *
      * @param name        Will be encoded, it's not usually necessary to have a display name.
      * @param displayName Can be null.
      * @param admin       Whether or not admin level required to see node.
      */
-    public void sendNode(String name, String displayName, boolean admin);
+    public void sendChildNode(String name, String displayName, boolean admin);
+
+    /**
+     * Add or update a child value to the list.
+     *
+     * @param name        Will be encoded, it's not usually necessary to have a display name.
+     * @param displayName Can be null.
+     * @param type        Required.
+     * @param admin       Whether or not admin level required to see node.
+     * @param readonly    Whether or not the value is writable.
+     */
+    public void sendChildValue(String name,
+                               String displayName,
+                               DSElementType type,
+                               boolean admin,
+                               boolean readonly);
 
     /**
      * The responder should call this whenever a child or metadata is removed.
@@ -81,18 +86,13 @@ public interface InboundListRequest extends InboundRequest {
     public void sendTarget(Node object);
 
     /**
-     * Add or update a child value to the list.
+     * Add or update a child action to the list.
      *
      * @param name        Will be encoded, it's not usually necessary to have a display name.
      * @param displayName Can be null.
-     * @param type        Required.
-     * @param admin       Whether or not admin level required to see node.
-     * @param readonly    Whether or not the value is writable.
+     * @param admin       Whether or not the action requires admin level permission.
+     * @param readonly    Whether or not the action requires write permission.
      */
-    public void sendValue(String name,
-                          String displayName,
-                          DSElementType type,
-                          boolean admin,
-                          boolean readonly);
+    public void setChildAction(String name, String displayName, boolean admin, boolean readonly);
 
 }

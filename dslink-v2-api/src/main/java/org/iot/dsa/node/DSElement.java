@@ -16,11 +16,6 @@ public abstract class DSElement extends DSValue {
         return this;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        return equals(obj);
-    }
-
     /**
      * For switch statements.
      */

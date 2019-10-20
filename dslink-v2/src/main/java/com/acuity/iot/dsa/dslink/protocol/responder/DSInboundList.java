@@ -182,27 +182,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void sendAction(String name, String displayName, boolean admin, boolean readonly) {
-        if (!isOpen()) {
-            throw new IllegalStateException("List stream closed");
-        }
-        DSMap map = new DSMap();
-        map.put("$is", "node");
-        if ((displayName != null) && !displayName.isEmpty()) {
-            map.put("$name", displayName);
-        }
-        if (admin) {
-            map.put("$invokable", "config");
-        } else if (!readonly) {
-            map.put("$invokable", "write");
-        } else {
-            map.put("$invokable", "read");
-        }
-        enqueue(encodeName(name, cacheBuf), map);
-    }
-
-    @Override
-    public void sendNode(String name, String displayName, boolean admin) {
+    public void sendChildNode(String name, String displayName, boolean admin) {
         if (!isOpen()) {
             throw new IllegalStateException("List stream closed");
         }
@@ -213,6 +193,37 @@ public class DSInboundList extends DSInboundRequest
         }
         if (admin) {
             map.put("$permission", "config");
+        }
+        enqueue(encodeName(name, cacheBuf), map);
+    }
+
+    @Override
+    public void sendChildValue(String name,
+                               String displayName,
+                               DSElementType type,
+                               boolean admin,
+                               boolean readonly) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
+        }
+        DSMap map = new DSMap();
+        map.put("$is", "node");
+        if ((displayName != null) && !displayName.isEmpty()) {
+            map.put("$name", displayName);
+        }
+        map.put("$type", encodeType(type));
+        if (readonly) {
+            if (admin) {
+                map.put("$permission", "config");
+            } else {
+                map.put("$permission", "read");
+            }
+        } else {
+            if (admin) {
+                map.put("$writable", "config");
+            } else {
+                map.put("$writable", "write");
+            }
         }
         enqueue(encodeName(name, cacheBuf), map);
     }
@@ -243,11 +254,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void sendValue(String name,
-                          String displayName,
-                          DSElementType type,
-                          boolean admin,
-                          boolean readonly) {
+    public void setChildAction(String name, String displayName, boolean admin, boolean readonly) {
         if (!isOpen()) {
             throw new IllegalStateException("List stream closed");
         }
@@ -256,19 +263,12 @@ public class DSInboundList extends DSInboundRequest
         if ((displayName != null) && !displayName.isEmpty()) {
             map.put("$name", displayName);
         }
-        map.put("$type", encodeType(type));
-        if (readonly) {
-            if (admin) {
-                map.put("$permission", "config");
-            } else {
-                map.put("$permission", "read");
-            }
+        if (admin) {
+            map.put("$invokable", "config");
+        } else if (!readonly) {
+            map.put("$invokable", "write");
         } else {
-            if (admin) {
-                map.put("$writable", "config");
-            } else {
-                map.put("$writable", "write");
-            }
+            map.put("$invokable", "read");
         }
         enqueue(encodeName(name, cacheBuf), map);
     }
@@ -500,15 +500,15 @@ public class DSInboundList extends DSInboundRequest
 
     private void encodeChild(DSInfo<?> child) {
         if (child.isAction()) {
-            sendAction(child.getName(), child.getMetadata().getDisplayName(),
-                       child.isAdmin(), child.isReadOnly());
+            setChildAction(child.getName(), child.getMetadata().getDisplayName(),
+                           child.isAdmin(), child.isReadOnly());
         } else if (child.isValue()) {
-            sendValue(child.getName(), child.getMetadata().getDisplayName(),
-                      child.getValue().toElement().getElementType(), child.isAdmin(),
-                      child.isReadOnly());
+            sendChildValue(child.getName(), child.getMetadata().getDisplayName(),
+                           child.getValue().toElement().getElementType(), child.isAdmin(),
+                           child.isReadOnly());
         } else {
-            sendNode(child.getName(), child.getMetadata().getDisplayName(),
-                     child.isAdmin());
+            sendChildNode(child.getName(), child.getMetadata().getDisplayName(),
+                          child.isAdmin());
         }
     }
 

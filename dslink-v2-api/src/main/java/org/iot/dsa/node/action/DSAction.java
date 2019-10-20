@@ -157,14 +157,6 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
     }
 
     /**
-     * Defaults to the equals method.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        return equals(obj);
-    }
-
-    /**
      * Possibly null.
      */
     public String getActionGroup() {

@@ -53,20 +53,20 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
         }
     }
 
-    public static final boolean isFixInt(byte b) {
+    public static boolean isFixInt(byte b) {
         int v = b & 0xff;
         return v <= 0x7f || v >= 0xe0;
     }
 
-    public static final boolean isFixStr(byte b) {
+    public static boolean isFixStr(byte b) {
         return (b & (byte) 0xe0) == FIXSTR_PREFIX;
     }
 
-    public static final boolean isFixedList(byte b) {
+    public static boolean isFixedList(byte b) {
         return (b & (byte) 0xf0) == FIXLIST_PREFIX;
     }
 
-    public static final boolean isFixedMap(byte b) {
+    public static boolean isFixedMap(byte b) {
         return (b & (byte) 0xf0) == FIXMAP_PREFIX;
     }
 
