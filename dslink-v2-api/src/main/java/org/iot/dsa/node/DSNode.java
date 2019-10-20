@@ -1161,7 +1161,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         synchronized (mutex) {
             sub = subscription;
             while (sub != null) {
-                if (sub == subscriber) {
+                if (sub.subscriber == subscriber) {
                     return sub;
                 }
                 sub = sub.next;
