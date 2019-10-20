@@ -115,7 +115,7 @@ public class ClosedTableTest {
     public static class MyMain extends DSMainNode {
 
         @Override
-        public DSInfo getVirtualAction(DSInfo target, String name) {
+        public DSInfo<?> getVirtualAction(DSInfo<?> target, String name) {
             return virtualInfo(name, new DSAction() {
                 @Override
                 public ActionResults invoke(DSIActionRequest req) {
@@ -125,7 +125,7 @@ public class ClosedTableTest {
         }
 
         @Override
-        public void getVirtualActions(DSInfo target, Collection<String> bucket) {
+        public void getVirtualActions(DSInfo<?> target, Collection<String> bucket) {
             bucket.add("getTable");
         }
 

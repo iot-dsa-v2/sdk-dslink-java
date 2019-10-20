@@ -66,8 +66,8 @@ public abstract class DSConnection extends DSBaseConnection {
     private long lastConnectAttempt = 0;
     private long lastPing;
     private long retryConnectMs = 0;
-    protected DSInfo state = getInfo(STATE);
-    protected DSInfo stateTime = getInfo(STATE_TIME);
+    protected DSInfo<?> state = getInfo(STATE);
+    protected DSInfo<?> stateTime = getInfo(STATE_TIME);
     private DSRuntime.Timer updateTimer;
     private boolean updating = false;
 
@@ -399,7 +399,7 @@ public abstract class DSConnection extends DSBaseConnection {
      * DSIConnectionDescendant and DSConnection.
      */
     private void notifyConnectedDescendants(DSNode node, DSConnection conn) {
-        DSInfo info = node.getFirstInfo();
+        DSInfo<?> info = node.getFirstInfo();
         while (info != null) {
             if (info.is(DSIConnectionDescendant.class)) {
                 try {

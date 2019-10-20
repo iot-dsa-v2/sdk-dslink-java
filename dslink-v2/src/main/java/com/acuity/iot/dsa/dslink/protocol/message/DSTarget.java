@@ -21,11 +21,11 @@ public class DSTarget {
 
     private String[] names;
     private DSNode node;
-    private DSInfo parentInfo;
+    private DSInfo<DSNode> parentInfo;
     private String path;
     private DSNode root;
     private DSIObject target;
-    private DSInfo targetInfo;
+    private DSInfo<?> targetInfo;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -61,7 +61,7 @@ public class DSTarget {
      * Info about the parent of the target.  This is helpful when the target is an action on
      * a value.
      */
-    public DSInfo getParentInfo() {
+    public DSInfo<DSNode> getParentInfo() {
         return parentInfo;
     }
 
@@ -117,7 +117,7 @@ public class DSTarget {
     /**
      * The info for the endpoint of a request path.
      */
-    public DSInfo getTargetInfo() {
+    public DSInfo<?> getTargetInfo() {
         if (target == null) {
             getTarget();
         }
@@ -150,7 +150,7 @@ public class DSTarget {
         if (target == null) {
             throw new DSInvalidPathException(path);
         }
-        parentInfo = targetInfo;
+        parentInfo = (DSInfo<DSNode>) targetInfo;
         if (target instanceof DSNode) {
             node = (DSNode) target;
             targetInfo = node.getInfo(names[nameIndex]);
@@ -168,7 +168,7 @@ public class DSTarget {
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
-    private static class RootInfo extends DSInfo {
+    private static class RootInfo extends DSInfo<DSNode> {
 
         RootInfo(DSNode root) {
             super(null, root);

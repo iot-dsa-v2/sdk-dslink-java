@@ -128,7 +128,7 @@ public class NodeDecoder {
         String name = null;
         DSElement state = null;
         String type = null;
-        DSInfo info = null;
+        DSInfo<?> info = null;
         DSMap meta = null;
         DSIObject obj = null;
         while (in.next() != Token.END_MAP) {

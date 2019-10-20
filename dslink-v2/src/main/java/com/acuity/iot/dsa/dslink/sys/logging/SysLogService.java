@@ -27,7 +27,7 @@ public class SysLogService extends StreamableLogNode {
     public SysLogService() {
     }
 
-    public DSInfo getLevelInfo() {
+    public DSInfo<?> getLevelInfo() {
         return levelInfo;
     }
 
@@ -46,7 +46,7 @@ public class SysLogService extends StreamableLogNode {
     }
 
     @Override
-    protected void onChildChanged(DSInfo info) {
+    protected void onChildChanged(DSInfo<?> info) {
         if (info == getLevelInfo()) {
             DSLevel level = (DSLevel) info.get();
             getLoggerObj().setLevel(level.toLevel());
@@ -70,7 +70,7 @@ public class SysLogService extends StreamableLogNode {
             }
 
             @Override
-            public void prepareParameter(DSInfo target, DSMap parameter) {
+            public void prepareParameter(DSInfo<?> target, DSMap parameter) {
                 DSMetadata meta = new DSMetadata(parameter);
                 if ("Log".equals(meta.getName())) {
                     DSList range = getLogNames();

@@ -38,8 +38,8 @@ public abstract class DSBaseConnection extends DSEnabledNode implements DSIStatu
 
     protected boolean down = getDefaultStatus().isDown();
     protected boolean fault = false;
-    protected DSInfo lastFail = getInfo(LAST_FAIL);
-    protected DSInfo lastOk = getInfo(LAST_OK);
+    protected DSInfo<?> lastFail = getInfo(LAST_FAIL);
+    protected DSInfo<?> lastOk = getInfo(LAST_OK);
     protected long lastOkMillis;
 
     ///////////////////////////////////////////////////////////////////////////

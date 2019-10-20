@@ -309,8 +309,8 @@ public class DSPath extends DSValue {
      * @param path The path to resolve, can be null or the empty string.
      * @return The info of the target of the path, or null if the path can't be resolved.
      */
-    public static DSInfo resolve(DSNode base, String path) {
-        DSInfo targetInfo = base.getInfo();
+    public static DSInfo<?> resolve(DSNode base, String path) {
+        DSInfo<?> targetInfo = base.getInfo();
         for (String name : decodePath(path)) {
             if (targetInfo.isNode()) {
                 targetInfo = targetInfo.getNode().getInfo(name);

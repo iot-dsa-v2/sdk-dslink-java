@@ -25,7 +25,7 @@ public class ListTest {
     public void test() throws Exception {
         link = new V1TestLink(new MyMain());
         doit();
-        //link = new V2TestLink(new MyMain());
+        //link = new V2TestLink(new MyMain()); //TODO Fix if V2 lives on
         //doit();
     }
 

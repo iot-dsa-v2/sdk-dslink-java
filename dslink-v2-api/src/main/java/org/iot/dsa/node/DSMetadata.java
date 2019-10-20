@@ -143,7 +143,7 @@ public class DSMetadata {
      *               instantiated.
      * @return The bucket arg, or a new map if the arg was null.
      */
-    public static DSMap getMetadata(DSInfo info, DSMap bucket) {
+    public static DSMap getMetadata(DSInfo<?> info, DSMap bucket) {
         if (bucket == null) {
             bucket = new DSMap();
         }

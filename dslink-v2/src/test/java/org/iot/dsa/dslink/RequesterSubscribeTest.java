@@ -5,6 +5,7 @@ import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
 import org.iot.dsa.dslink.requester.ErrorType;
 import org.iot.dsa.dslink.requester.SimpleRequestHandler;
 import org.iot.dsa.node.DSElement;
+import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSInt;
 import org.iot.dsa.node.DSLong;
@@ -166,8 +167,8 @@ public class RequesterSubscribeTest {
         }
 
         @Override
-        public DSInfo getValueChild() {
-            return getInfo("int");
+        public DSInfo<DSIValue> getValueChild() {
+            return (DSInfo<DSIValue>) getInfo("int");
         }
 
         @Override

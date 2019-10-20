@@ -31,8 +31,8 @@ public abstract class DSValueNode extends DSNode implements DSIValue {
      * node.  Overrides should call super.onChildChanged.
      */
     @Override
-    public void onChildChanged(DSInfo child) {
-        DSInfo info = getValueChild();
+    public void onChildChanged(DSInfo<?> child) {
+        DSInfo<?> info = getValueChild();
         if (child == info) {
             fire(VALUE_CHANGED_EVENT, null, child.getValue());
             DSNode parent = getParent();

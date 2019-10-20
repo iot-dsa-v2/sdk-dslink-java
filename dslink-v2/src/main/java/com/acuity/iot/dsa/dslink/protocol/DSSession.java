@@ -67,15 +67,15 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     private DSIReader reader;
     private Receiver receiver = new Receiver();
     private ConcurrentLinkedQueue<OutboundMessage> reqQueue = new ConcurrentLinkedQueue<OutboundMessage>();
-    private DSInfo requesterAllowed = getInfo(REQUESTER_ALLOWED);
+    private DSInfo<?> requesterAllowed = getInfo(REQUESTER_ALLOWED);
     private ConcurrentLinkedQueue<OutboundMessage> resQueue = new ConcurrentLinkedQueue<OutboundMessage>();
     private Sender sender = new Sender();
-    private DSInfo statAckRcvd = getInfo(LAST_ACK_RCVD);
-    private DSInfo statAckSent = getInfo(LAST_ACK_SENT);
-    private DSInfo statMidRcvd = getInfo(LAST_MID_SENT);
-    private DSInfo statMidSent = getInfo(LAST_MID_SENT);
-    private DSInfo statReqQ = getInfo(REQ_QUEUE);
-    private DSInfo statResQ = getInfo(RES_QUEUE);
+    private DSInfo<?> statAckRcvd = getInfo(LAST_ACK_RCVD);
+    private DSInfo<?> statAckSent = getInfo(LAST_ACK_SENT);
+    private DSInfo<?> statMidRcvd = getInfo(LAST_MID_SENT);
+    private DSInfo<?> statMidSent = getInfo(LAST_MID_SENT);
+    private DSInfo<?> statReqQ = getInfo(REQ_QUEUE);
+    private DSInfo<?> statResQ = getInfo(RES_QUEUE);
     private DSRuntime.Timer updateTimer;
     private DSIWriter writer;
 

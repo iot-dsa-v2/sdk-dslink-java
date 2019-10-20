@@ -40,13 +40,13 @@ public class SysBackupService extends DSNode implements Runnable {
     static final String MAXIMUM = "Max Backups";
     static final String SAVE = "Save";
 
-    private DSInfo enabled = getInfo(ENABLED);
-    private DSInfo interval = getInfo(INTERVAL);
-    private DSInfo lastDuration = getInfo(LAST_DURATION);
-    private DSInfo lastTime = getInfo(LAST_TIME);
+    private DSInfo<?> enabled = getInfo(ENABLED);
+    private DSInfo<?> interval = getInfo(INTERVAL);
+    private DSInfo<?> lastDuration = getInfo(LAST_DURATION);
+    private DSInfo<?> lastTime = getInfo(LAST_TIME);
     private DSLink link;
     private Object lock = new Object();
-    private DSInfo maximum = getInfo(MAXIMUM);
+    private DSInfo<?> maximum = getInfo(MAXIMUM);
     private Timer nextSave;
 
     public boolean isEnabled() {
@@ -54,7 +54,7 @@ public class SysBackupService extends DSNode implements Runnable {
     }
 
     @Override
-    public void onChildChanged(DSInfo info) {
+    public void onChildChanged(DSInfo<?> info) {
         super.onChildChanged(info);
         if (info == interval) {
             DSIValue value = info.getValue();

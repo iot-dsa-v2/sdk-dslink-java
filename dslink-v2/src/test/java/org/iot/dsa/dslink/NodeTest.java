@@ -60,7 +60,7 @@ public class NodeTest {
 
     public static class MyNode extends DSNode {
 
-        private DSInfo second = getInfo("second");
+        private DSInfo<?> second = getInfo("second");
 
         public boolean isSecond() {
             return ((DSElement) second.get()).toBoolean();

@@ -28,7 +28,8 @@ public class MetadataTest {
     @Test
     public void testNode() throws Exception {
         DSNode node = new DSNode();
-        DSInfo info = node.put("enum", DSFlexEnum.valueOf("abc", DSList.valueOf("abc", "def")));
+        DSInfo<?> info = node.put("enum",
+                                  DSFlexEnum.valueOf("abc", DSList.valueOf("abc", "def")));
         DSMap meta = DSMetadata.getMetadata(info, null);
         metadata.setMap(meta);
         Assert.assertEquals(2, metadata.getEnumRange().size());
@@ -36,7 +37,8 @@ public class MetadataTest {
         Assert.assertTrue(metadata.getEnumRange().get(1).equals("def"));
         meta.clear();
         node = new MyNode();
-        info = node.put("enum", DSFlexEnum.valueOf("abc", DSList.valueOf("abc", "def")));
+        info = node.put("enum",
+                        DSFlexEnum.valueOf("abc", DSList.valueOf("abc", "def")));
         DSMetadata.getMetadata(info, meta);
         Assert.assertEquals(3, metadata.getEnumRange().size());
         Assert.assertTrue(metadata.getEnumRange().get(0).equals("abc"));
@@ -62,7 +64,7 @@ public class MetadataTest {
     public static class MyNode extends DSNode {
 
         @Override
-        public void getMetadata(DSInfo info, DSMap bucket) {
+        public void getMetadata(DSInfo<?> info, DSMap bucket) {
             DSList list = metadata.getEnumRange();
             list.add("ghi");
         }

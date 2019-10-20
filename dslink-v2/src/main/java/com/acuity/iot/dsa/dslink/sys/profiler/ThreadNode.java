@@ -67,7 +67,7 @@ public class ThreadNode extends MXBeanNode {
             prevIds.remove(id);
             ThreadInfoNode infoNode = infoNodes.get(id);
             if (infoNode == null) {
-                DSInfo dsinfo = put(
+                DSInfo<?> dsinfo = put(
                         info.getThreadName() + " #" + id,
                         new ThreadInfoNode(id)).setTransient(true);
                 infoNode = (ThreadInfoNode) dsinfo.getNode();

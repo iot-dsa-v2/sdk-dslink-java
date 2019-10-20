@@ -116,7 +116,7 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
             throw new IllegalStateException("Action is immutable");
         }
         if (parameters == null) {
-            parameters = new ArrayList<DSMap>();
+            parameters = new ArrayList<>();
         }
         validate(metadata, parameters);
         parameters.add(metadata);

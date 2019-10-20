@@ -570,13 +570,13 @@ public class DSDateTime extends DSValue implements DSISetAction {
             int min = params.get(MINUTE, 0);
             int sec = params.get(SECOND, 0);
             DSTimezone tz = DSTimezone.NULL.valueOf(params.get(TIMEZONE));
-            DSInfo info = request.getTargetInfo();
+            DSInfo<?> info = request.getTargetInfo();
             info.getParent().put(info, valueOf(year, month, day, hr, min, sec, tz));
             return null;
         }
 
         @Override
-        public void prepareParameter(DSInfo target, DSMap parameter) {
+        public void prepareParameter(DSInfo<?> target, DSMap parameter) {
             DSDateTime dt = (DSDateTime) target.get();
             String name = parameter.get(DSMetadata.NAME, "");
             switch (name) {

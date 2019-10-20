@@ -26,9 +26,9 @@ public class DSRootLink extends DSLink {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo main;
-    private DSInfo sys = getInfo(SYS);
-    private DSInfo upstream;
+    private DSInfo<?> main;
+    private DSInfo<?> sys = getInfo(SYS);
+    private DSInfo<?> upstream;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors

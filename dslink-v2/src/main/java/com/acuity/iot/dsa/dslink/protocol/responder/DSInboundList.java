@@ -133,7 +133,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data) {
         if (!isOpen()) {
             return;
         }
@@ -597,7 +597,7 @@ public class DSInboundList extends DSInboundRequest
                     break;
                 default:
                     encodeName(name, cacheBuf);
-                    cacheBuf.insert(0, '@');
+                    cacheBuf.insert(0, '$');
                     name = cacheBuf.toString();
 
             }

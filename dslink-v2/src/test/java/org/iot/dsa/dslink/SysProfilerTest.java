@@ -37,7 +37,7 @@ public class SysProfilerTest {
         Assert.assertTrue(threadobj instanceof ThreadNode);
 
         final ThreadNode thread = (ThreadNode) threadobj;
-        final DSInfo cpuTime = thread.getInfo("CurrentThreadCpuTime");
+        final DSInfo<?> cpuTime = thread.getInfo("CurrentThreadCpuTime");
         Assert.assertTrue(cpuTime != null);
         success = false;
         thread.subscribe((event, node, child, data) -> {

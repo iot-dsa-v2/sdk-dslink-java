@@ -40,9 +40,9 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
     ///////////////////////////////////////////////////////////////////////////
 
     private int lastStatus = getDefaultStatus().getBits();
-    protected DSInfo status = getInfo(STATUS);
+    protected DSInfo<?> status = getInfo(STATUS);
     private DSStatusNode statusParent;
-    protected DSInfo statusText = getInfo(STATUS_TEXT);
+    protected DSInfo<?> statusText = getInfo(STATUS_TEXT);
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -109,7 +109,7 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
      * Detects changes to the merged status and notifies descendants.
      */
     @Override
-    protected void onChildChanged(DSInfo child) {
+    protected void onChildChanged(DSInfo<?> child) {
         if (child == status) {
             try {
                 onStatusChanged();
@@ -172,7 +172,7 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
      * below StatusNodes, they can do that themselves.
      */
     private void notifyStatusDescendants(DSNode parent, DSStatusNode notifier) {
-        DSInfo info = parent.getFirstNodeInfo();
+        DSInfo<?> info = parent.getFirstNodeInfo();
         while (info != null) {
             if (info.is(DSStatusNode.class)) {
                 try {

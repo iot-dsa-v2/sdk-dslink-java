@@ -33,7 +33,7 @@ public class LoggerNode extends StreamableLogNode {
     }
 
     @Override
-    protected void onChildChanged(DSInfo info) {
+    protected void onChildChanged(DSInfo<?> info) {
         if (info == getLevelInfo()) {
             LoggerNodeLevel level = (LoggerNodeLevel) info.get();
             getLoggerObj().setLevel(level.toLevel());

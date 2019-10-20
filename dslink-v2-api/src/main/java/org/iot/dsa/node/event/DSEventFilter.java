@@ -17,7 +17,7 @@ public class DSEventFilter implements DSISubscriber {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    protected DSInfo child;
+    protected DSInfo<?> child;
     protected DSEvent event;
     protected DSISubscriber subscriber;
 
@@ -42,7 +42,7 @@ public class DSEventFilter implements DSISubscriber {
      * @param event      Optional.
      * @param child      Optional.
      */
-    public DSEventFilter(DSISubscriber subscriber, DSEvent event, DSInfo child) {
+    public DSEventFilter(DSISubscriber subscriber, DSEvent event, DSInfo<?> child) {
         this(subscriber);
         this.event = event;
         this.child = child;
@@ -53,7 +53,7 @@ public class DSEventFilter implements DSISubscriber {
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data) {
         if (this.event != null) {
             if (!this.event.equals(event)) {
                 return;

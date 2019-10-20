@@ -32,7 +32,7 @@ public class DSInboundSubscription extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     private int ackRequired = 0;
-    private DSInfo child;
+    private DSInfo<?> child;
     private boolean closeAfterUpdate = false;
     private SubscriptionCloseHandler closeHandler;
     private boolean enqueued = false;
@@ -110,7 +110,7 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data) {
         if (data == null) {
             if ((child != null) && child.isValue()) {
                 data = child.getValue();
@@ -225,7 +225,8 @@ public class DSInboundSubscription extends DSInboundRequest
                 node = (DSNode) obj;
                 this.subscription = node.subscribe(new DSISubscriber() {
                     @Override
-                    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+                    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child,
+                                        DSIValue data) {
                         if (child == null) {
                             DSInboundSubscription.this.onEvent(event, node, null, data);
                         }
@@ -233,7 +234,7 @@ public class DSInboundSubscription extends DSInboundRequest
                 });
                 onEvent(DSNode.VALUE_CHANGED_EVENT, node, null, null);
             } else {
-                DSInfo info = path.getTargetInfo();
+                DSInfo<?> info = path.getTargetInfo();
                 node = info.getParent();
                 child = info;
                 this.subscription = node.subscribe(this, DSNode.VALUE_CHANGED_EVENT, info);

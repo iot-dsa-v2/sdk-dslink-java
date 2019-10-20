@@ -28,7 +28,7 @@ public class DSActionResults implements ActionResults {
 
     List<DSMap> cols;
     DSIActionRequest req;
-    List<DSList> rows = new LinkedList<>();
+    final List<DSList> rows = new LinkedList<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
