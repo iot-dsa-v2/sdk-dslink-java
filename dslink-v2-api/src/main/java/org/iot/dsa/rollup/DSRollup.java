@@ -35,7 +35,7 @@ public enum DSRollup implements DSIEnum, DSIValue {
     RANGE("Range"),
     SUM("Sum");
 
-    private static final Map<String, DSRollup> rollups = new HashMap<String, DSRollup>();
+    private static final Map<String, DSRollup> rollups = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
@@ -47,7 +47,7 @@ public enum DSRollup implements DSIEnum, DSIValue {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSRollup(String display) {
+    DSRollup(String display) {
         this.element = DSString.valueOf(display);
     }
 
@@ -146,7 +146,7 @@ public enum DSRollup implements DSIEnum, DSIValue {
 
     static {
         DSRegistry.registerDecoder(DSRollup.class, AND);
-        for (DSRollup e : AND.values()) {
+        for (DSRollup e : values()) {
             rollups.put(e.name(), e);
             rollups.put(e.toString(), e);
             rollups.put(e.toString().toLowerCase(), e);

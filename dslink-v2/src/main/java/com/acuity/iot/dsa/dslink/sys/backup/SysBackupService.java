@@ -137,7 +137,7 @@ public class SysBackupService extends DSNode implements Runnable {
             long time = System.currentTimeMillis();
             put(lastTime, DSDateTime.valueOf(time));
             info("Saving node database " + nodes.getAbsolutePath());
-            DSIWriter writer = null;
+            DSIWriter writer;
             if (name.endsWith(".zip")) {
                 String tmp = name.substring(0, name.lastIndexOf(".zip"));
                 writer = Json.zipWriter(nodes, tmp + ".json");
@@ -224,22 +224,20 @@ public class SysBackupService extends DSNode implements Runnable {
         int idx = nodesName.lastIndexOf('.');
         final String nameBase = nodesName.substring(0, idx);
         File dir = nodes.getAbsoluteFile().getParentFile();
-        File[] backups = dir.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                if (name.equals(nodesName)) {
-                    return false;
-                }
-                if (isZip) {
-                    if (name.endsWith(".zip")) {
-                        return name.startsWith(nameBase);
-                    }
-                } else {
-                    if (name.endsWith(".json")) {
-                        return name.startsWith(nameBase);
-                    }
-                }
+        File[] backups = dir.listFiles((dir1, name) -> {
+            if (name.equals(nodesName)) {
                 return false;
             }
+            if (isZip) {
+                if (name.endsWith(".zip")) {
+                    return name.startsWith(nameBase);
+                }
+            } else {
+                if (name.endsWith(".json")) {
+                    return name.startsWith(nameBase);
+                }
+            }
+            return false;
         });
         if (backups == null) {
             return;
@@ -254,7 +252,7 @@ public class SysBackupService extends DSNode implements Runnable {
         }
     }
 
-    private class SaveAction extends DSAction {
+    private static class SaveAction extends DSAction {
 
         @Override
         public ActionResults invoke(DSIActionRequest request) {

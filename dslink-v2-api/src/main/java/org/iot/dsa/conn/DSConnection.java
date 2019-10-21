@@ -330,7 +330,7 @@ public abstract class DSConnection extends DSBaseConnection {
     protected void startUpdateTimer() {
         if (updateTimer == null) {
             updateTimer = DSRuntime
-                    .run(() -> updateState(), System.currentTimeMillis(), getUpdateInterval());
+                    .run(this::updateState, System.currentTimeMillis(), getUpdateInterval());
         }
     }
 

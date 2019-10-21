@@ -240,7 +240,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
     }
 
     private Token readBytes(byte b) throws IOException {
-        int size = 0;
+        int size;
         switch (b) {
             case BIN8:
                 size = in.read() & 0xFF;
@@ -260,7 +260,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
     }
 
     private Token readList(byte b) throws IOException {
-        int size = 0;
+        int size;
         if (isFixedList(b)) {
             size = b & 0x0f;
         } else {
@@ -280,7 +280,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
     }
 
     private Token readMap(byte b) throws IOException {
-        int size = 0;
+        int size;
         if (isFixedMap(b)) {
             size = b & 0x0f;
         } else {
@@ -322,7 +322,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
     }
 
     private Token readString(byte b) throws IOException {
-        int size = 0;
+        int size;
         if (isFixStr(b)) {
             size = b & 0x1F;
         } else {
@@ -349,7 +349,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
 
     private class Frame {
 
-        boolean map = true;
+        boolean map;
         Frame parent;
         int size;
 

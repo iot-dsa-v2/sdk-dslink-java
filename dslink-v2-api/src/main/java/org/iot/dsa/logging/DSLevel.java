@@ -36,7 +36,7 @@ public enum DSLevel implements DSIEnum, DSIValue {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSLevel(Level level) {
+    DSLevel(Level level) {
         this.element = DSString.valueOf(name());
         this.level = level;
     }

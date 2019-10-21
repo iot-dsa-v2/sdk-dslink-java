@@ -26,7 +26,7 @@ public enum DSConnectionState implements DSIEnum, DSIValue {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSConnectionState(String display) {
+    DSConnectionState(String display) {
         this.element = DSString.valueOf(display);
     }
 

@@ -123,7 +123,7 @@ public class ValuesTest {
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    private static enum TestEnum {
+    private enum TestEnum {
         one,
         two,
         three

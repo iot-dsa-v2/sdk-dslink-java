@@ -29,7 +29,7 @@ public class NodeEncoder {
     ///////////////////////////////////////////////////////////////////////////
 
     private DSMap cacheMap = new DSMap();
-    private HashMap<Class, String> classMap = new HashMap<Class, String>();
+    private HashMap<Class, String> classMap = new HashMap<>();
     private int nextToken = 1;
     private DSIWriter out;
 

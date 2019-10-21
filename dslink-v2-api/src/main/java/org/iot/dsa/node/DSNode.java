@@ -1157,7 +1157,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             throw new NullPointerException("Null subscriber");
         }
         boolean firstSubscription = subscription == null;
-        Subscription sub = null;
+        Subscription sub;
         synchronized (mutex) {
             sub = subscription;
             while (sub != null) {

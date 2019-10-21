@@ -136,7 +136,7 @@ public abstract class DSElement extends DSValue {
      * Creates an DSIObject representation of the primitive.
      */
     public static DSElement make(int arg) {
-        return DSLong.valueOf((long) arg);
+        return DSLong.valueOf(arg);
     }
 
     /**

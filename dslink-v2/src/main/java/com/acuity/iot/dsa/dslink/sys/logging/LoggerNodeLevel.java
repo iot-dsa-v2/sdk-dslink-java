@@ -37,7 +37,7 @@ public enum LoggerNodeLevel implements DSIEnum, DSIValue {
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    private LoggerNodeLevel(Level level) {
+    LoggerNodeLevel(Level level) {
         this.element = DSString.valueOf(name());
         this.level = level;
     }

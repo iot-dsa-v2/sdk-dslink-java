@@ -182,6 +182,26 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
+    public void sendChildAction(String name, String displayName, boolean admin, boolean readonly) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
+        }
+        DSMap map = new DSMap();
+        map.put("$is", "node");
+        if ((displayName != null) && !displayName.isEmpty()) {
+            map.put("$name", displayName);
+        }
+        if (admin) {
+            map.put("$invokable", "config");
+        } else if (!readonly) {
+            map.put("$invokable", "write");
+        } else {
+            map.put("$invokable", "read");
+        }
+        enqueue(encodeName(name, cacheBuf), map);
+    }
+
+    @Override
     public void sendChildNode(String name, String displayName, boolean admin) {
         if (!isOpen()) {
             throw new IllegalStateException("List stream closed");
@@ -254,26 +274,6 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void setChildAction(String name, String displayName, boolean admin, boolean readonly) {
-        if (!isOpen()) {
-            throw new IllegalStateException("List stream closed");
-        }
-        DSMap map = new DSMap();
-        map.put("$is", "node");
-        if ((displayName != null) && !displayName.isEmpty()) {
-            map.put("$name", displayName);
-        }
-        if (admin) {
-            map.put("$invokable", "config");
-        } else if (!readonly) {
-            map.put("$invokable", "write");
-        } else {
-            map.put("$invokable", "read");
-        }
-        enqueue(encodeName(name, cacheBuf), map);
-    }
-
-    @Override
     public boolean write(DSSession session, MessageWriter writer) {
         synchronized (this) {
             enqueued = false;
@@ -281,7 +281,7 @@ public class DSInboundList extends DSInboundRequest
         if (isClosed()) {
             return false;
         }
-        boolean hasUpdates = false;
+        boolean hasUpdates;
         synchronized (updates) {
             hasUpdates = !updates.isEmpty();
         }
@@ -500,8 +500,8 @@ public class DSInboundList extends DSInboundRequest
 
     private void encodeChild(DSInfo<?> child) {
         if (child.isAction()) {
-            setChildAction(child.getName(), child.getMetadata().getDisplayName(),
-                           child.isAdmin(), child.isReadOnly());
+            sendChildAction(child.getName(), child.getMetadata().getDisplayName(),
+                            child.isAdmin(), child.isReadOnly());
         } else if (child.isValue()) {
             sendChildValue(child.getName(), child.getMetadata().getDisplayName(),
                            child.getValue().toElement().getElementType(), child.isAdmin(),

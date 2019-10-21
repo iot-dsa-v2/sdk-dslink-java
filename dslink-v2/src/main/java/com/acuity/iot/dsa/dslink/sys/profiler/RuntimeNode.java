@@ -12,7 +12,7 @@ import org.iot.dsa.node.DSString;
 
 public class RuntimeNode extends MXBeanNode {
 
-    private static List<String> overriden = new ArrayList<String>();
+    private static List<String> overriden = new ArrayList<>();
     private RuntimeMXBean mxbean;
     private DSNode systemNode;
 
@@ -22,7 +22,7 @@ public class RuntimeNode extends MXBeanNode {
     }
 
     @Override
-    public Class<? extends Object> getMXInterface() {
+    public Class<?> getMXInterface() {
         return RuntimeMXBean.class;
     }
 

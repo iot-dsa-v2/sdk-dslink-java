@@ -90,7 +90,7 @@ public class DSSysNode extends DSNode {
         profilerToggle = put(CLOSE_PROFILER, new ToggleAction()).setTransient(true);
     }
 
-    private class StopAction extends DSAction {
+    private static class StopAction extends DSAction {
 
         @Override
         public ActionResults invoke(DSIActionRequest req) {

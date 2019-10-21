@@ -27,7 +27,7 @@ public class DSDateTime extends DSValue implements DSISetAction {
     // Constants
     ///////////////////////////////////////////////////////////////////////////
 
-    public static final DSDateTime NULL = new DSDateTime("null", 0l);
+    public static final DSDateTime NULL = new DSDateTime("null", 0L);
 
     public static final String YEAR = "Year";
     public static final String MONTH = "Month";

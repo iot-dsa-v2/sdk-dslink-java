@@ -63,6 +63,7 @@ public class DSTime extends DSValue implements DSISetAction {
                 buf.append('0');
             }
             buf.append(second);
+            string = DSString.valueOf(buf.toString());
         }
         this.string = string;
     }

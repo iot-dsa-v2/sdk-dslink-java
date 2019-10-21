@@ -65,7 +65,7 @@ public class RequesterListReconnectTest {
     // Inner Classes
     // -------------
 
-    public class MyHandler extends SimpleListHandler {
+    public static class MyHandler extends SimpleListHandler {
 
     }
 

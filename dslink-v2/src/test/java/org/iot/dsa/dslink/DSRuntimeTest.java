@@ -21,18 +21,13 @@ public class DSRuntimeTest {
     @Test
     public void test1() throws Exception {
         runs = 0;
-        Timer tim = DSRuntime.run(new Runnable() {
-
-            @Override
-            public void run() {
-                runs += 1;
-                if (runs >= 5) {
-                    synchronized (lock1) {
-                        lock1.notifyAll();
-                    }
+        Timer tim = DSRuntime.run(() -> {
+            runs += 1;
+            if (runs >= 5) {
+                synchronized (lock1) {
+                    lock1.notifyAll();
                 }
             }
-
         }, System.currentTimeMillis() + 400, 100);
 
 //        System.out.println("test1    now: " + System.nanoTime());
@@ -47,18 +42,13 @@ public class DSRuntimeTest {
     @Test
     public void test2() throws Exception {
         runsWithDelay = 0;
-        Timer tim = DSRuntime.runAfterDelay(new Runnable() {
-
-            @Override
-            public void run() {
-                runsWithDelay += 1;
-                if (runsWithDelay >= 5) {
-                    synchronized (lock2) {
-                        lock2.notifyAll();
-                    }
+        Timer tim = DSRuntime.runAfterDelay(() -> {
+            runsWithDelay += 1;
+            if (runsWithDelay >= 5) {
+                synchronized (lock2) {
+                    lock2.notifyAll();
                 }
             }
-
         }, 400, 100);
 
 //        System.out.println("test2    now: " + System.nanoTime());
@@ -73,16 +63,11 @@ public class DSRuntimeTest {
     @Test
     public void test3() throws Exception {
         success = false;
-        Timer tim = DSRuntime.runAt(new Runnable() {
-
-            @Override
-            public void run() {
-                success = true;
-                synchronized (lock3) {
-                    lock3.notifyAll();
-                }
+        Timer tim = DSRuntime.runAt(() -> {
+            success = true;
+            synchronized (lock3) {
+                lock3.notifyAll();
             }
-
         }, System.currentTimeMillis() + 400);
 
 //        System.out.println("test3    now: " + System.nanoTime());
@@ -97,16 +82,11 @@ public class DSRuntimeTest {
     @Test
     public void test4() throws Exception {
         successWithDelay = false;
-        Timer tim = DSRuntime.runDelayed(new Runnable() {
-
-            @Override
-            public void run() {
-                successWithDelay = true;
-                synchronized (lock4) {
-                    lock4.notifyAll();
-                }
+        Timer tim = DSRuntime.runDelayed(() -> {
+            successWithDelay = true;
+            synchronized (lock4) {
+                lock4.notifyAll();
             }
-
         }, 400);
 
 //        System.out.println("test4    now: " + System.nanoTime());
@@ -121,18 +101,13 @@ public class DSRuntimeTest {
     @Test
     public void test5() throws Exception {
         runsImmed = 0;
-        Timer tim = DSRuntime.run(new Runnable() {
-
-            @Override
-            public void run() {
-                runsImmed += 1;
-                if (runsImmed >= 5) {
-                    synchronized (lock5) {
-                        lock5.notifyAll();
-                    }
+        Timer tim = DSRuntime.run(() -> {
+            runsImmed += 1;
+            if (runsImmed >= 5) {
+                synchronized (lock5) {
+                    lock5.notifyAll();
                 }
             }
-
         }, 0, 100);
 
 //        System.out.println("test1    now: " + System.nanoTime());

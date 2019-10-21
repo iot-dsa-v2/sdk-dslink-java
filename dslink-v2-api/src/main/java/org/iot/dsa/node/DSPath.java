@@ -243,7 +243,7 @@ public class DSPath extends DSValue {
         if (buf == null) {
             buf = new StringBuilder();
         }
-        ArrayList<DSNode> nodes = new ArrayList<DSNode>();
+        ArrayList<DSNode> nodes = new ArrayList<>();
         while (node != null) {
             if (node.getName() != null) {
                 nodes.add(node);
@@ -404,7 +404,7 @@ public class DSPath extends DSValue {
         int pathLength = name.length();
         CharArrayWriter charArrayWriter = null;
         char c;
-        boolean encode = false;
+        boolean encode;
         for (int i = 0; i < pathLength; ) {
             c = name.charAt(i);
             encode = v1 ? shouldEncodeV1(c) : shouldEncode(c);
@@ -419,7 +419,7 @@ public class DSPath extends DSValue {
                     charArrayWriter.write(c);
                     if (c >= 0xD800 && c <= 0xDBFF) {
                         if ((i + 1) < name.length()) {
-                            int d = (int) name.charAt(i + 1);
+                            int d = name.charAt(i + 1);
                             if (d >= 0xDC00 && d <= 0xDFFF) {
                                 charArrayWriter.write(d);
                                 i++;

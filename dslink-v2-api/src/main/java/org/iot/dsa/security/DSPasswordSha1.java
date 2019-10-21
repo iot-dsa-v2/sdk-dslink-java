@@ -184,7 +184,7 @@ public class DSPasswordSha1 extends DSValue implements DSIMetadata, DSIPassword,
      * SHA-256 hash of the bytes.
      */
     static byte[] hash(byte[] arg) {
-        byte[] hash = null;
+        byte[] hash;
         synchronized (digest) {
             hash = digest.digest(arg);
             digest.reset();

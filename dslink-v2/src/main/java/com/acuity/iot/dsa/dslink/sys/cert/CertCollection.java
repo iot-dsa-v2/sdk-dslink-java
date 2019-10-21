@@ -72,7 +72,7 @@ public class CertCollection extends DSNode {
     }
 
     public Map<String, X509Certificate> getCertificates() {
-        Map<String, X509Certificate> certs = new HashMap<String, X509Certificate>();
+        Map<String, X509Certificate> certs = new HashMap<>();
         for (DSInfo<?> info : this) {
             DSIObject obj = info.get();
             if (obj instanceof CertNode) {

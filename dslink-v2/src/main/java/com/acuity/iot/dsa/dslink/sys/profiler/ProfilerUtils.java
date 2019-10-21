@@ -19,7 +19,7 @@ import org.iot.dsa.node.DSValueType;
 public class ProfilerUtils {
 
     public static Map<String, String> dsMapToMap(DSMap dsMap) {
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         Entry e = dsMap.firstEntry();
         while (e != null) {
             map.put(e.getKey(), e.getValue().toString());

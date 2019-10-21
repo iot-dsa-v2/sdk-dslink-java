@@ -86,7 +86,7 @@ public class SysLogService extends StreamableLogNode {
     }
 
     private DSList getLogNames() {
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         Enumeration<String> logNames = LogManager.getLogManager().getLoggerNames();
         while (logNames.hasMoreElements()) {
             String name = logNames.nextElement();

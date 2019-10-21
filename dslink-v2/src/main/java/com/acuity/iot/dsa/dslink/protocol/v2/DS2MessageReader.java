@@ -29,7 +29,7 @@ public class DS2MessageReader extends DS2Message {
     private int ackId;
     private int bodyLength;
     private CharBuffer charBuffer;
-    private Map<Integer, Object> headers = new HashMap<Integer, Object>();
+    private Map<Integer, Object> headers = new HashMap<>();
     private InputStream input;
     private int method;
     private MsgpackReader reader;

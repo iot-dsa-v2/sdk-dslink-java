@@ -115,7 +115,7 @@ public abstract class DSLink extends DSNode implements Runnable {
      * @param config Configuration options
      */
     public static DSLink load(DSLinkOptions config) {
-        DSLink ret = null;
+        DSLink ret;
         File nodes = config.getNodesFile();
         if (nodes.exists()) {
             long time = System.currentTimeMillis();
@@ -172,13 +172,9 @@ public abstract class DSLink extends DSNode implements Runnable {
             } catch (Throwable t) {
                 debug(null, t);
             }
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                public void run() {
-                    shutdown();
-                }
-            });
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
             start();
-            long stableDelay = options.getConfig(DSLinkOptions.CFG_STABLE_DELAY, 2000l);
+            long stableDelay = options.getConfig(DSLinkOptions.CFG_STABLE_DELAY, 2000L);
             try {
                 Thread.sleep(stableDelay);
             } catch (Exception x) {
@@ -202,8 +198,7 @@ public abstract class DSLink extends DSNode implements Runnable {
                 DSException.throwRuntime(x);
             }
             LogManager.getLogManager().reset();
-            Logger logger = Logger.getLogger("");
-            for (Handler h : logger.getLogger("").getHandlers()) {
+            for (Handler h : Logger.getLogger("").getHandlers()) {
                 h.close();
             }
         } finally {

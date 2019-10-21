@@ -128,12 +128,12 @@ public class DSInt extends DSValue implements Comparable<DSINumber>, DSIMetadata
 
     @Override
     public int toInt() {
-        return (int) value;
+        return value;
     }
 
     @Override
     public long toLong() {
-        return (long) value;
+        return value;
     }
 
     @Override

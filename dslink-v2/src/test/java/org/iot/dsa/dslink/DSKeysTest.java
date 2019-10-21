@@ -1,5 +1,6 @@
 package org.iot.dsa.dslink;
 
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.Signature;
@@ -44,7 +45,7 @@ public class DSKeysTest {
         Assert.assertTrue(keys.getPrivateKey().equals(keys2.getPrivateKey()));
         String tempKey =
                 "BCVrEhPXmozrKAextseekQauwrRz3lz2sj56td9j09Oajar0RoVR5Uo95AVuuws1vVEbDzhOUu7freU0BXD759U";
-        byte[] salt = "0000".getBytes("UTF-8");
+        byte[] salt = "0000".getBytes(StandardCharsets.UTF_8);
         byte[] secret = keys.generateSharedSecret(tempKey);
         byte[] bytes = new byte[salt.length + secret.length];
         System.arraycopy(salt, 0, bytes, 0, salt.length);
@@ -120,7 +121,8 @@ public class DSKeysTest {
 
     static {
         try {
-            TEST_MSG = "The quick brown fox jumps over the lazy dog.".getBytes("UTF-8");
+            TEST_MSG = "The quick brown fox jumps over the lazy dog.".getBytes(
+                    StandardCharsets.UTF_8);
         } catch (Exception x) {
             DSException.throwRuntime(x);
         }

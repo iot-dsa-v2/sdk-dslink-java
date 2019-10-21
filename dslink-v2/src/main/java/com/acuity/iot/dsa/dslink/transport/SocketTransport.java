@@ -53,7 +53,7 @@ public class SocketTransport extends DSTransportStream {
             } else {
                 throw new IllegalArgumentException("Invalid broker URI: " + url);
             }
-            socket.setSoTimeout((int) getReadTimeout());
+            socket.setSoTimeout(getReadTimeout());
             open(socket.getInputStream(), socket.getOutputStream());
             DSRuntime.run(new Reader());
             debug(debug() ? "SocketTransport open" : null);

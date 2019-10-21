@@ -77,11 +77,11 @@ public class HostnameWhitelist extends DSNode {
         return act;
     }
 
-    public static enum WhitelistOption {
+    public enum WhitelistOption {
         ALLOWED, FORBIDDEN, REMOVE;
     }
 
-    public static enum WhitelistValue {
+    public enum WhitelistValue {
         ALLOWED, FORBIDDEN;
     }
 

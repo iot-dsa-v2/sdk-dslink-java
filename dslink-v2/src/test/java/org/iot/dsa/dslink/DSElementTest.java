@@ -23,9 +23,9 @@ public class DSElementTest {
         test(DSElement.make(100.5d), 100.5d);
         test(DSElement.make(0), 0);
         test(DSElement.make(101), 101);
-        test(DSElement.make(0l), 0l);
-        test(DSElement.make(101l), 101l);
-        Assert.assertTrue(DSElement.make(101l).isLong());
+        test(DSElement.make(0L), 0L);
+        test(DSElement.make(101L), 101L);
+        Assert.assertTrue(DSElement.make(101L).isLong());
         test(DSElement.make(""), "");
         test(DSElement.make("0"), "0");
         test(DSElement.make("abc"), "abc");
@@ -39,7 +39,7 @@ public class DSElementTest {
                 .add(true)
                 .add(100.001d)
                 .add(100001)
-                .add(100001l)
+                .add(100001L)
                 .add("abcdefghij\r\njklmnopqrs\u0000\u0001\u0002tuvwxyz\r\n")
                 .addNull();
     }
@@ -49,7 +49,7 @@ public class DSElementTest {
                 .put("boolean", true)
                 .put("double", 105.001d)
                 .put("int", 100001)
-                .put("long", (long) 123l)
+                .put("long", 123L)
                 .put("string", "abcdefghij\r\njklmnopqrs\u0000\u0001\u0002tuvwxyz\r\n")
                 .putNull("null");
     }

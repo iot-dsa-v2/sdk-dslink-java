@@ -39,7 +39,7 @@ public class DSInboundSubscription extends DSInboundRequest
     private DSInboundSubscriptions manager;
     private DSNode node;
     private boolean open = true;
-    private int qos = 0;
+    private int qos;
     private Integer sid;
     private DSISubscription subscription;
     private Update updateHead;
@@ -223,13 +223,9 @@ public class DSInboundSubscription extends DSInboundRequest
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
                 node = (DSNode) obj;
-                this.subscription = node.subscribe(new DSISubscriber() {
-                    @Override
-                    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child,
-                                        DSIValue data) {
-                        if (child == null) {
-                            DSInboundSubscription.this.onEvent(event, node, null, data);
-                        }
+                this.subscription = node.subscribe((event, node, child, data) -> {
+                    if (child == null) {
+                        DSInboundSubscription.this.onEvent(event, node, null, data);
                     }
                 });
                 onEvent(DSNode.VALUE_CHANGED_EVENT, node, null, null);
@@ -340,7 +336,7 @@ public class DSInboundSubscription extends DSInboundRequest
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
-    protected class Update {
+    protected static class Update {
 
         Update next;
         public DSStatus status;

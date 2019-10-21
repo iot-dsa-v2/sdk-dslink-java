@@ -99,7 +99,7 @@ public class DS2LinkConnection extends DSBrokerConnection {
 
     @Override
     protected DSTransport makeTransport() {
-        DSTransport.Factory factory = null;
+        DSTransport.Factory factory;
         String uri = getLink().getOptions().getBrokerUri();
         DSTransport transport = null;
         if (uri.startsWith("ws")) {

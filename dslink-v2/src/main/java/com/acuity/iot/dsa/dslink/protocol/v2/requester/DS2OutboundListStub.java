@@ -38,7 +38,7 @@ public class DS2OutboundListStub extends DSOutboundListStub
             InputStream in = response.getBody();
             int bodyLen = response.getBodyLength();
             String name;
-            DSElement value = null;
+            DSElement value;
             while (bodyLen > 0) {
                 int len = DSBytes.readShort(in, false);
                 bodyLen -= len;

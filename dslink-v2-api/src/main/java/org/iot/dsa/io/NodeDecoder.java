@@ -32,7 +32,7 @@ public class NodeDecoder {
     ///////////////////////////////////////////////////////////////////////////
 
     private DSIReader in;
-    private HashMap<String, Class> tokenMap = new HashMap<String, Class>();
+    private HashMap<String, Class> tokenMap = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors

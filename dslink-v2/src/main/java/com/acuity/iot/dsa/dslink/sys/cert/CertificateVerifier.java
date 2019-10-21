@@ -82,8 +82,8 @@ public class CertificateVerifier {
 
             // Prepare a set of trusted root CA certificates
             // and a set of intermediate certificates
-            Set<X509Certificate> trustedRootCerts = new HashSet<X509Certificate>();
-            Set<X509Certificate> intermediateCerts = new HashSet<X509Certificate>();
+            Set<X509Certificate> trustedRootCerts = new HashSet<>();
+            Set<X509Certificate> intermediateCerts = new HashSet<>();
             for (X509Certificate additionalCert : additionalCerts) {
                 if (isSelfSigned(additionalCert)) {
                     trustedRootCerts.add(additionalCert);
@@ -138,7 +138,7 @@ public class CertificateVerifier {
         selector.setCertificate(cert);
 
         // Create the trust anchors (set of root CA certificates)
-        Set<TrustAnchor> trustAnchors = new HashSet<TrustAnchor>();
+        Set<TrustAnchor> trustAnchors = new HashSet<>();
         for (X509Certificate trustedRootCert : trustedRootCerts) {
             trustAnchors.add(new TrustAnchor(trustedRootCert, null));
         }

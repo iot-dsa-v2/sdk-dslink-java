@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import org.iot.dsa.dslink.DSLink;
 import org.iot.dsa.dslink.DSLinkOptions;
 import org.iot.dsa.io.json.Json;
@@ -90,7 +91,7 @@ public class DS1LinkConnection extends DSBrokerConnection {
 
     @Override
     protected DSTransport makeTransport() {
-        DSTransport.Factory factory = null;
+        DSTransport.Factory factory;
         DSTransport transport = null;
         try {
             String type = getLink().getOptions().getConfig(
@@ -268,7 +269,7 @@ public class DS1LinkConnection extends DSBrokerConnection {
                 out.write(buf, 0, len);
                 len = in.read(buf);
             }
-            builder.append(": ").append(new String(out.toByteArray(), "UTF-8"));
+            builder.append(": ").append(new String(out.toByteArray(), StandardCharsets.UTF_8));
         } catch (Exception ignore) {
         }
         try {

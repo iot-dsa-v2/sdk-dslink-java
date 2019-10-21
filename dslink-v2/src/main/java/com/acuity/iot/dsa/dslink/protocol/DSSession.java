@@ -66,9 +66,9 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     private int nextMessage = 1;
     private DSIReader reader;
     private Receiver receiver = new Receiver();
-    private ConcurrentLinkedQueue<OutboundMessage> reqQueue = new ConcurrentLinkedQueue<OutboundMessage>();
+    private ConcurrentLinkedQueue<OutboundMessage> reqQueue = new ConcurrentLinkedQueue<>();
     private DSInfo<?> requesterAllowed = getInfo(REQUESTER_ALLOWED);
-    private ConcurrentLinkedQueue<OutboundMessage> resQueue = new ConcurrentLinkedQueue<OutboundMessage>();
+    private ConcurrentLinkedQueue<OutboundMessage> resQueue = new ConcurrentLinkedQueue<>();
     private Sender sender = new Sender();
     private DSInfo<?> statAckRcvd = getInfo(LAST_ACK_RCVD);
     private DSInfo<?> statAckSent = getInfo(LAST_ACK_SENT);
@@ -384,7 +384,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
 
     @Override
     protected void onSubscribed() {
-        updateTimer = DSRuntime.run(() -> updateStats(), 0, 1000);
+        updateTimer = DSRuntime.run(this::updateStats, 0, 1000);
     }
 
     protected void onUnsubscribed() {
