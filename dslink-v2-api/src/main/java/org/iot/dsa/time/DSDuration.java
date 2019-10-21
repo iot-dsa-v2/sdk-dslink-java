@@ -513,13 +513,13 @@ public class DSDuration extends DSValue implements DSISetAction {
             int mins = params.get(MINUTES, 0);
             int secs = params.get(SECONDS, 0);
             int ms = params.get(MILLIS, 0);
-            DSInfo target = request.getTargetInfo();
+            DSInfo<?> target = request.getTargetInfo();
             target.getParent().put(target, valueOf(neg, years, months, days, hrs, mins, secs, ms));
             return null;
         }
 
         @Override
-        public void prepareParameter(DSInfo target, DSMap parameter) {
+        public void prepareParameter(DSInfo<?> target, DSMap parameter) {
             DSDuration dur = (DSDuration) target.get();
             String name = parameter.get(DSMetadata.NAME, "");
             switch (name) {

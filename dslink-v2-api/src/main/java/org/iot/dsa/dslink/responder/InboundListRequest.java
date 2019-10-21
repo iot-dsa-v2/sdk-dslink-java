@@ -5,7 +5,7 @@ import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.Node;
 import org.iot.dsa.dslink.Value;
 import org.iot.dsa.node.DSElement;
-import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSElementType;
 
 /**
  * How to respond to a list request.  Implementations must first send the target of the
@@ -20,28 +20,28 @@ public interface InboundListRequest extends InboundRequest {
     /**
      * Allows the responder to forcefully close the list stream.
      */
-    public void close();
+    void close();
 
     /**
      * Allows the responder to forcefully close the list stream with an error.
      */
-    public void close(Exception reason);
+    void close(Exception reason);
 
     /**
      * Whether or not the list stream is still open.
      */
-    public boolean isOpen();
+    boolean isOpen();
 
     /**
      * Call after the initial state of the target and it's children has been sent.
      */
-    public void listComplete();
+    void listComplete();
 
     /**
      * Add or change any metadata on the target of the request after beginUpdates.  Can also be
      * used as a pass-thru mechanism.
      */
-    public void send(String name, DSElement value);
+    void send(String name, DSElement value);
 
     /**
      * Add or update a child action to the list.
@@ -51,7 +51,7 @@ public interface InboundListRequest extends InboundRequest {
      * @param admin       Whether or not the action requires admin level permission.
      * @param readonly    Whether or not the action requires write permission.
      */
-    public void sendAction(String name, String displayName, boolean admin, boolean readonly);
+    void sendChildAction(String name, String displayName, boolean admin, boolean readonly);
 
     /**
      * Add or update a child node to the list.
@@ -60,12 +60,27 @@ public interface InboundListRequest extends InboundRequest {
      * @param displayName Can be null.
      * @param admin       Whether or not admin level required to see node.
      */
-    public void sendNode(String name, String displayName, boolean admin);
+    void sendChildNode(String name, String displayName, boolean admin);
+
+    /**
+     * Add or update a child value to the list.
+     *
+     * @param name        Will be encoded, it's not usually necessary to have a display name.
+     * @param displayName Can be null.
+     * @param type        Required.
+     * @param admin       Whether or not admin level required to see node.
+     * @param readonly    Whether or not the value is writable.
+     */
+    void sendChildValue(String name,
+                        String displayName,
+                        DSElementType type,
+                        boolean admin,
+                        boolean readonly);
 
     /**
      * The responder should call this whenever a child or metadata is removed.
      */
-    public void sendRemove(String name);
+    void sendRemove(String name);
 
     /**
      * This should be called first to provide details about the target and should be an
@@ -78,21 +93,6 @@ public interface InboundListRequest extends InboundRequest {
      * @see Node
      * @see Value
      */
-    public void sendTarget(Node object);
-
-    /**
-     * Add or update a child value to the list.
-     *
-     * @param name        Will be encoded, it's not usually necessary to have a display name.
-     * @param displayName Can be null.
-     * @param type        Used for encoding the type only.
-     * @param admin       Whether or not admin level required to see node.
-     * @param readonly    Whether or not the value is writable.
-     */
-    public void sendValue(String name,
-                          String displayName,
-                          DSIValue type,
-                          boolean admin,
-                          boolean readonly);
+    void sendTarget(Node object);
 
 }

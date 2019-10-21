@@ -7,7 +7,7 @@ import java.util.List;
 
 public class MemoryNode extends MXBeanNode {
 
-    private static List<String> overriden = new ArrayList<String>();
+    private static List<String> overriden = new ArrayList<>();
     private MemoryMXBean mxbean;
 
     @Override
@@ -16,7 +16,7 @@ public class MemoryNode extends MXBeanNode {
     }
 
     @Override
-    public Class<? extends Object> getMXInterface() {
+    public Class<?> getMXInterface() {
         return MemoryMXBean.class;
     }
 

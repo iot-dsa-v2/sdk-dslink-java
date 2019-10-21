@@ -22,7 +22,7 @@ public abstract class DSEnabledNode extends DSStatusNode implements DSIStatus {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo enabled = getInfo(ENABLED);
+    private DSInfo<?> enabled = getInfo(ENABLED);
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -67,7 +67,7 @@ public abstract class DSEnabledNode extends DSStatusNode implements DSIStatus {
      * should call the super implemenation.
      */
     @Override
-    protected void onChildChanged(DSInfo child) {
+    protected void onChildChanged(DSInfo<?> child) {
         if (child == enabled) {
             updateStatus(null);
             if (isEnabled()) {

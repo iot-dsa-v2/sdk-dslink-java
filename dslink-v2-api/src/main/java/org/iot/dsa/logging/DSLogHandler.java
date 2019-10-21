@@ -36,7 +36,7 @@ public class DSLogHandler extends Handler {
     ///////////////////////////////////////////////////////////////////////////
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
-    private LinkedList<LogRecord> queue = new LinkedList<LogRecord>();
+    private LinkedList<LogRecord> queue = new LinkedList<>();
     private int queueThrottle = (int) (maxQueueSize * .90);
     private int state = STATE_CLOSED;
 

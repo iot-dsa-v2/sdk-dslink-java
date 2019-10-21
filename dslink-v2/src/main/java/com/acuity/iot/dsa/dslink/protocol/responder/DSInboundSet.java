@@ -41,7 +41,7 @@ public class DSInboundSet extends DSInboundRequest implements InboundSetRequest,
                 setPath(path.getPath());
                 responder.onSet(this);
             } else {
-                DSInfo info = path.getTargetInfo();
+                DSInfo<?> info = path.getTargetInfo();
                 if ((info != null) && info.isReadOnly()) {
                     throw new DSRequestException("Not writable: " + getPath());
                 }

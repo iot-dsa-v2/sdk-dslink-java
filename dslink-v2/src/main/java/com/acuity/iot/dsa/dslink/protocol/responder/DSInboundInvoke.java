@@ -18,6 +18,7 @@ import org.iot.dsa.io.DSIWriter;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
+import org.iot.dsa.node.action.DSIAction;
 import org.iot.dsa.security.DSPermission;
 
 /**
@@ -41,7 +42,7 @@ public class DSInboundInvoke extends DSInboundRequest
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo action;
+    private DSInfo<DSIAction> action;
     private Exception closeReason;
     private boolean enqueued = false;
     private DSMap parameters;
@@ -49,7 +50,7 @@ public class DSInboundInvoke extends DSInboundRequest
     private ActionResults results;
     private int state = STATE_INIT;
     private boolean streamOpen = false;
-    private DSInfo target;
+    private DSInfo<?> target;
     private PassThruUpdate updateHead;
     private PassThruUpdate updateTail;
 
@@ -98,7 +99,7 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     @Override
-    public DSInfo getActionInfo() {
+    public DSInfo<DSIAction> getActionInfo() {
         return action;
     }
 
@@ -113,7 +114,7 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     @Override
-    public DSInfo getTargetInfo() {
+    public DSInfo<?> getTargetInfo() {
         return target;
     }
 
@@ -153,7 +154,7 @@ public class DSInboundInvoke extends DSInboundRequest
                     return;
                 }
             } else {
-                DSInfo info = path.getTargetInfo();
+                DSInfo<?> info = path.getTargetInfo();
                 if (!info.isAction()) {
                     throw new DSRequestException("Not an action " + path.getPath());
                 }
@@ -170,7 +171,7 @@ public class DSInboundInvoke extends DSInboundRequest
                         throw new DSPermissionException("Read permission required");
                     }
                 }
-                action = info;
+                action = (DSInfo<DSIAction>) info;
                 target = path.getParentInfo();
                 results = path.getNode().invoke(this);
             }
@@ -236,7 +237,7 @@ public class DSInboundInvoke extends DSInboundRequest
                 writeClose(writer);
             }
             doClose();
-        } else if (!passThru){
+        } else if (!passThru) {
             switch (results.getResultsType()) {
                 case STREAM:
                 case TABLE:

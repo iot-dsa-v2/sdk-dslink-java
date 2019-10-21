@@ -8,7 +8,7 @@ import org.iot.dsa.node.DSString;
 
 public class CompilationNode extends MXBeanNode {
 
-    private static List<String> overriden = new ArrayList<String>();
+    private static List<String> overriden = new ArrayList<>();
     private CompilationMXBean mxbean;
 
     @Override
@@ -17,7 +17,7 @@ public class CompilationNode extends MXBeanNode {
     }
 
     @Override
-    public Class<? extends Object> getMXInterface() {
+    public Class<?> getMXInterface() {
         return CompilationMXBean.class;
     }
 

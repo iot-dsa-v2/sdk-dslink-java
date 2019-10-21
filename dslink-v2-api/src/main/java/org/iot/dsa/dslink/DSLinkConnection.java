@@ -103,7 +103,7 @@ public abstract class DSLinkConnection extends DSConnection {
     @Override
     protected void onDisconnected() {
         super.onDisconnected();
-        DSInfo info = getInfo(TRANSPORT);
+        DSInfo<?> info = getInfo(TRANSPORT);
         if (info != null) {
             remove(info.setLocked(false));
         }

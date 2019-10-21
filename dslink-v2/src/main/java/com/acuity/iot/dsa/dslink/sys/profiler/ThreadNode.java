@@ -23,8 +23,8 @@ import org.iot.dsa.node.action.DSIActionRequest;
 
 public class ThreadNode extends MXBeanNode {
 
-    private static List<String> overriden = new ArrayList<String>();
-    private Map<Long, ThreadInfoNode> infoNodes = new HashMap<Long, ThreadInfoNode>();
+    private static List<String> overriden = new ArrayList<>();
+    private Map<Long, ThreadInfoNode> infoNodes = new HashMap<>();
     private ThreadMXBean mxbean;
 
     public ActionResults findDeadlocked(DSIActionRequest req) {
@@ -43,7 +43,7 @@ public class ThreadNode extends MXBeanNode {
     }
 
     @Override
-    public Class<? extends Object> getMXInterface() {
+    public Class<?> getMXInterface() {
         return ThreadMXBean.class;
     }
 
@@ -61,13 +61,13 @@ public class ThreadNode extends MXBeanNode {
         }
         putProp("AllThreadIds", l);
         ThreadInfo[] infos = mxbean.getThreadInfo(ids, false, false);
-        Set<Long> prevIds = new HashSet<Long>(infoNodes.keySet());
+        Set<Long> prevIds = new HashSet<>(infoNodes.keySet());
         for (ThreadInfo info : infos) {
             long id = info.getThreadId();
             prevIds.remove(id);
             ThreadInfoNode infoNode = infoNodes.get(id);
             if (infoNode == null) {
-                DSInfo dsinfo = put(
+                DSInfo<?> dsinfo = put(
                         info.getThreadName() + " #" + id,
                         new ThreadInfoNode(id)).setTransient(true);
                 infoNode = (ThreadInfoNode) dsinfo.getNode();

@@ -1,6 +1,7 @@
 package org.iot.dsa.node;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * String wrapper.
@@ -22,7 +23,7 @@ public class DSString extends DSElement implements Comparable<Object> {
     /**
      * The standard UTF8 charset, can be used with string.getBytes(Charset).
      */
-    public static final Charset UTF8 = Charset.forName("UTF-8");
+    public static final Charset UTF8 = StandardCharsets.UTF_8;
 
     // Fields
     // ------

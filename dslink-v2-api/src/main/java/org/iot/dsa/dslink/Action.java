@@ -47,7 +47,7 @@ public interface Action extends Node {
     }
 
     /**
-     * Whether or not the action the action requires write permission.  Returns false by default.
+     * Whether or not the action requires write permission.  Returns false by default.
      */
     public default boolean isReadOnly() {
         return false;

@@ -18,7 +18,7 @@ public class HostnameWhitelist extends DSNode {
 
     private static final String ENABLED = "Enabled";
     private static final String ADD_HOSTNAME = "Add Hostname";
-    private DSInfo enabled = getInfo(ENABLED);
+    private DSInfo<?> enabled = getInfo(ENABLED);
 
     public WhitelistValue checkHostname(String hostname) {
         DSIValue value = getValue(hostname);
@@ -44,7 +44,8 @@ public class HostnameWhitelist extends DSNode {
         declareDefault(ADD_HOSTNAME, getAddHostnameAction());
     }
 
-    protected void onChildChanged(DSInfo info) {
+    @Override
+    protected void onChildChanged(DSInfo<?> info) {
         if (info.isValue()) {
             String val = info.getValue().toElement().toString();
             if (WhitelistOption.REMOVE.name().equals(val)) {
@@ -76,11 +77,11 @@ public class HostnameWhitelist extends DSNode {
         return act;
     }
 
-    public static enum WhitelistOption {
+    public enum WhitelistOption {
         ALLOWED, FORBIDDEN, REMOVE;
     }
 
-    public static enum WhitelistValue {
+    public enum WhitelistValue {
         ALLOWED, FORBIDDEN;
     }
 

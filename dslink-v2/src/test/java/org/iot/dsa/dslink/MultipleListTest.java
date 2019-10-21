@@ -81,7 +81,7 @@ public class MultipleListTest {
     // Inner Classes
     // -------------
 
-    class MyHandler extends SimpleListHandler {
+    static class MyHandler extends SimpleListHandler {
 
     }
 

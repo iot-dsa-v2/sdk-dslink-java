@@ -151,7 +151,7 @@ public abstract class AbstractReader implements DSIReader {
             throw new IllegalStateException("Not a map");
         }
         DSMap ret = new DSMap();
-        String key = null;
+        String key;
         while (true) {
             switch (next()) {
                 case STRING:

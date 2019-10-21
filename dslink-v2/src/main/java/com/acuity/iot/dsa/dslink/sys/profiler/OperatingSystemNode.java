@@ -7,7 +7,7 @@ import java.util.List;
 
 public class OperatingSystemNode extends MXBeanNode {
 
-    private static List<String> overriden = new ArrayList<String>();
+    private static List<String> overriden = new ArrayList<>();
     private OperatingSystemMXBean mxbean;
 
     @Override
@@ -16,7 +16,7 @@ public class OperatingSystemNode extends MXBeanNode {
     }
 
     @Override
-    public Class<? extends Object> getMXInterface() {
+    public Class<?> getMXInterface() {
         return OperatingSystemMXBean.class;
     }
 

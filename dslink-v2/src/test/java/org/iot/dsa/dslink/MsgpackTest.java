@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import org.iot.dsa.io.DSIReader;
 import org.iot.dsa.node.DSList;
 import org.iot.dsa.node.DSMap;
@@ -109,7 +110,7 @@ public class MsgpackTest {
         Assert.assertTrue(map.get("fifth").isMap());
         Assert.assertTrue(map.get("seventh").isBytes());
         Assert.assertEquals(
-                new String(map.get("seventh").toBytes(), "UTF-8"), "somebytes");
+                new String(map.get("seventh").toBytes(), StandardCharsets.UTF_8), "somebytes");
         list = map.getList("sixth");
         Assert.assertEquals(list.size(), 6);
         Assert.assertEquals(list.get(0).toString(), "abc");

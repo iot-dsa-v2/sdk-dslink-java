@@ -1,6 +1,7 @@
 package org.iot.dsa.io;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import org.iot.dsa.util.DSException;
 
@@ -44,7 +45,7 @@ public class DSBase64 {
     public static byte[] decode(String str) {
         byte[] src = null;
         try {
-            src = str.getBytes("UTF-8");
+            src = str.getBytes(StandardCharsets.UTF_8);
         } catch (Exception willNotHappen) {
             DSException.throwRuntime(willNotHappen);
         }

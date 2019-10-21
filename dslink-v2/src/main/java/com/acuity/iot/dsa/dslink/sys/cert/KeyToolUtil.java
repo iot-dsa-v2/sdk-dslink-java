@@ -133,7 +133,7 @@ public class KeyToolUtil extends DSLogger {
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()));
             StringBuilder sb = new StringBuilder();
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null) {
                 sb.append(line);
                 sb.append(System.getProperty("line.separator"));

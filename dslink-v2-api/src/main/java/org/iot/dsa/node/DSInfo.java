@@ -43,10 +43,10 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     int flags = 0;
     DSMap metadata;
     String name;
-    DSInfo next;
+    DSInfo<?> next;
     T object;
     DSNode parent;
-    DSInfo prev;
+    DSInfo<?> prev;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -114,8 +114,8 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         if (arg == this) {
             return true;
         }
-        if (arg instanceof DSInfo) {
-            DSInfo argInfo = (DSInfo) arg;
+        if (arg instanceof DSInfo<?>) {
+            DSInfo<?> argInfo = (DSInfo<?>) arg;
             if (flags != argInfo.flags) {
                 return false;
             }
@@ -151,7 +151,7 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         return (DSIAction) get();
     }
 
-    public DSInfo getChild(String name) {
+    public DSInfo<?> getChild(String name) {
         if (isNode()) {
             return getNode().getInfo(name);
         }
@@ -163,7 +163,7 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         if (isNode()) {
             DSNode node = getNode();
             node.getVirtualActions(this, bucket);
-            DSInfo info = node.getFirstInfo();
+            DSInfo<?> info = node.getFirstInfo();
             String name;
             while (info != null) {
                 name = info.getName();
@@ -371,8 +371,8 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     /**
      * The next DSInfo in the parent whose object is of the given type, or null.
      */
-    public DSInfo next(Class<?> is) {
-        DSInfo cur = next;
+    public DSInfo<?> next(Class<?> is) {
+        DSInfo<?> cur = next;
         while (cur != null) {
             if (cur.is(is)) {
                 return cur;
@@ -386,10 +386,10 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
      * The next DSInfo in the parent that is an action, or null.
      */
     public DSInfo<DSAction> nextAction() {
-        DSInfo cur = next;
+        DSInfo<?> cur = next;
         while (cur != null) {
             if (cur.isAction()) {
-                return cur;
+                return (DSInfo<DSAction>) cur;
             }
             cur = cur.next();
         }
@@ -400,10 +400,10 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
      * The next DSInfo in the parent that is a node, or null.
      */
     public DSInfo<DSNode> nextNode() {
-        DSInfo cur = next;
+        DSInfo<?> cur = next;
         while (cur != null) {
             if (cur.isNode()) {
-                return cur;
+                return (DSInfo<DSNode>) cur;
             }
             cur = cur.next();
         }
@@ -414,10 +414,10 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
      * The next DSInfo in the parent that is a value, or null.
      */
     public DSInfo<DSIValue> nextValue() {
-        DSInfo cur = next;
+        DSInfo<?> cur = next;
         while (cur != null) {
             if (cur.isValue()) {
-                return cur;
+                return (DSInfo<DSIValue>) cur;
             }
             cur = cur.next();
         }
@@ -509,7 +509,7 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         return ret;
     }
 
-    void copy(DSInfo<T> info) {
+    void copy(DSInfo<?> info) {
         copyState(info);
         if (isDefaultOnCopy()) {
             return;
@@ -519,7 +519,7 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         }
     }
 
-    void copyState(DSInfo<T> info) {
+    void copyState(DSInfo<?> info) {
         flags = info.flags;
         name = info.name;
         if (info.metadata != null) {

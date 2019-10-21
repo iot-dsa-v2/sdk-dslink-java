@@ -26,7 +26,7 @@ public abstract class MXBeanNode extends DSNode implements Runnable {
 
     public void discover() {
         Object bean = getMXBean();
-        Class<? extends Object> clazz = getMXInterface();
+        Class<?> clazz = getMXInterface();
         for (Method meth : clazz.getMethods()) {
             String methName = meth.getName();
             if (meth.getParameterCount() == 0 && meth.getReturnType() != Void.TYPE) {
@@ -59,7 +59,7 @@ public abstract class MXBeanNode extends DSNode implements Runnable {
 
     public abstract Object getMXBean();
 
-    public abstract Class<? extends Object> getMXInterface();
+    public abstract Class<?> getMXInterface();
 
     public abstract List<String> getOverriden();
 

@@ -22,8 +22,8 @@ class DSThreadPool {
 
     private boolean alive = true;
     private int idleThreads = 0;
-    private int max = -1;
-    private int min = 1;
+    private int max;
+    private int min;
     private int numThreads = 0;
     private LinkedList queue = new LinkedList();
     private String threadName;
@@ -183,7 +183,7 @@ class DSThreadPool {
         }
 
         public void run() {
-            long start = 0;
+            long start;
             Runnable r = null;
             try {
                 while (alive) {

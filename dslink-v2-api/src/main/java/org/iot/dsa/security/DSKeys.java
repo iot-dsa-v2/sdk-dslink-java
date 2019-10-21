@@ -7,12 +7,12 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.interfaces.ECPrivateKey;
@@ -44,7 +44,7 @@ public class DSKeys {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private KeyPair keyPair;
+    private final KeyPair keyPair;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -199,7 +199,7 @@ public class DSKeys {
     public String generateAuth(String saltStr, String pubKey) {
         String ret = null;
         try {
-            byte[] salt = saltStr.getBytes("UTF-8");
+            byte[] salt = saltStr.getBytes(StandardCharsets.UTF_8);
             byte[] secret = generateSharedSecret(pubKey);
             byte[] bytes = new byte[salt.length + secret.length];
             System.arraycopy(salt, 0, bytes, 0, salt.length);
@@ -324,7 +324,7 @@ public class DSKeys {
      * Creates a signer for this private key.
      */
     public Signer newSigner() {
-        return new Signer(keyPair.getPrivate());
+        return new Signer();
     }
 
     /**
@@ -342,19 +342,10 @@ public class DSKeys {
      */
     public static DSKeys restore(File file) {
         DSKeys ret = null;
-        FileInputStream in = null;
-        try {
-            in = new FileInputStream(file);
+        try (FileInputStream in = new FileInputStream(file)) {
             ret = restore(in);
         } catch (Exception x) {
             DSException.throwRuntime(x);
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (Exception ignore) {
-            }
         }
         return ret;
     }
@@ -375,7 +366,7 @@ public class DSKeys {
                 len = in.read(buf);
             }
             out.close();
-            String encoded = new String(out.toByteArray(), "UTF-8");
+            String encoded = new String(out.toByteArray(), StandardCharsets.UTF_8);
             return decodeKeys(encoded);
         } catch (Exception x) {
             DSException.throwRuntime(x);
@@ -401,19 +392,10 @@ public class DSKeys {
      * @throws DSException Wrapping underlying IOExceptions.
      */
     public void store(File file) {
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(file);
+        try (FileOutputStream out = new FileOutputStream(file)) {
             store(out);
         } catch (Exception x) {
             DSException.throwRuntime(x);
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (Exception ignore) {
-            }
         }
     }
 
@@ -425,7 +407,7 @@ public class DSKeys {
      */
     public void store(OutputStream out) {
         try {
-            byte[] bytes = encodeKeys().getBytes("UTF-8");
+            byte[] bytes = encodeKeys().getBytes(StandardCharsets.UTF_8);
             out.write(bytes);
             out.flush();
         } catch (Exception x) {
@@ -469,11 +451,9 @@ public class DSKeys {
      */
     public class Signer {
 
-        private PrivateKey privateKey;
         private Signature signature;
 
-        public Signer(PrivateKey privateKey) {
-            this.privateKey = privateKey;
+        private Signer() {
             signature = newSignature();
             reset();
         }
@@ -542,13 +522,11 @@ public class DSKeys {
      * verify with a signature for the message to validate. This object is not thread safe, but can
      * be reused by calling reset to begin a new signature.
      */
-    public static class Verifier {
+    public class Verifier {
 
-        private PublicKey publicKey;
         private Signature signature;
 
-        public Verifier(PublicKey publicKey) {
-            this.publicKey = publicKey;
+        private Verifier(PublicKey publicKey) {
             this.signature = newSignature();
             reset();
         }
@@ -558,7 +536,7 @@ public class DSKeys {
          */
         public Verifier reset() {
             try {
-                signature.initVerify(publicKey);
+                signature.initVerify(getKeys().getPublic());
             } catch (Exception x) {
                 DSException.throwRuntime(x);
             }

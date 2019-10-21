@@ -8,13 +8,13 @@ import org.iot.dsa.node.DSInfo;
  */
 public class LoggerNode extends StreamableLogNode {
 
-    private DSInfo<?> levelInfo = getInfo("Log Level");
+    private DSInfo<LoggerNodeLevel> levelInfo = (DSInfo<LoggerNodeLevel>) getInfo("Log Level");
     private Logger logger;
 
     public LoggerNode() {
     }
 
-    public DSInfo<?> getLevelInfo() {
+    public DSInfo<LoggerNodeLevel> getLevelInfo() {
         return levelInfo;
     }
 
@@ -33,7 +33,7 @@ public class LoggerNode extends StreamableLogNode {
     }
 
     @Override
-    protected void onChildChanged(DSInfo info) {
+    protected void onChildChanged(DSInfo<?> info) {
         if (info == getLevelInfo()) {
             LoggerNodeLevel level = (LoggerNodeLevel) info.get();
             getLoggerObj().setLevel(level.toLevel());
@@ -45,9 +45,7 @@ public class LoggerNode extends StreamableLogNode {
     @Override
     protected void onStable() {
         super.onStable();
-        DSInfo<?> info = getLevelInfo();
-        LoggerNodeLevel level = (LoggerNodeLevel) info.get();
-        getLoggerObj().setLevel(level.toLevel());
+        getLoggerObj().setLevel(getLevelInfo().get().toLevel());
     }
 
 }

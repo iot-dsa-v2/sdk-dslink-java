@@ -32,7 +32,7 @@ public class DSBool extends DSElement implements Comparable<DSIValue>, DSIBoolea
 
     @Override
     public int compareTo(DSIValue val) {
-        if ((val instanceof DSIValue) && (((DSIValue) val).isNull())) {
+        if ((val instanceof DSIValue) && (val.isNull())) {
             return (this == NULL) ? 0 : 1;
         }
         if (isNull()) {

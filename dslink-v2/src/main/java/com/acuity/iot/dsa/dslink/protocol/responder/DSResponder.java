@@ -23,7 +23,7 @@ public abstract class DSResponder extends DSNode {
     ///////////////////////////////////////////////////////////////////////////
 
     private DSLinkConnection connection;
-    private ConcurrentHashMap<Integer, DSStream> inboundRequests = new ConcurrentHashMap<Integer, DSStream>();
+    private ConcurrentHashMap<Integer, DSStream> inboundRequests = new ConcurrentHashMap<>();
     private DSLink link;
     private DSSession session;
 

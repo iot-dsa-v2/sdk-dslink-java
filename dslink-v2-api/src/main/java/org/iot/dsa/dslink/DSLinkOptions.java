@@ -182,7 +182,7 @@ public class DSLinkOptions {
      */
     public DSMap getDslinkMap() {
         if (dslinkMap == null) {
-            File file = null;
+            File file;
             if (home != null) { //home cannot be in dslink.json
                 file = makeFile(getHome(), getDslinkJson());
             } else {

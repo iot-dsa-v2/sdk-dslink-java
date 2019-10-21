@@ -143,7 +143,7 @@ public class DSMetadata {
      *               instantiated.
      * @return The bucket arg, or a new map if the arg was null.
      */
-    public static DSMap getMetadata(DSInfo info, DSMap bucket) {
+    public static DSMap getMetadata(DSInfo<?> info, DSMap bucket) {
         if (bucket == null) {
             bucket = new DSMap();
         }
@@ -370,7 +370,7 @@ public class DSMetadata {
      * Sets the type and if the given implements DSIMetadata, adds it's metadata as well.
      */
     public DSMetadata setType(DSIValue arg) {
-        map.put(DSMetadata.TYPE, arg.toElement().getElementType().toString());
+        map.put(DSMetadata.TYPE, arg.toElement().getElementType().toElement());
         if (arg instanceof DSIMetadata) {
             ((DSIMetadata) arg).getMetadata(map);
         }

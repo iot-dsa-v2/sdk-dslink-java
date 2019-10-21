@@ -3,13 +3,13 @@ package org.iot.dsa.node;
 /**
  * Used to create temporary info's for virtual actions in DSNode.
  */
-class VirtualInfo extends DSInfo {
+class VirtualInfo<T extends DSIObject> extends DSInfo<T> {
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
     ///////////////////////////////////////////////////////////////////////////
 
-    public VirtualInfo(String name, DSIObject obj) {
+    public VirtualInfo(String name, T obj) {
         super(name, obj);
     }
 
