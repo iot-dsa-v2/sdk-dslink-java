@@ -28,12 +28,12 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
 
     private boolean enqueued = false;
     private ConcurrentLinkedQueue<DSInboundSubscription> outbound =
-            new ConcurrentLinkedQueue<DSInboundSubscription>();
+            new ConcurrentLinkedQueue<>();
     private Map<String, DSInboundSubscription> pathMap =
-            new ConcurrentHashMap<String, DSInboundSubscription>();
+            new ConcurrentHashMap<>();
     private DSResponder responder;
     private Map<Integer, DSInboundSubscription> sidMap =
-            new ConcurrentHashMap<Integer, DSInboundSubscription>();
+            new ConcurrentHashMap<>();
     private StringBuilder timestampBuffer = new StringBuilder();//used by the subs
 
     ///////////////////////////////////////////////////////////////////////////

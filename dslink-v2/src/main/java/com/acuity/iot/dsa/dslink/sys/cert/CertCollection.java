@@ -72,8 +72,8 @@ public class CertCollection extends DSNode {
     }
 
     public Map<String, X509Certificate> getCertificates() {
-        Map<String, X509Certificate> certs = new HashMap<String, X509Certificate>();
-        for (DSInfo info : this) {
+        Map<String, X509Certificate> certs = new HashMap<>();
+        for (DSInfo<?> info : this) {
             DSIObject obj = info.get();
             if (obj instanceof CertNode) {
                 String certStr = ((CertNode) obj).toElement().toString();
@@ -90,7 +90,7 @@ public class CertCollection extends DSNode {
     }
 
     @Override
-    public DSNode remove(DSInfo info) {
+    public DSNode remove(DSInfo<?> info) {
         DSIObject child = info.get();
         if (child instanceof CertNode) {
             CertNode certNode = (CertNode) child;

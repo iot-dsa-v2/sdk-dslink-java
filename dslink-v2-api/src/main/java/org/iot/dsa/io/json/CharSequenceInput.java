@@ -11,7 +11,7 @@ import java.io.IOException;
 class CharSequenceInput implements JsonReader.Input {
 
     private CharSequence in;
-    private int len = 0;
+    private int len;
     private int next = 0;
 
     public CharSequenceInput(CharSequence in) {

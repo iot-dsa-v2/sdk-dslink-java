@@ -1,6 +1,6 @@
 package org.iot.dsa.dslink;
 
-import org.iot.dsa.node.DSIValue;
+import org.iot.dsa.node.DSElementType;
 
 /**
  * Used in DSIResponder list responses.
@@ -10,14 +10,14 @@ import org.iot.dsa.node.DSIValue;
 public interface Value extends Node {
 
     /**
-     * Whether or not the value can be written.
-     */
-    public boolean isReadOnly();
-
-    /**
      * Does not have to be the current value, used to determine the type
      * of the value.
      */
-    public DSIValue toValue();
+    public DSElementType getType();
+
+    /**
+     * Whether or not the value can be written.
+     */
+    public boolean isReadOnly();
 
 }

@@ -190,7 +190,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
 
         private void tryAddingRootCertToQuarantine(X509Certificate[] chain, String authType)
                 throws CertificateException {
-            Set<X509Certificate> chainAsSet = new HashSet<X509Certificate>();
+            Set<X509Certificate> chainAsSet = new HashSet<>();
             Collections.addAll(chainAsSet, chain);
             X509Certificate anchorCert;
             try {
@@ -208,11 +208,7 @@ public class AnonymousTrustFactory extends TrustManagerFactorySpi {
                 }
 
                 certManager.addToQuarantine(anchorCert);
-            } catch (CertificateVerificationException e) {
-                log.debug("", e);
-            } catch (NoSuchAlgorithmException e) {
-                log.debug("", e);
-            } catch (NoSuchProviderException e) {
+            } catch (CertificateVerificationException | NoSuchProviderException | NoSuchAlgorithmException e) {
                 log.debug("", e);
             }
         }

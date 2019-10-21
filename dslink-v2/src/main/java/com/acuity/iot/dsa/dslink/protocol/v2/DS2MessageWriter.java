@@ -30,7 +30,7 @@ public class DS2MessageWriter extends DS2Message implements MessageWriter {
     private DSByteBuffer body;
     private CharBuffer charBuffer;
     private DSByteBuffer header;
-    private Map<Integer, Object> headers = new HashMap<Integer, Object>();
+    private Map<Integer, Object> headers = new HashMap<>();
     private int method;
     private int requestId = -1;
     private ByteBuffer strBuffer;

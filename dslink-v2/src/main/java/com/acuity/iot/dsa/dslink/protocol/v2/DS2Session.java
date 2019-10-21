@@ -31,7 +31,7 @@ public class DS2Session extends DSSession implements MessageConstants {
     private long lastMessageSent;
     private DS2MessageReader messageReader;
     private DS2MessageWriter messageWriter;
-    private Map<Integer, MultipartReader> multiparts = new HashMap<Integer, MultipartReader>();
+    private Map<Integer, MultipartReader> multiparts = new HashMap<>();
     private DS2Requester requester = new DS2Requester(this);
     private boolean requestsNext = false;
     private DS2Responder responder = new DS2Responder(this);

@@ -7,7 +7,7 @@ import org.iot.dsa.node.DSString;
 
 public class GarbageCollectorNode extends MXBeanNode {
 
-    private static List<String> overriden = new ArrayList<String>();
+    private static List<String> overriden = new ArrayList<>();
     private GarbageCollectorMXBean mxbean;
 
     public GarbageCollectorNode() {
@@ -23,7 +23,7 @@ public class GarbageCollectorNode extends MXBeanNode {
     }
 
     @Override
-    public Class<? extends Object> getMXInterface() {
+    public Class<?> getMXInterface() {
         return GarbageCollectorMXBean.class;
     }
 

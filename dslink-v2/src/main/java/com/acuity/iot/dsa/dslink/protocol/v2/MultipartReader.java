@@ -19,10 +19,10 @@ public class MultipartReader implements MessageConstants {
 
     private DSByteBuffer body = new DSByteBuffer();
     private int currentPage = 0;
-    private Map<Integer, Object> headers = new HashMap<Integer, Object>();
+    private Map<Integer, Object> headers = new HashMap<>();
     private int lastPage;
     private int method;
-    private int requestId = -1;
+    private int requestId;
     private Byte status;
 
     ///////////////////////////////////////////////////////////////////////////

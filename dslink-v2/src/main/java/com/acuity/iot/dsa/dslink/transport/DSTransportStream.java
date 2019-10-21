@@ -75,7 +75,7 @@ public abstract class DSTransportStream extends DSTransport {
 
     @Override
     protected int available() {
-        int ret = 0;
+        int ret;
         try {
             ret = in.available();
         } catch (IOException x) {

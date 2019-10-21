@@ -158,7 +158,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     // Fields
     ///////////////////////////////////////////////////////////////////////////
     private static ConcurrentHashMap<String, Integer> stringCache =
-            new ConcurrentHashMap<String, Integer>();
+            new ConcurrentHashMap<>();
     private int bits;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -640,7 +640,7 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     static DSStatus valueOf(String... strings) {
-        int tmp = 0;
+        int tmp;
         int max = 0;
         for (String s : strings) {
             tmp = getBit(s);

@@ -34,6 +34,19 @@ public abstract class StreamableLogNode extends DSNode {
 
     public abstract Logger getLoggerObj();
 
+    public static boolean levelMatches(Level msgLevel, Level desiredLevel) {
+        return msgLevel.intValue() >= desiredLevel.intValue();
+    }
+
+    public static boolean logNameMatches(String msgLogName, String desiredLogName) {
+        return msgLogName != null && msgLogName.startsWith(desiredLogName);
+    }
+
+    public static boolean logTextMatches(String text, String filter) {
+        Pattern p = Pattern.compile(filter);
+        return p.matcher(text).find();
+    }
+
     protected DSAction getStreamLogAction(boolean isRoot) {
         DSAction act = new DSAction() {
             @Override
@@ -54,6 +67,40 @@ public abstract class StreamableLogNode extends DSNode {
         return act;
     }
 
+    private static String encodeLogRecord(LogRecord record) {
+        StringBuilder builder = new StringBuilder();
+        // class
+        if (record.getSourceClassName() != null) {
+            builder.append(record.getSourceClassName());
+            builder.append(" - ");
+        }
+        // method
+        if (record.getSourceMethodName() != null) {
+            builder.append(record.getSourceMethodName());
+            builder.append(" - ");
+        }
+        // message
+        String msg = record.getMessage();
+        if ((msg != null) && (msg.length() > 0)) {
+            Object[] params = record.getParameters();
+            if (params != null) {
+                msg = String.format(msg, params);
+            }
+            builder.append(msg);
+        }
+        // exception
+        Throwable thrown = record.getThrown();
+        if (thrown != null) {
+            builder.append("\n");
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            thrown.printStackTrace(pw);
+            pw.close();
+            builder.append(sw.toString());
+        }
+        return builder.toString();
+    }
+
     private ActionResults startLogStream(final DSIActionRequest req) {
         final Logger loggerObj = getLoggerObj();
         final String name = req.getParameters().getString("Log Name");
@@ -63,18 +110,19 @@ public abstract class StreamableLogNode extends DSNode {
         final Handler handler = new DSLogHandler() {
             @Override
             protected void write(LogRecord record) {
-            	String recordName = record.getLoggerName();
-            	Level recordLevel = record.getLevel();
-            	String recordMsg = encodeLogRecord(record);
+                String recordName = record.getLoggerName();
+                Level recordLevel = record.getLevel();
+                String recordMsg = encodeLogRecord(record);
                 DSDateTime ts = DSDateTime.valueOf(record.getMillis());
-                if (levelMatches(recordLevel, level.toLevel()) && 
+                if (levelMatches(recordLevel, level.toLevel()) &&
                         (name == null || name.isEmpty() || logNameMatches(recordName, name)) &&
                         (filter == null || filter.isEmpty() || logTextMatches(recordMsg, filter))) {
-                    
+
                     while (lines.size() > 1000) {
                         lines.remove(0);
                     }
-                    lines.add(DSList.valueOf(ts.toString(), recordName, DSLevel.valueOf(recordLevel).toString(), recordMsg));
+                    lines.add(DSList.valueOf(ts.toString(), recordName,
+                                             DSLevel.valueOf(recordLevel).toString(), recordMsg));
                     req.sendResults();
                 }
             }
@@ -120,53 +168,6 @@ public abstract class StreamableLogNode extends DSNode {
                 loggerObj.removeHandler(handler);
             }
         };
-    }
-    
-    private static String encodeLogRecord(LogRecord record) {
-        StringBuilder builder = new StringBuilder();
-       // class
-        if (record.getSourceClassName() != null) {
-            builder.append(record.getSourceClassName());
-            builder.append(" - ");
-        }
-        // method
-        if (record.getSourceMethodName() != null) {
-            builder.append(record.getSourceMethodName());
-            builder.append(" - ");
-        }
-        // message
-        String msg = record.getMessage();
-        if ((msg != null) && (msg.length() > 0)) {
-            Object[] params = record.getParameters();
-            if (params != null) {
-                msg = String.format(msg, params);
-            }
-            builder.append(msg);
-        }
-        // exception
-        Throwable thrown = record.getThrown();
-        if (thrown != null) {
-            builder.append("\n");
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            thrown.printStackTrace(pw);
-            pw.close();
-            builder.append(sw.toString());
-        }
-        return builder.toString();
-    }
-    
-    public static boolean levelMatches(Level msgLevel, Level desiredLevel) {
-        return msgLevel.intValue() >= desiredLevel.intValue();
-    }
-    
-    public static boolean logNameMatches(String msgLogName, String desiredLogName) {
-        return msgLogName != null && msgLogName.startsWith(desiredLogName);
-    }
-    
-    public static boolean logTextMatches(String text, String filter) {
-        Pattern p = Pattern.compile(filter);
-        return p.matcher(text).find();
     }
 
     static {

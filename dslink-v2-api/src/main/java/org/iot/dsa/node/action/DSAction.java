@@ -116,7 +116,7 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
             throw new IllegalStateException("Action is immutable");
         }
         if (parameters == null) {
-            parameters = new ArrayList<DSMap>();
+            parameters = new ArrayList<>();
         }
         validate(metadata, parameters);
         parameters.add(metadata);
@@ -154,14 +154,6 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
     @Override
     public DSAction copy() {
         return this;
-    }
-
-    /**
-     * Defaults to the equals method.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        return equals(obj);
     }
 
     /**
@@ -212,6 +204,7 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
     /**
      * Puts the metadata from an already added parameter into the bucket, and calls prepareParameter
      * so that is can be updated for any current state.
+     *
      * @see #prepareParameter(DSInfo, DSMap)
      */
     @Override

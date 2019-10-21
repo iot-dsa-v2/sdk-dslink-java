@@ -67,10 +67,10 @@ public class DS1Requester extends DSRequester {
 
     private void handleError(DSOutboundStub stub, DSElement details) {
         try {
-            ErrorType type = ErrorType.internalError;
+            ErrorType type;
             String msg;
             if (details.isMap()) {
-                String detail = null;
+                String detail;
                 DSMap map = details.toMap();
                 String tmp = map.getString("type");
                 if ("permissionDenied".equals(tmp)) {
@@ -118,9 +118,9 @@ public class DS1Requester extends DSRequester {
     }
 
     private void processUpdate(DSElement updateElement) {
-        int sid = -1;
+        int sid;
         DSElement value;
-        String ts, sts = null;
+        String ts, sts;
         if (updateElement instanceof DSList) {
             DSList updateList = (DSList) updateElement;
             int cols = updateList.size();
@@ -131,13 +131,13 @@ public class DS1Requester extends DSRequester {
             sid = updateList.get(0, -1);
             value = updateList.get(1);
             ts = updateList.getString(2);
-            sts = updateList.get(3, (String) null);
+            sts = updateList.get(3, null);
         } else if (updateElement instanceof DSMap) {
             DSMap updateMap = (DSMap) updateElement;
             sid = updateMap.get("sid", -1);
             value = updateMap.get("value");
             ts = updateMap.getString("ts");
-            sts = updateMap.get("status", (String) null);
+            sts = updateMap.get("status", null);
         } else {
             return;
         }

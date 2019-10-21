@@ -22,12 +22,12 @@ import org.iot.dsa.node.action.DSIActionRequest;
  */
 public class SysLogService extends StreamableLogNode {
 
-    private DSInfo<?> levelInfo = getInfo("Default Log Level");
+    private DSInfo<DSLevel> levelInfo = (DSInfo<DSLevel>) getInfo("Default Log Level");
 
     public SysLogService() {
     }
 
-    public DSInfo getLevelInfo() {
+    public DSInfo<DSLevel> getLevelInfo() {
         return levelInfo;
     }
 
@@ -46,7 +46,7 @@ public class SysLogService extends StreamableLogNode {
     }
 
     @Override
-    protected void onChildChanged(DSInfo info) {
+    protected void onChildChanged(DSInfo<?> info) {
         if (info == getLevelInfo()) {
             DSLevel level = (DSLevel) info.get();
             getLoggerObj().setLevel(level.toLevel());
@@ -70,7 +70,7 @@ public class SysLogService extends StreamableLogNode {
             }
 
             @Override
-            public void prepareParameter(DSInfo target, DSMap parameter) {
+            public void prepareParameter(DSInfo<?> target, DSMap parameter) {
                 DSMetadata meta = new DSMetadata(parameter);
                 if ("Log".equals(meta.getName())) {
                     DSList range = getLogNames();
@@ -86,7 +86,7 @@ public class SysLogService extends StreamableLogNode {
     }
 
     private DSList getLogNames() {
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         Enumeration<String> logNames = LogManager.getLogManager().getLoggerNames();
         while (logNames.hasMoreElements()) {
             String name = logNames.nextElement();

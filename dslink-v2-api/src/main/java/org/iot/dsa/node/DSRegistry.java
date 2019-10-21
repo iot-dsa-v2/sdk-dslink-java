@@ -13,9 +13,9 @@ public class DSRegistry {
     // ------
 
     private static ConcurrentHashMap<Class, DSIValue> decoderMap =
-            new ConcurrentHashMap<Class, DSIValue>();
+            new ConcurrentHashMap<>();
     private static ConcurrentHashMap<Class, DSNode> defaultMap =
-            new ConcurrentHashMap<Class, DSNode>();
+            new ConcurrentHashMap<>();
 
     // Public Methods
     // --------------

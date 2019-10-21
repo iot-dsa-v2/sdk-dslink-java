@@ -186,13 +186,13 @@ public class DSTimezone extends DSValue implements DSISetAction {
             if (id == null) {
                 throw new IllegalArgumentException("Missing Zone ID");
             }
-            DSInfo target = request.getTargetInfo();
+            DSInfo<?> target = request.getTargetInfo();
             target.getParent().put(target, DSTimezone.valueOf(id));
             return null;
         }
 
         @Override
-        public void prepareParameter(DSInfo target, DSMap parameter) {
+        public void prepareParameter(DSInfo<?> target, DSMap parameter) {
             parameter.put(DSMetadata.DEFAULT, target.getValue().toElement());
         }
 

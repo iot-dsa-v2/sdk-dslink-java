@@ -15,7 +15,6 @@ import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.event.DSEvent;
-import org.iot.dsa.node.event.DSEventFilter;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.time.DSDateTime;
@@ -33,14 +32,14 @@ public class DSInboundSubscription extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     private int ackRequired = 0;
-    private DSInfo child;
+    private DSInfo<?> child;
     private boolean closeAfterUpdate = false;
     private SubscriptionCloseHandler closeHandler;
     private boolean enqueued = false;
     private DSInboundSubscriptions manager;
     private DSNode node;
     private boolean open = true;
-    private int qos = 0;
+    private int qos;
     private Integer sid;
     private DSISubscription subscription;
     private Update updateHead;
@@ -111,7 +110,7 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data) {
         if (data == null) {
             if ((child != null) && child.isValue()) {
                 data = child.getValue();
@@ -224,17 +223,14 @@ public class DSInboundSubscription extends DSInboundRequest
             DSIObject obj = path.getTarget();
             if (obj instanceof DSNode) {
                 node = (DSNode) obj;
-                this.subscription = node.subscribe(new DSISubscriber() {
-                    @Override
-                    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
-                        if (child == null) {
-                            DSInboundSubscription.this.onEvent(event, node, null, data);
-                        }
+                this.subscription = node.subscribe((event, node, child, data) -> {
+                    if (child == null) {
+                        DSInboundSubscription.this.onEvent(event, node, null, data);
                     }
                 });
                 onEvent(DSNode.VALUE_CHANGED_EVENT, node, null, null);
             } else {
-                DSInfo info = path.getTargetInfo();
+                DSInfo<?> info = path.getTargetInfo();
                 node = info.getParent();
                 child = info;
                 this.subscription = node.subscribe(this, DSNode.VALUE_CHANGED_EVENT, info);
@@ -340,7 +336,7 @@ public class DSInboundSubscription extends DSInboundRequest
     // Inner Classes
     ///////////////////////////////////////////////////////////////////////////
 
-    protected class Update {
+    protected static class Update {
 
         Update next;
         public DSStatus status;

@@ -38,14 +38,14 @@ public class DSOutboundSubscriptions extends DSNode implements OutboundMessage {
     private boolean enqueued = false;
     private int nextSid = 1;
     private final Map<String, DSOutboundSubscription> pathMap =
-            new ConcurrentHashMap<String, DSOutboundSubscription>();
+            new ConcurrentHashMap<>();
     private final ConcurrentLinkedQueue<DSOutboundSubscription> pendingSubscribe =
-            new ConcurrentLinkedQueue<DSOutboundSubscription>();
+            new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<DSOutboundSubscription> pendingUnsubscribe =
-            new ConcurrentLinkedQueue<DSOutboundSubscription>();
+            new ConcurrentLinkedQueue<>();
     private DSRequester requester;
     private final Map<Integer, DSOutboundSubscription> sidMap =
-            new ConcurrentHashMap<Integer, DSOutboundSubscription>();
+            new ConcurrentHashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -78,7 +78,7 @@ public class DSOutboundSubscriptions extends DSNode implements OutboundMessage {
             debug(debug() ? ("Unexpected subscription sid " + sid) : null);
             return;
         }
-        DSDateTime timestamp = null;
+        DSDateTime timestamp;
         if ((ts == null) || ts.isEmpty()) {
             timestamp = DSDateTime.now();
         } else {
@@ -256,7 +256,7 @@ public class DSOutboundSubscriptions extends DSNode implements OutboundMessage {
     OutboundSubscribeHandler subscribe(String path, DSIValue qos, OutboundSubscribeHandler req) {
         debug(debug() ? String.format("Subscribe (qos=%s) %s", qos, path) : null);
         DSOutboundSubscribeStub stub = new DSOutboundSubscribeStub(path, qos, req);
-        DSOutboundSubscription sub = null;
+        DSOutboundSubscription sub;
         synchronized (pathMap) {
             sub = pathMap.get(path);
             if (sub == null) {

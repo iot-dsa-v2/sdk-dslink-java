@@ -63,6 +63,7 @@ public class DSTime extends DSValue implements DSISetAction {
                 buf.append('0');
             }
             buf.append(second);
+            string = DSString.valueOf(buf.toString());
         }
         this.string = string;
     }
@@ -228,13 +229,13 @@ public class DSTime extends DSValue implements DSISetAction {
             int hr = params.get(HOUR, 0);
             int min = params.get(MINUTE, 0);
             int sec = params.get(SECOND, 0);
-            DSInfo target = request.getTargetInfo();
+            DSInfo<?> target = request.getTargetInfo();
             target.getParent().put(target, valueOf(hr, min, sec));
             return null;
         }
 
         @Override
-        public void prepareParameter(DSInfo target, DSMap parameter) {
+        public void prepareParameter(DSInfo<?> target, DSMap parameter) {
             DSTime dt = (DSTime) target.get();
             String name = parameter.get(DSMetadata.NAME, "");
             switch (name) {

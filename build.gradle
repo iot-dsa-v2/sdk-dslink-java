@@ -5,8 +5,8 @@ subprojects {
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.71.0'
-    
+    version '0.72.0'
+
     targetCompatibility = JavaVersion.VERSION_1_8
     sourceCompatibility = JavaVersion.VERSION_1_8
 
@@ -21,7 +21,7 @@ subprojects {
     jar {
         manifest {
             attributes(
-                    'Automatic-Module-Name' : 'org.iot.dsa.' + project.name.replaceAll('-','.')
+                    'Automatic-Module-Name': 'org.iot.dsa.' + project.name.replaceAll('-', '.')
             )
         }
     }

@@ -30,6 +30,6 @@ public interface DSISubscriber {
      * @param child Optional, if the event concerns a child.
      * @param data  Optional, if the event supplies any data.
      */
-    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data);
+    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data);
 
 }

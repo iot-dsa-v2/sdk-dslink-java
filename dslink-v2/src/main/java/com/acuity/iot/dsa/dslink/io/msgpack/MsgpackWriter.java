@@ -380,7 +380,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
 
     class Frame {
 
-        boolean map = true;
+        boolean map;
         int offset = -1;
         Frame parent;
         int size = 0;

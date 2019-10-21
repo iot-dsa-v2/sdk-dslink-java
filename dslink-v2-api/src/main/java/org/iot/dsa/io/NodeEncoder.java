@@ -29,7 +29,7 @@ public class NodeEncoder {
     ///////////////////////////////////////////////////////////////////////////
 
     private DSMap cacheMap = new DSMap();
-    private HashMap<Class, String> classMap = new HashMap<Class, String>();
+    private HashMap<Class, String> classMap = new HashMap<>();
     private int nextToken = 1;
     private DSIWriter out;
 
@@ -83,11 +83,6 @@ public class NodeEncoder {
     }
 
     void write(DSNode arg) {
-        DSInfo info = arg.getInfo();
-        if (info != null) {
-            writeNode(info);
-            return;
-        }
         out.beginMap();
         out.key("t").value(getToken(arg));
         writeChildren(arg);
@@ -104,7 +99,7 @@ public class NodeEncoder {
             return;
         }
         DSIObject obj;
-        DSInfo info;
+        DSInfo<?> info;
         out.key("v");
         out.beginList();
         info = arg.getFirstInfo();
@@ -130,7 +125,7 @@ public class NodeEncoder {
         out.endList();
     }
 
-    void writeDefault(DSInfo arg) {
+    void writeDefault(DSInfo<?> arg) {
         out.beginMap();
         if (out instanceof AbstractJsonWriter) {
             ((AbstractJsonWriter) out).writeNewLineIndent();
@@ -139,7 +134,7 @@ public class NodeEncoder {
         out.endMap();
     }
 
-    void writeInfo(DSInfo arg) {
+    void writeInfo(DSInfo<?> arg) {
         if (out instanceof AbstractJsonWriter) {
             ((AbstractJsonWriter) out).writeNewLineIndent();
         }
@@ -162,14 +157,14 @@ public class NodeEncoder {
         }
     }
 
-    void writeNode(DSInfo arg) {
+    void writeNode(DSInfo<?> arg) {
         out.beginMap();
         writeInfo(arg);
         writeChildren((DSNode) arg.get());
         out.endMap();
     }
 
-    void writeValue(DSInfo arg) {
+    void writeValue(DSInfo<?> arg) {
         out.beginMap();
         writeInfo(arg);
         DSIValue v = arg.getValue();

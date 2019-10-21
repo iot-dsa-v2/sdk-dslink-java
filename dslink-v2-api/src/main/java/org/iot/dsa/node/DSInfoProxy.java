@@ -112,11 +112,11 @@ class DSInfoProxy<T extends DSIObject> extends DSInfo<T> {
     }
 
     @Override
-    void copy(DSInfo<T> info) {
+    void copy(DSInfo<?> info) {
         if (info instanceof DSInfoProxy) {
             defaultInfo = ((DSInfoProxy) info).defaultInfo;
         } else {
-            defaultInfo = info;
+            defaultInfo = (DSInfo<T>) info;
         }
         super.copy(info);
     }

@@ -2,6 +2,7 @@ package com.acuity.iot.dsa.dslink.sys.cert;
 
 import java.util.Collection;
 import org.iot.dsa.dslink.ActionResults;
+import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.DSValueNode;
@@ -20,7 +21,7 @@ public class CertNode extends DSValueNode {
     private static final String ALLOW = "Allow";
     private static final String REMOVE = "Remove";
     private SysCertService certManager;
-    private DSInfo value = getInfo(VALUE);
+    private DSInfo<DSIValue> value = (DSInfo<DSIValue>) getInfo(VALUE);
 
     public SysCertService getCertManager() {
         if (certManager == null) {
@@ -30,12 +31,12 @@ public class CertNode extends DSValueNode {
     }
 
     @Override
-    public DSInfo getValueChild() {
+    public DSInfo<DSIValue> getValueChild() {
         return value;
     }
 
     @Override
-    public void getVirtualActions(DSInfo target, Collection<String> bucket) {
+    public void getVirtualActions(DSInfo<?> target, Collection<String> bucket) {
         super.getVirtualActions(target, bucket);
         if (target.isNode() && target.getNode() == this) {
             bucket.remove(DeleteAction.DELETE);

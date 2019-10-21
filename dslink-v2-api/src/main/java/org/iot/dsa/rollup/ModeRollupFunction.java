@@ -17,7 +17,7 @@ final class ModeRollupFunction extends AbstractRollupFunction {
 
     private int curCnt;
     private DSElement curVal;
-    private TreeMap<DSElement, Integer> map = new TreeMap<DSElement, Integer>();
+    private TreeMap<DSElement, Integer> map = new TreeMap<>();
 
     /////////////////////////////////////////////////////////////////
     // Constructors

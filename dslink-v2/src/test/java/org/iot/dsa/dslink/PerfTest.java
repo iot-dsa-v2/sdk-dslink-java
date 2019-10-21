@@ -69,7 +69,7 @@ public class PerfTest {
     }
 
     private void iterate(DSNode node) {
-        DSInfo info = node.getFirstInfo();
+        DSInfo<?> info = node.getFirstInfo();
         while (info != null) {
             if (info.isNode()) {
                 iterate(info.getNode());

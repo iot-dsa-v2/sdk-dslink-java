@@ -127,9 +127,9 @@ public class DSRuntime {
      */
     private static void executeTimers() {
         long now = System.nanoTime();
-        long nextCycleTmp = now + 60000000000l;
-        Timer current = null;
-        Timer next = null;
+        long nextCycleTmp = now + 60000000000L;
+        Timer current;
+        Timer next;
         Timer keepHead = null;
         Timer keepTail = null;
         long tmp;
@@ -250,10 +250,10 @@ public class DSRuntime {
         private long count = 0;
         boolean done = false;
         boolean hasRun = false;
-        private long interval = 0;
+        private long interval;
         private long lastRun = 0;
         private Timer next; //linked list
-        private long nextRun = 0;
+        private long nextRun;
         private Runnable runnable;
         private boolean running = false;
         private boolean skipMissed = true;

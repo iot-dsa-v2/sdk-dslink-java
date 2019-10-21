@@ -18,7 +18,7 @@ public enum DSValueType {
 
     private String display;
 
-    private DSValueType(String display) {
+    DSValueType(String display) {
         this.display = display;
     }
 

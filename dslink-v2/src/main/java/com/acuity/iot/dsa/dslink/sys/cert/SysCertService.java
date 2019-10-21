@@ -63,22 +63,22 @@ public class SysCertService extends DSNode {
     private static SysCertService inst;
     private static HostnameVerifier oldHostnameVerifier = HttpsURLConnection
             .getDefaultHostnameVerifier();
-    private DSInfo allowClients = getInfo(ALLOW_CLIENTS);
-    private DSInfo allowServers = getInfo(ALLOW_SERVERS);
-    private DSInfo deleteKSEntry = getInfo(DELETE_KS_ENTRY);
-    private DSInfo generateCsr = getInfo(GENERATE_CSR);
-    private DSInfo generateSSCert = getInfo(GENERATE_SELF_SIGNED);
-    private DSInfo getKSEntry = getInfo(GET_KS_ENTRY);
+    private DSInfo<?> allowClients = getInfo(ALLOW_CLIENTS);
+    private DSInfo<?> allowServers = getInfo(ALLOW_SERVERS);
+    private DSInfo<?> deleteKSEntry = getInfo(DELETE_KS_ENTRY);
+    private DSInfo<?> generateCsr = getInfo(GENERATE_CSR);
+    private DSInfo<?> generateSSCert = getInfo(GENERATE_SELF_SIGNED);
+    private DSInfo<?> getKSEntry = getInfo(GET_KS_ENTRY);
     private HostnameVerifier hostnameVerifier = new SysHostnameVerifier();
-    private DSInfo importCaCert = getInfo(IMPORT_CA_CERT);
-    private DSInfo importPrimaryCert = getInfo(IMPORT_PRIMARY_CERT);
-    private DSInfo keystorePass = getInfo(CERTFILE_PASS);
-    private DSInfo keystorePath = getInfo(CERTFILE);
-    private DSInfo keystoreType = getInfo(CERTFILE_TYPE);
+    private DSInfo<?> importCaCert = getInfo(IMPORT_CA_CERT);
+    private DSInfo<?> importPrimaryCert = getInfo(IMPORT_PRIMARY_CERT);
+    private DSInfo<?> keystorePass = getInfo(CERTFILE_PASS);
+    private DSInfo<?> keystorePath = getInfo(CERTFILE);
+    private DSInfo<?> keystoreType = getInfo(CERTFILE_TYPE);
     private KeyStore localTruststore;
     private CertCollection localTruststoreNode;
     private CertCollection quarantine;
-    private DSInfo verifyHostnames = getInfo(VERIFY_HOSTNAMES);
+    private DSInfo<?> verifyHostnames = getInfo(VERIFY_HOSTNAMES);
     private HostnameWhitelist whitelist;
 
     public SysCertService() {
@@ -92,7 +92,7 @@ public class SysCertService extends DSNode {
         }
     }
 
-    public void allow(DSInfo certInfo) {
+    public void allow(DSInfo<?> certInfo) {
         String name = certInfo.getName();
         CertNode certNode = (CertNode) certInfo.getNode();
         String certStr = certNode.toElement().toString();
@@ -257,7 +257,7 @@ public class SysCertService extends DSNode {
     }
 
     @Override
-    protected void onChildChanged(DSInfo info) {
+    protected void onChildChanged(DSInfo<?> info) {
         if (info == keystorePath) {
             System.setProperty("javax.net.ssl.keyStore", getKeystorePath());
         } else if (info == keystoreType) {

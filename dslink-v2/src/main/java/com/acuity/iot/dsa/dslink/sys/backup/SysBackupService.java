@@ -3,7 +3,6 @@ package com.acuity.iot.dsa.dslink.sys.backup;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -40,13 +39,13 @@ public class SysBackupService extends DSNode implements Runnable {
     static final String MAXIMUM = "Max Backups";
     static final String SAVE = "Save";
 
-    private DSInfo enabled = getInfo(ENABLED);
-    private DSInfo interval = getInfo(INTERVAL);
-    private DSInfo lastDuration = getInfo(LAST_DURATION);
-    private DSInfo lastTime = getInfo(LAST_TIME);
+    private DSInfo<?> enabled = getInfo(ENABLED);
+    private DSInfo<?> interval = getInfo(INTERVAL);
+    private DSInfo<?> lastDuration = getInfo(LAST_DURATION);
+    private DSInfo<?> lastTime = getInfo(LAST_TIME);
     private DSLink link;
     private Object lock = new Object();
-    private DSInfo maximum = getInfo(MAXIMUM);
+    private DSInfo<?> maximum = getInfo(MAXIMUM);
     private Timer nextSave;
 
     public boolean isEnabled() {
@@ -54,7 +53,7 @@ public class SysBackupService extends DSNode implements Runnable {
     }
 
     @Override
-    public void onChildChanged(DSInfo info) {
+    public void onChildChanged(DSInfo<?> info) {
         super.onChildChanged(info);
         if (info == interval) {
             DSIValue value = info.getValue();
@@ -137,7 +136,7 @@ public class SysBackupService extends DSNode implements Runnable {
             long time = System.currentTimeMillis();
             put(lastTime, DSDateTime.valueOf(time));
             info("Saving node database " + nodes.getAbsolutePath());
-            DSIWriter writer = null;
+            DSIWriter writer;
             if (name.endsWith(".zip")) {
                 String tmp = name.substring(0, name.lastIndexOf(".zip"));
                 writer = Json.zipWriter(nodes, tmp + ".json");
@@ -224,22 +223,20 @@ public class SysBackupService extends DSNode implements Runnable {
         int idx = nodesName.lastIndexOf('.');
         final String nameBase = nodesName.substring(0, idx);
         File dir = nodes.getAbsoluteFile().getParentFile();
-        File[] backups = dir.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                if (name.equals(nodesName)) {
-                    return false;
-                }
-                if (isZip) {
-                    if (name.endsWith(".zip")) {
-                        return name.startsWith(nameBase);
-                    }
-                } else {
-                    if (name.endsWith(".json")) {
-                        return name.startsWith(nameBase);
-                    }
-                }
+        File[] backups = dir.listFiles((dir1, name) -> {
+            if (name.equals(nodesName)) {
                 return false;
             }
+            if (isZip) {
+                if (name.endsWith(".zip")) {
+                    return name.startsWith(nameBase);
+                }
+            } else {
+                if (name.endsWith(".json")) {
+                    return name.startsWith(nameBase);
+                }
+            }
+            return false;
         });
         if (backups == null) {
             return;
@@ -254,7 +251,7 @@ public class SysBackupService extends DSNode implements Runnable {
         }
     }
 
-    private class SaveAction extends DSAction {
+    private static class SaveAction extends DSAction {
 
         @Override
         public ActionResults invoke(DSIActionRequest request) {

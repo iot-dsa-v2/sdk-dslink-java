@@ -28,10 +28,10 @@ public class DSSysNode extends DSNode {
     public static final String OPEN_PROFILER = "Open Profiler";
     static final String CLOSE_PROFILER = "Close Profiler";
 
-    private DSInfo backups = getInfo(BACKUPS);
-    private DSInfo connection = getInfo(CONNECTION);
-    private DSInfo profiler = null;
-    private DSInfo profilerToggle;
+    private DSInfo<?> backups = getInfo(BACKUPS);
+    private DSInfo<?> connection = getInfo(CONNECTION);
+    private DSInfo<?> profiler = null;
+    private DSInfo<?> profilerToggle;
 
     public SysBackupService getBackupService() {
         return (SysBackupService) backups.get();
@@ -90,7 +90,7 @@ public class DSSysNode extends DSNode {
         profilerToggle = put(CLOSE_PROFILER, new ToggleAction()).setTransient(true);
     }
 
-    private class StopAction extends DSAction {
+    private static class StopAction extends DSAction {
 
         @Override
         public ActionResults invoke(DSIActionRequest req) {

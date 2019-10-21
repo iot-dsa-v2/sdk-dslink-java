@@ -19,8 +19,6 @@ import org.iot.dsa.dslink.responder.InboundListRequest;
 import org.iot.dsa.dslink.responder.ListCloseHandler;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSElementType;
-import org.iot.dsa.node.DSIEnum;
-import org.iot.dsa.node.DSIMetadata;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSList;
@@ -36,7 +34,6 @@ import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
 import org.iot.dsa.time.DSDateTime;
 import org.iot.dsa.util.DSException;
-import org.iot.dsa.util.DSUtil;
 
 /**
  * List implementation for a responder.
@@ -70,7 +67,7 @@ public class DSInboundList extends DSInboundRequest
     private int state = STATE_INIT;
     private DSISubscription subscription;
     private DSTarget target;
-    private List<DSElement> updates = new LinkedList<>();
+    private final List<DSElement> updates = new LinkedList<>();
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -136,7 +133,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void onEvent(DSEvent event, DSNode node, DSInfo child, DSIValue data) {
+    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data) {
         if (!isOpen()) {
             return;
         }
@@ -185,7 +182,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void sendAction(String name, String displayName, boolean admin, boolean readonly) {
+    public void sendChildAction(String name, String displayName, boolean admin, boolean readonly) {
         if (!isOpen()) {
             throw new IllegalStateException("List stream closed");
         }
@@ -205,7 +202,7 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void sendNode(String name, String displayName, boolean admin) {
+    public void sendChildNode(String name, String displayName, boolean admin) {
         if (!isOpen()) {
             throw new IllegalStateException("List stream closed");
         }
@@ -216,6 +213,37 @@ public class DSInboundList extends DSInboundRequest
         }
         if (admin) {
             map.put("$permission", "config");
+        }
+        enqueue(encodeName(name, cacheBuf), map);
+    }
+
+    @Override
+    public void sendChildValue(String name,
+                               String displayName,
+                               DSElementType type,
+                               boolean admin,
+                               boolean readonly) {
+        if (!isOpen()) {
+            throw new IllegalStateException("List stream closed");
+        }
+        DSMap map = new DSMap();
+        map.put("$is", "node");
+        if ((displayName != null) && !displayName.isEmpty()) {
+            map.put("$name", displayName);
+        }
+        map.put("$type", encodeType(type));
+        if (readonly) {
+            if (admin) {
+                map.put("$permission", "config");
+            } else {
+                map.put("$permission", "read");
+            }
+        } else {
+            if (admin) {
+                map.put("$writable", "config");
+            } else {
+                map.put("$writable", "write");
+            }
         }
         enqueue(encodeName(name, cacheBuf), map);
     }
@@ -246,41 +274,6 @@ public class DSInboundList extends DSInboundRequest
     }
 
     @Override
-    public void sendValue(String name,
-                          String displayName,
-                          DSIValue type,
-                          boolean admin,
-                          boolean readonly) {
-        if (!isOpen()) {
-            throw new IllegalStateException("List stream closed");
-        }
-        DSMap map = new DSMap();
-        map.put("$is", "node");
-        if ((displayName != null) && !displayName.isEmpty()) {
-            map.put("$name", displayName);
-        }
-        cacheMeta.clear();
-        if (type instanceof DSIMetadata) {
-            ((DSIMetadata) type).getMetadata(cacheMeta.getMap());
-        }
-        map.put("$type", encodeType(type, cacheMeta));
-        if (readonly) {
-            if (admin) {
-                map.put("$permission", "config");
-            } else {
-                map.put("$permission", "read");
-            }
-        } else {
-            if (admin) {
-                map.put("$writable", "config");
-            } else {
-                map.put("$writable", "write");
-            }
-        }
-        enqueue(encodeName(name, cacheBuf), map);
-    }
-
-    @Override
     public boolean write(DSSession session, MessageWriter writer) {
         synchronized (this) {
             enqueued = false;
@@ -288,7 +281,7 @@ public class DSInboundList extends DSInboundRequest
         if (isClosed()) {
             return false;
         }
-        boolean hasUpdates = false;
+        boolean hasUpdates;
         synchronized (updates) {
             hasUpdates = !updates.isEmpty();
         }
@@ -429,7 +422,7 @@ public class DSInboundList extends DSInboundRequest
         encodeAction(action, cacheMap);
     }
 
-    private void encodeAction(DSInfo action) {
+    private void encodeAction(DSInfo<?> action) {
         DSMetadata.getMetadata(action, cacheMap.clear());
         encodeAction(action.getAction(), cacheMap);
     }
@@ -454,6 +447,7 @@ public class DSInboundList extends DSInboundRequest
                 enqueue("$invokable", "read");
             }
         }
+        DSMetadata md = new DSMetadata();
         DSIAction dsiAction = null;
         if (action instanceof DSIAction) {
             dsiAction = (DSIAction) action;
@@ -463,15 +457,16 @@ public class DSInboundList extends DSInboundRequest
             enqueue("$params", e);
         } else {
             DSList list = new DSList();
+            DSMap map = md.getMap();
             for (int i = 0, len = action.getParameterCount(); i < len; i++) {
-                DSMap param = new DSMap();
+                map.clear();
                 if (dsiAction != null) {
-                    dsiAction.getParameterMetadata(target.getParentInfo(), i, param);
+                    dsiAction.getParameterMetadata(target.getParentInfo(), i, map);
                 } else {
-                    action.getParameterMetadata(i, param);
+                    action.getParameterMetadata(i, map);
                 }
-                fixRangeTypes(param);
-                list.add(param);
+                map.put("type", encodeType(md.getDefault(), md));
+                list.add(map.copy());
             }
             enqueue("$params", list);
         }
@@ -480,15 +475,16 @@ public class DSInboundList extends DSInboundRequest
             enqueue("$columns", e);
         } else if (action.getColumnCount() > 0) {
             DSList list = new DSList();
+            DSMap col = md.getMap();
             for (int i = 0, len = action.getColumnCount(); i < len; i++) {
-                DSMap col = new DSMap();
+                col.clear();
                 if (dsiAction != null) {
                     dsiAction.getColumnMetadata(target.getParentInfo(), i, col);
                 } else {
                     action.getColumnMetadata(i, col);
                 }
-                fixRangeTypes(col);
-                list.add(col);
+                col.put("type", encodeType(md.getDefault(), md));
+                list.add(col.copy());
             }
             enqueue("$columns", list);
         }
@@ -502,23 +498,23 @@ public class DSInboundList extends DSInboundRequest
         cacheMap.clear();
     }
 
-    private void encodeChild(DSInfo child) {
+    private void encodeChild(DSInfo<?> child) {
         if (child.isAction()) {
-            sendAction(child.getName(), child.getMetadata().getDisplayName(),
-                       child.isAdmin(), child.isReadOnly());
+            sendChildAction(child.getName(), child.getMetadata().getDisplayName(),
+                            child.isAdmin(), child.isReadOnly());
         } else if (child.isValue()) {
-            sendValue(child.getName(), child.getMetadata().getDisplayName(),
-                      child.getValue(), child.isAdmin(), child.isReadOnly());
+            sendChildValue(child.getName(), child.getMetadata().getDisplayName(),
+                           child.getValue().toElement().getElementType(), child.isAdmin(),
+                           child.isReadOnly());
         } else {
-            sendNode(child.getName(), child.getMetadata().getDisplayName(),
-                     child.isAdmin());
+            sendChildNode(child.getName(), child.getMetadata().getDisplayName(),
+                          child.isAdmin());
         }
-
     }
 
-    private void encodeChildren(DSInfo info) {
+    private void encodeChildren(DSInfo<?> info) {
         Iterator<String> it = info.getChildren();
-        DSInfo child;
+        DSInfo<?> child;
         while (it.hasNext()) {
             child = info.getChild(it.next());
             if (!child.isPrivate()) {
@@ -527,7 +523,7 @@ public class DSInboundList extends DSInboundRequest
         }
     }
 
-    private void encodeNode(DSInfo object) {
+    private void encodeNode(DSInfo<?> object) {
         DSMetadata.getMetadata(object, cacheMap.clear());
         DSElement e = cacheMap.remove("$is");
         if (e == null) {
@@ -577,7 +573,7 @@ public class DSInboundList extends DSInboundRequest
         cacheMap.clear();
     }
 
-    private void encodeTarget(DSInfo target) {
+    private void encodeTarget(DSInfo<?> target) {
         if (target.isAction()) {
             encodeAction(target);
         } else if (target.isValue()) {
@@ -601,7 +597,7 @@ public class DSInboundList extends DSInboundRequest
                     break;
                 default:
                     encodeName(name, cacheBuf);
-                    cacheBuf.insert(0, '@');
+                    cacheBuf.insert(0, '$');
                     name = cacheBuf.toString();
 
             }
@@ -610,41 +606,10 @@ public class DSInboundList extends DSInboundRequest
         }
     }
 
-    private DSElement encodeType(DSIValue value, DSMetadata meta) {
-        String orig = meta.getType();
-        String type = orig;
-        if ((type == null) && (value != null)) {
-            meta.setType(value);
-            type = meta.getType();
-        }
-        DSElementType et = DSElementType.valueFor(type);
-        switch (et) {
-            case BOOLEAN:
-                type = "bool";
-                break;
-            case DOUBLE:
-            case LONG:
-                type = "number";
-                break;
-            case LIST:
-                type = "array";
-                break;
-            case MAP:
-                type = "map";
-                break;
-            case BYTES:
-                type = "binary";
-                break;
-            case STRING:
-                type = "string";
-                break;
-            default:
-                type = "dynamic";
-        }
-        if (!DSUtil.equal(orig, type)) {
-            cacheMap.put(DSMetadata.TYPE, DSString.valueOf(type));
-        }
-        fixRangeTypes(meta.getMap());
+    private DSElement encodeType(Value value) {
+        String type = encodeType(value.getType());
+        cacheMap.put(DSMetadata.TYPE, DSString.valueOf(type));
+        fixRangeTypes(cacheMap);
         DSElement e = cacheMap.remove(DSMetadata.TYPE);
         if (e == null) {
             throw new IllegalArgumentException("Missing type");
@@ -652,10 +617,47 @@ public class DSInboundList extends DSInboundRequest
         return e;
     }
 
+    private DSElement encodeType(DSIValue value, DSMetadata meta) {
+        String type = meta.getType();
+        if ((type == null) && (value != null)) {
+            meta.setType(value);
+            type = meta.getType();
+        }
+        DSMap map = meta.getMap();
+        type = encodeType(DSElementType.valueFor(type));
+        map.put(DSMetadata.TYPE, type);
+        fixRangeTypes(map);
+        DSElement e = map.remove(DSMetadata.TYPE);
+        if (e == null) {
+            throw new IllegalArgumentException("Missing type");
+        }
+        return e;
+    }
+
+    private String encodeType(DSElementType et) {
+        switch (et) {
+            case BOOLEAN:
+                return "bool";
+            case DOUBLE:
+            case LONG:
+                return "number";
+            case LIST:
+                return "array";
+            case MAP:
+                return "map";
+            case BYTES:
+                return "binary";
+            case STRING:
+                return "string";
+            default:
+                return "dynamic";
+        }
+    }
+
     /**
      * Encode all the meta data about the root target of a list request.
      */
-    private void encodeValue(DSInfo object) {
+    private void encodeValue(DSInfo<?> object) {
         DSMetadata.getMetadata(object, cacheMap.clear());
         DSElement e = cacheMap.remove("$is");
         if (e == null) {
@@ -697,10 +699,6 @@ public class DSInboundList extends DSInboundRequest
      */
     private void encodeValue(Value object) {
         cacheMap.clear();
-        DSIValue val = object.toValue();
-        if (val instanceof DSIMetadata) {
-            ((DSIMetadata) val).getMetadata(cacheMap);
-        }
         object.getMetadata(cacheMap);
         DSElement e = cacheMap.remove("$is");
         if (e == null) {
@@ -719,7 +717,7 @@ public class DSInboundList extends DSInboundRequest
         if (e != null) {
             enqueue("$type", e);
         } else {
-            enqueue("$type", encodeType(val, cacheMeta));
+            enqueue("$type", encodeType(object.getType()));
         }
         e = cacheMap.remove("$writable");
         if (e != null) {

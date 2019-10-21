@@ -41,7 +41,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
 
     private Map<String, DSOutboundListStub> lists = new HashMap<>();
     private AtomicInteger nextRid = new AtomicInteger();
-    private Map<Integer, DSOutboundStub> requests = new ConcurrentHashMap<Integer, DSOutboundStub>();
+    private Map<Integer, DSOutboundStub> requests = new ConcurrentHashMap<>();
     private DSSession session;
     private DSOutboundSubscriptions subscriptions = makeSubscriptions();
     private DSRuntime.Timer updateTimer;
@@ -249,7 +249,7 @@ public abstract class DSRequester extends DSNode implements DSIRequester {
     protected void onSubscribed() {
         super.onSubscribed();
         if (updateTimer == null) {
-            updateTimer = DSRuntime.runAfterDelay(() -> updateStats(), 1000, 2000);
+            updateTimer = DSRuntime.runAfterDelay(this::updateStats, 1000, 2000);
         }
     }
 

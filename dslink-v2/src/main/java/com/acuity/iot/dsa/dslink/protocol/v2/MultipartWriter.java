@@ -19,8 +19,8 @@ public class MultipartWriter implements MessageConstants {
     private DSByteBuffer body;
     private Map<Integer, Object> headers;
     private int method;
-    private int page = 0;
-    private int requestId = -1;
+    private int page;
+    private int requestId;
     private Byte status;
 
     ///////////////////////////////////////////////////////////////////////////

@@ -32,13 +32,13 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSInfo brokerDsId = getInfo(BROKER_ID);
-    private DSInfo brokerFormat = getInfo(BROKER_FORMAT);
-    private DSInfo brokerPath = getInfo(BROKER_PATH);
-    private DSInfo brokerPubKey = getInfo(BROKER_PUB_KEY);
-    private DSInfo brokerSalt = getInfo(BROKER_SALT);
-    private DSInfo brokerUri = getInfo(BROKER_URI);
-    private DSInfo brokerVersion = getInfo(BROKER_VERSION);
+    private DSInfo<?> brokerDsId = getInfo(BROKER_ID);
+    private DSInfo<?> brokerFormat = getInfo(BROKER_FORMAT);
+    private DSInfo<?> brokerPath = getInfo(BROKER_PATH);
+    private DSInfo<?> brokerPubKey = getInfo(BROKER_PUB_KEY);
+    private DSInfo<?> brokerSalt = getInfo(BROKER_SALT);
+    private DSInfo<?> brokerUri = getInfo(BROKER_URI);
+    private DSInfo<?> brokerVersion = getInfo(BROKER_VERSION);
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods

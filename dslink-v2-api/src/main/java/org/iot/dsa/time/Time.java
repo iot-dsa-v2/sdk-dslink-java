@@ -39,14 +39,14 @@ public class Time {
     public static final int MILLIS_TWELVE_HOURS = 43200000;
     public static final int MILLIS_DAY = 86400000;
     public static final int MILLIS_WEEK = 604800000;
-    public static final long MILLIS_MONTH = 2592000000l;
+    public static final long MILLIS_MONTH = 2592000000L;
     public static final long MILLIS_QUARTER = MILLIS_MONTH * 3;
     public static final long MILLIS_YEAR = MILLIS_MONTH * 12;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////
-    private static final Map<String, TimeZone> timezones = new HashMap<String, TimeZone>();
+    private static final Map<String, TimeZone> timezones = new HashMap<>();
     private static Calendar calendarCache1;
     private static Calendar calendarCache2;
 

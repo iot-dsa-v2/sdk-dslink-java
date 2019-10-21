@@ -27,7 +27,7 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
 
     private Entry first;
     private Entry last;
-    private Map<String, Entry> map = new HashMap<String, Entry>();
+    private Map<String, Entry> map = new HashMap<>();
 
     // Constructors
     // ------------
