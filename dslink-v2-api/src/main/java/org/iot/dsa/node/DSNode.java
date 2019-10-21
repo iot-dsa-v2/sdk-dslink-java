@@ -490,7 +490,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
      *
      * @return Possibly null.
      */
-    public DSInfo<?> getInfo(String name) {
+    public DSInfo getInfo(String name) {
         dsInit();
         if (firstChild == null) {
             if (getInfo() == null) {
@@ -1143,10 +1143,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         return subscribe(new DSEventFilter(subscriber, event, child));
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Protected Methods
-    ///////////////////////////////////////////////////////////////////////////
-
     /**
      * Only creates a subscription if not already subscribed.
      *
@@ -1184,6 +1180,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         }
         return sub;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Use this in the declareDefaults method to create a non-removable child.  This is only called
