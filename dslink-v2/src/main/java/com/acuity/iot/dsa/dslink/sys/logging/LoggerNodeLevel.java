@@ -30,8 +30,8 @@ public enum LoggerNodeLevel implements DSIEnum, DSIValue {
     // Instance Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private DSString element;
-    private Level level;
+    private final DSString element;
+    private final Level level;
 
     ///////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -57,7 +57,7 @@ public enum LoggerNodeLevel implements DSIEnum, DSIValue {
             bucket = new DSList();
         }
         for (LoggerNodeLevel e : values()) {
-            bucket.add(e.toElement());
+            bucket.add(e.element);
         }
         return bucket;
     }
@@ -74,7 +74,7 @@ public enum LoggerNodeLevel implements DSIEnum, DSIValue {
 
     public static LoggerNodeLevel make(String str) {
         for (LoggerNodeLevel e : values()) {
-            if (e.toElement().toString().equalsIgnoreCase(str)) {
+            if (e.element.toString().equalsIgnoreCase(str)) {
                 return e;
             }
         }
@@ -100,7 +100,7 @@ public enum LoggerNodeLevel implements DSIEnum, DSIValue {
     @Override
     public DSIValue valueOf(DSElement element) {
         for (LoggerNodeLevel e : values()) {
-            if (e.toElement().equals(element)) {
+            if (e.element.equals(element)) {
                 return e;
             }
         }
