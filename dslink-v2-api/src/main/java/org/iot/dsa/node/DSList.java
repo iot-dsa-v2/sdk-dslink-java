@@ -178,6 +178,7 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
      *
      * @return Null if empty.
      */
+    @Override
     public DSElement first() {
         if (isEmpty()) {
             return null;
@@ -400,6 +401,7 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
     /**
      * Returns true.
      */
+    @Override
     public boolean isList() {
         return true;
     }
@@ -421,6 +423,7 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
     /**
      * Returns false.
      */
+    @Override
     public boolean isNull() {
         return false;
     }
@@ -428,6 +431,7 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
     /**
      * Returns an iterator that does not implement remove.
      */
+    @Override
     public Iterator<DSElement> iterator() {
         return new MyIterator();
     }
@@ -437,6 +441,7 @@ public class DSList extends DSGroup implements Iterable<DSElement> {
      *
      * @return Null if empty.
      */
+    @Override
     public DSElement last() {
         if (isEmpty()) {
             return null;

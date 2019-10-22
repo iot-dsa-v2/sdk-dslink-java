@@ -19,12 +19,14 @@ class CharSequenceInput implements JsonReader.Input {
         this.len = in.length();
     }
 
+    @Override
     public void close() throws IOException {
         if (in instanceof Closeable) {
             ((Closeable) in).close();
         }
     }
 
+    @Override
     public int read() {
         if (next >= len) {
             return -1;
@@ -32,6 +34,7 @@ class CharSequenceInput implements JsonReader.Input {
         return in.charAt(next++);
     }
 
+    @Override
     public void unread() {
         next--;
     }

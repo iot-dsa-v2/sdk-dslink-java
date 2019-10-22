@@ -42,6 +42,7 @@ public class DSByteBuffer extends InputStream {
     /**
      * Number of bytes available for reading.
      */
+    @Override
     public int available() {
         return length;
     }

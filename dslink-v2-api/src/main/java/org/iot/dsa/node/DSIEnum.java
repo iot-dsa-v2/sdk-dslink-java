@@ -27,6 +27,7 @@ public interface DSIEnum extends DSIMetadata {
     /**
      * The string representation of the the enum value.
      */
+    @Override
     public String toString();
 
 }

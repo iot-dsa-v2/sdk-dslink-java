@@ -59,12 +59,14 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * Called at the start of a new inbound message.
      */
+    @Override
     public void beginRecvMessage() {
     }
 
     /**
      * Called at the start of a new outbound message.
      */
+    @Override
     public void beginSendMessage() {
     }
 
@@ -72,6 +74,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
      * Close the actual connection and clean up resources.  Calling when already closed will have no
      * effect.
      */
+    @Override
     public void close() {
         synchronized (this) {
             if (!open) {
@@ -85,6 +88,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * Called at the end of a message, this trace logs the entire message.
      */
+    @Override
     public void endRecvMessage() {
         if ((traceIn != null) && getTransportLogger().isLoggable(trace)) {
             getTransportLogger().log(trace, traceIn.toString());
@@ -98,6 +102,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
      * Called at the end of a message, this ensures that message based transports know the message
      * is complete and this also trace logs the entire message.
      */
+    @Override
     public void endSendMessage() {
         if (writeSize == 0) {
             return;
@@ -123,6 +128,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * For reading binary data, only use if isText() is false.
      */
+    @Override
     public InputStream getBinaryInput() {
         if (binaryInput == null) {
             binaryInput = new MyInputStream();
@@ -133,6 +139,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * For writing binary data, only use if isText() is false.
      */
+    @Override
     public OutputStream getBinaryOutput() {
         if (binaryOutput == null) {
             binaryOutput = new MyOutputStream();
@@ -143,6 +150,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * If not explicitly set, searches for the ancestor.
      */
+    @Override
     public DSLinkConnection getConnection() {
         if (connection == null) {
             connection = (DSLinkConnection) getAncestor(DSLinkConnection.class);
@@ -164,6 +172,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * For reading text, only use if isText() is true.
      */
+    @Override
     public Reader getTextInput() {
         if (textInput == null) {
             textInput = new MyReader();
@@ -174,6 +183,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * For writing text, only use if isText() is true.
      */
+    @Override
     public Writer getTextOutput() {
         if (textOutput == null) {
             textOutput = new MyWriter();
@@ -184,6 +194,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * Whether or not the transport is open for reading and writing.
      */
+    @Override
     public boolean isOpen() {
         return open;
     }
@@ -191,10 +202,12 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * True if the transport is text based, and the text IO methods should be used.
      */
+    @Override
     public boolean isText() {
         return text;
     }
 
+    @Override
     public abstract void open();
 
     /**
@@ -373,6 +386,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     /**
      * The size of the current outbound message (bytes for binary, chars for text).
      */
+    @Override
     public int writeMessageSize() {
         return writeSize;
     }

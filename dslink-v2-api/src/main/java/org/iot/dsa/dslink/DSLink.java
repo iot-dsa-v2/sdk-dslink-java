@@ -157,6 +157,7 @@ public abstract class DSLink extends DSNode implements Runnable {
      * Calls starts, waits the stableDelay, then calls stable.  Does not return until
      * this node is stopped.
      */
+    @Override
     public void run() {
         synchronized (this) {
             if (runThread != null) {

@@ -98,6 +98,7 @@ public class DSPasswordSha1 extends DSValue implements DSIMetadata, DSIPassword,
      * @param clearText If null, isNull, or is the empty string, this will on return true if this is
      *                  the NULL instance.
      */
+    @Override
     public boolean isValid(DSElement clearText) {
         if (clearText == null) {
             return isNull();

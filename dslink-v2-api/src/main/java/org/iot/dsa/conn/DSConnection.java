@@ -319,6 +319,7 @@ public abstract class DSConnection extends DSBaseConnection {
     /**
      * Calls startUpdateTimer()
      */
+    @Override
     protected void onStable() {
         super.onStable();
         startUpdateTimer();

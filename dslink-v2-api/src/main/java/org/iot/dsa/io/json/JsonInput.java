@@ -36,6 +36,7 @@ class JsonInput implements JsonReader.Input {
         setInput(in);
     }
 
+    @Override
     public void close() {
         try {
             in.close();
@@ -44,6 +45,7 @@ class JsonInput implements JsonReader.Input {
         }
     }
 
+    @Override
     public int read() {
         if (next >= len) {
             try {
@@ -97,6 +99,7 @@ class JsonInput implements JsonReader.Input {
         this.next = 0;
     }
 
+    @Override
     public void unread() {
         if (next > 0) {
             --next;

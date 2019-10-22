@@ -176,6 +176,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
     /**
      * Returns 0 by default.
      */
+    @Override
     public int length() {
         return 0;
     }

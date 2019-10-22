@@ -89,6 +89,7 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
      */
     public abstract void handleResponse(DSMap map);
 
+    @Override
     public boolean isStreamOpen() {
         return open;
     }

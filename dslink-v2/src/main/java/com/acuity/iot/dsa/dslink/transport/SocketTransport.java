@@ -64,6 +64,7 @@ public class SocketTransport extends DSTransportStream {
 
     private class Reader implements Runnable {
 
+        @Override
         public void run() {
             while (isOpen()) {
                 getConnection().getSession().recvMessage(false);

@@ -12,7 +12,7 @@ import org.iot.dsa.node.DSString;
  * changes.
  * <p>
  * Status is inherited.  If a parent is disabled, then so should be the children.  If a node
- * representing a remote connection is down, then all descendant points should be down too.
+ * representing a remote connection is down, then all descendants should be down too.
  * <p>
  * Subclasses must:<br>
  * <ul>

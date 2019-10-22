@@ -14,10 +14,12 @@ public class LoggerNode extends StreamableLogNode {
     public LoggerNode() {
     }
 
+    @Override
     public DSInfo<LoggerNodeLevel> getLevelInfo() {
         return levelInfo;
     }
 
+    @Override
     public Logger getLoggerObj() {
         if (logger == null) {
             logger = Logger.getLogger(getName());

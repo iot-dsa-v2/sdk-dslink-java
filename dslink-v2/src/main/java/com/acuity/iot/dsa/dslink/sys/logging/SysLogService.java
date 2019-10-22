@@ -27,6 +27,7 @@ public class SysLogService extends StreamableLogNode {
     public SysLogService() {
     }
 
+    @Override
     public DSInfo<DSLevel> getLevelInfo() {
         return levelInfo;
     }

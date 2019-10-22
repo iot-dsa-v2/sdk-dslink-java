@@ -787,6 +787,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
     /**
      * Returns an info iterator of all children.
      */
+    @Override
     public Iterator<DSInfo<?>> iterator() {
         return new ChildIterator();
     }
@@ -1577,16 +1578,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             next = getFirstInfo();
         }
 
+        @Override
         public boolean hasNext() {
             return next != null;
         }
 
+        @Override
         public DSInfo<?> next() {
             last = next;
             next = next.next;
             return last;
         }
 
+        @Override
         public void remove() {
             if (last == null) {
                 throw new NullPointerException();
@@ -1611,16 +1615,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             }
         }
 
+        @Override
         public boolean hasNext() {
             return next != null;
         }
 
+        @Override
         public DSInfo<DSNode> next() {
             last = next;
             next = next.nextNode();
             return last;
         }
 
+        @Override
         public void remove() {
             if (last == null) {
                 throw new NullPointerException();
@@ -1691,16 +1698,19 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             }
         }
 
+        @Override
         public boolean hasNext() {
             return next != null;
         }
 
+        @Override
         public DSInfo<DSIValue> next() {
             last = next;
             next = next.nextValue();
             return last;
         }
 
+        @Override
         public void remove() {
             if (last == null) {
                 throw new NullPointerException();
