@@ -103,6 +103,7 @@ public class DSException extends RuntimeException {
     // Fields - in alphabetical order by field name.
     /////////////////////////////////////////////////////////////////
 
+    @Override
     public String toString() {
         return inner.toString();
     }

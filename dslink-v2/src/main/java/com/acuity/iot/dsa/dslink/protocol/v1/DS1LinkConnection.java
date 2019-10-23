@@ -61,6 +61,7 @@ public class DS1LinkConnection extends DSBrokerConnection {
         return wsUri.get().toString();
     }
 
+    @Override
     protected void initializeConnection() {
         try {
             String uri = getBrokerUri();

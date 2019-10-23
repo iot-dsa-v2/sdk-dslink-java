@@ -115,6 +115,7 @@ public class PerfTest {
 
     public static class TestNode extends DSNode {
 
+        @Override
         public void declareDefaults() {
             super.declareDefaults();
             declareDefault("string", DSString.valueOf("abc"));

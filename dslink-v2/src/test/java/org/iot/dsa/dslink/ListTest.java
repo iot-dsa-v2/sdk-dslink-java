@@ -53,6 +53,7 @@ public class ListTest {
 
     public static class MyMain extends DSMainNode {
 
+        @Override
         public void declareDefaults() {
             declareDefault("int", DSInt.valueOf(0));
             declareDefault("bool", DSBool.TRUE);

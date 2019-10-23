@@ -122,6 +122,7 @@ public class DS1Responder extends DSResponder {
         }
     }
 
+    @Override
     public void sendClose(int rid) {
         sendResponse(new CloseMessage(rid));
     }
@@ -130,6 +131,7 @@ public class DS1Responder extends DSResponder {
         sendResponse(new ErrorMessage(rid, reason));
     }
 
+    @Override
     public void sendError(DSInboundRequest req, Throwable reason) {
         sendResponse(new ErrorMessage(req.getRequestId(), reason));
     }

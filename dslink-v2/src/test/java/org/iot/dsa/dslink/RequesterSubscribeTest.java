@@ -162,6 +162,7 @@ public class RequesterSubscribeTest {
         public boolean subscribeCalled = false;
         public boolean unsubscribeCalled = false;
 
+        @Override
         public void declareDefaults() {
             declareDefault("int", DSInt.valueOf(0));
         }
@@ -187,10 +188,12 @@ public class RequesterSubscribeTest {
 
     public static class MyMain extends DSMainNode {
 
+        @Override
         public void declareDefaults() {
             declareDefault("int", DSInt.valueOf(0));
         }
 
+        @Override
         public synchronized void onStable() {
             put("aNode", new ANode());
         }

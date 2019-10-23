@@ -352,6 +352,7 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     /**
      * Fires a metadata changed event on the parent node.
      */
+    @Override
     public void modified(DSGroup map) {
         if (isNode()) {
             getNode().fire(DSNode.METADATA_CHANGED_EVENT, null, metadata);
@@ -482,6 +483,7 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         return this;
     }
 
+    @Override
     public String toString() {
         if (name != null) {
             return name;

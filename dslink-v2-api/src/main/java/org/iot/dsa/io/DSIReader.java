@@ -34,6 +34,7 @@ public interface DSIReader extends Closeable {
     /**
      * Close the input.
      */
+    @Override
     public void close();
 
     /**

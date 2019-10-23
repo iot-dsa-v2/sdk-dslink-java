@@ -24,6 +24,7 @@ public abstract class DSElement extends DSValue {
     /**
      * The DSA value type mapping.
      */
+    @Override
     public abstract DSValueType getValueType();
 
     /**

@@ -39,10 +39,12 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
         return getResponder().getLogger();
     }
 
+    @Override
     public final String getPath() {
         return path;
     }
 
+    @Override
     public final Integer getRequestId() {
         return requestId;
     }

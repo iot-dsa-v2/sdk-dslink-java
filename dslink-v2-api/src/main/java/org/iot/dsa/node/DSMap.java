@@ -319,6 +319,7 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
         return new EntryIterator();
     }
 
+    @Override
     public DSElement last() {
         if (last != null) {
             return last.getValue();
@@ -631,16 +632,19 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
             next = firstEntry();
         }
 
+        @Override
         public boolean hasNext() {
             return next != null;
         }
 
+        @Override
         public Entry next() {
             last = next;
             next = next.next();
             return last;
         }
 
+        @Override
         public void remove() {
             if (last == null) {
                 throw new NullPointerException();

@@ -71,6 +71,7 @@ public class RequesterListReconnectTest {
 
     public static class MyMain extends DSMainNode {
 
+        @Override
         protected void declareDefaults() {
             super.declareDefaults();
             declareDefault("abc", DSLong.valueOf(0), "foo");

@@ -47,6 +47,7 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
     /**
      * The path representing the link node in the broker.
      */
+    @Override
     public String getPathInBroker() {
         return brokerPath.getElement().toString();
     }
