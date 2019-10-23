@@ -22,6 +22,7 @@ public enum DSValueType {
         this.display = display;
     }
 
+    @Override
     public String toString() {
         return display;
     }

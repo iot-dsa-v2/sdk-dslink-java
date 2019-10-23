@@ -44,6 +44,7 @@ public class DS2OutboundSubscriptions extends DSOutboundSubscriptions implements
     /**
      * Override point for v2.
      */
+    @Override
     protected void doWriteUnsubscribe(MessageWriter writer, Integer sid) {
         requester().sendClose(sid);
     }

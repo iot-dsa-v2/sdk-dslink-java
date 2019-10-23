@@ -354,6 +354,7 @@ public class DSLogHandler extends Handler {
             setDaemon(true);
         }
 
+        @Override
         public void run() {
             LogRecord record = null;
             while (state != STATE_CLOSED) {

@@ -50,6 +50,7 @@ final class MedianRollupFunction extends AbstractRollupFunction {
     // Protected Methods
     /////////////////////////////////////////////////////////////////
 
+    @Override
     protected void onReset() {
     }
 

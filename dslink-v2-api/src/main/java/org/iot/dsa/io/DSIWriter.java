@@ -62,6 +62,7 @@ public interface DSIWriter extends Closeable {
     /**
      * Close the stream. IOExceptions will be wrapped in runtime exceptions.
      */
+    @Override
     public void close();
 
     /**

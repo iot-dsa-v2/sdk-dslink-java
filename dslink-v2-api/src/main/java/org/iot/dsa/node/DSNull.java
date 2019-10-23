@@ -36,6 +36,7 @@ public class DSNull extends DSElement {
     /**
      * True of the arg == this.
      */
+    @Override
     public boolean equals(Object arg) {
         return arg == this;
     }
@@ -53,6 +54,7 @@ public class DSNull extends DSElement {
     /**
      * True
      */
+    @Override
     public boolean isNull() {
         return true;
     }
@@ -65,6 +67,7 @@ public class DSNull extends DSElement {
         return this;
     }
 
+    @Override
     public String toString() {
         return "null";
     }

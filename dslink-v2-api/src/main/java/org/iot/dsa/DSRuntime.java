@@ -209,6 +209,7 @@ public class DSRuntime {
             setDaemon(true);
         }
 
+        @Override
         public void run() {
             long delta;
             while (alive) {
@@ -235,6 +236,7 @@ public class DSRuntime {
             super("DSRuntime Shutdown Hook");
         }
 
+        @Override
         public void run() {
             shutdown();
         }
@@ -329,6 +331,7 @@ public class DSRuntime {
         /**
          * Do not call.
          */
+        @Override
         public void run() {
             try {
                 runnable.run();
@@ -356,6 +359,7 @@ public class DSRuntime {
             return this;
         }
 
+        @Override
         public String toString() {
             StringBuilder buf = new StringBuilder();
             Time.encode(nextRun(), false, buf);

@@ -135,6 +135,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
         return ret;
     }
 
+    @Override
     public DSLinkConnection getConnection() {
         if (connection == null) {
             connection = (DSLinkConnection) getAncestor(DSLinkConnection.class);
@@ -161,6 +162,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
         return reader;
     }
 
+    @Override
     public abstract DSIRequester getRequester();
 
     public abstract DSResponder getResponder();
@@ -186,6 +188,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
         return writer;
     }
 
+    @Override
     public boolean isRequesterAllowed() {
         return requesterAllowed.getElement().toBoolean();
     }
@@ -387,6 +390,7 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
         updateTimer = DSRuntime.run(this::updateStats, 0, 1000);
     }
 
+    @Override
     protected void onUnsubscribed() {
         updateTimer.cancel();
         updateTimer = null;

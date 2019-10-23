@@ -24,6 +24,7 @@ public class DSOutboundRemoveStub extends DSOutboundStub {
         this.request = request;
     }
 
+    @Override
     public OutboundRequestHandler getHandler() {
         return request;
     }

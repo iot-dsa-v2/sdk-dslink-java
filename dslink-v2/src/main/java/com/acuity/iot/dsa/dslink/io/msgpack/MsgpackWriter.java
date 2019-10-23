@@ -55,6 +55,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     /**
      * Returns the number of bytes in the outgoing byte buffer.
      */
+    @Override
     public int length() {
         return byteBuffer.length();
     }

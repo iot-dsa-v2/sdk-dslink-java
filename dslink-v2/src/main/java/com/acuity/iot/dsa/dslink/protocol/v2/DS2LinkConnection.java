@@ -65,6 +65,7 @@ public class DS2LinkConnection extends DSBrokerConnection {
         getInfo(ENABLED).setPrivate(true);
     }
 
+    @Override
     public DS2Session getSession() {
         return (DS2Session) super.getSession();
     }

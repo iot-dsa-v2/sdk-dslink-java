@@ -54,6 +54,7 @@ public abstract class AbstractJsonWriter extends AbstractWriter
     /**
      * Two spaces per level.
      */
+    @Override
     public void writeNewLineIndent() {
         try {
             append('\n');
