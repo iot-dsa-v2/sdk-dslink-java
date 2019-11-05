@@ -375,7 +375,11 @@ public class DSDateTime extends DSValue implements DSISetAction {
     @Override
     public String toString() {
         if (string == null) {
-            string = Time.encode(millis, true).toString();
+            if (timeZone != null) {
+                string = Time.encode(millis, timeZone).toString();
+            } else {
+                string = Time.encode(millis, true).toString();
+            }
         }
         return string;
     }

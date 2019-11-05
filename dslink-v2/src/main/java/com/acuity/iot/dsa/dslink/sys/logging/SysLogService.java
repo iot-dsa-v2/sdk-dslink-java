@@ -22,7 +22,7 @@ import org.iot.dsa.node.action.DSIActionRequest;
  */
 public class SysLogService extends StreamableLogNode {
 
-    private DSInfo<DSLevel> levelInfo = (DSInfo<DSLevel>) getInfo("Default Log Level");
+    private DSInfo<DSLevel> levelInfo = getInfo("Default Log Level");
 
     public SysLogService() {
     }

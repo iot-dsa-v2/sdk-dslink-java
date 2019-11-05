@@ -122,6 +122,12 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
     }
 
     @Override
+    protected void onStable() {
+        super.onStable();
+        updateStatus(getStatusParent());
+    }
+
+    @Override
     protected void onStarted() {
         statusParent = null;
         super.onStarted();

@@ -1,5 +1,6 @@
 package org.iot.dsa.time;
 
+import java.util.Calendar;
 import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSInfo;
@@ -72,17 +73,6 @@ public class DSTime extends DSValue implements DSISetAction {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof DSTime) {
-            DSTime arg = (DSTime) obj;
-            return arg.hour == hour &&
-                    arg.minute == minute &&
-                    arg.second == second;
-        }
-        return false;
-    }
-
     /**
      * 0 - 23
      */
@@ -118,11 +108,6 @@ public class DSTime extends DSValue implements DSISetAction {
     }
 
     @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
-
-    @Override
     public boolean isNull() {
         return this == NULL;
     }
@@ -150,6 +135,56 @@ public class DSTime extends DSValue implements DSISetAction {
         return string;
     }
 
+    @Override
+    public DSTime valueOf(DSElement element) {
+        return valueOf(element.toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof DSTime) {
+            DSTime arg = (DSTime) obj;
+            return arg.hour == hour &&
+                    arg.minute == minute &&
+                    arg.second == second;
+        }
+        return false;
+    }
+
+    public boolean isAfter(DSTime time) {
+        return !isBefore(time);
+    }
+
+    public boolean isBefore(DSTime time) {
+        if (hour < time.hour) {
+            return true;
+        } else if (hour > time.hour) {
+            return false;
+        }
+        if (minute < time.minute) {
+            return true;
+        } else if (minute > time.minute) {
+            return false;
+        }
+        if (second < time.second) {
+            return true;
+        }
+        return false;
+    }
+
+    public int millisInDay() {
+        return millisInDay(hour, minute, second);
+    }
+
+    public static int millisInDay(int hour, int minute, int second) {
+        return (hour * Time.MILLIS_HOUR) + (minute * Time.MILLIS_MINUTE) + (second * 1000);
+    }
+
     /**
      * Formatted as hh:mm:ss
      */
@@ -159,15 +194,17 @@ public class DSTime extends DSValue implements DSISetAction {
     }
 
     /**
-     * Creates a DSDateTime for the given range.
+     * Creates a DSTime for the given.
+     */
+    public static DSTime valueOf(Calendar cal) {
+        return new DSTime(Time.getHour(cal), Time.getMinute(cal), Time.getSecond(cal), null);
+    }
+
+    /**
+     * Creates a DSTime for the given.
      */
     public static DSTime valueOf(int hour, int minute, int second) {
         return new DSTime(hour, minute, second, null);
-    }
-
-    @Override
-    public DSTime valueOf(DSElement element) {
-        return valueOf(element.toString());
     }
 
     /**

@@ -372,11 +372,11 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     /**
      * The next DSInfo in the parent whose object is of the given type, or null.
      */
-    public DSInfo<?> next(Class<?> is) {
+    public <T extends DSIObject> DSInfo<T> next(Class<T> is) {
         DSInfo<?> cur = next;
         while (cur != null) {
             if (cur.is(is)) {
-                return cur;
+                return (DSInfo<T>) cur;
             }
             cur = cur.next();
         }
