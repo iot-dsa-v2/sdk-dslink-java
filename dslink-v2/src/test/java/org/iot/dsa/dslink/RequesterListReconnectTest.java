@@ -41,7 +41,7 @@ public class RequesterListReconnectTest {
         MyHandler h = (MyHandler) requester.list("/main", new MyHandler());
         h.waitForInitialized(20000);
         Assert.assertTrue(h.hasUpdates());
-        h.getUpdates();
+        h.reset();
         Assert.assertFalse(h.hasUpdates());
         link.getConnection().setEnabled(false);
         link.getConnection().disconnect();

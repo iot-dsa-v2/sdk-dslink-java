@@ -66,6 +66,7 @@ public class DSOutboundListStub extends DSOutboundStub {
     @Override
     public synchronized void handleResponse(DSMap response) {
         try {
+            boolean disconnected = false;
             DSList updates = response.getList("updates");
             if (updates != null) {
                 String name;
@@ -76,7 +77,11 @@ public class DSOutboundListStub extends DSOutboundStub {
                         list = (DSList) elem;
                         name = DSPath.decodeName(list.getString(0));
                         if (name.equals("$is")) {
+                            initialized = false;
                             state.clear();
+                        }
+                        if (name.equals("$disconnectedTs")) {
+                            disconnected = true;
                         }
                         DSElement e = list.remove(1);
                         state.put(name, e);
@@ -95,7 +100,7 @@ public class DSOutboundListStub extends DSOutboundStub {
                     }
                 }
             }
-            if ("open".equals(response.getString("stream"))) {
+            if (disconnected || "open".equals(response.getString("stream"))) {
                 initialized = true;
                 adapter.onInitialized();
             }

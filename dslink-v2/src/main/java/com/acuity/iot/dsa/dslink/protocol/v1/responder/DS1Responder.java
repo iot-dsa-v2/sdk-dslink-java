@@ -58,7 +58,7 @@ public class DS1Responder extends DSResponder {
                         if (!method.equals("close")) {
                             sendInvalidMethod(rid, method);
                         }
-                        DSRuntime.runDelayed(() -> {
+                        DSRuntime.run(() -> {
                             try {
                                 DSStream req = removeRequest(rid);
                                 if (req != null) {
@@ -67,7 +67,7 @@ public class DS1Responder extends DSResponder {
                             } catch (Exception x) {
                                 debug(getPath(), x);
                             }
-                        }, 10);
+                        });
                         break;
                     case 'i':  //invoke
                         if (!method.equals("invoke")) {
@@ -127,13 +127,13 @@ public class DS1Responder extends DSResponder {
         sendResponse(new CloseMessage(rid));
     }
 
-    public void sendError(int rid, Throwable reason) {
-        sendResponse(new ErrorMessage(rid, reason));
-    }
-
     @Override
     public void sendError(DSInboundRequest req, Throwable reason) {
         sendResponse(new ErrorMessage(req.getRequestId(), reason));
+    }
+
+    public void sendError(int rid, Throwable reason) {
+        sendResponse(new ErrorMessage(rid, reason));
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.acuity.iot.dsa.dslink.protocol.responder;
 import com.acuity.iot.dsa.dslink.protocol.DSSession;
 import com.acuity.iot.dsa.dslink.protocol.DSStream;
 import com.acuity.iot.dsa.dslink.protocol.message.OutboundMessage;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -104,6 +105,20 @@ public abstract class DSResponder extends DSNode {
 
     public boolean shouldEndMessage() {
         return session.shouldEndMessage();
+    }
+
+    public void update(String path) {
+        getSubscriptions().refresh(path);
+        ArrayList<?> list = new ArrayList<>(inboundRequests.values());
+        DSInboundList req;
+        for (Object o : list) {
+            if (o instanceof DSInboundList) {
+                req = (DSInboundList) o;
+                if (req.getPath().startsWith(path)) {
+                    req.run();
+                }
+            }
+        }
     }
 
     /////////////////////////////////////////////////////////////////

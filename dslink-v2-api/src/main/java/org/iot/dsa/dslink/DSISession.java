@@ -22,4 +22,10 @@ public interface DSISession extends DSIObject {
      */
     public void recvMessage(boolean async);
 
+    /**
+     * An object has been added to the tree, use this to update existing list and
+     * subscription requests for everything starting with this path.
+     */
+    public void update(String path);
+
 }

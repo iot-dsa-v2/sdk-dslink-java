@@ -165,8 +165,6 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     @Override
     public abstract DSIRequester getRequester();
 
-    public abstract DSResponder getResponder();
-
     public DSITransport getTransport() {
         return getConnection().getTransport();
     }
@@ -235,6 +233,11 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     }
 
     public abstract boolean shouldEndMessage();
+
+    @Override
+    public void update(String path) {
+        getResponder().update(path);
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
@@ -309,6 +312,8 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
         }
         return midSent;
     }
+
+    protected abstract DSResponder getResponder();
 
     protected boolean hasAckToSend() {
         return ackToSend > 0;

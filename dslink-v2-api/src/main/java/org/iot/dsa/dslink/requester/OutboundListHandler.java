@@ -16,17 +16,15 @@ import org.iot.dsa.node.DSElement;
  * <li>onRemove and onUpdate will be called for subsequent changed to the target.
  *
  * </ul>
- * <p>
- * Configs, or node metadata names, start with $.  Attributes start with @.  Anything else
- * represents a child.  Child maps will only contain configs/node metadata.
  *
  * @author Daniel Shapiro, Aaron Hansen
  */
 public interface OutboundListHandler extends OutboundRequestHandler {
 
     /**
-     * Called once the initial state of the target has been transmitted.  This is a good place to
-     * call close if not interested in future updates.
+     * Called once the initial state of the target has been transmitted as well as when the
+     * target is not available.  This is a good place to call close if not interested
+     * in future updates.
      */
     public void onInitialized();
 

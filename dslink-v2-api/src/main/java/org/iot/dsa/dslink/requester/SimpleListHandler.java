@@ -39,16 +39,6 @@ public class SimpleListHandler extends AbstractListHandler {
     }
 
     /**
-     * Removes the current updates such that calling hasUpdates immediately after this
-     * will return false.
-     */
-    public synchronized Map<String, DSElement> getUpdates() {
-        Map<String, DSElement> ret = updates;
-        updates = null;
-        return ret;
-    }
-
-    /**
      * Adds all updates to the given bucket.
      */
     public synchronized void getUpdates(Map<String, DSElement> bucket) {
@@ -95,7 +85,20 @@ public class SimpleListHandler extends AbstractListHandler {
             updates = new TreeMap<>();
         }
         updates.put(name, value);
+        if (name.equals("$is")) {
+            isInitialized = false;
+        }
         notifyAll();
+    }
+
+    /**
+     * Sets the state to uninitialized and removes the current updates.
+     */
+    public synchronized Map<String, DSElement> reset() {
+        Map<String, DSElement> ret = updates;
+        updates = null;
+        isInitialized = false;
+        return ret;
     }
 
     /**
@@ -116,12 +119,40 @@ public class SimpleListHandler extends AbstractListHandler {
             if (isError()) {
                 throw getError();
             }
-            if (System.currentTimeMillis() >= end) {
+            if (isClosed() || System.currentTimeMillis() >= end) {
                 break;
             }
             timeout = end - System.currentTimeMillis();
         }
         if (!isInitialized) {
+            throw new IllegalStateException("Timed out");
+        }
+    }
+
+    /**
+     * Waits for the initialed state.
+     *
+     * @param timeout Passed to Object.wait
+     * @throws RuntimeException      if there is an error with the invocation.
+     * @throws IllegalStateException if there is a timeout, or if there are any errors.
+     */
+    public synchronized void waitForUpdate(long timeout) {
+        long end = System.currentTimeMillis() + timeout;
+        while (!hasUpdates()) {
+            try {
+                wait(timeout);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+            if (isError()) {
+                throw getError();
+            }
+            if (isClosed() || System.currentTimeMillis() >= end) {
+                break;
+            }
+            timeout = end - System.currentTimeMillis();
+        }
+        if (!hasUpdates()) {
             throw new IllegalStateException("Timed out");
         }
     }
