@@ -12,25 +12,25 @@ public interface DSIActionRequest extends ActionRequest {
     /**
      * The action being invoked.
      */
-    public default DSIAction getAction() {
+    default DSIAction getAction() {
         return getActionInfo().getAction();
     }
 
     /**
      * The info for the action being invoked.
      */
-    public DSInfo<DSIAction> getActionInfo();
+    DSInfo<DSIAction> getActionInfo();
 
     /**
      * The target of the action, such as a node or value.
      */
-    public default DSIObject getTarget() {
+    default DSIObject getTarget() {
         return getTargetInfo().get();
     }
 
     /**
      * The target info of the action, such as a node or value.
      */
-    public DSInfo<?> getTargetInfo();
+    DSInfo<?> getTargetInfo();
 
 }

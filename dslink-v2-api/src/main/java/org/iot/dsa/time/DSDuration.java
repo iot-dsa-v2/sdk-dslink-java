@@ -154,24 +154,48 @@ public class DSDuration extends DSValue implements DSISetAction {
         return days;
     }
 
+    private void setDays(int arg) {
+        days = validate(arg);
+    }
+
     public int getHours() {
         return hours;
+    }
+
+    private void setHours(int arg) {
+        hours = validate(arg);
     }
 
     public int getMillis() {
         return millis;
     }
 
+    private void setMillis(int arg) {
+        millis = validate(arg);
+    }
+
     public int getMinutes() {
         return minutes;
+    }
+
+    private void setMinutes(int arg) {
+        minutes = validate(arg);
     }
 
     public int getMonths() {
         return months;
     }
 
+    private void setMonths(int arg) {
+        months = validate(arg);
+    }
+
     public int getSeconds() {
         return seconds;
+    }
+
+    private void setSeconds(int arg) {
+        seconds = validate(arg);
     }
 
     @Override
@@ -191,6 +215,10 @@ public class DSDuration extends DSValue implements DSISetAction {
         return years;
     }
 
+    private void setYears(int arg) {
+        years = validate(arg);
+    }
+
     @Override
     public int hashCode() {
         return toString().hashCode();
@@ -204,6 +232,10 @@ public class DSDuration extends DSValue implements DSISetAction {
     public boolean isNull() {
         return this == NULL;
     }
+
+    /////////////////////////////////////////////////////////////////
+    // Private Methods
+    /////////////////////////////////////////////////////////////////
 
     @Override
     public DSElement toElement() {
@@ -401,38 +433,6 @@ public class DSDuration extends DSValue implements DSISetAction {
             throw new IllegalArgumentException("Invalid duration: " + s);
         }
         return ret;
-    }
-
-    /////////////////////////////////////////////////////////////////
-    // Private Methods
-    /////////////////////////////////////////////////////////////////
-
-    private void setDays(int arg) {
-        days = validate(arg);
-    }
-
-    private void setHours(int arg) {
-        hours = validate(arg);
-    }
-
-    private void setMillis(int arg) {
-        millis = validate(arg);
-    }
-
-    private void setMinutes(int arg) {
-        minutes = validate(arg);
-    }
-
-    private void setMonths(int arg) {
-        months = validate(arg);
-    }
-
-    private void setSeconds(int arg) {
-        seconds = validate(arg);
-    }
-
-    private void setYears(int arg) {
-        years = validate(arg);
     }
 
     private int validate(int arg) {

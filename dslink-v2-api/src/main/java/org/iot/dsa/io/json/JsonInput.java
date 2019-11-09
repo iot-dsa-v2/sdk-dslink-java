@@ -60,7 +60,7 @@ class JsonInput implements JsonReader.Input {
         return buf[next++];
     }
 
-    public int read(char[] buf, int off, int len) throws IOException {
+    public int read(char[] buf, int off, int len) {
         throw new IllegalStateException("Will never be called");
     }
 

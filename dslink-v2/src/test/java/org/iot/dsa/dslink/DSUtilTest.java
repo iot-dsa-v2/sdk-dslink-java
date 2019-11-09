@@ -22,7 +22,7 @@ public class DSUtilTest {
     // -------
 
     @Test
-    public void test() throws Exception {
+    public void test() {
         Assert.assertTrue(DSUtil.equal(null, null));
         Assert.assertTrue(DSUtil.equal("abc", "abc"));
         Assert.assertFalse(DSUtil.equal(null, "abc"));

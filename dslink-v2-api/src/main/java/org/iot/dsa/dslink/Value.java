@@ -13,11 +13,11 @@ public interface Value extends Node {
      * Does not have to be the current value, used to determine the type
      * of the value.
      */
-    public DSElementType getType();
+    DSElementType getType();
 
     /**
      * Whether or not the value can be written.
      */
-    public boolean isReadOnly();
+    boolean isReadOnly();
 
 }

@@ -26,7 +26,7 @@ public class MetadataTest {
     // -------
 
     @Test
-    public void testNode() throws Exception {
+    public void testNode() {
         DSNode node = new DSNode();
         DSInfo<?> info = node.put("enum",
                                   DSFlexEnum.valueOf("abc", DSList.valueOf("abc", "def")));

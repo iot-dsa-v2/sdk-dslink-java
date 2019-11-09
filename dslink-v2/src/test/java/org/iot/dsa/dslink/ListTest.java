@@ -29,7 +29,7 @@ public class ListTest {
         //doit();
     }
 
-    private void doit() throws Exception {
+    private void doit() {
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         link.getConnection().waitForConnection(5000);

@@ -19,7 +19,7 @@ public interface DSISetAction extends DSIValue {
     /**
      * Default action name: Set
      */
-    public static final String SET = "Set";
+    String SET = "Set";
 
     ///////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -28,12 +28,12 @@ public interface DSISetAction extends DSIValue {
     /**
      * Implementations should return the action for setting the value.
      */
-    public DSAction getSetAction();
+    DSAction getSetAction();
 
     /**
      * The name for the set action, "set" by default.
      */
-    public default String getSetActionName() {
+    default String getSetActionName() {
         return SET;
     }
 

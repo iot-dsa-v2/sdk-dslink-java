@@ -15,30 +15,30 @@ public interface RollupFunction {
     /**
      * The number of values combined.
      */
-    public int getCount();
+    int getCount();
 
     /**
      * Defines how the RollupFunction aggregates values.
      */
-    public DSRollup getRollup();
+    DSRollup getRollup();
 
     /**
      * Status bits.
      *
      * @see DSStatus#getBits()
      */
-    public int getStatus();
+    int getStatus();
 
     /**
      * The current state of the rollup.
      */
-    public DSElement getValue();
+    DSElement getValue();
 
     /**
      * Clears the state of the RollupFunction; the count will be zero and
      * the current value will be null (getAnalyticValue().isNull()==true).
      */
-    public RollupFunction reset();
+    RollupFunction reset();
 
     /**
      * Updates the combination with the given value.  Returns true
@@ -46,6 +46,6 @@ public interface RollupFunction {
      * example, for a "first" combination, the first element will return
      * true, but all others will return false.
      */
-    public boolean update(DSElement value, int status);
+    boolean update(DSElement value, int status);
 
 }

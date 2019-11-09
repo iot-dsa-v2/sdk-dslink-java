@@ -80,11 +80,14 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public void close() {
+        //we never close locally in case the node is added back
+        /*
         if (!isOpen()) {
             return;
         }
         state = STATE_CLOSE_PENDING;
         enqueueResponse();
+        */
     }
 
     @Override
@@ -107,6 +110,7 @@ public class DSInboundList extends DSInboundRequest
     @Override
     public void listComplete() {
         sendOpen = true;
+        enqueueResponse();
     }
 
     @Override
@@ -128,7 +132,9 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public void onClosed(DSISubscription subscription) {
-        this.subscription = null;
+        if (subscription == this.subscription) {
+            this.subscription = null;
+        }
         close();
     }
 
@@ -139,19 +145,35 @@ public class DSInboundList extends DSInboundRequest
         }
         switch (event.getEventId()) {
             case DSNode.CHILD_RENAMED:
-                sendRemove(data.toString());
+                if (target.getTargetInfo().isNode()) {
+                    sendRemove(data.toString());
+                }
+                break;
             case DSNode.CHILD_ADDED:
-                encodeChild(child);
+                if (target.getTargetInfo().isNode()) {
+                    encodeChild(child);
+                }
                 break;
             case DSNode.CHILD_REMOVED:
-                sendRemove(child.getName());
+                if (target.getTargetInfo().isNode()) {
+                    sendRemove(child.getName());
+                } else if (target.getTargetInfo() == child) {
+                    send("$disconnectedTs", DSDateTime.now().toElement());
+                }
                 break;
+            case DSNode.STOPPED:
+                send("$disconnectedTs", DSDateTime.now().toElement());
         }
     }
 
     @Override
     public void run() {
+        if (subscription != null) {
+            subscription.close();
+            subscription = null;
+        }
         try {
+            state = STATE_INIT;
             target = new DSTarget(getPath(), getLink().getRootNode());
             if (target.isResponder()) {
                 DSIResponder responder = (DSIResponder) target.getTarget();
@@ -167,9 +189,6 @@ public class DSInboundList extends DSInboundRequest
             }
         } catch (Exception x) {
             send("$disconnectedTs", DSDateTime.now().toElement());
-            error(getPath(), x);
-            close(x);
-            return;
         }
     }
 
@@ -275,9 +294,6 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public boolean write(DSSession session, MessageWriter writer) {
-        synchronized (this) {
-            enqueued = false;
-        }
         if (isClosed()) {
             return false;
         }
@@ -297,6 +313,7 @@ public class DSInboundList extends DSInboundRequest
             endUpdates(writer);
         }
         synchronized (updates) {
+            enqueued = false;
             hasUpdates = !updates.isEmpty();
         }
         if (hasUpdates) {
@@ -739,7 +756,7 @@ public class DSInboundList extends DSInboundRequest
      * Enqueues in the session.
      */
     private void enqueueResponse() {
-        synchronized (this) {
+        synchronized (updates) {
             if (enqueued) {
                 return;
             }
@@ -816,7 +833,7 @@ public class DSInboundList extends DSInboundRequest
     private void writeUpdates(MessageWriter writer) {
         DSResponder responder = getResponder();
         DSElement update;
-        while (isOpen()) {
+        while (!isClosed()) {
             update = dequeue();
             if (update == null) {
                 break;

@@ -12,6 +12,6 @@ public interface ListCloseHandler {
     /**
      * Will be called no matter how the stream is closed.
      */
-    public void onClose();
+    void onClose();
 
 }

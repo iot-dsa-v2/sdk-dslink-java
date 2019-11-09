@@ -10,46 +10,46 @@ public interface DSINumber {
     /**
      * Whether or not the object represents a double.
      */
-    public boolean isDouble();
+    boolean isDouble();
 
     /**
      * Whether or not the object represents a double.
      */
-    public boolean isFloat();
+    boolean isFloat();
 
     /**
      * Whether or not the object represents an int.
      */
-    public boolean isInt();
+    boolean isInt();
 
     /**
      * Whether or not the object represents a long.
      */
-    public boolean isLong();
+    boolean isLong();
 
     /**
      * If not a double, will cast the underlying value.
      */
-    public double toDouble();
+    double toDouble();
 
     /**
      * If not a float, will cast the underlying value.
      */
-    public float toFloat();
+    float toFloat();
 
     /**
      * If not an int, will cast the underlying value.
      */
-    public int toInt();
+    int toInt();
 
     /**
      * If not a long, will cast the underlying value.
      */
-    public long toLong();
+    long toLong();
 
     /**
      * Returns the Java primitive wrapper.
      */
-    public Number toNumber();
+    Number toNumber();
 
 }

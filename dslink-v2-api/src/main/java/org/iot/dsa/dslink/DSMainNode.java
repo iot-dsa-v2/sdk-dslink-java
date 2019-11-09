@@ -14,7 +14,7 @@ public class DSMainNode extends DSNode {
      * The ancestral DSLink, or null.
      */
     public DSLink getLink() {
-        return (DSLink) getAncestor(DSLink.class);
+        return getAncestor(DSLink.class);
     }
 
     /**

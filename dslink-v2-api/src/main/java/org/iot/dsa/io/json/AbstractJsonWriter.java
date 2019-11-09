@@ -70,7 +70,7 @@ public abstract class AbstractJsonWriter extends AbstractWriter
     // -----------------
 
     @Override
-    protected void write(boolean arg) throws IOException {
+    protected void write(boolean arg) {
         if (arg) {
             append(C_TRUE, 0, 4);
         } else {
@@ -140,7 +140,7 @@ public abstract class AbstractJsonWriter extends AbstractWriter
     }
 
     @Override
-    protected void writeNull() throws IOException {
+    protected void writeNull() {
         append(C_NULL, 0, 4);
     }
 

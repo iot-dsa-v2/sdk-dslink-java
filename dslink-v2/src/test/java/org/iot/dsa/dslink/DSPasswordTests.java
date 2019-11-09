@@ -25,7 +25,7 @@ public class DSPasswordTests {
     // -------
 
     @Test
-    public void testAes256() throws Exception {
+    public void testAes256() {
         DSPasswordAes256 pass = DSPasswordAes256.valueOf("myPass");
         String encrypted = pass.toString();
         Assert.assertFalse(pass.toString().equals("myPass"));
@@ -42,7 +42,7 @@ public class DSPasswordTests {
     }
 
     @Test
-    public void testSha256() throws Exception {
+    public void testSha256() {
         DSPasswordSha256 pass = DSPasswordSha256.valueOf("myPass");
         String encrypted = pass.toString();
         Assert.assertFalse(pass.toString().equals("myPass"));

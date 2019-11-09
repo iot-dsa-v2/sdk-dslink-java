@@ -16,6 +16,6 @@ public interface DSIPassword extends DSIValue {
     /**
      * Returns true if the give element is valid according to the backing implementation.
      */
-    public boolean isValid(DSElement arg);
+    boolean isValid(DSElement arg);
 
 }

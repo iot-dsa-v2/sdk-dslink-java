@@ -27,7 +27,7 @@ public class MultipleListTest {
         doit();
     }
 
-    private void doit() throws Exception {
+    private void doit() {
         int emt = DS1Session.END_MSG_THRESHOLD;
         DS1Session.END_MSG_THRESHOLD = 1000;
         Thread t = new Thread(link, "DSLink Runner");

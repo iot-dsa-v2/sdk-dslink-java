@@ -25,7 +25,7 @@ public class DSFlexEnumTest {
     // -------
 
     @Test
-    public void theTest() throws Exception {
+    public void theTest() {
         try {
             DSFlexEnum fe = DSFlexEnum.valueOf("First", DSList.valueOf("First", "Second", "Third"));
             Assert.assertTrue(fe.toString().equals("First"));

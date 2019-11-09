@@ -216,4 +216,12 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
         return responder.getConnection().getLink();
     }
 
+    void refresh(String path) {
+        for (DSInboundSubscription sub : pathMap.values()) {
+            if (sub.getPath().startsWith(path)) {
+                sub.init();
+            }
+        }
+    }
+
 }

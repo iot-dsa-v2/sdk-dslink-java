@@ -11,6 +11,6 @@ public interface DSIResultsCursor extends DSIResults {
      * The cursor must start before the first row of results.  If there is another row, this
      * should advance the cursor and return true.  Otherwise return false.
      */
-    public boolean next();
+    boolean next();
 
 }

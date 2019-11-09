@@ -8,11 +8,11 @@ public interface InboundSetRequest extends InboundRequest {
     /**
      * The permission to set with.
      */
-    public DSPermission getPermission();
+    DSPermission getPermission();
 
     /**
      * The value to set.
      */
-    public DSElement getValue();
+    DSElement getValue();
 
 }

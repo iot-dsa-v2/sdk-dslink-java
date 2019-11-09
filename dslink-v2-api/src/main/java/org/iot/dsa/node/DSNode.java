@@ -4,8 +4,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import org.iot.dsa.DSRuntime;
 import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.dslink.DSIResponder;
+import org.iot.dsa.dslink.DSISession;
+import org.iot.dsa.dslink.DSLink;
+import org.iot.dsa.dslink.DSLinkConnection;
 import org.iot.dsa.dslink.responder.InboundSetRequest;
 import org.iot.dsa.logging.DSLogger;
 import org.iot.dsa.node.action.DSAction;
@@ -96,7 +100,7 @@ import org.iot.dsa.util.DSUtil;
  * <p>
  * Stable is called after the entire tree has been started.  The first time the node tree is loaded,
  * there is a stable delay of 5 seconds.  This is configurable as <b>stableDelay</b> in
- * <i>slink.json</i>.
+ * <i>dslink.json</i>.
  * <p>
  * Nodes added to an already stable parent will have onStart and onStable called immediately.
  * <p>
@@ -127,7 +131,8 @@ import org.iot.dsa.util.DSUtil;
  * Values mostly represent leaf members of the node tree.  There are two types of values:
  *
  * <ul>
- * <li>DSElement - These map to the JSON type system and represent leaf members of the node tree.
+ * <li>DSElement - These map to the JSON/MsgPack type system and represent leaf members of the node
+ * tree.
  * <li>DSIValue - These don't map to the JSON type system, and it is possible for nodes to implement
  * this interface. This allows for values to have children.
  * </ul>
@@ -142,17 +147,13 @@ import org.iot.dsa.util.DSUtil;
  * <h3>Actions</h3>
  * <p>
  * Add actions to your node to allow requester invocation using org.iot.dsa.node.action.DSAction.
- * <p>
- * Override DSNode.onInvoke to handle invocations.  The reason for this is complicated but it is
- * possible to subclass DSAction, just carefully read the javadoc if you do.  Be sure to call
- * super.onInvoke() when overriding that method.
  *
  * <h3>DSInfo</h3>
  * <p>
  * All node children have corresponding DSInfo instances.  This type serves two purposes:
  *
  * <ul>
- * <li>It carries some meta-data about the relationship between the parent node and the child.
+ * <li>It carries meta-data about the relationship between the parent node and the child.
  * <li>It tracks whether or not the child matches a declared default.
  * </ul>
  * <p>
@@ -212,6 +213,16 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
      * data accompanying this event.
      */
     public static final DSEvent METADATA_CHANGED_EVENT = new DSEvent(METADATA_CHANGED);
+
+    /**
+     * Event ID.
+     */
+    public static final String STOPPED = "STOPPED";
+
+    /**
+     * Singleton instance, fired whenever a node stops.  There will be no child info.
+     */
+    public static final DSEvent STOPPED_EVENT = new DSEvent(STOPPED);
 
     /**
      * Event ID.
@@ -292,6 +303,20 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             if (argIsNode) {
                 argAsNode.stable();
             }
+            //Update any existing lists and subscriptions
+            String updatePath = info.getPath(null).toString();
+            DSRuntime.run(() -> {
+                DSLink link = getAncestor(DSLink.class);
+                if (link != null) {
+                    DSLinkConnection conn = link.getConnection();
+                    if (conn != null) {
+                        DSISession session = conn.getSession();
+                        if (session != null) {
+                            session.update(updatePath);
+                        }
+                    }
+                }
+            });
         }
         return info;
     }
@@ -401,10 +426,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
      *
      * @return Possibly null.
      */
-    public DSIObject get(String name) {
+    public <T extends DSIObject> T get(String name) {
         DSInfo<?> info = getInfo(name);
         if (info != null) {
-            return info.get();
+            return (T) info.get();
         }
         return null;
     }
@@ -416,19 +441,21 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
      * @return Possibly null.
      * @see java.lang.Class#isAssignableFrom(Class)
      */
-    public DSNode getAncestor(Class<?> clazz) {
+    public <T extends DSNode> T getAncestor(Class<T> clazz) {
         DSNode node = getParent();
         while (node != null) {
             if (clazz.isAssignableFrom(node.getClass())) {
-                return node;
+                return (T) node;
             }
             node = node.getParent();
         }
-        return node;
+        return null;
     }
 
     /**
      * A convenience for getValue(name).toElement().
+     *
+     * @deprecated Use get(String)
      */
     public DSElement getElement(String name) {
         return getValue(name).toElement();
@@ -454,13 +481,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         return firstChild;
     }
 
-    public DSInfo<?> getFirstInfo(Class<?> type) {
+    public <T extends DSIObject> DSInfo<T> getFirstInfo(Class<T> type) {
         DSInfo<?> info = getFirstInfo();
         if (info == null) {
             return null;
         }
         if (info.is(type)) {
-            return info;
+            return (DSInfo<T>) info;
         }
         return info.next(type);
     }
@@ -481,8 +508,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
     /**
      * DSInfo for this node in its parent, or null if un-parented.
      */
-    public DSInfo<DSNode> getInfo() {
-        return infoInParent;
+    public <T extends DSNode> DSInfo<T> getInfo() {
+        return (DSInfo<T>) infoInParent;
     }
 
     /**
@@ -490,13 +517,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
      *
      * @return Possibly null.
      */
-    public DSInfo getInfo(String name) {
+    public <T extends DSIObject> DSInfo<T> getInfo(String name) {
         dsInit();
         if (firstChild == null) {
             if (getInfo() == null) {
                 return null;
             } else {
-                return getVirtualAction(getInfo(), name);
+                return (DSInfo<T>) getVirtualAction(getInfo(), name);
             }
         }
         synchronized (mutex) {
@@ -507,14 +534,14 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
                         childMap.put(info.getName(), info);
                     }
                 }
-                DSInfo<?> ret = childMap.get(name);
+                DSInfo<T> ret = childMap.get(name);
                 if (ret != null) {
                     return ret;
                 } else {
                     if (getInfo() == null) {
                         return null;
                     } else {
-                        return getVirtualAction(getInfo(), name);
+                        return (DSInfo<T>) getVirtualAction(getInfo(), name);
                     }
                 }
             }
@@ -522,14 +549,14 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         DSInfo<?> info = firstChild;
         while (info != null) {
             if (info.getName().equals(name)) {
-                return info;
+                return (DSInfo<T>) info;
             }
             info = info.next();
         }
         if (getInfo() == null) {
             return null;
         } else {
-            return getVirtualAction(getInfo(), name);
+            return (DSInfo<T>) getVirtualAction(getInfo(), name);
         }
     }
 
@@ -610,6 +637,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
 
     /**
      * A convenience for (DSIValue) get(name).
+     *
+     * @deprecated Use get(String)
      */
     public DSIValue getValue(String name) {
         return (DSIValue) get(name);
@@ -911,6 +940,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         ((DSInfo<DSIObject>) info).setObject(object);
         if (isNode(old)) {
             DSNode node = toNode(old);
+            notifyRemoved(node);
             node.stop();
             node.infoInParent = null;
         } else if (old instanceof DSGroup) {
@@ -978,8 +1008,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             if (isRunning()) {
                 notifyRemoved(node);
             }
-            node.infoInParent = null;
             node.stop();
+            node.infoInParent = null;
         }
         if (isRunning()) {
             try {
@@ -1100,8 +1130,8 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
     }
 
     /**
-     * Sets the state to stopped.  Will call onStop before child nodes are stopped, and
-     * onChildrenStopped after all child nodes are stopped.
+     * Sets the state to stopped.  Will call onStopped after child nodes are stopped.  Lastly,
+     * fires a stopped event.
      */
     public final void stop() {
         if (isStopped()) {
@@ -1115,6 +1145,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             }
             info = info.next();
         }
+        fire(STOPPED_EVENT, null, null);
         synchronized (mutex) {
             Subscription sub = subscription;
             while (sub != null) {
@@ -1516,10 +1547,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
     ///////////////////////////////////////////////////////////////////////////
 
     private void notifyRemoved(DSNode node) {
-        DSInfo<?> info = node.getFirstNodeInfo();
+        DSInfo<?> info = node.getFirstInfo();
         while (info != null) {
-            notifyRemoved(info.getNode());
-            info = info.nextNode();
+            if (info.isNode()) {
+                notifyRemoved(info.getNode());
+            }
+            fire(CHILD_REMOVED_EVENT, info, null);
+            info = info.next();
         }
         try {
             node.onRemoved();

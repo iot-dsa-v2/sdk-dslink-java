@@ -118,7 +118,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     }
 
     @Override
-    protected void write(boolean arg) throws IOException {
+    protected void write(boolean arg) {
         if (frame != null) {
             frame.increment();
         }
@@ -149,7 +149,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     }
 
     @Override
-    protected void write(double arg) throws IOException {
+    protected void write(double arg) {
         if (frame != null) {
             frame.increment();
         }
@@ -158,7 +158,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     }
 
     @Override
-    protected void write(long arg) throws IOException {
+    protected void write(long arg) {
         if (frame != null) {
             frame.increment();
         }
@@ -209,11 +209,11 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     }
 
     @Override
-    protected void writeKeyValueSeparator() throws IOException {
+    protected void writeKeyValueSeparator() {
     }
 
     @Override
-    protected void writeListEnd() throws IOException {
+    protected void writeListEnd() {
         frame.writeSize();
         frame = frame.parent;
         if (frame == null) {
@@ -225,7 +225,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
      * A negative size implies dynamic and will be written when the list is closed.
      */
     @Override
-    protected void writeListStart(int len) throws IOException {
+    protected void writeListStart(int len) {
         if (frame != null) {
             frame.increment();
         }
@@ -246,7 +246,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     }
 
     @Override
-    protected void writeMapEnd() throws IOException {
+    protected void writeMapEnd() {
         frame.writeSize();
         frame = frame.parent;
         if (frame == null) {
@@ -258,7 +258,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
      * A negative size implies dynamic and will be written when the map is closed.
      */
     @Override
-    protected void writeMapStart(int len) throws IOException {
+    protected void writeMapStart(int len) {
         if (frame != null) {
             frame.increment();
         }
@@ -279,7 +279,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     }
 
     @Override
-    protected void writeNull() throws IOException {
+    protected void writeNull() {
         if (frame != null) {
             frame.increment();
         }
@@ -287,7 +287,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
     }
 
     @Override
-    protected void writeSeparator() throws IOException {
+    protected void writeSeparator() {
     }
 
     @Override
@@ -349,7 +349,7 @@ public class MsgpackWriter extends AbstractWriter implements MsgpackConstants {
         return strBuffer;
     }
 
-    private void writeString(CharSequence arg) throws IOException {
+    private void writeString(CharSequence arg) {
         if (arg.length() == 0) {
             byteBuffer.put(FIXSTR_PREFIX);
             return;

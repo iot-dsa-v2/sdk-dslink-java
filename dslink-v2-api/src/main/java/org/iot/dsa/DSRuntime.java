@@ -367,6 +367,10 @@ public class DSRuntime {
             return buf.toString();
         }
 
+        long nextRunNanos() {
+            return nextRun;
+        }
+
         /**
          * Executes the task if it is time.
          *
@@ -392,10 +396,6 @@ public class DSRuntime {
             lastRun = nextRun;
             hasRun = true;
             return computeNextRun(now);
-        }
-
-        long nextRunNanos() {
-            return nextRun;
         }
 
         private boolean computeNextRun(long now) {

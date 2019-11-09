@@ -35,70 +35,70 @@ public interface DSIReader extends Closeable {
      * Close the input.
      */
     @Override
-    public void close();
+    void close();
 
     /**
      * Returns the value when last() == BOOLEAN.
      */
-    public boolean getBoolean();
+    boolean getBoolean();
 
     /**
      * Returns the value when last() == BYTES.
      */
-    public byte[] getBytes();
+    byte[] getBytes();
 
     /**
      * Returns the value when last() == DOUBLE.
      */
-    public double getDouble();
+    double getDouble();
 
     /**
      * Returns the DSElement when last() == raw type or ROOT.
      */
-    public DSElement getElement();
+    DSElement getElement();
 
     /**
      * This should only be called when last() == BEGIN_LIST and it will decodeKeys the entire
      * list.  Call next rather than this method to get the list in pieces.
      */
-    public DSList getList();
+    DSList getList();
 
     /**
      * Returns the value when last() == LONG.
      */
-    public long getLong();
+    long getLong();
 
     /**
      * This should only be called when last() == BEGIN_MAP and it will decodeKeys the entire map.
      * Call next rather than this method get the map in pieces.
      */
-    public DSMap getMap();
+    DSMap getMap();
 
     /**
      * Returns the value when last() == STRING.
      */
-    public String getString();
+    String getString();
 
     /**
      * The last value returned from next(). At the beginning of a document, before next has been
      * called, this will return ROOT.
      */
-    public Token last();
+    Token last();
 
     /**
      * Advances the reader to the next item and returns the token representing it's current state.
      */
-    public Token next();
+    Token next();
 
     /**
      * Sets last() == ROOT.
      */
-    public DSIReader reset();
+    DSIReader reset();
 
     /**
      * Represents the state of the reader, and determines which getter should be called next.
      */
-    public enum Token {
+    enum Token {
         BEGIN_LIST,
         BEGIN_MAP,
         BOOLEAN,

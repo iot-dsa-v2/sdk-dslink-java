@@ -34,7 +34,7 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter beginList();
+    DSIWriter beginList();
 
     /**
      * Start a new list of the given size and return this.
@@ -42,14 +42,14 @@ public interface DSIWriter extends Closeable {
      * @param size Less than zero means the size is unknown.
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter beginList(int size);
+    DSIWriter beginList(int size);
 
     /**
      * Start a new map and return this.
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter beginMap();
+    DSIWriter beginMap();
 
     /**
      * Start a new map of the given size and return this.
@@ -57,32 +57,32 @@ public interface DSIWriter extends Closeable {
      * @param size Less than zero means the size is unknown.
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter beginMap(int size);
+    DSIWriter beginMap(int size);
 
     /**
      * Close the stream. IOExceptions will be wrapped in runtime exceptions.
      */
     @Override
-    public void close();
+    void close();
 
     /**
      * End the current list.
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter endList();
+    DSIWriter endList();
 
     /**
      * End the current map.
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter endMap();
+    DSIWriter endMap();
 
     /**
      * Flush the stream. IOExceptions will be wrapped in runtime exceptions.
      */
-    public DSIWriter flush();
+    DSIWriter flush();
 
     /**
      * Write a key in the current map.  Cannot be called in a list, must be followed by a call to
@@ -90,17 +90,17 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter key(CharSequence key);
+    DSIWriter key(CharSequence key);
 
     /**
      * If the writer is buffering output, this returns the size of that buffer.
      */
-    public int length();
+    int length();
 
     /**
      * Clears the state of the writer.
      */
-    public DSIWriter reset();
+    DSIWriter reset();
 
     /**
      * Write a value to the map or list.  If in a map, this must have been preceded by a call to
@@ -108,7 +108,7 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter value(DSElement arg);
+    DSIWriter value(DSElement arg);
 
     /**
      * Write a value to the map or list.  If in a map, this must have been preceded by a call to
@@ -116,7 +116,7 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter value(boolean arg);
+    DSIWriter value(boolean arg);
 
     /**
      * Write a value to the map or list.  If in a map, this must have been preceded by a call to
@@ -124,7 +124,7 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter value(byte[] arg);
+    DSIWriter value(byte[] arg);
 
     /**
      * Write a value to the map or list.  If in a map, this must have been preceded by a call to
@@ -132,7 +132,7 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter value(double arg);
+    DSIWriter value(double arg);
 
     /**
      * Write a value to the map or list.  If in a map, this must have been preceded by a call to
@@ -140,7 +140,7 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter value(int arg);
+    DSIWriter value(int arg);
 
     /**
      * Write a value to the map or list.  If in a map, this must have been preceded by a call to
@@ -148,7 +148,7 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter value(long arg);
+    DSIWriter value(long arg);
 
     /**
      * Write a value to the map or list.  If in a map, this must have been preceded by a call to
@@ -156,7 +156,7 @@ public interface DSIWriter extends Closeable {
      *
      * @throws IllegalStateException when improperly called.
      */
-    public DSIWriter value(String arg);
+    DSIWriter value(String arg);
 
 
 }

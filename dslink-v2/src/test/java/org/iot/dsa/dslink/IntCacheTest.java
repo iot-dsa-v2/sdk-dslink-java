@@ -22,7 +22,7 @@ public class IntCacheTest {
     // -------
 
     @Test
-    public void test() throws Exception {
+    public void test() {
         DSInt dsint = DSInt.valueOf(0);
         Assert.assertTrue(DSInt.valueOf(0) == dsint);
         Assert.assertTrue(dsint.toInt() == 0);

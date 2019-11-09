@@ -86,7 +86,7 @@ public class JsonWriter extends AbstractJsonWriter {
     }
 
     @Override
-    public Appendable append(char ch) throws IOException {
+    public Appendable append(char ch) {
         if (buflen + 1 >= BUF_SIZE) {
             flush();
         }

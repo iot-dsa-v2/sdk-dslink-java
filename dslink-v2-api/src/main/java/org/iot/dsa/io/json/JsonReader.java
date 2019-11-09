@@ -421,11 +421,11 @@ public class JsonReader extends AbstractReader implements DSIReader, JsonConstan
     /**
      * Needed for the ability to unread (pushback) a char.
      */
-    static interface Input extends Closeable {
+    interface Input extends Closeable {
 
-        public int read() throws IOException;
+        int read();
 
-        public void unread();
+        void unread();
     }
 
 }

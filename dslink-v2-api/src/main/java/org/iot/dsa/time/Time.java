@@ -532,6 +532,21 @@ public class Time {
      * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based on ISO 8601 but
      * allows the timezone offset to not be specified.
      *
+     * @param timestamp What to encode.
+     * @param timeZone  Timezone to encode.
+     * @return The buffer containing the encoding.
+     */
+    public static StringBuilder encode(long timestamp, TimeZone timeZone) {
+        Calendar cal = getCalendar(timestamp, timeZone);
+        StringBuilder buf = encode(cal, true, new StringBuilder());
+        recycle(cal);
+        return buf;
+    }
+
+    /**
+     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based on ISO 8601 but
+     * allows the timezone offset to not be specified.
+     *
      * @param timestamp      What to encode.
      * @param encodeTzOffset Whether or not to encode the timezone offset.
      * @param buf            The buffer to append the encoded timestamp and return value, can be
