@@ -28,7 +28,7 @@ public class JsonTest {
     // -------
 
     @Test
-    public void theTest() throws Exception {
+    public void theTest() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DSIWriter out = Json.writer(baos);
         out.beginList();

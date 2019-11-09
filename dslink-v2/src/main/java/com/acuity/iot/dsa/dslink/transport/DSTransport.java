@@ -153,7 +153,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     @Override
     public DSLinkConnection getConnection() {
         if (connection == null) {
-            connection = (DSLinkConnection) getAncestor(DSLinkConnection.class);
+            connection = getAncestor(DSLinkConnection.class);
         }
         return connection;
     }
@@ -162,11 +162,24 @@ public abstract class DSTransport extends DSNode implements DSITransport {
         return connectionUrl;
     }
 
+    public DSTransport setConnectionUrl(String url) {
+        this.connectionUrl = url;
+        return this;
+    }
+
     /**
      * Read timeout in milliseconds.
      */
     public int getReadTimeout() {
         return readTimeout;
+    }
+
+    /**
+     * Read timeout in milliseconds, default is 30000.
+     */
+    public DSTransport setReadTimeout(int timeout) {
+        this.readTimeout = timeout;
+        return this;
     }
 
     /**
@@ -205,6 +218,15 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     @Override
     public boolean isText() {
         return text;
+    }
+
+    /**
+     * Whether or not the transport is text based, default is true.
+     */
+    public DSTransport setText(boolean isText) {
+        this.text = isText;
+        put(TEXT, DSBool.valueOf(isText));
+        return this;
     }
 
     @Override
@@ -257,28 +279,6 @@ public abstract class DSTransport extends DSNode implements DSITransport {
             close(x);
         }
         return -1;
-    }
-
-    public DSTransport setConnectionUrl(String url) {
-        this.connectionUrl = url;
-        return this;
-    }
-
-    /**
-     * Read timeout in milliseconds, default is 30000.
-     */
-    public DSTransport setReadTimeout(int timeout) {
-        this.readTimeout = timeout;
-        return this;
-    }
-
-    /**
-     * Whether or not the transport is text based, default is true.
-     */
-    public DSTransport setText(boolean isText) {
-        this.text = isText;
-        put(TEXT, DSBool.valueOf(isText));
-        return this;
     }
 
     /**
@@ -504,7 +504,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
      */
     public interface Factory {
 
-        public DSTransport makeTransport(DSLinkConnection conn);
+        DSTransport makeTransport(DSLinkConnection conn);
 
     }
 

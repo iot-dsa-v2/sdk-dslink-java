@@ -13,7 +13,7 @@ public interface DSIResults {
     /**
      * The number of columns in the row.
      */
-    public int getColumnCount();
+    int getColumnCount();
 
     /**
      * Adds the meta data for the given column/index to the given bucket.  Only needs to be
@@ -22,7 +22,7 @@ public interface DSIResults {
      * @param index  0 based column identifier.
      * @param bucket Must not be null and the caller is responsible for clearing it.
      */
-    public void getColumnMetadata(int index, DSMap bucket);
+    void getColumnMetadata(int index, DSMap bucket);
 
     /**
      * Retrieves the value at the given index.  In the cursor subclass, this must only
@@ -30,6 +30,6 @@ public interface DSIResults {
      *
      * @param index 0 based column identifier.
      */
-    public DSIValue getValue(int index);
+    DSIValue getValue(int index);
 
 }

@@ -16,17 +16,17 @@ public interface InboundSubscribeRequest extends InboundRequest {
     /**
      * Allows the responder to forcefully terminate the subscription.
      */
-    public void close();
+    void close();
 
     /**
      * Unique subscription id for this path.
      */
-    public Integer getSubscriptionId();
+    Integer getSubscriptionId();
 
     /**
      * The responder should call this when first received and then whenever the value or status
      * changes.
      */
-    public void update(DSDateTime timestamp, DSIValue value, DSStatus quality);
+    void update(DSDateTime timestamp, DSIValue value, DSStatus quality);
 
 }

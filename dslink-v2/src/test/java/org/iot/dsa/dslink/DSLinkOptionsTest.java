@@ -27,7 +27,7 @@ public class DSLinkOptionsTest {
     ///////////////////////////////////////////////////////////////////////////
 
     @Test
-    public void test() throws Exception {
+    public void test() {
         File file = new File("dslink.json");
         boolean created = false;
         if (!file.exists()) {

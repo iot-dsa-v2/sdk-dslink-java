@@ -31,66 +31,66 @@ public interface DSITransport extends DSIObject {
     /**
      * Called at the start of a new inbound message.
      */
-    public void beginRecvMessage();
+    void beginRecvMessage();
 
     /**
      * Called at the start of a new outbound message.
      */
-    public void beginSendMessage();
+    void beginSendMessage();
 
     /**
      * Close the actual connection and clean up resources.  Calling when already closed will have no
      * effect.
      */
-    public void close();
+    void close();
 
     /**
      * Called at the end of a message, this trace logs the entire message.
      */
-    public void endRecvMessage();
+    void endRecvMessage();
 
     /**
      * Called at the end of a message, this ensures that message based transports know the message
      * is complete and this also trace logs the entire message.
      */
-    public void endSendMessage();
+    void endSendMessage();
 
     /**
      * For reading binary data, only use if isText() is false.
      */
-    public InputStream getBinaryInput();
+    InputStream getBinaryInput();
 
     /**
      * For writing binary data, only use if isText() is false.
      */
-    public OutputStream getBinaryOutput();
+    OutputStream getBinaryOutput();
 
     /**
      * If not explicitly set, searches for the ancestor.
      */
-    public DSLinkConnection getConnection();
+    DSLinkConnection getConnection();
 
     /**
      * For reading text, only use if isText() is true.
      */
-    public Reader getTextInput();
+    Reader getTextInput();
 
     /**
      * For writing text, only use if isText() is true.
      */
-    public Writer getTextOutput();
+    Writer getTextOutput();
 
     /**
      * Whether or not the transport is open for reading and writing.
      */
-    public boolean isOpen();
+    boolean isOpen();
 
     /**
      * True if the transport is text based, and the text IO methods should be used.
      */
-    public boolean isText();
+    boolean isText();
 
-    public void open();
+    void open();
 
     /**
      * Blocking read operation, returns the number of bytes read.
@@ -134,6 +134,6 @@ public interface DSITransport extends DSIObject {
     /**
      * The size of the current outbound message (bytes for binary, chars for text).
      */
-    public int writeMessageSize();
+    int writeMessageSize();
 
 }

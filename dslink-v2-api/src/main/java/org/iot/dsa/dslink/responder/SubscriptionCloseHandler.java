@@ -12,6 +12,6 @@ public interface SubscriptionCloseHandler {
     /**
      * Will be called no matter how the subscription is terminated.
      */
-    public void onClose(Integer subscriptionId);
+    void onClose(Integer subscriptionId);
 
 }

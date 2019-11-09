@@ -194,6 +194,14 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         return add(flags.getBits());
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof DSStatus) {
+            return hashCode() == obj.hashCode();
+        }
+        return false;
+    }
+
     /**
      * The bitset representing the all the set qualities.
      */
@@ -214,38 +222,9 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         return DSValueType.STRING;
     }
 
-    /**
-     * False, there is no null instance, use ok instead.
-     */
-    @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
-    public DSString toElement() {
-        return DSString.valueOf(toString());
-    }
-
-    @Override
-    public DSStatus valueOf(DSElement element) {
-        if ((element == null) || element.isNull()) {
-            return ok;
-        }
-        return valueOf(element.toString());
-    }
-
     @Override
     public int hashCode() {
         return bits;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof DSStatus) {
-            return hashCode() == obj.hashCode();
-        }
-        return false;
     }
 
     /**
@@ -398,6 +377,14 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
         return (bits & NOT_GOOD_MASK) == 0;
     }
 
+    /**
+     * False, there is no null instance, use ok instead.
+     */
+    @Override
+    public boolean isNull() {
+        return false;
+    }
+
     public boolean isOffnormal() {
         return isOffnormal(bits);
     }
@@ -548,6 +535,11 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     }
 
     @Override
+    public DSString toElement() {
+        return DSString.valueOf(toString());
+    }
+
+    @Override
     public String toString() {
         if (isNull()) {
             return "null";
@@ -602,6 +594,14 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
             append(buf, START_STR);
         }
         return buf.toString();
+    }
+
+    @Override
+    public DSStatus valueOf(DSElement element) {
+        if ((element == null) || element.isNull()) {
+            return ok;
+        }
+        return valueOf(element.toString());
     }
 
     /**

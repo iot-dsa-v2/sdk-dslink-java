@@ -18,6 +18,6 @@ public interface OutboundSubscribeHandler extends OutboundRequestHandler {
      * @param value    The update value.
      * @param status   The status of the value, never null.
      */
-    public void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status);
+    void onUpdate(DSDateTime dateTime, DSElement value, DSStatus status);
 
 }

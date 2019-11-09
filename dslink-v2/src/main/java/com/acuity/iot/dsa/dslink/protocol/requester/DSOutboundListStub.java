@@ -145,7 +145,7 @@ public class DSOutboundListStub extends DSOutboundStub {
 
     public interface HandlerAdapterStream extends OutboundStream {
 
-        public DSMap getState();
+        DSMap getState();
 
     }
 

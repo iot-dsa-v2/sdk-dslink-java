@@ -15,18 +15,18 @@ public interface ActionRequest {
     /**
      * For use with streams and AsyncActionResults, will have no effect if already closed.
      */
-    public void close();
+    void close();
 
     /**
      * Close and send an error. For use with streams and AsyncActionResults, will have no effect
      * if already closed.
      */
-    public void close(Exception reason);
+    void close(Exception reason);
 
     /**
      * A convenience for getting a single parameter out of the parameters map.
      */
-    public default DSElement getParameter(String key) {
+    default DSElement getParameter(String key) {
         DSMap map = getParameters();
         if (map == null) {
             return null;
@@ -37,17 +37,17 @@ public interface ActionRequest {
     /**
      * The parameters supplied by the invoker, or null.
      */
-    public DSMap getParameters();
+    DSMap getParameters();
 
     /**
      * The permission level of the invoker.
      */
-    public DSPermission getPermission();
+    DSPermission getPermission();
 
     /**
      * Whether or not response is still open.
      */
-    public boolean isOpen();
+    boolean isOpen();
 
     /**
      * This is for streams and AsyncActionResults.  Call this after returning false
@@ -56,6 +56,6 @@ public interface ActionRequest {
      *
      * @see AsyncActionResults
      */
-    public void sendResults();
+    void sendResults();
 
 }

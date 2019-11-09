@@ -83,7 +83,7 @@ public abstract class DSStatusNode extends DSNode implements DSIStatus {
      */
     protected DSStatusNode getStatusParent() {
         if (statusParent == null) {
-            statusParent = (DSStatusNode) getAncestor(DSStatusNode.class);
+            statusParent = getAncestor(DSStatusNode.class);
         }
         return statusParent;
     }

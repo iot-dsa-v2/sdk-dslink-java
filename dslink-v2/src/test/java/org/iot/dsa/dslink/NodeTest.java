@@ -26,7 +26,7 @@ public class NodeTest {
     // -------
 
     @Test
-    public void theTest() throws Exception {
+    public void theTest() {
         testMine(new MyNode());
         testMine(new MyNode()); //on purpose, making sure defaults hold
     }

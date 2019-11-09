@@ -13,6 +13,6 @@ public interface DSIConnectionDescendant {
      * Called when the ancestral DSIConnectionDescendant changes state.  The subtree of this instance will not
      * notified, that is the responsibility of the DSIConnectionDescendant implementation..
      */
-    public void onConnectionChange(DSConnection conn);
+    void onConnectionChange(DSConnection conn);
 
 }

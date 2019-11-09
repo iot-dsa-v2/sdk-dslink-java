@@ -22,7 +22,6 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 import org.testng.Assert;
-import org.testng.annotations.Test;
 
 public class JmhTest {
 

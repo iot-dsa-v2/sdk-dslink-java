@@ -118,7 +118,7 @@ public class DSOutboundInvokeStub extends DSOutboundStub {
 
     public interface PassThruHandler {
 
-        public void handlePassThru(DSMap response);
+        void handlePassThru(DSMap response);
 
     }
 

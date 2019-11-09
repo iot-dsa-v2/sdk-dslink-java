@@ -142,15 +142,10 @@ public class DSInboundSubscription extends DSInboundRequest
         DSStatus status = DSStatus.ok;
         switch (event.getEventId()) {
             case DSNode.CHILD_REMOVED:
-                if (child == this.child) {
-                    status = DSStatus.unknown;
-                    data = DSNull.NULL;
-                    break;
-                }
-                break;
             case DSNode.STOPPED:
-                status = DSStatus.unknown;
-                data = DSNull.NULL;
+                if (child == this.child) {
+                    update(dt, DSNull.NULL, DSStatus.unknown);
+                }
                 break;
             case DSNode.VALUE_CHANGED:
                 if (child == this.child) {
@@ -166,12 +161,12 @@ public class DSInboundSubscription extends DSInboundRequest
                     if (data instanceof DSIStatus) {
                         status = ((DSIStatus) data).getStatus();
                     }
+                    update(dt, data, status);
                 }
                 break;
             default:
                 return;
         }
-        update(dt, data, status);
     }
 
     @Override
@@ -264,7 +259,7 @@ public class DSInboundSubscription extends DSInboundRequest
                         });
                         onEvent(DSNode.VALUE_CHANGED_EVENT, theNode, null, null);
                     } else {
-                        onEvent(DSNode.VALUE_CHANGED_EVENT, theNode, null, DSString.EMPTY);
+                        update(DSDateTime.now(), DSString.EMPTY, DSStatus.ok);
                     }
                 } else {
                     DSInfo<?> info = path.getTargetInfo();
@@ -275,7 +270,7 @@ public class DSInboundSubscription extends DSInboundRequest
                 }
             }
         } catch (Exception x) {
-            onEvent(DSNode.STOPPED_EVENT, null, null, null);
+            update(DSDateTime.now(), DSNull.NULL, DSStatus.unknown);
         }
     }
 

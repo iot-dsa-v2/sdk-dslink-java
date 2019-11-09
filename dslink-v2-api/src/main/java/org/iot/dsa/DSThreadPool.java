@@ -137,7 +137,7 @@ class DSThreadPool {
     /////////////////////////////////////////////////////////////////
 
     @Override
-    protected void finalize() throws Throwable {
+    protected void finalize() {
         alive = false;
         synchronized (this) {
             notifyAll();

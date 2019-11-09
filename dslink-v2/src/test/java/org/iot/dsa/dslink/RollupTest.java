@@ -282,7 +282,7 @@ public class RollupTest {
     }
 
     @Test
-    public void testStatus() throws Exception {
+    public void testStatus() {
         DSRollup roll = DSRollup.valueFor("sum");
         RollupFunction func = roll.getFunction();
         func.update(DSDouble.valueOf(0), DSStatus.FAULT);
@@ -318,7 +318,7 @@ public class RollupTest {
     }
 
     @Test
-    public void testValid() throws Exception {
+    public void testValid() {
         DSRollup roll = DSRollup.valueFor("and");
         RollupFunction func = roll.getFunction();
         func.update(DSBool.TRUE, DSStatus.FAULT);

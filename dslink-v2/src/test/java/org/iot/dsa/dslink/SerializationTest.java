@@ -47,11 +47,11 @@ public class SerializationTest {
         list.add("d").add("e").add("f");
         node.put("second", list);
         node = decode(encode(node));
-        list = (DSList) node.get("first");
+        list = node.get("first");
         Assert.assertTrue("a".equals(list.getString(0)));
         Assert.assertTrue("b".equals(list.getString(1)));
         Assert.assertTrue("c".equals(list.getString(2)));
-        list = (DSList) node.get("second");
+        list = node.get("second");
         Assert.assertTrue("d".equals(list.getString(0)));
         Assert.assertTrue("e".equals(list.getString(1)));
         Assert.assertTrue("f".equals(list.getString(2)));
@@ -87,7 +87,7 @@ public class SerializationTest {
         fos.close();
     }
 
-    private DSNode decode(byte[] bytes) throws Exception {
+    private DSNode decode(byte[] bytes) {
         ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
         DSIReader reader = Json.reader(bin);
         DSNode ret = NodeDecoder.decode(reader);
@@ -95,7 +95,7 @@ public class SerializationTest {
         return ret;
     }
 
-    private byte[] encode(DSNode node) throws Exception {
+    private byte[] encode(DSNode node) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DSIWriter writer = Json.writer(bos);
         NodeEncoder.encode(writer, node);

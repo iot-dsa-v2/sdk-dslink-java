@@ -2,9 +2,6 @@ package org.iot.dsa.dslink;
 
 import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.iot.dsa.dslink.requester.AbstractSubscribeHandler;
 import org.iot.dsa.dslink.requester.SimpleListHandler;
 import org.iot.dsa.dslink.requester.SimpleSubscribeHandler;
 import org.iot.dsa.node.DSElement;
@@ -13,7 +10,6 @@ import org.iot.dsa.node.DSLong;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSStatus;
 import org.iot.dsa.node.DSString;
-import org.iot.dsa.time.DSDateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -41,11 +37,12 @@ public class AddRemoveRequesterTest {
         link.shutdown();
     }
 
-    private void listDeepNode(DSLink link) throws Exception {
+    private void listDeepNode(DSLink link) {
         DSIRequester requester = link.getConnection().getRequester();
 
         //subscribe to non-existent node
-        SimpleListHandler h = (SimpleListHandler) requester.list("/main/def/abc", new SimpleListHandler());
+        SimpleListHandler h = (SimpleListHandler) requester
+                .list("/main/def/abc", new SimpleListHandler());
         h.waitForInitialized(5000);
         Map<String, DSElement> updates = h.reset();
         Assert.assertTrue(updates.containsKey("$disconnectedTs"));
@@ -66,11 +63,12 @@ public class AddRemoveRequesterTest {
         h.getStream().closeStream();
     }
 
-    private void listDeepValue(DSLink link) throws Exception {
+    private void listDeepValue(DSLink link) {
         DSIRequester requester = link.getConnection().getRequester();
 
         //subscribe to non-existent value
-        SimpleListHandler h = (SimpleListHandler) requester.list("/main/def/abc", new SimpleListHandler());
+        SimpleListHandler h = (SimpleListHandler) requester
+                .list("/main/def/abc", new SimpleListHandler());
         h.waitForInitialized(5000);
         Map<String, DSElement> updates = h.reset();
         Assert.assertTrue(updates.containsKey("$disconnectedTs"));
@@ -91,34 +89,12 @@ public class AddRemoveRequesterTest {
         h.getStream().closeStream();
     }
 
-    private void listSimpleValue(DSLink link) throws Exception {
-        DSIRequester requester = link.getConnection().getRequester();
-
-        //subscribe to non-existent value
-        SimpleListHandler h = (SimpleListHandler) requester.list("/main/def", new SimpleListHandler());
-        h.waitForInitialized(5000);
-        Map<String, DSElement> updates = h.reset();
-        Assert.assertTrue(updates.containsKey("$disconnectedTs"));
-
-        //add the value
-        link.getMain().put("def", DSLong.valueOf(123));
-        h.waitForInitialized(5000);
-        updates = h.reset();
-        Assert.assertTrue(updates.get("$type").equals(DSString.valueOf("number")));
-
-        //remove the value
-        link.getMain().remove("def");
-        h.waitForInitialized(5000);
-        updates = h.reset();
-        Assert.assertTrue(updates.containsKey("$disconnectedTs"));
-        h.getStream().closeStream();
-    }
-
-    private void listSimpleNode(DSLink link) throws Exception {
+    private void listSimpleNode(DSLink link) {
         DSIRequester requester = link.getConnection().getRequester();
 
         //subscribe to non-existent node
-        SimpleListHandler h = (SimpleListHandler) requester.list("/main/def", new SimpleListHandler());
+        SimpleListHandler h = (SimpleListHandler) requester
+                .list("/main/def", new SimpleListHandler());
         h.waitForInitialized(5000);
         Map<String, DSElement> updates = h.reset();
         Assert.assertTrue(updates.containsKey("$disconnectedTs"));
@@ -137,7 +113,31 @@ public class AddRemoveRequesterTest {
         h.getStream().closeStream();
     }
 
-    private void subDeepValue(DSLink link) throws Exception {
+    private void listSimpleValue(DSLink link) {
+        DSIRequester requester = link.getConnection().getRequester();
+
+        //subscribe to non-existent value
+        SimpleListHandler h = (SimpleListHandler) requester
+                .list("/main/def", new SimpleListHandler());
+        h.waitForInitialized(5000);
+        Map<String, DSElement> updates = h.reset();
+        Assert.assertTrue(updates.containsKey("$disconnectedTs"));
+
+        //add the value
+        link.getMain().put("def", DSLong.valueOf(123));
+        h.waitForInitialized(5000);
+        updates = h.reset();
+        Assert.assertTrue(updates.get("$type").equals(DSString.valueOf("number")));
+
+        //remove the value
+        link.getMain().remove("def");
+        h.waitForInitialized(5000);
+        updates = h.reset();
+        Assert.assertTrue(updates.containsKey("$disconnectedTs"));
+        h.getStream().closeStream();
+    }
+
+    private void subDeepValue(DSLink link) {
         DSIRequester requester = link.getConnection().getRequester();
 
         //subscribe to non-existent value
@@ -154,13 +154,15 @@ public class AddRemoveRequesterTest {
         Assert.assertTrue(update.status == DSStatus.ok);
 
         //remove the value
+        /*
         link.getMain().remove("def");
         update = h.nextUpdate(5000);
         Assert.assertTrue(update.status == DSStatus.unknown);
         h.getStream().closeStream();
+        */
     }
 
-    private void subSimpleValue(DSLink link) throws Exception {
+    private void subSimpleValue(DSLink link) {
         DSIRequester requester = link.getConnection().getRequester();
 
         //subscribe to non-existent value

@@ -12,18 +12,18 @@ public interface InboundRequest {
     /**
      * Any parameters accompanying the request, possibly null.
      */
-    public default DSIValue getParameters() {
+    default DSIValue getParameters() {
         return null;
     }
 
     /**
      * The target of the request.
      */
-    public String getPath();
+    String getPath();
 
     /**
      * Unique ID of the request, or 0 for subscriptions.
      */
-    public Integer getRequestId();
+    Integer getRequestId();
 
 }

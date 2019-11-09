@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 public class DSPathTest {
 
     @Test
-    public void testAttribute() throws Exception {
+    public void testAttribute() {
         String path = "/main/Node/@attr";
         String attr = null;
         int idx = 1 + path.lastIndexOf('/');

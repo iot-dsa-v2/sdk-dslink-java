@@ -167,6 +167,10 @@ public class DSLogger {
         return logger;
     }
 
+    protected void setLogger(Logger logger) {
+        this.logger = logger;
+    }
+
     /**
      * True if the level is loggable.
      */
@@ -290,6 +294,10 @@ public class DSLogger {
         }
     }
 
+    /////////////////////////////////////////////////////////////////
+    // Protected Methods
+    /////////////////////////////////////////////////////////////////
+
     /**
      * Log a trace or verbose event.
      */
@@ -299,19 +307,11 @@ public class DSLogger {
         }
     }
 
-    /////////////////////////////////////////////////////////////////
-    // Protected Methods
-    /////////////////////////////////////////////////////////////////
-
     /**
      * Override point, returns the simple class name by default.
      */
     protected String getLogName() {
         return "dsa";
-    }
-
-    protected void setLogger(Logger logger) {
-        this.logger = logger;
     }
 
     /////////////////////////////////////////////////////////////////

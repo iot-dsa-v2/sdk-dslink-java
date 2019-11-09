@@ -16,7 +16,7 @@ public interface OutboundInvokeHandler extends OutboundRequestHandler {
      *
      * @param list A list of maps.
      */
-    public void onColumns(DSList list);
+    void onColumns(DSList list);
 
     /**
      * Called when the given rows should be inserted at the given index.
@@ -24,12 +24,12 @@ public interface OutboundInvokeHandler extends OutboundRequestHandler {
      * @param index Where to insert the given rows.
      * @param rows  What to insert at the given index.
      */
-    public void onInsert(int index, DSList rows);
+    void onInsert(int index, DSList rows);
 
     /**
      * Called whenever a mode is received.
      */
-    public void onMode(Mode mode);
+    void onMode(Mode mode);
 
     /**
      * The rows starting and ending with the given indexes should be removed and the given rows
@@ -39,19 +39,19 @@ public interface OutboundInvokeHandler extends OutboundRequestHandler {
      * @param end   Last inclusive index of rows to be replaced.
      * @param rows  What to insert at the starting index.
      */
-    public void onReplace(int start, int end, DSList rows);
+    void onReplace(int start, int end, DSList rows);
 
     /**
      * Called whenever metadata for the entire table is received.
      */
-    public void onTableMeta(DSMap map);
+    void onTableMeta(DSMap map);
 
     /**
      * Called for every row.
      */
-    public void onUpdate(DSList row);
+    void onUpdate(DSList row);
 
-    public enum Mode {
+    enum Mode {
         APPEND,
         REFRESH,
         STREAM,

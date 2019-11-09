@@ -36,7 +36,7 @@ public class V2HandshakeTest {
         testF3(); //broker->link
     }
 
-    public void testF0() throws Exception {
+    public void testF0() {
         DSKeys dsKeys = getLinkKeys();
         //dsId
         StringBuilder sbuf = new StringBuilder();
@@ -106,7 +106,7 @@ public class V2HandshakeTest {
         Assert.assertEquals(bytes, saltBytes);
     }
 
-    public void testF2() throws Exception {
+    public void testF2() {
         DSKeys brokerKeys = getBrokerKeys();
         byte[] pubKeyBytes = brokerKeys.encodePublic();
         Assert.assertTrue(pubKeyBytes.length == 65);

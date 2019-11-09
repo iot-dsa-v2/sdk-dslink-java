@@ -26,7 +26,7 @@ public interface OutboundListHandler extends OutboundRequestHandler {
      * target is not available.  This is a good place to call close if not interested
      * in future updates.
      */
-    public void onInitialized();
+    void onInitialized();
 
     /**
      * Only called after onOpen(), indicates something about the target of the request has been
@@ -34,7 +34,7 @@ public interface OutboundListHandler extends OutboundRequestHandler {
      *
      * @param name Name of the the thing that has been removed.
      */
-    public void onRemove(String name);
+    void onRemove(String name);
 
     /**
      * Called to provide a value for node metadata, attribute or child.  After onOpen is called
@@ -43,7 +43,7 @@ public interface OutboundListHandler extends OutboundRequestHandler {
      * @param name  Node metadata starts with $, attributes @, otherwise represents a child.
      * @param value If a child, will be a map.
      */
-    public void onUpdate(String name, DSElement value);
+    void onUpdate(String name, DSElement value);
 
 }
 

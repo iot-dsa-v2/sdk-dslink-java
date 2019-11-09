@@ -16,7 +16,7 @@ import org.testng.annotations.Test;
 public class DSElementTest {
 
     @Test
-    public void test() throws Exception {
+    public void test() {
         test(DSElement.make(true), true);
         test(DSElement.make(false), false);
         test(DSElement.make(0d), 0d);

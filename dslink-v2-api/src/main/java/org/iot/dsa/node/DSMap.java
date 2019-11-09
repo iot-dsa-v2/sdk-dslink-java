@@ -605,6 +605,10 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
             return val;
         }
 
+        void setValue(DSElement val) {
+            this.val = val;
+        }
+
         @Override
         public int hashCode() {
             return key.hashCode() ^ val.hashCode();
@@ -616,10 +620,6 @@ public class DSMap extends DSGroup implements Iterable<Entry> {
 
         void setNext(Entry entry) {
             next = entry;
-        }
-
-        void setValue(DSElement val) {
-            this.val = val;
         }
     }
 

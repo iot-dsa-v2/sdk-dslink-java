@@ -213,8 +213,19 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         return new DSMetadata(metadata);
     }
 
+    public DSInfo<T> setMetadata(DSMap map) {
+        map.setParent(this);
+        metadata = map;
+        return this;
+    }
+
     public String getName() {
         return name;
+    }
+
+    DSInfo<T> setName(String arg) {
+        this.name = arg;
+        return this;
     }
 
     /**
@@ -226,6 +237,11 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
 
     public DSNode getParent() {
         return parent;
+    }
+
+    DSInfo<T> setParent(DSNode arg) {
+        this.parent = arg;
+        return this;
     }
 
     /**
@@ -271,6 +287,15 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     }
 
     /**
+     * False by default, set to true if you don't want the child to require admin level
+     * permissions.
+     */
+    public DSInfo<T> setAdmin(boolean admin) {
+        setFlag(ADMIN, admin);
+        return this;
+    }
+
+    /**
      * True if the info represents a declared default.  If true, the info is not removable or
      * renamable.
      */
@@ -278,11 +303,25 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         return getFlag(DECLARED);
     }
 
+    DSInfo<T> setDeclared(boolean arg) {
+        setFlag(DECLARED, arg);
+        return this;
+    }
+
     /**
      * Whether or not the current value, or the default value is copied.
      */
     public boolean isDefaultOnCopy() {
         return getFlag(DEFAULT_ON_COPY);
+    }
+
+    /**
+     * False by default, set to true to reset the target to it's default when the parent node
+     * is copied.
+     */
+    public DSInfo<T> setDefaultOnCopy(boolean defaultOnCopy) {
+        setFlag(DEFAULT_ON_COPY, defaultOnCopy);
+        return this;
     }
 
     /**
@@ -298,6 +337,15 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
      */
     public boolean isLocked() {
         return getFlag(LOCKED);
+    }
+
+    /**
+     * False by default, set to true if the info cannot be removed or renamed.
+     * Intended for non-default children, default children are implicitly locked.
+     */
+    public DSInfo<T> setLocked(boolean locked) {
+        setFlag(LOCKED, locked);
+        return this;
     }
 
     /**
@@ -328,6 +376,14 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     }
 
     /**
+     * False by default, set to true if you don't want the child to be sent to clients.
+     */
+    public DSInfo<T> setPrivate(boolean hidden) {
+        setFlag(PRIVATE, hidden);
+        return this;
+    }
+
+    /**
      * Whether or not an object is a writable value, or an action that mutates anything.  If an
      * action is not read only, it will require write level permissions.
      */
@@ -336,10 +392,27 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     }
 
     /**
+     * False by default, set to true if the object is a writable value, or an action that
+     * doesn't require write permission.
+     */
+    public DSInfo<T> setReadOnly(boolean readOnly) {
+        setFlag(READONLY, readOnly);
+        return this;
+    }
+
+    /**
      * Whether or not an object is persistent.
      */
     public boolean isTransient() {
         return getFlag(TRANSIENT);
+    }
+
+    /**
+     * False by default, set to true if you don't want the child persisted.
+     */
+    public DSInfo<T> setTransient(boolean trans) {
+        setFlag(TRANSIENT, trans);
+        return this;
     }
 
     /**
@@ -397,6 +470,10 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         return null;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Package Methods
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * The next DSInfo in the parent that is a node, or null.
      */
@@ -425,64 +502,6 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         return null;
     }
 
-    /**
-     * False by default, set to true if you don't want the child to require admin level
-     * permissions.
-     */
-    public DSInfo<T> setAdmin(boolean admin) {
-        setFlag(ADMIN, admin);
-        return this;
-    }
-
-    /**
-     * False by default, set to true to reset the target to it's default when the parent node
-     * is copied.
-     */
-    public DSInfo<T> setDefaultOnCopy(boolean defaultOnCopy) {
-        setFlag(DEFAULT_ON_COPY, defaultOnCopy);
-        return this;
-    }
-
-    /**
-     * False by default, set to true if the info cannot be removed or renamed.
-     * Intended for non-default children, default children are implicitly locked.
-     */
-    public DSInfo<T> setLocked(boolean locked) {
-        setFlag(LOCKED, locked);
-        return this;
-    }
-
-    public DSInfo<T> setMetadata(DSMap map) {
-        map.setParent(this);
-        metadata = map;
-        return this;
-    }
-
-    /**
-     * False by default, set to true if you don't want the child to be sent to clients.
-     */
-    public DSInfo<T> setPrivate(boolean hidden) {
-        setFlag(PRIVATE, hidden);
-        return this;
-    }
-
-    /**
-     * False by default, set to true if the object is a writable value, or an action that
-     * doesn't require write permission.
-     */
-    public DSInfo<T> setReadOnly(boolean readOnly) {
-        setFlag(READONLY, readOnly);
-        return this;
-    }
-
-    /**
-     * False by default, set to true if you don't want the child persisted.
-     */
-    public DSInfo<T> setTransient(boolean trans) {
-        setFlag(TRANSIENT, trans);
-        return this;
-    }
-
     @Override
     public String toString() {
         if (name != null) {
@@ -490,10 +509,6 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         }
         return String.valueOf(object);
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Package Methods
-    ///////////////////////////////////////////////////////////////////////////
 
     DSInfo<T> copy() {
         DSInfo<T> ret = new DSInfo<>();
@@ -545,16 +560,16 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     }
 
     /**
-     * Whether or not the info is for a dynamic action.
+     * Quick test for a proxy info.
      */
-    boolean isVirtual() {
+    boolean isProxy() {
         return false;
     }
 
     /**
-     * Quick test for a proxy info.
+     * Whether or not the info is for a dynamic action.
      */
-    boolean isProxy() {
+    boolean isVirtual() {
         return false;
     }
 
@@ -565,11 +580,6 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     DSInfo<T> setFlag(int position, boolean on) {
         //modified?
         flags = DSUtil.setBit(flags, position, on);
-        return this;
-    }
-
-    DSInfo<T> setName(String arg) {
-        this.name = arg;
         return this;
     }
 
@@ -586,16 +596,6 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
             }
         }
         this.object = arg;
-        return this;
-    }
-
-    DSInfo<T> setParent(DSNode arg) {
-        this.parent = arg;
-        return this;
-    }
-
-    DSInfo<T> setDeclared(boolean arg) {
-        setFlag(DECLARED, arg);
         return this;
     }
 

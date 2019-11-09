@@ -32,7 +32,7 @@ public interface DSIResponder {
      * @return The initial response and close notification mechanism, can be null if the if the
      * result type is void.
      */
-    public ActionResults onInvoke(InboundInvokeRequest request);
+    ActionResults onInvoke(InboundInvokeRequest request);
 
     /**
      * The implementation should quickly create an object for responding to the request, but do no
@@ -42,7 +42,7 @@ public interface DSIResponder {
      * @param request The details of the request and the mechanism for providing updates.
      * @return The initial response and close mechanism.
      */
-    public ListCloseHandler onList(InboundListRequest request);
+    ListCloseHandler onList(InboundListRequest request);
 
     /**
      * The implementation should do no processing of it on the calling thread. Simply throw a
@@ -50,7 +50,7 @@ public interface DSIResponder {
      *
      * @param request The details of the request.
      */
-    public void onSet(InboundSetRequest request);
+    void onSet(InboundSetRequest request);
 
     /**
      * The implementation should quickly create an object for responding to the request, but do no
@@ -60,6 +60,6 @@ public interface DSIResponder {
      * @param request The details of the request and the mechanism for sending updates.
      * @return Who to notify when the subscription is closed.
      */
-    public SubscriptionCloseHandler onSubscribe(InboundSubscribeRequest request);
+    SubscriptionCloseHandler onSubscribe(InboundSubscribeRequest request);
 
 }

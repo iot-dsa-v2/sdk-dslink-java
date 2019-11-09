@@ -58,7 +58,7 @@ public class DSKeysTest {
     }
 
     @Test
-    public void testAll() throws Exception {
+    public void testAll() {
         DSKeys keys = new DSKeys(DSKeys.newKeyPair());
         String signature = keys.sign(TEST_MSG, 0, TEST_MSG.length);
         Assert.assertTrue(keys.verify(TEST_MSG, 0, TEST_MSG.length, signature));
@@ -74,7 +74,7 @@ public class DSKeysTest {
     }
 
     @Test
-    public void testSerialization() throws Exception {
+    public void testSerialization() {
         DSKeys first = new DSKeys(DSKeys.newKeyPair());
         String encoded = first.encodeKeys();
         DSKeys second = DSKeys.decodeKeys(encoded);
@@ -86,7 +86,7 @@ public class DSKeysTest {
     }
 
     @Test
-    public void testSignerAndVerifier() throws Exception {
+    public void testSignerAndVerifier() {
         DSKeys keys = new DSKeys(DSKeys.newKeyPair());
         DSKeys.Signer signer = keys.newSigner();
         String signature = signer.update(TEST_MSG).getSignatureBase64();

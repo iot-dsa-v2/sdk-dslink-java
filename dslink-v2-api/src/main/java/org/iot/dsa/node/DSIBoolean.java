@@ -7,6 +7,6 @@ package org.iot.dsa.node;
  */
 public interface DSIBoolean {
 
-    public boolean toBoolean();
+    boolean toBoolean();
 
 }

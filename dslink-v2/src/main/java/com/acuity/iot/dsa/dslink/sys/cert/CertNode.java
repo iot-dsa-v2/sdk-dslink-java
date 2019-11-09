@@ -25,7 +25,7 @@ public class CertNode extends DSValueNode {
 
     public SysCertService getCertManager() {
         if (certManager == null) {
-            certManager = (SysCertService) getAncestor(SysCertService.class);
+            certManager = getAncestor(SysCertService.class);
         }
         return certManager;
     }

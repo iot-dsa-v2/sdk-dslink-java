@@ -93,6 +93,16 @@ public class DSLogHandler extends Handler {
     }
 
     /**
+     * Applies the level to the root logger and it's handlers.
+     */
+    public static void setRootLevel(Level level) {
+        if (root == null) {
+            root = Logger.getLogger("");
+        }
+        root.setLevel(level);
+    }
+
+    /**
      * Installs the root handler.
      */
     public static void init() {
@@ -172,16 +182,6 @@ public class DSLogHandler extends Handler {
                 queue.notify();
             }
         }
-    }
-
-    /**
-     * Applies the level to the root logger and it's handlers.
-     */
-    public static void setRootLevel(Level level) {
-        if (root == null) {
-            root = Logger.getLogger("");
-        }
-        root.setLevel(level);
     }
 
     /**

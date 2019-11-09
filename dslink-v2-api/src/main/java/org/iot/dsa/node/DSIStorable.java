@@ -12,12 +12,12 @@ public interface DSIStorable {
      * Deserialize a value from the configuration database, these will be values returned from the
      * store() method.
      */
-    public DSIValue restore(DSElement element);
+    DSIValue restore(DSElement element);
 
     /**
      * Serialize the value for the configuration database.  Can be a different element type than
      * toElement().
      */
-    public DSElement store();
+    DSElement store();
 
 }

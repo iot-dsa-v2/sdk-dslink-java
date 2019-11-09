@@ -164,10 +164,32 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
     }
 
     /**
+     * Sets the action group, which is null by default.
+     */
+    public DSAction setActionGroup(String name) {
+        if (immutable) {
+            throw new IllegalStateException("Action is immutable");
+        }
+        this.actionGroup = name;
+        return this;
+    }
+
+    /**
      * Display name in the group menu, usually null.
      */
     public String getActionGroupDisplay() {
         return actionGroupDisplay;
+    }
+
+    /**
+     * Display name in the group menu, usually null.  Not used if the group is null.
+     */
+    public DSAction setActionGroupDisplay(String name) {
+        if (immutable) {
+            throw new IllegalStateException("Action is immutable");
+        }
+        this.actionGroupDisplay = name;
+        return this;
     }
 
     @Override
@@ -219,6 +241,17 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
     }
 
     /**
+     * Returns this, it is not necessary to set the result to void.
+     */
+    public DSAction setResultsType(ResultsType result) {
+        if (immutable) {
+            throw new IllegalStateException("Action is immutable");
+        }
+        this.result = result;
+        return this;
+    }
+
+    /**
      * {@inheritDoc}
      * <p>
      * Does nothing by default.
@@ -240,28 +273,6 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
     }
 
     /**
-     * Sets the action group, which is null by default.
-     */
-    public DSAction setActionGroup(String name) {
-        if (immutable) {
-            throw new IllegalStateException("Action is immutable");
-        }
-        this.actionGroup = name;
-        return this;
-    }
-
-    /**
-     * Display name in the group menu, usually null.  Not used if the group is null.
-     */
-    public DSAction setActionGroupDisplay(String name) {
-        if (immutable) {
-            throw new IllegalStateException("Action is immutable");
-        }
-        this.actionGroupDisplay = name;
-        return this;
-    }
-
-    /**
      * Prevents further modification of parameters or return type.  Will throw an
      * exception if already immutable.
      *
@@ -272,17 +283,6 @@ public class DSAction implements DSIAction, DSIMetadata, DSIObject {
             throw new IllegalStateException("Action is immutable");
         }
         this.immutable = arg;
-        return this;
-    }
-
-    /**
-     * Returns this, it is not necessary to set the result to void.
-     */
-    public DSAction setResultsType(ResultsType result) {
-        if (immutable) {
-            throw new IllegalStateException("Action is immutable");
-        }
-        this.result = result;
         return this;
     }
 
