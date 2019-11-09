@@ -16,23 +16,23 @@ public interface ActionResults {
     /**
      * Unless the result type is void, this should return a value greater than zero.
      */
-    public int getColumnCount();
+    int getColumnCount();
 
     /**
      * Only needed if the column count is greater than 0.
      */
-    public void getColumnMetadata(int idx, DSMap bucket);
+    void getColumnMetadata(int idx, DSMap bucket);
 
     /**
      * The implementation should add the values of the current row to the given bucket.  The
      * bucket can be reused across calls, the implementation should not cache references to it.
      */
-    public void getResults(DSList bucket);
+    void getResults(DSList bucket);
 
     /**
      * Determines how the results should be used.
      */
-    public ResultsType getResultsType();
+    ResultsType getResultsType();
 
     /**
      * Initially, this cursor must be positioned before the first set of results. Return true to
@@ -42,12 +42,12 @@ public interface ActionResults {
      * will be closed once this returns false.  This will only be called once for a results
      * type of VALUES.
      */
-    public boolean next();
+    boolean next();
 
     /**
      * Always called, does nothing by default.
      */
-    public default void onClose() {
+    default void onClose() {
     }
 
 }

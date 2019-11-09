@@ -61,6 +61,10 @@ public class DS1LinkConnection extends DSBrokerConnection {
         return wsUri.get().toString();
     }
 
+    protected void setWsUri(String arg) {
+        put(wsUri, DSString.valueOf(arg));
+    }
+
     @Override
     protected void initializeConnection() {
         try {
@@ -119,10 +123,6 @@ public class DS1LinkConnection extends DSBrokerConnection {
             setBrokerUri(uri);
         }
         debug(debug() ? "Broker URI " + getBrokerUri() : null);
-    }
-
-    protected void setWsUri(String arg) {
-        put(wsUri, DSString.valueOf(arg));
     }
 
     ///////////////////////////////////////////////////////////////////////////

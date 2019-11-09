@@ -153,7 +153,8 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     public static final DSStatus remoteDisabled = valueOf(REMOTE_DISABLED);
     public static final DSStatus unknown = valueOf(UNKNOWN);
     public static final DSStatus remoteUnknown = valueOf(REMOTE_UNKNOWN);
-    public static final DSStatus start = valueOf(STALE);
+    public static final DSStatus start = valueOf(START);
+
     ///////////////////////////////////////////////////////////////////////////
     // Fields
     ///////////////////////////////////////////////////////////////////////////

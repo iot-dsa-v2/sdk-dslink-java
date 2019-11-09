@@ -50,6 +50,10 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
         return requestId;
     }
 
+    public void setRequestId(Integer rid) {
+        this.requestId = rid;
+    }
+
     public DSRequester getRequester() {
         return requester;
     }
@@ -92,10 +96,6 @@ public abstract class DSOutboundStub implements OutboundMessage, OutboundStream 
     @Override
     public boolean isStreamOpen() {
         return open;
-    }
-
-    public void setRequestId(Integer rid) {
-        this.requestId = rid;
     }
 
 }

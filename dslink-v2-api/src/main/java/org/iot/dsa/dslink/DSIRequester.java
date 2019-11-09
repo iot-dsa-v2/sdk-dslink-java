@@ -25,7 +25,7 @@ public interface DSIRequester {
      * @return The handler parameter.
      * @see AbstractInvokeHandler
      */
-    public OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler handler);
+    OutboundInvokeHandler invoke(String path, DSMap params, OutboundInvokeHandler handler);
 
     /**
      * Submits a list request.  Child names do not need to be encoded unless they contain
@@ -38,7 +38,7 @@ public interface DSIRequester {
      * @see org.iot.dsa.node.DSPath#encodeName(String)
      * @see org.iot.dsa.node.DSPath#decodeName(String)
      */
-    public OutboundListHandler list(String path, OutboundListHandler handler);
+    OutboundListHandler list(String path, OutboundListHandler handler);
 
     /**
      * Submits request to remove an attribute.
@@ -47,7 +47,7 @@ public interface DSIRequester {
      * @return The handler parameter.
      * @see SimpleRequestHandler
      */
-    public OutboundRequestHandler remove(String path, OutboundRequestHandler handler);
+    OutboundRequestHandler remove(String path, OutboundRequestHandler handler);
 
     /**
      * Submits a set request.
@@ -56,7 +56,7 @@ public interface DSIRequester {
      * @return The handler parameter.
      * @see SimpleRequestHandler
      */
-    public OutboundRequestHandler set(String path, DSIValue value, OutboundRequestHandler handler);
+    OutboundRequestHandler set(String path, DSIValue value, OutboundRequestHandler handler);
 
     /**
      * Submits a subscribe request.
@@ -66,8 +66,8 @@ public interface DSIRequester {
      * @return The handler parameter.
      * @see AbstractSubscribeHandler
      */
-    public OutboundSubscribeHandler subscribe(String path, DSIValue qos,
-                                              OutboundSubscribeHandler handler);
+    OutboundSubscribeHandler subscribe(String path, DSIValue qos,
+                                       OutboundSubscribeHandler handler);
 
 }
 

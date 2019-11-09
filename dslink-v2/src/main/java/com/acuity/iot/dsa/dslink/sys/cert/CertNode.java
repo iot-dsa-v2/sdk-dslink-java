@@ -21,11 +21,11 @@ public class CertNode extends DSValueNode {
     private static final String ALLOW = "Allow";
     private static final String REMOVE = "Remove";
     private SysCertService certManager;
-    private DSInfo<DSIValue> value = (DSInfo<DSIValue>) getInfo(VALUE);
+    private DSInfo<DSIValue> value = getInfo(VALUE);
 
     public SysCertService getCertManager() {
         if (certManager == null) {
-            certManager = (SysCertService) getAncestor(SysCertService.class);
+            certManager = getAncestor(SysCertService.class);
         }
         return certManager;
     }

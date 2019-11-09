@@ -105,6 +105,11 @@ public class DSLinkOptions {
         return brokerUri;
     }
 
+    public DSLinkOptions setBrokerUri(String arg) {
+        brokerUri = arg;
+        return this;
+    }
+
     /**
      * Looks for the value in dslink.json and if not found, returns the fallback.
      */
@@ -177,6 +182,11 @@ public class DSLinkOptions {
         return dslinkJson;
     }
 
+    public DSLinkOptions setDslinkJson(String path) {
+        dslinkJson = path;
+        return this;
+    }
+
     /**
      * If not set, this will attempt to open dslink.json.
      */
@@ -194,6 +204,14 @@ public class DSLinkOptions {
             dslinkMap = Json.read(file).toMap();
         }
         return dslinkMap;
+    }
+
+    /**
+     * Directly set the map without using file io.
+     */
+    public DSLinkOptions setDslinkMap(DSMap map) {
+        dslinkMap = map;
+        return this;
     }
 
     /**
@@ -219,6 +237,19 @@ public class DSLinkOptions {
     }
 
     /**
+     * Null by default.
+     public File getLogFile() {
+     if (logFile == null) {
+     String path = getConfig(CFG_LOG_FILE, null);
+     if (path != null) {
+     logFile = new File(workingDir, path);
+     }
+     }
+     return logFile;
+     }
+     */
+
+    /**
      * If not already set, will attempt to use CFG_HOME in dslink.json.  Whether or not the config
      * is present, home will be resolved against the directory of the process.
      */
@@ -230,6 +261,24 @@ public class DSLinkOptions {
     }
 
     /**
+     * Sets the home directory the link should use for file IO.  The path will be resolved
+     * against the directory of the process "."
+     */
+    public DSLinkOptions setHome(String path) {
+        home = new File(".");
+        if ((path != null) && !path.isEmpty()) {
+            home = makeFile(home, path);
+        } else {
+            try {
+                home = home.getCanonicalFile();
+            } catch (Exception x) {
+            }
+        }
+        home = home.getAbsoluteFile();
+        return this;
+    }
+
+    /**
      * If not set, will attempt to use the config in dslink.json (default is '.key') and resolve
      * against the home directory.  If the file does not exist, new keys will be created.
      */
@@ -238,6 +287,26 @@ public class DSLinkOptions {
             setKeys(makeFile(getHome(), getConfig(CFG_KEY_FILE, ".key")));
         }
         return keys;
+    }
+
+    /**
+     * Directly set the keys without using file io.
+     */
+    public DSLinkOptions setKeys(DSKeys keys) {
+        this.keys = keys;
+        return this;
+    }
+
+    /**
+     * Sets the link keys by file path.  Will throw a runtime exception if there are IO problems.
+     */
+    public DSLinkOptions setKeys(File file) {
+        keys = new DSKeys(file);
+        return this;
+    }
+
+    public DSLinkOptions setKeys(String path) {
+        return setKeys(makeFile(getHome(), path));
     }
 
     public String getLinkName() {
@@ -255,18 +324,10 @@ public class DSLinkOptions {
         return linkName;
     }
 
-    /**
-     * Null by default.
-     public File getLogFile() {
-     if (logFile == null) {
-     String path = getConfig(CFG_LOG_FILE, null);
-     if (path != null) {
-     logFile = new File(workingDir, path);
-     }
-     }
-     return logFile;
-     }
-     */
+    public DSLinkOptions setLinkName(String arg) {
+        linkName = arg;
+        return this;
+    }
 
     /**
      * Info by default.
@@ -277,6 +338,16 @@ public class DSLinkOptions {
             logLevel = DSLevel.make(level).toLevel();
         }
         return logLevel;
+    }
+
+    public DSLinkOptions setLogLevel(String level) {
+        logLevel = DSLevel.make(level).toLevel();
+        return this;
+    }
+
+    public DSLinkOptions setLogLevel(Level level) {
+        logLevel = level;
+        return this;
     }
 
     /**
@@ -295,6 +366,15 @@ public class DSLinkOptions {
         return mainType;
     }
 
+    public DSLinkOptions setMainType(Class clazz) {
+        return setMainType(clazz.getName());
+    }
+
+    public DSLinkOptions setMainType(String className) {
+        mainType = className;
+        return this;
+    }
+
     /**
      * Whether or not to support msgpack in the v1 protocol, true by default.
      */
@@ -303,6 +383,15 @@ public class DSLinkOptions {
             msgpack = getConfig(CFG_MSGPACK, true);
         }
         return msgpack;
+    }
+
+    public DSLinkOptions setMsgpack(boolean arg) {
+        msgpack = arg;
+        return this;
+    }
+
+    public DSLinkOptions setMsgpack(String str) {
+        return setMsgpack("true".equalsIgnoreCase(str));
     }
 
     /**
@@ -317,6 +406,11 @@ public class DSLinkOptions {
         return nodesFile;
     }
 
+    public DSLinkOptions setNodesFile(String path) {
+        nodesFile = new File(getHome(), path);
+        return this;
+    }
+
     /**
      * Authentication token for the broker, this can return null.
      */
@@ -327,8 +421,8 @@ public class DSLinkOptions {
         return token;
     }
 
-    public DSLinkOptions setBrokerUri(String arg) {
-        brokerUri = arg;
+    public DSLinkOptions setToken(String arg) {
+        token = arg;
         return this;
     }
 
@@ -374,100 +468,6 @@ public class DSLinkOptions {
     public DSLinkOptions setConfig(String name, String value) {
         DSMap map = getConfigMap(name, true);
         map.put("value", value);
-        return this;
-    }
-
-    public DSLinkOptions setDslinkJson(String path) {
-        dslinkJson = path;
-        return this;
-    }
-
-    /**
-     * Directly set the map without using file io.
-     */
-    public DSLinkOptions setDslinkMap(DSMap map) {
-        dslinkMap = map;
-        return this;
-    }
-
-    /**
-     * Sets the home directory the link should use for file IO.  The path will be resolved
-     * against the directory of the process "."
-     */
-    public DSLinkOptions setHome(String path) {
-        home = new File(".");
-        if ((path != null) && !path.isEmpty()) {
-            home = makeFile(home, path);
-        } else {
-            try {
-                home = home.getCanonicalFile();
-            } catch (Exception x) {
-            }
-        }
-        home = home.getAbsoluteFile();
-        return this;
-    }
-
-    /**
-     * Directly set the keys without using file io.
-     */
-    public DSLinkOptions setKeys(DSKeys keys) {
-        this.keys = keys;
-        return this;
-    }
-
-    /**
-     * Sets the link keys by file path.  Will throw a runtime exception if there are IO problems.
-     */
-    public DSLinkOptions setKeys(File file) {
-        keys = new DSKeys(file);
-        return this;
-    }
-
-    public DSLinkOptions setKeys(String path) {
-        return setKeys(makeFile(getHome(), path));
-    }
-
-    public DSLinkOptions setLinkName(String arg) {
-        linkName = arg;
-        return this;
-    }
-
-    public DSLinkOptions setLogLevel(String level) {
-        logLevel = DSLevel.make(level).toLevel();
-        return this;
-    }
-
-    public DSLinkOptions setLogLevel(Level level) {
-        logLevel = level;
-        return this;
-    }
-
-    public DSLinkOptions setMainType(Class clazz) {
-        return setMainType(clazz.getName());
-    }
-
-    public DSLinkOptions setMainType(String className) {
-        mainType = className;
-        return this;
-    }
-
-    public DSLinkOptions setMsgpack(boolean arg) {
-        msgpack = arg;
-        return this;
-    }
-
-    public DSLinkOptions setMsgpack(String str) {
-        return setMsgpack("true".equalsIgnoreCase(str));
-    }
-
-    public DSLinkOptions setNodesFile(String path) {
-        nodesFile = new File(getHome(), path);
-        return this;
-    }
-
-    public DSLinkOptions setToken(String arg) {
-        token = arg;
         return this;
     }
 

@@ -55,8 +55,17 @@ class DSOutboundSubscription {
         return sid;
     }
 
+    public DSOutboundSubscription setSid(Integer sid) {
+        this.sid = sid;
+        return this;
+    }
+
     public State getState() {
         return state;
+    }
+
+    void setState(State state) {
+        this.state = state;
     }
 
     public DSOutboundSubscriptions getSubscriptions() {
@@ -67,6 +76,10 @@ class DSOutboundSubscription {
         return sid != null;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Package / Private Methods
+    ///////////////////////////////////////////////////////////////////////////
+
     public void onDisconnect() {
         DSOutboundSubscribeStub cur = first;
         while (cur != null) {
@@ -74,15 +87,6 @@ class DSOutboundSubscription {
             cur = cur.getNext();
         }
     }
-
-    public DSOutboundSubscription setSid(Integer sid) {
-        this.sid = sid;
-        return this;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Package / Private Methods
-    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * If already subscribed, will pass the last update to the new subscriber.
@@ -157,10 +161,6 @@ class DSOutboundSubscription {
                 getSubscriptions().sendSubscribe(this);
             }
         }
-    }
-
-    void setState(State state) {
-        this.state = state;
     }
 
     int size() {

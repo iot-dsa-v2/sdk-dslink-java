@@ -31,7 +31,7 @@ public class RequesterInvokeTest {
         doit(new V2TestLink(new MyMain()));
     }
 
-    private void doit(DSLink link) throws Exception {
+    private void doit(DSLink link) {
         success = false;
         Thread t = new Thread(link, "DSLink Runner");
         t.start();

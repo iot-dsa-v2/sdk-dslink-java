@@ -9,6 +9,6 @@ import org.iot.dsa.io.DSIWriter;
  */
 public interface MessageWriter {
 
-    public DSIWriter getWriter();
+    DSIWriter getWriter();
 
 }

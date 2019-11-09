@@ -13,18 +13,18 @@ public interface DSISubscription {
     /**
      * Closes the subscription.
      */
-    public void close();
+    void close();
 
     /**
      * The node being subscribed to.
      */
-    public DSNode getNode();
+    DSNode getNode();
 
     /**
      * Event sink.
      */
-    public DSISubscriber getSubscriber();
+    DSISubscriber getSubscriber();
 
-    public boolean isOpen();
+    boolean isOpen();
 
 }

@@ -52,16 +52,13 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
         return brokerPath.getElement().toString();
     }
 
+    protected void setPathInBroker(String path) {
+        put(brokerPath, DSString.valueOf(path));
+    }
+
     @Override
     public DSSession getSession() {
         return (DSSession) super.getSession();
-    }
-
-    /**
-     * For the sessions to update
-     */
-    public void setBrokerSalt(String arg) {
-        put(brokerSalt, DSString.valueOf(arg));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -116,50 +113,53 @@ public abstract class DSBrokerConnection extends DSLinkConnection {
         return brokerFormat.get().toString();
     }
 
-    protected String getBrokerId() {
-        return brokerDsId.get().toString();
-    }
-
-    protected String getBrokerKey() {
-        return brokerPubKey.get().toString();
-    }
-
-    protected String getBrokerSalt() {
-        return brokerSalt.get().toString();
-    }
-
-    protected String getBrokerUri() {
-        return brokerUri.get().toString();
-    }
-
-    protected String getBrokerVersion() {
-        return brokerVersion.get().toString();
-    }
-
-    protected abstract void initializeConnection();
-
     protected void setBrokerFormat(String arg) {
         put(brokerFormat, DSString.valueOf(arg));
+    }
+
+    protected String getBrokerId() {
+        return brokerDsId.get().toString();
     }
 
     protected void setBrokerId(String arg) {
         put(brokerDsId, DSString.valueOf(arg));
     }
 
+    protected String getBrokerKey() {
+        return brokerPubKey.get().toString();
+    }
+
     protected void setBrokerKey(String arg) {
         put(brokerPubKey, DSString.valueOf(arg));
+    }
+
+    protected String getBrokerSalt() {
+        return brokerSalt.get().toString();
+    }
+
+    /**
+     * For the sessions to update
+     */
+    public void setBrokerSalt(String arg) {
+        put(brokerSalt, DSString.valueOf(arg));
+    }
+
+    protected String getBrokerUri() {
+        return brokerUri.get().toString();
     }
 
     protected void setBrokerUri(String arg) {
         put(brokerUri, DSString.valueOf(arg));
     }
 
+    protected String getBrokerVersion() {
+        return brokerVersion.get().toString();
+    }
+
     protected void setBrokerVersion(String arg) {
         put(brokerVersion, DSString.valueOf(arg));
     }
 
-    protected void setPathInBroker(String path) {
-        put(brokerPath, DSString.valueOf(path));
-    }
+    protected abstract void initializeConnection();
 
 }

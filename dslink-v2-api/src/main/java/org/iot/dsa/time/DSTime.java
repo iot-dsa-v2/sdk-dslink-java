@@ -1,5 +1,6 @@
 package org.iot.dsa.time;
 
+import java.util.Calendar;
 import org.iot.dsa.dslink.ActionResults;
 import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSInfo;
@@ -122,9 +123,38 @@ public class DSTime extends DSValue implements DSISetAction {
         return toString().hashCode();
     }
 
+    public boolean isAfter(DSTime time) {
+        return !isBefore(time);
+    }
+
+    public boolean isBefore(DSTime time) {
+        if (hour < time.hour) {
+            return true;
+        } else if (hour > time.hour) {
+            return false;
+        }
+        if (minute < time.minute) {
+            return true;
+        } else if (minute > time.minute) {
+            return false;
+        }
+        if (second < time.second) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean isNull() {
         return this == NULL;
+    }
+
+    public int millisInDay() {
+        return millisInDay(hour, minute, second);
+    }
+
+    public static int millisInDay(int hour, int minute, int second) {
+        return (hour * Time.MILLIS_HOUR) + (minute * Time.MILLIS_MINUTE) + (second * 1000);
     }
 
     @Override
@@ -158,16 +188,23 @@ public class DSTime extends DSValue implements DSISetAction {
         return toElement().toString();
     }
 
-    /**
-     * Creates a DSDateTime for the given range.
-     */
-    public static DSTime valueOf(int hour, int minute, int second) {
-        return new DSTime(hour, minute, second, null);
-    }
-
     @Override
     public DSTime valueOf(DSElement element) {
         return valueOf(element.toString());
+    }
+
+    /**
+     * Creates a DSTime for the given.
+     */
+    public static DSTime valueOf(Calendar cal) {
+        return new DSTime(Time.getHour(cal), Time.getMinute(cal), Time.getSecond(cal), null);
+    }
+
+    /**
+     * Creates a DSTime for the given.
+     */
+    public static DSTime valueOf(int hour, int minute, int second) {
+        return new DSTime(hour, minute, second, null);
     }
 
     /**

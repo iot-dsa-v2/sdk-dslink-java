@@ -24,7 +24,7 @@ public class DSJavaEnumTest {
     // -------
 
     @Test
-    public void theTest() throws Exception {
+    public void theTest() {
         DSJavaEnum javaEnum = DSJavaEnum.valueOf(TestEnum.FIRST);
         DSElement e = javaEnum.store();
         javaEnum = DSJavaEnum.NULL.restore(e);

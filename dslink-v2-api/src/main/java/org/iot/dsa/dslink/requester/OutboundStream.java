@@ -10,11 +10,11 @@ public interface OutboundStream {
     /**
      * Allows the requester to close the stream.
      */
-    public void closeStream();
+    void closeStream();
 
     /**
      * Whether or not the request is open.
      */
-    public boolean isStreamOpen();
+    boolean isStreamOpen();
 
 }

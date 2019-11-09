@@ -35,7 +35,7 @@ public class StreamTableTest {
         doit(new V2TestLink(new MyMain()));
     }
 
-    private void doit(DSLink link) throws Exception {
+    private void doit(DSLink link) {
         Thread t = new Thread(link, "DSLink Runner");
         t.start();
         link.getConnection().waitForConnection(5000);

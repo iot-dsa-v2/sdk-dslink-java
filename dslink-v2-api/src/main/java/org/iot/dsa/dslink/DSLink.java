@@ -91,6 +91,11 @@ public abstract class DSLink extends DSNode implements Runnable {
      */
     public abstract DSMainNode getMain();
 
+    protected DSLink setMain(DSMainNode node) {
+        put(MAIN, node);
+        return this;
+    }
+
     public DSLinkOptions getOptions() {
         return options;
     }
@@ -207,6 +212,10 @@ public abstract class DSLink extends DSNode implements Runnable {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * Properly shuts down the link when a thread is executing the run method.
      */
@@ -224,10 +233,6 @@ public abstract class DSLink extends DSNode implements Runnable {
             debug(x);
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Protected Methods
-    ///////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void declareDefaults() {
@@ -259,11 +264,6 @@ public abstract class DSLink extends DSNode implements Runnable {
         synchronized (this) {
             notifyAll();
         }
-    }
-
-    protected DSLink setMain(DSMainNode node) {
-        put(MAIN, node);
-        return this;
     }
 
 }

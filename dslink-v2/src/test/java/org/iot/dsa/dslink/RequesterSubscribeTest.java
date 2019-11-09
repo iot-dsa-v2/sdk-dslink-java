@@ -169,7 +169,7 @@ public class RequesterSubscribeTest {
 
         @Override
         public DSInfo<DSIValue> getValueChild() {
-            return (DSInfo<DSIValue>) getInfo("int");
+            return getInfo("int");
         }
 
         @Override

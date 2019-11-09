@@ -35,7 +35,7 @@ public abstract class DSLinkConnection extends DSConnection {
      */
     public DSLink getLink() {
         if (link == null) {
-            link = (DSLink) getAncestor(DSLink.class);
+            link = getAncestor(DSLink.class);
         }
         return link;
     }
@@ -63,11 +63,25 @@ public abstract class DSLinkConnection extends DSConnection {
         return session;
     }
 
+    protected void setSession(DSISession session) {
+        this.session = session;
+        put(SESSION, session).setTransient(true).setLocked(true);
+    }
+
     public DSITransport getTransport() {
         if (transport == null) {
             setTransport(makeTransport());
         }
         return transport;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
+
+    protected void setTransport(DSITransport transport) {
+        this.transport = transport;
+        put(TRANSPORT, transport).setTransient(true).setLocked(true);
     }
 
     /**
@@ -76,10 +90,6 @@ public abstract class DSLinkConnection extends DSConnection {
     public boolean isRequesterAllowed() {
         return getSession().isRequesterAllowed();
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Protected Methods
-    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Closes the transport.
@@ -108,16 +118,6 @@ public abstract class DSLinkConnection extends DSConnection {
             remove(info.setLocked(false));
         }
         transport = null;
-    }
-
-    protected void setSession(DSISession session) {
-        this.session = session;
-        put(SESSION, session).setTransient(true).setLocked(true);
-    }
-
-    protected void setTransport(DSITransport transport) {
-        this.transport = transport;
-        put(TRANSPORT, transport).setTransient(true).setLocked(true);
     }
 
 }

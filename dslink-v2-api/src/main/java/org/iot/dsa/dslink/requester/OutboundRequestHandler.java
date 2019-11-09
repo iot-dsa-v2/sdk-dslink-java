@@ -12,29 +12,29 @@ public interface OutboundRequestHandler {
     /**
      * Parameters are specific to the request type and may be null.
      */
-    public DSIValue getParameters();
+    DSIValue getParameters();
 
     /**
      * Path of the request.
      */
-    public String getPath();
+    String getPath();
 
     /**
      * The mechanism to close the request stream.
      */
-    public OutboundStream getStream();
+    OutboundStream getStream();
 
     /**
      * Callback for when the request stream is closed, no matter how or by who.  Will be called if
      * there is an error as well.
      */
-    public void onClose();
+    void onClose();
 
     /**
      * Callback for when an error is received.  onClose will also be called after this.
      * Does nothing by default.
      */
-    public void onError(ErrorType type, String msg);
+    void onError(ErrorType type, String msg);
 
     /**
      * Called by the requester before submitting the actual request to the responder.
@@ -43,6 +43,6 @@ public interface OutboundRequestHandler {
      * @param params Any additional parameters supplied to the operation.
      * @param stream Mechanism to close the request stream.
      */
-    public void onInit(String path, DSIValue params, OutboundStream stream);
+    void onInit(String path, DSIValue params, OutboundStream stream);
 
 }

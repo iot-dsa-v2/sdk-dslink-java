@@ -8,7 +8,7 @@ import org.iot.dsa.node.DSInfo;
  */
 public class LoggerNode extends StreamableLogNode {
 
-    private DSInfo<LoggerNodeLevel> levelInfo = (DSInfo<LoggerNodeLevel>) getInfo("Log Level");
+    private DSInfo<LoggerNodeLevel> levelInfo = getInfo("Log Level");
     private Logger logger;
 
     public LoggerNode() {

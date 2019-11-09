@@ -51,7 +51,7 @@ public class DSByteBufferTest {
     }
 
     @Test
-    public void theTest() throws Exception {
+    public void theTest() {
         DSByteBuffer buffer = new DSByteBuffer(5);
         Assert.assertTrue(buffer.available() == 0);
         byte[] tmp = new byte[]{1, 2, 3, 4, 5};

@@ -12,7 +12,7 @@ public interface Action extends Node {
     /**
      * Only needed for a VALUES type actions, and optional even then.
      */
-    public default int getColumnCount() {
+    default int getColumnCount() {
         return 0;
     }
 
@@ -20,14 +20,14 @@ public interface Action extends Node {
      * Add the metadata for the column at the given index to the bucket.  Only called before the
      * action invocation.  Throws an IllegalStateException by default.
      */
-    public default void getColumnMetadata(int idx, DSMap bucket) {
+    default void getColumnMetadata(int idx, DSMap bucket) {
         throw new IllegalStateException("Method not overridden");
     }
 
     /**
      * Return 0 or less if there are no parameters.  Returns 0 by default.
      */
-    public default int getParameterCount() {
+    default int getParameterCount() {
         return 0;
     }
 
@@ -35,28 +35,28 @@ public interface Action extends Node {
      * Add the metadata for the parameter at the given index to the bucket.  Throws an
      * IllegalStateException by default.
      */
-    public default void getParameterMetadata(int idx, DSMap bucket) {
+    default void getParameterMetadata(int idx, DSMap bucket) {
         throw new IllegalStateException("Method not overridden");
     }
 
     /**
      * What the action returns, returns VOID by default.
      */
-    public default ResultsType getResultsType() {
+    default ResultsType getResultsType() {
         return ResultsType.VOID;
     }
 
     /**
      * Whether or not the action requires write permission.  Returns false by default.
      */
-    public default boolean isReadOnly() {
+    default boolean isReadOnly() {
         return false;
     }
 
     /**
      * Defines what the action returns.
      */
-    public enum ResultsType {
+    enum ResultsType {
 
         /**
          * A stream of rows.  Clients can choose to trim rows for memory management.

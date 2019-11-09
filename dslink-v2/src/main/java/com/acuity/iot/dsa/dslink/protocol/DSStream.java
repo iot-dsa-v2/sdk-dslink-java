@@ -10,12 +10,12 @@ public interface DSStream {
     /**
      * Use to close locally.
      */
-    public void close();
+    void close();
 
     /**
      * Called when closed by external forces, such as by the requester or the connection being
      * closed.
      */
-    public void onClose(Integer requestId);
+    void onClose(Integer requestId);
 
 }

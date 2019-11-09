@@ -259,7 +259,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
         return setNextValue(bytes);
     }
 
-    private Token readList(byte b) throws IOException {
+    private Token readList(byte b) {
         int size;
         if (isFixedList(b)) {
             size = b & 0x0f;
@@ -279,7 +279,7 @@ public class MsgpackReader extends AbstractReader implements DSIReader, MsgpackC
         return setBeginList();
     }
 
-    private Token readMap(byte b) throws IOException {
+    private Token readMap(byte b) {
         int size;
         if (isFixedMap(b)) {
             size = b & 0x0f;

@@ -52,6 +52,13 @@ public class SysBackupService extends DSNode implements Runnable {
         return enabled.getElement().toBoolean();
     }
 
+    /**
+     * Intended for use by DSLink subclasses, such as testing links.
+     */
+    public void setEnabled(boolean arg) {
+        put(enabled, DSBool.valueOf(arg));
+    }
+
     @Override
     public void onChildChanged(DSInfo<?> info) {
         super.onChildChanged(info);
@@ -168,13 +175,6 @@ public class SysBackupService extends DSNode implements Runnable {
         }
     }
 
-    /**
-     * Intended for use by DSLink subclasses, such as testing links.
-     */
-    public void setEnabled(boolean arg) {
-        put(enabled, DSBool.valueOf(arg));
-    }
-
     @Override
     protected void declareDefaults() {
         declareDefault(SAVE, new SaveAction());
@@ -199,7 +199,7 @@ public class SysBackupService extends DSNode implements Runnable {
 
     private DSLink getLink() {
         if (link == null) {
-            link = (DSLink) getAncestor(DSLink.class);
+            link = getAncestor(DSLink.class);
         }
         return link;
     }

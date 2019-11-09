@@ -88,10 +88,36 @@ public class DSMetadata {
     }
 
     /**
+     * The list must be size 2, index 0 should be the false text and 1 the true text, and the
+     * entries must not be null.
+     */
+    public DSMetadata setBooleanRange(DSList range) {
+        if (range.size() != 2) {
+            throw new IllegalStateException();
+        }
+        if (range.get(0).isNull() || range.get(1).isNull()) {
+            throw new NullPointerException();
+        }
+        map.put(BOOLEAN_RANGE, range);
+        return this;
+    }
+
+    /**
      * The default value for an action parameter, or null.
      */
     public DSElement getDefault() {
         return map.get(DEFAULT);
+    }
+
+    /**
+     * Sets the default value only, does not set type information.
+     */
+    public DSMetadata setDefault(DSIValue arg) {
+        if (arg == null) {
+            return this;
+        }
+        map.put(DEFAULT, arg.toElement());
+        return this;
     }
 
     /**
@@ -101,11 +127,25 @@ public class DSMetadata {
         return map.getString(DESCRIPTION);
     }
 
+    public DSMetadata setDescription(String arg) {
+        if (arg != null) {
+            map.put(DESCRIPTION, arg);
+        }
+        return this;
+    }
+
     /**
      * The alternate display name, or null.
      */
     public String getDisplayName() {
         return map.getString(DISPLAY_NAME);
+    }
+
+    public DSMetadata setDisplayName(String arg) {
+        if (arg != null) {
+            map.put(DISPLAY_NAME, arg);
+        }
+        return this;
     }
 
     /**
@@ -116,10 +156,37 @@ public class DSMetadata {
     }
 
     /**
+     * See the EDITOR_ constants.
+     */
+    public DSMetadata setEditor(String arg) {
+        if (arg != null) {
+            map.put(EDITOR, arg);
+        }
+        return this;
+    }
+
+    /**
      * The editor, or null.
      */
     public DSList getEnumRange() {
         return map.getList(ENUM_RANGE);
+    }
+
+    /**
+     * List of string values for an enum or string.
+     */
+    public DSMetadata setEnumRange(DSList arg) {
+        if (arg != null) {
+            map.put(ENUM_RANGE, arg);
+        }
+        return this;
+    }
+
+    /**
+     * List of string values for an enum or string.
+     */
+    public DSMetadata setEnumRange(String... range) {
+        return setEnumRange(DSList.valueOf(range));
     }
 
     public DSMap getMap() {
@@ -127,10 +194,32 @@ public class DSMetadata {
     }
 
     /**
+     * Change the underlying map so the metadata instance can be reused.
+     */
+    public DSMetadata setMap(DSMap arg) {
+        if (arg == null) {
+            this.map = new DSMap();
+        } else {
+            this.map = arg;
+        }
+        return this;
+    }
+
+    /**
      * The max value, or null.
      */
     public DSElement getMaxValue() {
         return map.get(MAX);
+    }
+
+    /**
+     * The arg should be a number.
+     */
+    public DSMetadata setMaxValue(DSElement arg) {
+        if (arg != null) {
+            map.put(MIN, arg);
+        }
+        return this;
     }
 
     /**
@@ -166,10 +255,30 @@ public class DSMetadata {
     }
 
     /**
+     * The arg should be a number.
+     */
+    public DSMetadata setMinValue(DSElement arg) {
+        if (arg != null) {
+            map.put(MIN, arg);
+        }
+        return this;
+    }
+
+    /**
      * Not the name in the parent node, but used for things such as columns and parameters.
      */
     public String getName() {
         return map.getString(NAME);
+    }
+
+    /**
+     * Not the name used in the parent node, but used elsewhere such as parameter or column names.
+     */
+    public DSMetadata setName(String arg) {
+        if (arg != null) {
+            map.put(NAME, arg);
+        }
+        return this;
     }
 
     /**
@@ -180,10 +289,27 @@ public class DSMetadata {
     }
 
     /**
+     * Place holder text for text fields.
+     */
+    public DSMetadata setPlaceHolder(String arg) {
+        if (arg != null) {
+            map.put(PLACEHOLDER, arg);
+        }
+        return this;
+    }
+
+    /**
      * The decimal precision or null.
      */
     public DSLong getPrecision() {
         return (DSLong) map.get(PRECISION);
+    }
+
+    public DSMetadata setPrecision(DSLong arg) {
+        if (arg != null) {
+            map.put(PRECISION, arg);
+        }
+        return this;
     }
 
     /**
@@ -194,10 +320,39 @@ public class DSMetadata {
     }
 
     /**
+     * Sets the type and if the given implements DSIMetadata, adds it's metadata as well.
+     */
+    public DSMetadata setType(DSIValue arg) {
+        map.put(DSMetadata.TYPE, arg.toElement().getElementType().toElement());
+        if (arg instanceof DSIMetadata) {
+            ((DSIMetadata) arg).getMetadata(map);
+        }
+        return this;
+    }
+
+    /**
+     * The type for action parameters, can be used to override types in the responder api.
+     */
+    public DSMetadata setType(DSValueType arg) {
+        map.put(TYPE, arg.toString());
+        return this;
+    }
+
+    /**
      * Value if defined, otherwise null.
      */
     public String getUnit() {
         return map.getString(UNIT);
+    }
+
+    /**
+     * The unit identifier.
+     */
+    public DSMetadata setUnit(String arg) {
+        if (arg != null) {
+            map.put(UNIT, arg);
+        }
+        return this;
     }
 
     public boolean isEmpty() {
@@ -230,21 +385,6 @@ public class DSMetadata {
     }
 
     /**
-     * The list must be size 2, index 0 should be the false text and 1 the true text, and the
-     * entries must not be null.
-     */
-    public DSMetadata setBooleanRange(DSList range) {
-        if (range.size() != 2) {
-            throw new IllegalStateException();
-        }
-        if (range.get(0).isNull() || range.get(1).isNull()) {
-            throw new NullPointerException();
-        }
-        map.put(BOOLEAN_RANGE, range);
-        return this;
-    }
-
-    /**
      * The parameters can be null, which will result in the default text (false/true).
      */
     public DSMetadata setBooleanRange(String falseText, String trueText) {
@@ -252,146 +392,6 @@ public class DSMetadata {
         list.add(falseText == null ? "false" : falseText);
         list.add(trueText == null ? "true" : trueText);
         map.put(BOOLEAN_RANGE, list);
-        return this;
-    }
-
-    /**
-     * Sets the default value only, does not set type information.
-     */
-    public DSMetadata setDefault(DSIValue arg) {
-        if (arg == null) {
-            return this;
-        }
-        map.put(DEFAULT, arg.toElement());
-        return this;
-    }
-
-    public DSMetadata setDescription(String arg) {
-        if (arg != null) {
-            map.put(DESCRIPTION, arg);
-        }
-        return this;
-    }
-
-    public DSMetadata setDisplayName(String arg) {
-        if (arg != null) {
-            map.put(DISPLAY_NAME, arg);
-        }
-        return this;
-    }
-
-    /**
-     * See the EDITOR_ constants.
-     */
-    public DSMetadata setEditor(String arg) {
-        if (arg != null) {
-            map.put(EDITOR, arg);
-        }
-        return this;
-    }
-
-    /**
-     * List of string values for an enum or string.
-     */
-    public DSMetadata setEnumRange(DSList arg) {
-        if (arg != null) {
-            map.put(ENUM_RANGE, arg);
-        }
-        return this;
-    }
-
-    /**
-     * List of string values for an enum or string.
-     */
-    public DSMetadata setEnumRange(String... range) {
-        return setEnumRange(DSList.valueOf(range));
-    }
-
-    /**
-     * Change the underlying map so the metadata instance can be reused.
-     */
-    public DSMetadata setMap(DSMap arg) {
-        if (arg == null) {
-            this.map = new DSMap();
-        } else {
-            this.map = arg;
-        }
-        return this;
-    }
-
-    /**
-     * The arg should be a number.
-     */
-    public DSMetadata setMaxValue(DSElement arg) {
-        if (arg != null) {
-            map.put(MIN, arg);
-        }
-        return this;
-    }
-
-    /**
-     * The arg should be a number.
-     */
-    public DSMetadata setMinValue(DSElement arg) {
-        if (arg != null) {
-            map.put(MIN, arg);
-        }
-        return this;
-    }
-
-    /**
-     * Not the name used in the parent node, but used elsewhere such as parameter or column names.
-     */
-    public DSMetadata setName(String arg) {
-        if (arg != null) {
-            map.put(NAME, arg);
-        }
-        return this;
-    }
-
-    /**
-     * Place holder text for text fields.
-     */
-    public DSMetadata setPlaceHolder(String arg) {
-        if (arg != null) {
-            map.put(PLACEHOLDER, arg);
-        }
-        return this;
-    }
-
-    public DSMetadata setPrecision(DSLong arg) {
-        if (arg != null) {
-            map.put(PRECISION, arg);
-        }
-        return this;
-    }
-
-    /**
-     * Sets the type and if the given implements DSIMetadata, adds it's metadata as well.
-     */
-    public DSMetadata setType(DSIValue arg) {
-        map.put(DSMetadata.TYPE, arg.toElement().getElementType().toElement());
-        if (arg instanceof DSIMetadata) {
-            ((DSIMetadata) arg).getMetadata(map);
-        }
-        return this;
-    }
-
-    /**
-     * The type for action parameters, can be used to override types in the responder api.
-     */
-    public DSMetadata setType(DSValueType arg) {
-        map.put(TYPE, arg.toString());
-        return this;
-    }
-
-    /**
-     * The unit identifier.
-     */
-    public DSMetadata setUnit(String arg) {
-        if (arg != null) {
-            map.put(UNIT, arg);
-        }
         return this;
     }
 

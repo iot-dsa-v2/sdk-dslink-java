@@ -28,7 +28,7 @@ public class SysProfilerTest {
                 "/sys/" + DSSysNode.OPEN_PROFILER, null, new SimpleInvokeHandler());
         res.getUpdate(2000);
 
-        DSSysNode sys = (DSSysNode) link.get(DSLink.SYS);
+        DSSysNode sys = link.get(DSLink.SYS);
         DSIObject profobj = sys.get(DSSysNode.PROFILER);
         Assert.assertTrue(profobj instanceof SysProfiler);
 

@@ -123,6 +123,20 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     }
 
     /**
+     * Called for each incoming ack.
+     */
+    protected void setAckRcvd(int ackRcvd) {
+        if (ackRcvd < this.ackRcvd) {
+            debug(debug() ? String.format("Ack rcvd %s < last %s", ackRcvd, this.ackRcvd) : null);
+        } else {
+            this.ackRcvd = ackRcvd;
+        }
+        synchronized (receiver) {
+            receiver.notify();
+        }
+    }
+
+    /**
      * The next ack id to send, or -1.
      */
     public synchronized int getAckToSend() {
@@ -135,10 +149,20 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
         return ret;
     }
 
+    /**
+     * Call for each incoming message id that needs to be acked.
+     */
+    protected void setAckToSend(int ackToSend) {
+        if (ackToSend > 0) {
+            this.ackToSend = ackToSend;
+            sendMessage();
+        }
+    }
+
     @Override
     public DSLinkConnection getConnection() {
         if (connection == null) {
-            connection = (DSLinkConnection) getAncestor(DSLinkConnection.class);
+            connection = getAncestor(DSLinkConnection.class);
         }
         return connection;
     }
@@ -165,8 +189,6 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     @Override
     public abstract DSIRequester getRequester();
 
-    public abstract DSResponder getResponder();
-
     public DSITransport getTransport() {
         return getConnection().getTransport();
     }
@@ -191,6 +213,13 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     @Override
     public boolean isRequesterAllowed() {
         return requesterAllowed.getElement().toBoolean();
+    }
+
+    /**
+     * Called when the broker signifies that requests are allowed.
+     */
+    public void setRequesterAllowed(boolean allowed) {
+        put(requesterAllowed, DSBool.valueOf(allowed));
     }
 
     @Override
@@ -227,18 +256,16 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
         DSRuntime.run(sender);
     }
 
-    /**
-     * Called when the broker signifies that requests are allowed.
-     */
-    public void setRequesterAllowed(boolean allowed) {
-        put(requesterAllowed, DSBool.valueOf(allowed));
-    }
-
-    public abstract boolean shouldEndMessage();
-
     ///////////////////////////////////////////////////////////////////////////
     // Protected Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    public abstract boolean shouldEndMessage();
+
+    @Override
+    public void update(String path) {
+        getResponder().update(path);
+    }
 
     @Override
     protected void declareDefaults() {
@@ -284,13 +311,13 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
      * The subclass should read a single message.  Throw an exception to indicate
      * an error.
      */
-    protected abstract void doRecvMessage() throws Exception;
+    protected abstract void doRecvMessage();
 
     /**
      * The subclass should send a single message.  Throw an exception to indicate
      * an error.
      */
-    protected abstract void doSendMessage() throws Exception;
+    protected abstract void doSendMessage();
 
     protected int getMissingAcks() {
         if (ackRequired > 0) {
@@ -309,6 +336,8 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
         }
         return midSent;
     }
+
+    protected abstract DSResponder getResponder();
 
     protected boolean hasAckToSend() {
         return ackToSend > 0;
@@ -405,34 +434,10 @@ public abstract class DSSession extends DSNode implements DSIConnectionDescendan
     }
 
     /**
-     * Called for each incoming ack.
-     */
-    protected void setAckRcvd(int ackRcvd) {
-        if (ackRcvd < this.ackRcvd) {
-            debug(debug() ? String.format("Ack rcvd %s < last %s", ackRcvd, this.ackRcvd) : null);
-        } else {
-            this.ackRcvd = ackRcvd;
-        }
-        synchronized (receiver) {
-            receiver.notify();
-        }
-    }
-
-    /**
      * Used to indicate that the current message ID requires an ack.
      */
     protected void setAckRequired() {
         ackRequired = midSent;
-    }
-
-    /**
-     * Call for each incoming message id that needs to be acked.
-     */
-    protected void setAckToSend(int ackToSend) {
-        if (ackToSend > 0) {
-            this.ackToSend = ackToSend;
-            sendMessage();
-        }
     }
 
     protected void setMidRcvd(int mid) {

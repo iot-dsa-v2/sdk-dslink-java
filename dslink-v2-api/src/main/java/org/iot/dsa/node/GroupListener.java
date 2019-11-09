@@ -5,6 +5,6 @@ package org.iot.dsa.node;
  */
 interface GroupListener {
 
-    public void modified(DSGroup group);
+    void modified(DSGroup group);
 
 }

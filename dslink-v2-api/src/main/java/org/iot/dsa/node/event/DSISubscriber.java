@@ -19,7 +19,7 @@ public interface DSISubscriber {
      * Called no matter how the unsubscribe happens, whether by the subscriber or the
      * the subscribee. Does nothing by default.
      */
-    public default void onClosed(DSISubscription subscription) {
+    default void onClosed(DSISubscription subscription) {
     }
 
     /**
@@ -30,6 +30,6 @@ public interface DSISubscriber {
      * @param child Optional, if the event concerns a child.
      * @param data  Optional, if the event supplies any data.
      */
-    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data);
+    void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data);
 
 }

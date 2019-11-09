@@ -26,7 +26,7 @@ public interface DSIAction extends Action, DSIObject {
      *
      * @see Action#getColumnCount()
      */
-    public default int getColumnCount(DSInfo<?> target) {
+    default int getColumnCount(DSInfo<?> target) {
         return getColumnCount();
     }
 
@@ -36,7 +36,7 @@ public interface DSIAction extends Action, DSIObject {
      *
      * @see Action#getColumnMetadata(int, DSMap)
      */
-    public default void getColumnMetadata(DSInfo<?> target, int idx, DSMap bucket) {
+    default void getColumnMetadata(DSInfo<?> target, int idx, DSMap bucket) {
         getColumnMetadata(idx, bucket);
     }
 
@@ -46,7 +46,7 @@ public interface DSIAction extends Action, DSIObject {
      *
      * @see Action#getParameterCount()
      */
-    public default int getParameterCount(DSInfo<?> target) {
+    default int getParameterCount(DSInfo<?> target) {
         return getParameterCount();
     }
 
@@ -56,7 +56,7 @@ public interface DSIAction extends Action, DSIObject {
      *
      * @see Action#getParameterMetadata(int, DSMap)
      */
-    public default void getParameterMetadata(DSInfo<?> target, int idx, DSMap bucket) {
+    default void getParameterMetadata(DSInfo<?> target, int idx, DSMap bucket) {
         getParameterMetadata(idx, bucket);
     }
 
@@ -77,26 +77,26 @@ public interface DSIAction extends Action, DSIObject {
      * the encoding of results until sendResults is called on the request.
      * @throws RuntimeException Throw a runtime exception to report an error and close the stream.
      */
-    public ActionResults invoke(DSIActionRequest request);
+    ActionResults invoke(DSIActionRequest request);
 
     /**
      * Calls the corresponding static toAsyncResults.
      */
-    public default AsyncActionResults makeAsyncResults(DSIActionRequest req, DSIResults res) {
+    default AsyncActionResults makeAsyncResults(DSIActionRequest req, DSIResults res) {
         return toAsyncResults(req, res);
     }
 
     /**
      * Calls the corresponding static toResults.
      */
-    public default ActionResults makeResults(DSIActionRequest req, DSIValue... value) {
+    default ActionResults makeResults(DSIActionRequest req, DSIValue... value) {
         return toResults(req, value);
     }
 
     /**
      * Calls the corresponding static toResults.
      */
-    public default ActionResults makeResults(DSIActionRequest req, DSIResults res) {
+    default ActionResults makeResults(DSIActionRequest req, DSIResults res) {
         return toResults(req, res);
     }
 
@@ -107,8 +107,8 @@ public interface DSIAction extends Action, DSIObject {
      * @param req Be sure to call enqueueRequest or close if autoClose if false.
      * @param res Note that this can be a DIResultsCursor.
      */
-    public static AsyncActionResults toAsyncResults(final DSIActionRequest req,
-                                                    final DSIResults res) {
+    static AsyncActionResults toAsyncResults(final DSIActionRequest req,
+                                             final DSIResults res) {
         AsyncActionResults ret = new AsyncActionResults() {
 
             boolean next = true;
@@ -162,7 +162,7 @@ public interface DSIAction extends Action, DSIObject {
      * The result type of the action must also be VALUES.
      * The request will be automatically closed.
      */
-    public static ActionResults toResults(final DSIActionRequest req, final DSIValue... value) {
+    static ActionResults toResults(final DSIActionRequest req, final DSIValue... value) {
         return new ActionResults() {
 
             boolean next = true;
@@ -214,8 +214,8 @@ public interface DSIAction extends Action, DSIObject {
      * @param req Be sure to call enqueueRequest or close if autoClose if false.
      * @param res Note that this can be a DIResultsCursor.
      */
-    public static ActionResults toResults(final DSIActionRequest req,
-                                          final DSIResults res) {
+    static ActionResults toResults(final DSIActionRequest req,
+                                   final DSIResults res) {
         ActionResults ret = new ActionResults() {
 
             boolean next = true;

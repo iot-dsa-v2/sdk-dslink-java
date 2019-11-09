@@ -416,7 +416,7 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
     /**
      * Write the value.
      */
-    protected abstract void write(boolean arg) throws IOException;
+    protected abstract void write(boolean arg);
 
     /**
      * Write the value.
@@ -469,13 +469,13 @@ public abstract class AbstractWriter implements Closeable, DSIWriter {
      *
      * @see #getDepth()
      */
-    protected void writeNewLineIndent() throws IOException {
+    protected void writeNewLineIndent() {
     }
 
     /**
      * Write a null value.
      */
-    protected abstract void writeNull() throws IOException;
+    protected abstract void writeNull();
 
     /**
      * Write a value separator, such as the comma in json.

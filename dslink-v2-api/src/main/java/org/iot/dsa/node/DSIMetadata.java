@@ -10,6 +10,6 @@ public interface DSIMetadata {
     /**
      * The entity should add any metadata about itself to the given map.
      */
-    public void getMetadata(DSMap bucket);
+    void getMetadata(DSMap bucket);
 
 }

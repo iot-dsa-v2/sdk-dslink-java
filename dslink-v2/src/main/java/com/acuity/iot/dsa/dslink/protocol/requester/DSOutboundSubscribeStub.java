@@ -56,6 +56,13 @@ class DSOutboundSubscribeStub implements OutboundStream {
         return next;
     }
 
+    /**
+     * The next stub in the parent stubs object.
+     */
+    void setNext(DSOutboundSubscribeStub next) {
+        this.next = next;
+    }
+
     public String getPath() {
         return path;
     }
@@ -78,13 +85,6 @@ class DSOutboundSubscribeStub implements OutboundStream {
         } catch (Exception x) {
             sub.getSubscriptions().error(path, x);
         }
-    }
-
-    /**
-     * The next stub in the parent stubs object.
-     */
-    void setNext(DSOutboundSubscribeStub next) {
-        this.next = next;
     }
 
     void setSub(DSOutboundSubscription sub) {

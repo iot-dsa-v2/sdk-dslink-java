@@ -9,17 +9,23 @@ import org.iot.dsa.node.DSIObject;
  */
 public interface DSISession extends DSIObject {
 
-    public DSLinkConnection getConnection();
+    DSLinkConnection getConnection();
 
-    public DSIRequester getRequester();
+    DSIRequester getRequester();
 
-    public boolean isRequesterAllowed();
+    boolean isRequesterAllowed();
 
     /**
      * Read the next message.  Intended to be called by the transport.
      *
      * @param async If false, the messsage will be read on the calling thread.
      */
-    public void recvMessage(boolean async);
+    void recvMessage(boolean async);
+
+    /**
+     * An object has been added to the tree, use this to update existing list and
+     * subscription requests for everything starting with this path.
+     */
+    void update(String path);
 
 }

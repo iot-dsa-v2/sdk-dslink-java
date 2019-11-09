@@ -73,46 +73,6 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     @Override
-    public boolean write(DSSession session, MessageWriter writer) {
-        enqueued = false;
-        if (isClosed()) {
-            return false;
-        }
-        if (isClosePending() && (updateHead == null) && (closeReason != null)) {
-            getResponder().sendError(this, closeReason);
-            doClose();
-            return false;
-        }
-        writeBegin(writer);
-        boolean passThru = updateHead != null;
-        if (results != null) {
-            switch (state) {
-                case STATE_INIT:
-                    writeColumns(writer);
-                case STATE_CLOSE_PENDING:
-                case STATE_UPDATES:
-                    writeRows(writer);
-                    break;
-            }
-        }
-        if (isClosePending() && (updateHead == null)) {
-            if (closeReason != null) {
-                getResponder().sendError(this, closeReason);
-            } else {
-                writeClose(writer);
-            }
-            doClose();
-        } else if (!passThru && !streamOpen) {
-            if (results.getResultsType().isStream()) {
-                streamOpen = true;
-                writeOpen(writer);
-            }
-        }
-        writeEnd(writer);
-        return true;
-    }
-
-    @Override
     public void close() {
         if (!isOpen()) {
             return;
@@ -122,45 +82,12 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     @Override
-    public void onClose(Integer requestId) {
-        if (isClosed()) {
-            return;
-        }
-        state = STATE_CLOSED;
-        synchronized (this) {
-            updateHead = updateTail = null;
-        }
-        doClose();
-    }
-
-    @Override
     public void close(Exception reason) {
         if (!isOpen()) {
             return;
         }
         closeReason = reason;
         close();
-    }
-
-    @Override
-    public DSPermission getPermission() {
-        return permission;
-    }
-
-    @Override
-    public boolean isOpen() {
-        return (state != STATE_CLOSED) && (state != STATE_CLOSE_PENDING);
-    }
-
-    @Override
-    public void sendResults() {
-        synchronized (this) {
-            if (enqueued) {
-                return;
-            }
-            enqueued = true;
-        }
-        getResponder().sendResponse(this);
     }
 
     /**
@@ -177,17 +104,39 @@ public class DSInboundInvoke extends DSInboundRequest
     }
 
     @Override
-    public DSInfo<?> getTargetInfo() {
-        return target;
-    }
-
-    @Override
     public DSMap getParameters() {
         return parameters;
     }
 
+    @Override
+    public DSPermission getPermission() {
+        return permission;
+    }
+
+    @Override
+    public DSInfo<?> getTargetInfo() {
+        return target;
+    }
+
     public boolean isClosed() {
         return state == STATE_CLOSED;
+    }
+
+    @Override
+    public boolean isOpen() {
+        return (state != STATE_CLOSED) && (state != STATE_CLOSE_PENDING);
+    }
+
+    @Override
+    public void onClose(Integer requestId) {
+        if (isClosed()) {
+            return;
+        }
+        state = STATE_CLOSED;
+        synchronized (this) {
+            updateHead = updateTail = null;
+        }
+        doClose();
     }
 
     /**
@@ -241,11 +190,62 @@ public class DSInboundInvoke extends DSInboundRequest
         sendResults();
     }
 
+    @Override
+    public void sendResults() {
+        synchronized (this) {
+            if (enqueued) {
+                return;
+            }
+            enqueued = true;
+        }
+        getResponder().sendResponse(this);
+    }
+
     /**
      * For v2 only, set to false to auto close the stream after sending the initial state.
      */
     public DSInboundInvoke setStream(boolean stream) {
         return this;
+    }
+
+    @Override
+    public boolean write(DSSession session, MessageWriter writer) {
+        enqueued = false;
+        if (isClosed()) {
+            return false;
+        }
+        if (isClosePending() && (updateHead == null) && (closeReason != null)) {
+            getResponder().sendError(this, closeReason);
+            doClose();
+            return false;
+        }
+        writeBegin(writer);
+        boolean passThru = updateHead != null;
+        if (results != null) {
+            switch (state) {
+                case STATE_INIT:
+                    writeColumns(writer);
+                case STATE_CLOSE_PENDING:
+                case STATE_UPDATES:
+                    writeRows(writer);
+                    break;
+            }
+        }
+        if (isClosePending() && (updateHead == null)) {
+            if (closeReason != null) {
+                getResponder().sendError(this, closeReason);
+            } else {
+                writeClose(writer);
+            }
+            doClose();
+        } else if (!passThru && !streamOpen) {
+            if (results.getResultsType().isStream()) {
+                streamOpen = true;
+                writeOpen(writer);
+            }
+        }
+        writeEnd(writer);
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////

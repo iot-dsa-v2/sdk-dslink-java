@@ -34,6 +34,11 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
         return link;
     }
 
+    public final DSInboundRequest setLink(DSLink link) {
+        this.link = link;
+        return this;
+    }
+
     @Override
     public Logger getLogger() {
         return getResponder().getLogger();
@@ -44,27 +49,14 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
         return path;
     }
 
-    @Override
-    public final Integer getRequestId() {
-        return requestId;
-    }
-
-    public final DSResponder getResponder() {
-        return responder;
-    }
-
-    public final DSSession getSession() {
-        return session;
-    }
-
-    public final DSInboundRequest setLink(DSLink link) {
-        this.link = link;
-        return this;
-    }
-
     public final DSInboundRequest setPath(String path) {
         this.path = path;
         return this;
+    }
+
+    @Override
+    public final Integer getRequestId() {
+        return requestId;
     }
 
     public final DSInboundRequest setRequestId(Integer requestId) {
@@ -72,9 +64,17 @@ public abstract class DSInboundRequest extends DSLogger implements InboundReques
         return this;
     }
 
+    public final DSResponder getResponder() {
+        return responder;
+    }
+
     public final DSInboundRequest setResponder(DSResponder responder) {
         this.responder = responder;
         return this;
+    }
+
+    public final DSSession getSession() {
+        return session;
     }
 
     public final DSInboundRequest setSession(DSSession session) {

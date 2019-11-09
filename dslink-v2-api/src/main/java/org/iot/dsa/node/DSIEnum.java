@@ -14,13 +14,13 @@ public interface DSIEnum extends DSIMetadata {
      *               list.
      * @return The list argument, or if it was null, a new list.
      */
-    public DSList getEnums(DSList bucket);
+    DSList getEnums(DSList bucket);
 
     /**
      * Adds the enum range to the bucket.
      */
     @Override
-    public default void getMetadata(DSMap bucket) {
+    default void getMetadata(DSMap bucket) {
         bucket.put(DSMetadata.ENUM_RANGE, getEnums(new DSList()));
     }
 
@@ -28,6 +28,6 @@ public interface DSIEnum extends DSIMetadata {
      * The string representation of the the enum value.
      */
     @Override
-    public String toString();
+    String toString();
 
 }

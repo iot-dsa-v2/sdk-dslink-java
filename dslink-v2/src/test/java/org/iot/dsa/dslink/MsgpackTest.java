@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 public class MsgpackTest {
 
     @Test
-    public void testStrings() throws Exception {
+    public void testStrings() {
         String input = "He wes Leovenaðes sone -- liðe him be Drihten.";
         CharBuffer charBuffer = CharBuffer.allocate(1024);
         charBuffer.append(input);
@@ -51,7 +51,7 @@ public class MsgpackTest {
     }
 
     @Test
-    public void theTest() throws Exception {
+    public void theTest() {
         MsgpackWriter tmp = new MsgpackWriter();
         tmp.beginList();
         tmp.value("abc");

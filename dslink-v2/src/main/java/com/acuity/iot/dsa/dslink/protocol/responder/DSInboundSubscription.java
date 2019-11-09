@@ -14,6 +14,7 @@ import org.iot.dsa.node.DSInfo;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSNull;
 import org.iot.dsa.node.DSStatus;
+import org.iot.dsa.node.DSString;
 import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
@@ -37,7 +38,6 @@ public class DSInboundSubscription extends DSInboundRequest
     private SubscriptionCloseHandler closeHandler;
     private boolean enqueued = false;
     private DSInboundSubscriptions manager;
-    private DSNode node;
     private boolean open = true;
     private int qos;
     private Integer sid;
@@ -81,58 +81,12 @@ public class DSInboundSubscription extends DSInboundRequest
 
     @Override
     public void close() {
-        manager.unsubscribe(sid);
+        //we never close locally in case the node is added back
+        //manager.unsubscribe(sid);
     }
 
     public int getQos() {
         return qos;
-    }
-
-    /**
-     * Unique subscription id for this path.
-     */
-    @Override
-    public Integer getSubscriptionId() {
-        return sid;
-    }
-
-    /**
-     * For v2 only.
-     */
-    public boolean isCloseAfterUpdate() {
-        return closeAfterUpdate;
-    }
-
-    @Override
-    public void onClosed(DSISubscription subscription) {
-        this.subscription = null;
-        close();
-    }
-
-    @Override
-    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data) {
-        if (data == null) {
-            if ((child != null) && child.isValue()) {
-                data = child.getValue();
-            } else if (node instanceof DSIValue) {
-                data = (DSIValue) node;
-            } else {
-                data = DSNull.NULL;
-            }
-        }
-        DSStatus status = DSStatus.ok;
-        if (data instanceof DSIStatus) {
-            status = ((DSIStatus) data).getStatus();
-        }
-        update(DSDateTime.now(), data, status);
-    }
-
-    /**
-     * For v2 only.
-     */
-    public DSInboundSubscription setCloseAfterUpdate(boolean closeAfterUpdate) {
-        this.closeAfterUpdate = closeAfterUpdate;
-        return this;
     }
 
     public void setQos(Integer val) {
@@ -144,14 +98,85 @@ public class DSInboundSubscription extends DSInboundRequest
         }
     }
 
+    protected DSInboundSubscription setQos(int qos) {
+        this.qos = qos;
+        return this;
+    }
+
+    /**
+     * Unique subscription id for this path.
+     */
+    @Override
+    public Integer getSubscriptionId() {
+        return sid;
+    }
+
     public void setSubscriptionId(Integer id) {
         sid = id;
+    }
+
+    /**
+     * For v2 only.
+     */
+    public boolean isCloseAfterUpdate() {
+        return closeAfterUpdate;
+    }
+
+    /**
+     * For v2 only.
+     */
+    public DSInboundSubscription setCloseAfterUpdate(boolean closeAfterUpdate) {
+        this.closeAfterUpdate = closeAfterUpdate;
+        return this;
+    }
+
+    @Override
+    public void onClosed(DSISubscription subscription) {
+        this.subscription = null;
+        close();
+    }
+
+    @Override
+    public void onEvent(DSEvent event, DSNode node, DSInfo<?> child, DSIValue data) {
+        DSDateTime dt = DSDateTime.now();
+        DSStatus status = DSStatus.ok;
+        switch (event.getEventId()) {
+            case DSNode.CHILD_REMOVED:
+            case DSNode.STOPPED:
+                if (child == this.child) {
+                    update(dt, DSNull.NULL, DSStatus.unknown);
+                }
+                break;
+            case DSNode.VALUE_CHANGED:
+                if (child == this.child) {
+                    if (data == null) {
+                        if ((child != null) && child.isValue()) {
+                            data = child.getValue();
+                        } else if (node instanceof DSIValue) {
+                            data = (DSIValue) node;
+                        } else {
+                            data = DSNull.NULL;
+                        }
+                    }
+                    if (data instanceof DSIStatus) {
+                        status = ((DSIStatus) data).getStatus();
+                    }
+                    update(dt, data, status);
+                }
+                break;
+            default:
+                return;
+        }
     }
 
     @Override
     public String toString() {
         return "Subscription (" + getSubscriptionId() + ") " + getPath();
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * The responder should call this whenever the value or status changes.
@@ -192,10 +217,6 @@ public class DSInboundSubscription extends DSInboundRequest
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Protected Methods
-    ///////////////////////////////////////////////////////////////////////////
-
     /**
      * Remove an update from the queue.
      */
@@ -214,34 +235,43 @@ public class DSInboundSubscription extends DSInboundRequest
     }
 
     protected void init() {
-        DSTarget path = new DSTarget(getPath(), getLink().getRootNode());
-        if (path.isResponder()) {
-            DSIResponder responder = (DSIResponder) path.getTarget();
-            closeHandler = responder.onSubscribe(
-                    new SubWrapper(path.getPath(), this));
-        } else {
-            DSIObject obj = path.getTarget();
-            if (obj instanceof DSNode) {
-                node = (DSNode) obj;
-                this.subscription = node.subscribe((event, node, child, data) -> {
-                    if (child == null) {
-                        DSInboundSubscription.this.onEvent(event, node, null, data);
-                    }
-                });
-                onEvent(DSNode.VALUE_CHANGED_EVENT, node, null, null);
-            } else {
-                DSInfo<?> info = path.getTargetInfo();
-                node = info.getParent();
-                child = info;
-                this.subscription = node.subscribe(this, DSNode.VALUE_CHANGED_EVENT, info);
-                onEvent(DSNode.VALUE_CHANGED_EVENT, node, info, null);
-            }
+        if (subscription != null) {
+            subscription.close();
+            subscription = null;
         }
-    }
-
-    protected DSInboundSubscription setQos(int qos) {
-        this.qos = qos;
-        return this;
+        try {
+            DSTarget path = new DSTarget(getPath(), getLink().getRootNode());
+            if (path.isResponder()) {
+                DSIResponder responder = (DSIResponder) path.getTarget();
+                closeHandler = responder.onSubscribe(
+                        new SubWrapper(path.getPath(), this));
+            } else {
+                DSIObject obj = path.getTarget();
+                DSNode theNode;
+                if (obj instanceof DSNode) {
+                    theNode = (DSNode) obj;
+                    if (obj instanceof DSIValue) {
+                        child = null;
+                        this.subscription = theNode.subscribe((event, node, child, data) -> {
+                            if (child == null) {
+                                DSInboundSubscription.this.onEvent(event, node, null, data);
+                            }
+                        });
+                        onEvent(DSNode.VALUE_CHANGED_EVENT, theNode, null, null);
+                    } else {
+                        update(DSDateTime.now(), DSString.EMPTY, DSStatus.ok);
+                    }
+                } else {
+                    DSInfo<?> info = path.getTargetInfo();
+                    theNode = info.getParent();
+                    child = info;
+                    this.subscription = theNode.subscribe(DSInboundSubscription.this::onEvent);
+                    onEvent(DSNode.VALUE_CHANGED_EVENT, theNode, info, info.getValue());
+                }
+            }
+        } catch (Exception x) {
+            update(DSDateTime.now(), DSNull.NULL, DSStatus.unknown);
+        }
     }
 
     /**

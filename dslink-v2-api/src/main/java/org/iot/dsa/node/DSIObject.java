@@ -10,6 +10,6 @@ public interface DSIObject {
     /**
      * Return a copy if it makes sense, otherwise return this.
      */
-    public DSIObject copy();
+    DSIObject copy();
 
 }

@@ -9,6 +9,6 @@ import org.iot.dsa.io.DSIReader;
  */
 public interface MessageReader {
 
-    public DSIReader getReader();
+    DSIReader getReader();
 
 }
