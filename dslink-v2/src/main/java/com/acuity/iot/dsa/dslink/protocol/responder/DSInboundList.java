@@ -148,6 +148,7 @@ public class DSInboundList extends DSInboundRequest
                 if (target.getTarget() == node) {
                     sendRemove(data.toString());
                 }
+                //fall through to add the child
             case DSNode.CHILD_ADDED:
                 if (target.getTarget() == node) {
                     encodeChild(child);
