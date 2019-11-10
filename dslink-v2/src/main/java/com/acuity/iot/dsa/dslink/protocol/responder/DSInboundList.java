@@ -145,24 +145,27 @@ public class DSInboundList extends DSInboundRequest
         }
         switch (event.getEventId()) {
             case DSNode.CHILD_RENAMED:
-                if (target.getTargetInfo().isNode()) {
+                if (target.getTarget() == node) {
                     sendRemove(data.toString());
                 }
-                break;
             case DSNode.CHILD_ADDED:
-                if (target.getTargetInfo().isNode()) {
+                if (target.getTarget() == node) {
                     encodeChild(child);
                 }
                 break;
             case DSNode.CHILD_REMOVED:
-                if (target.getTargetInfo().isNode()) {
-                    sendRemove(child.getName());
-                } else if (target.getTargetInfo() == child) {
+                if (target.getTargetInfo() == child) {
                     send("$disconnectedTs", DSDateTime.now().toElement());
+                    subscription.close();
+                    subscription = null;
+                } else if (target.getTarget() == node) {
+                    sendRemove(child.getName());
                 }
                 break;
             case DSNode.STOPPED:
                 send("$disconnectedTs", DSDateTime.now().toElement());
+                subscription.close();
+                subscription = null;
         }
     }
 
@@ -839,6 +842,16 @@ public class DSInboundList extends DSInboundRequest
                 break;
             }
             writer.getWriter().value(update);
+            if (update.isList()) { //DGLux bug workaround
+                DSList list = update.toList();
+                if (list.size() > 1) {
+                    if (list.get(0).isString()) {
+                        if ("$disconnectedTs".equals(list.getString(0))) {
+                            break;
+                        }
+                    }
+                }
+            }
             if (responder.shouldEndMessage()) {
                 break;
             }

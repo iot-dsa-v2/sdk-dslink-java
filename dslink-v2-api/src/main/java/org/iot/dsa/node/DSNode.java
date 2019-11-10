@@ -294,30 +294,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         }
         info = new DSInfo<>(name.intern(), object);
         add(info);
-        if (isRunning()) {
-            if (argIsNode) {
-                argAsNode.start();
-            }
-        }
-        if (isStable()) {
-            if (argIsNode) {
-                argAsNode.stable();
-            }
-            //Update any existing lists and subscriptions
-            String updatePath = info.getPath(null).toString();
-            DSRuntime.run(() -> {
-                DSLink link = getAncestor(DSLink.class);
-                if (link != null) {
-                    DSLinkConnection conn = link.getConnection();
-                    if (conn != null) {
-                        DSISession session = conn.getSession();
-                        if (session != null) {
-                            session.update(updatePath);
-                        }
-                    }
-                }
-            });
-        }
+        added(info);
         return info;
     }
 
@@ -951,18 +928,15 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         }
         if (isRunning()) {
             if (argIsNode) {
-                argAsNode.start();
-            } else {
-                try {
-                    onChildChanged(info);
-                } catch (Exception x) {
-                    error(getPath(), x);
-                }
-                if (info.isValue()) {
-                    fire(VALUE_CHANGED_EVENT, info, info.getElement());
-                } else {
-                    fire(VALUE_CHANGED_EVENT, info, null);
-                }
+                added(info);
+            }
+            try {
+                onChildChanged(info);
+            } catch (Exception x) {
+                error(getPath(), x);
+            }
+            if (info.isValue()) {
+                fire(VALUE_CHANGED_EVENT, info, info.getElement());
             }
         }
         return this;
@@ -1003,19 +977,17 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             }
             size--;
         }
-        if (info.isNode()) {
-            DSNode node = info.getNode();
-            if (isRunning()) {
-                notifyRemoved(node);
-            }
-            node.stop();
-            node.infoInParent = null;
-        }
         if (isRunning()) {
             try {
                 onChildRemoved(info);
             } catch (Exception x) {
                 error(getPath(), x);
+            }
+            if (info.isNode()) {
+                DSNode node = info.getNode();
+                notifyRemoved(node);
+                node.stop();
+                node.infoInParent = null;
             }
             fire(CHILD_REMOVED_EVENT, info, null);
         }
@@ -1030,10 +1002,9 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
      */
     public DSInfo<?> remove(String name) {
         DSInfo<?> info = getInfo(name);
-        if (info == null) {
-            return info;
+        if (info != null) {
+            remove(info);
         }
-        remove(info);
         return info;
     }
 
@@ -1546,13 +1517,38 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////
 
+    private void added(DSInfo<?> info) {
+        boolean isNode = info.isNode();
+        if (isRunning() && isNode) {
+            info.getNode().start();
+        }
+        if (isStable()) {
+            if (isNode) {
+                info.getNode().stable();
+            }
+            //Update any existing lists and subscriptions
+            String updatePath = info.getPath(null).toString();
+            DSRuntime.run(() -> {
+                DSLink link = getAncestor(DSLink.class);
+                if (link != null) {
+                    DSLinkConnection conn = link.getConnection();
+                    if (conn != null) {
+                        DSISession session = conn.getSession();
+                        if (session != null) {
+                            session.update(updatePath);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
     private void notifyRemoved(DSNode node) {
         DSInfo<?> info = node.getFirstInfo();
         while (info != null) {
             if (info.isNode()) {
                 notifyRemoved(info.getNode());
             }
-            fire(CHILD_REMOVED_EVENT, info, null);
             info = info.next();
         }
         try {
