@@ -153,13 +153,6 @@ public class AddRemoveRequesterTest {
         update = h.nextUpdate(5000);
         Assert.assertTrue(update.status == DSStatus.ok);
 
-        //remove the value
-        /*
-        link.getMain().remove("def");
-        update = h.nextUpdate(5000);
-        Assert.assertTrue(update.status == DSStatus.unknown);
-        h.getStream().closeStream();
-        */
     }
 
     private void subSimpleValue(DSLink link) {
