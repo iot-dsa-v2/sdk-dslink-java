@@ -43,13 +43,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
 
     ///////////////////////////////////////////////////////////////////////////
-    // Constants
+    // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
     private static final int UNCERTAIN_MASK = 0x0000FF00;
     private static final int BAD_MASK = 0x00FF0000;
     private static final int HIS_MASK = 0xFF000000; //for history flags
     private static final int NOT_GOOD_MASK = 0x00FFFF00;
+
     /**
      * Good, no other status applies. Always implied when not present.
      */
@@ -155,11 +156,13 @@ public class DSStatus extends DSValue implements DSIStatus, DSIStorable {
     public static final DSStatus remoteUnknown = valueOf(REMOTE_UNKNOWN);
     public static final DSStatus start = valueOf(START);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////
     private static ConcurrentHashMap<String, Integer> stringCache =
             new ConcurrentHashMap<>();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Instance Fields
+    ///////////////////////////////////////////////////////////////////////////
+
     private int bits;
 
     ///////////////////////////////////////////////////////////////////////////
