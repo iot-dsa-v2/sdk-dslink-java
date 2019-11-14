@@ -97,7 +97,7 @@ public class DSKeys {
      */
     public static ECPrivateKey decodePrivate(byte[] bytes) {
         try {
-            BigInteger s = new BigInteger(bytes);
+            BigInteger s = new BigInteger(1, bytes);
             ECPrivateKeySpec spec = new ECPrivateKeySpec(s, getParameters());
             KeyFactory fac = KeyFactory.getInstance("EC");
             return (ECPrivateKey) fac.generatePrivate(spec);
@@ -115,8 +115,8 @@ public class DSKeys {
             if (bytes[0] != 0x04) {
                 throw new IllegalArgumentException("Invalid public key");
             }
-            BigInteger x = new BigInteger(Arrays.copyOfRange(bytes, 1, 33));
-            BigInteger y = new BigInteger(Arrays.copyOfRange(bytes, 33, 65));
+            BigInteger x = new BigInteger(1, Arrays.copyOfRange(bytes, 1, 33));
+            BigInteger y = new BigInteger(1, Arrays.copyOfRange(bytes, 33, 65));
             ECPoint point = new ECPoint(x, y);
             ECPublicKeySpec spec = new ECPublicKeySpec(point, getParameters());
             KeyFactory fac = KeyFactory.getInstance("EC");
