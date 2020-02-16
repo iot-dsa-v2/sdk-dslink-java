@@ -191,7 +191,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
         //Integer queueSize = (Integer) msg.getHeader(MessageConstants.HDR_QUEUE_SIZE);
         DSInboundSubscription sub = subscriptions.subscribe(sid, path, qos.intValue());
         if (msg.getHeader(HDR_NO_STREAM) != null) {
-            sub.setCloseAfterUpdate(true);
+            //sub.setCloseAfterUpdate(true);
         }
     }
 
