@@ -122,9 +122,6 @@ public class DSInboundSubscriptions extends DSNode implements OutboundMessage {
                 break;
             }
             sub.write(session, writer, timestampBuffer);
-            if (sub.isCloseAfterUpdate()) {
-                unsubscribe(sub.getSubscriptionId());
-            }
         }
         writeEnd(writer);
         synchronized (this) {
