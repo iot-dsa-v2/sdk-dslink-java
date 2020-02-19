@@ -5,7 +5,7 @@ subprojects {
     apply plugin: 'maven'
 
     group 'org.iot-dsa'
-    version '0.73.3-SNAPSHOT'
+    version '0.74.0'
 
     targetCompatibility = JavaVersion.VERSION_1_8
     sourceCompatibility = JavaVersion.VERSION_1_8
