@@ -7,7 +7,7 @@ import org.iot.dsa.dslink.DSIResponder;
 import org.iot.dsa.dslink.responder.InboundSubscribeRequest;
 import org.iot.dsa.dslink.responder.SubscriptionCloseHandler;
 import org.iot.dsa.io.DSIWriter;
-import org.iot.dsa.node.DSIObject;
+import org.iot.dsa.node.DSElement;
 import org.iot.dsa.node.DSIStatus;
 import org.iot.dsa.node.DSIValue;
 import org.iot.dsa.node.DSInfo;
@@ -34,13 +34,12 @@ public class DSInboundSubscription extends DSInboundRequest
 
     private int ackRequired = 0;
     private DSInfo<?> child;
-    private boolean closeAfterUpdate = false;
     private SubscriptionCloseHandler closeHandler;
     private boolean enqueued = false;
     private DSInboundSubscriptions manager;
-    private boolean open = true;
     private int qos;
     private Integer sid;
+    private StreamState state = StreamState.CLOSED;
     private DSISubscription subscription;
     private Update updateHead;
     private Update updateTail;
@@ -81,25 +80,36 @@ public class DSInboundSubscription extends DSInboundRequest
 
     @Override
     public void close() {
-        //we never close locally in case the node is added back
-        //manager.unsubscribe(sid);
+        //never close locally in case a node is added back
+        if (isOpen()) {
+            update(DSDateTime.now(), DSNull.NULL, DSStatus.unknown);
+        }
+        state = StreamState.DISCONNECTED;
+        if ((subscription != null) && (qos < 2)) {
+            subscription.close();
+            subscription = null;
+        }
+        if (closeHandler != null) {
+            try {
+                closeHandler.onClose(sid);
+            } catch (Exception x) {
+                error(x);
+            }
+            closeHandler = null;
+        }
     }
 
     public int getQos() {
         return qos;
     }
 
-    public void setQos(Integer val) {
+    public DSInboundSubscription setQos(int val) {
         synchronized (this) {
             if (val == 0) {
                 updateHead = updateTail;
             }
             qos = val;
         }
-    }
-
-    protected DSInboundSubscription setQos(int qos) {
-        this.qos = qos;
         return this;
     }
 
@@ -115,19 +125,8 @@ public class DSInboundSubscription extends DSInboundRequest
         sid = id;
     }
 
-    /**
-     * For v2 only.
-     */
-    public boolean isCloseAfterUpdate() {
-        return closeAfterUpdate;
-    }
-
-    /**
-     * For v2 only.
-     */
-    public DSInboundSubscription setCloseAfterUpdate(boolean closeAfterUpdate) {
-        this.closeAfterUpdate = closeAfterUpdate;
-        return this;
+    public boolean isOpen() {
+        return state == StreamState.OPEN;
     }
 
     @Override
@@ -142,30 +141,30 @@ public class DSInboundSubscription extends DSInboundRequest
         DSStatus status = DSStatus.ok;
         switch (event.getEventId()) {
             case DSNode.CHILD_REMOVED:
-            case DSNode.STOPPED:
                 if (child == this.child) {
-                    update(dt, DSNull.NULL, DSStatus.unknown);
+                    close();
                 }
                 break;
             case DSNode.VALUE_CHANGED:
                 if (child == this.child) {
+                    DSElement value;
                     if (data == null) {
                         if ((child != null) && child.isValue()) {
-                            data = child.getValue();
+                            value = child.getElement();
                         } else if (node instanceof DSIValue) {
-                            data = (DSIValue) node;
+                            value = ((DSIValue) node).toElement();
                         } else {
-                            data = DSNull.NULL;
+                            value = DSNull.NULL;
                         }
+                    } else {
+                        value = data.toElement();
                     }
                     if (data instanceof DSIStatus) {
                         status = ((DSIStatus) data).getStatus();
                     }
-                    update(dt, data, status);
+                    update(dt, value, status);
                 }
                 break;
-            default:
-                return;
         }
     }
 
@@ -174,18 +173,11 @@ public class DSInboundSubscription extends DSInboundRequest
         return "Subscription (" + getSubscriptionId() + ") " + getPath();
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Protected Methods
-    ///////////////////////////////////////////////////////////////////////////
-
     /**
      * The responder should call this whenever the value or status changes.
      */
     @Override
     public void update(DSDateTime timestamp, DSIValue value, DSStatus status) {
-        if (!open) {
-            return;
-        }
         if (qos == 0) {
             synchronized (this) {
                 if (updateHead == null) {
@@ -212,10 +204,14 @@ public class DSInboundSubscription extends DSInboundRequest
                 enqueued = true;
             }
         }
-        if (sid != 0) {
+        if (sid != 0) { //0 if the connection was disconnected
             manager.enqueue(this);
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Remove an update from the queue.
@@ -239,14 +235,23 @@ public class DSInboundSubscription extends DSInboundRequest
             subscription.close();
             subscription = null;
         }
+        if (closeHandler != null) {
+            try {
+                closeHandler.onClose(sid);
+            } catch (Exception x) {
+                error(x);
+            }
+            closeHandler = null;
+        }
         try {
+            state = StreamState.OPEN;
             DSTarget path = new DSTarget(getPath(), getLink().getRootNode());
             if (path.isResponder()) {
                 DSIResponder responder = (DSIResponder) path.getTarget();
                 closeHandler = responder.onSubscribe(
                         new SubWrapper(path.getPath(), this));
             } else {
-                DSIObject obj = path.getTarget();
+                Object obj = path.getTarget();
                 DSNode theNode;
                 if (obj instanceof DSNode) {
                     theNode = (DSNode) obj;
@@ -265,12 +270,12 @@ public class DSInboundSubscription extends DSInboundRequest
                     DSInfo<?> info = path.getTargetInfo();
                     theNode = info.getParent();
                     child = info;
-                    this.subscription = theNode.subscribe(DSInboundSubscription.this::onEvent);
-                    onEvent(DSNode.VALUE_CHANGED_EVENT, theNode, info, info.getValue());
+                    this.subscription = theNode.subscribe(DSInboundSubscription.this);
+                    onEvent(DSNode.VALUE_CHANGED_EVENT, theNode, info, info.getElement());
                 }
             }
         } catch (Exception x) {
-            update(DSDateTime.now(), DSNull.NULL, DSStatus.unknown);
+            close();
         }
     }
 
@@ -281,6 +286,9 @@ public class DSInboundSubscription extends DSInboundRequest
      * @param buf    For encoding timestamps.
      */
     protected void write(DSSession session, MessageWriter writer, StringBuilder buf) {
+        if (state.isClosed()) { //can be disconnected
+            return;
+        }
         if (qos > 0) {
             ackRequired = session.getMidSent();
         }
@@ -335,31 +343,11 @@ public class DSInboundSubscription extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Called no matter how closed.
+     * The connection was dropped or the requester closed the subscription.
      */
     void onClose() {
-        synchronized (this) {
-            if (!open) {
-                return;
-            }
-            open = false;
-        }
-        try {
-            if (subscription != null) {
-                subscription.close();
-                subscription = null;
-            }
-        } catch (Exception x) {
-            manager.debug(manager.getPath(), x);
-        }
-        try {
-            if (closeHandler != null) {
-                closeHandler.onClose(getSubscriptionId());
-                closeHandler = null;
-            }
-        } catch (Exception x) {
-            manager.debug(manager.getPath(), x);
-        }
+        state = StreamState.CLOSED;
+        close();
     }
 
     ///////////////////////////////////////////////////////////////////////////
