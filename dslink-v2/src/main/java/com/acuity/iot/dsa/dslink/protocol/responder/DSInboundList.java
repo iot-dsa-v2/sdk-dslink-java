@@ -27,6 +27,7 @@ import org.iot.dsa.node.DSMetadata;
 import org.iot.dsa.node.DSNode;
 import org.iot.dsa.node.DSPath;
 import org.iot.dsa.node.DSString;
+import org.iot.dsa.node.action.DSIAction;
 import org.iot.dsa.node.event.DSEvent;
 import org.iot.dsa.node.event.DSISubscriber;
 import org.iot.dsa.node.event.DSISubscription;
@@ -448,6 +449,10 @@ public class DSInboundList extends DSInboundRequest
             }
         }
         DSMetadata md = new DSMetadata();
+        DSIAction dsiAction = null;
+        if (action instanceof DSIAction) {
+            dsiAction = (DSIAction) action;
+        }
         e = cacheMap.remove("$params");
         if (e != null) {
             enqueue("$params", e);
@@ -456,7 +461,11 @@ public class DSInboundList extends DSInboundRequest
             DSMap map = md.getMap();
             for (int i = 0, len = action.getParameterCount(); i < len; i++) {
                 map.clear();
-                action.getParameterMetadata(i, map);
+                if (dsiAction != null) {
+                    dsiAction.getParameterMetadata(target.getParentInfo(), i, map);
+                } else {
+                    action.getParameterMetadata(i, map);
+                }
                 map.put("type", encodeType(md.getDefault(), md));
                 list.add(map.copy());
             }
@@ -470,7 +479,11 @@ public class DSInboundList extends DSInboundRequest
             DSMap col = md.getMap();
             for (int i = 0, len = action.getColumnCount(); i < len; i++) {
                 col.clear();
-                action.getColumnMetadata(i, col);
+                if (dsiAction != null) {
+                    dsiAction.getColumnMetadata(target.getParentInfo(), i, col);
+                } else {
+                    action.getColumnMetadata(i, col);
+                }
                 col.put("type", encodeType(md.getDefault(), md));
                 list.add(col.copy());
             }
