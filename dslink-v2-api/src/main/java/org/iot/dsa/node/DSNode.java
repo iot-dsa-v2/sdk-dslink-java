@@ -1638,10 +1638,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         private DSInfo<DSNode> next;
 
         NodeIterator() {
-            if (firstChild.isNode()) {
-                next = (DSInfo<DSNode>) firstChild;
-            } else {
-                next = firstChild.nextNode();
+            DSInfo<?> first = getFirstInfo();
+            if (first != null) {
+                if (first.isNode()) {
+                    next = (DSInfo<DSNode>) first;
+                } else {
+                    next = first.nextNode();
+                }
             }
         }
 
@@ -1721,10 +1724,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         private DSInfo<DSIValue> next;
 
         ValueIterator() {
-            if (firstChild.isValue()) {
-                next = (DSInfo<DSIValue>) firstChild;
-            } else {
-                next = firstChild.nextValue();
+            DSInfo<?> first = getFirstInfo();
+            if (first != null) {
+                if (first.isValue()) {
+                    next = (DSInfo<DSIValue>) first;
+                } else {
+                    next = first.nextValue();
+                }
             }
         }
 
