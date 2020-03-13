@@ -904,6 +904,10 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             throw new IllegalArgumentException("Info parented in another node");
         }
         validateChild(object);
+        DSIObject old = info.get();
+        if (DSUtil.equal(object, old) && info.isIgnoreEquals()) {
+            return this;
+        }
         DSNode argAsNode = null;
         boolean argIsNode = isNode(object);
         if (argIsNode) {
@@ -913,7 +917,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         if (object instanceof DSGroup) {
             ((DSGroup) object).setParent(this);
         }
-        DSIObject old = info.get();
         ((DSInfo<DSIObject>) info).setObject(object);
         if (isNode(old)) {
             DSNode node = toNode(old);

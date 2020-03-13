@@ -7,13 +7,11 @@ import com.acuity.iot.dsa.dslink.test.V1TestLink;
 import org.iot.dsa.dslink.requester.SimpleInvokeHandler;
 import org.iot.dsa.node.DSIObject;
 import org.iot.dsa.node.DSInfo;
-import org.iot.dsa.node.DSNode;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class SysProfilerTest {
 
-    private static boolean success = false;
     private V1TestLink link;
 
     @Test
@@ -39,23 +37,6 @@ public class SysProfilerTest {
         final ThreadNode thread = (ThreadNode) threadobj;
         final DSInfo<?> cpuTime = thread.getInfo("CurrentThreadCpuTime");
         Assert.assertTrue(cpuTime != null);
-        success = false;
-        thread.subscribe((event, node, child, data) -> {
-            Assert.assertEquals(thread, node);
-            Assert.assertEquals(cpuTime, child);
-            Assert.assertTrue(child.isValue());
-            Assert.assertTrue(child.getValue().toElement().isNumber());
-            synchronized (SysProfilerTest.this) {
-                success = true;
-                SysProfilerTest.this.notifyAll();
-            }
-        }, DSNode.VALUE_CHANGED_EVENT, cpuTime);
-        synchronized (this) {
-            if (!success) {
-                this.wait(6000);
-            }
-        }
-        Assert.assertTrue(success);
     }
 
 }
