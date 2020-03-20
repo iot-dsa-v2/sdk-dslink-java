@@ -105,6 +105,12 @@ public class DSInboundList extends DSInboundRequest
         return state.isOpen();
     }
 
+    @Override
+    public void listComplete() {
+        sendStreamOpen = true;
+        enqueueResponse();
+    }
+
     /**
      * This is the only way to really close a list request, called only when the connection is
      * closed or the requester has explicitly closed it.
@@ -269,12 +275,6 @@ public class DSInboundList extends DSInboundRequest
             }
         }
         enqueue(encodeName(name, cacheBuf), map);
-    }
-
-    @Override
-    public void listComplete() {
-        sendStreamOpen = true;
-        enqueueResponse();
     }
 
     @Override
