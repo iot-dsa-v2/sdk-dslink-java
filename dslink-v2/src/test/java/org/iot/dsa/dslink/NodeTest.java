@@ -26,6 +26,27 @@ public class NodeTest {
     // -------
 
     @Test
+    public void testOnChildChanged() throws Exception {
+        DSNode root = new DSNode();
+        MyNode child = new MyNode();
+        root.add("child", child);
+        root.start();
+        Assert.assertTrue(child.isRunning());
+        Assert.assertFalse(child.isStopped());
+        Assert.assertTrue(child.lastChildChange == 0);
+        long time = System.currentTimeMillis();
+        child.setSecond(false);
+        Assert.assertTrue(child.lastChildChange >= time);
+        root.remove("child");
+        Assert.assertFalse(child.isRunning());
+        Assert.assertTrue(child.isStopped());
+        Thread.sleep(10);
+        time = System.currentTimeMillis();
+        child.setSecond(true);
+        Assert.assertFalse(child.lastChildChange >= time);
+    }
+
+    @Test
     public void theTest() {
         testMine(new MyNode());
         testMine(new MyNode()); //on purpose, making sure defaults hold
@@ -60,6 +81,7 @@ public class NodeTest {
 
     public static class MyNode extends DSNode {
 
+        long lastChildChange;
         private DSInfo<?> second = getInfo("second");
 
         public boolean isSecond() {
@@ -74,6 +96,10 @@ public class NodeTest {
         protected void declareDefaults() {
             add("first", DSInt.valueOf(1));
             declareDefault("second", DSBool.valueOf(true));
+        }
+
+        protected void onChildChanged(DSInfo<?> child) {
+            lastChildChange = System.currentTimeMillis();
         }
 
     }

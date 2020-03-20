@@ -35,6 +35,7 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
     static final int DECLARED = 4;
     static final int DEFAULT_ON_COPY = 5;
     static final int LOCKED = 6;
+    static final int IGNORE_EQUALS = 7;
 
     ///////////////////////////////////////////////////////////////////////////
     // Fields
@@ -329,6 +330,23 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
      */
     public boolean isFrozen() {
         return isDeclared() || isLocked();
+    }
+
+    /**
+     * False by default, set to true if you don't want equals objects to be applied and
+     * events to be fired.
+     */
+    public boolean isIgnoreEquals() {
+        return getFlag(IGNORE_EQUALS);
+    }
+
+    /**
+     * False by default, set to true if you don't want equals objects to be applied and
+     * events to be fired.
+     */
+    public DSInfo<T> setIgnoreEquals(boolean ignore) {
+        setFlag(IGNORE_EQUALS, ignore);
+        return this;
     }
 
     /**

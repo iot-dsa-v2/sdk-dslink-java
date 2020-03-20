@@ -26,7 +26,7 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     // Class Fields
     ///////////////////////////////////////////////////////////////////////////
 
-    private static final int DEFAULT_READ_TIMEOUT = 60000;
+    private static final int DEFAULT_READ_TIMEOUT = 90000;
     private static final byte[] EMPTY_BYTES = new byte[0];
     private static final int HEX_COLS = 30;
     private static final String TEXT = "Text";
@@ -463,6 +463,12 @@ public abstract class DSTransport extends DSNode implements DSITransport {
     protected void onStarted() {
         super.onStarted();
         getTransportLogger();
+    }
+
+    @Override
+    protected void onStopped() {
+        close();
+        super.onStopped();
     }
 
     /**

@@ -29,12 +29,8 @@ public class DSRuntimeTest {
                 }
             }
         }, System.currentTimeMillis() + 400, 100);
-
-//        System.out.println("test1    now: " + System.nanoTime());
-//        System.out.println("test1nextrun: " + tim.nextRun());
-
         synchronized (lock1) {
-            lock1.wait(1000);
+            lock1.wait(2000);
         }
         Assert.assertTrue(runs >= 5);
     }
@@ -50,12 +46,8 @@ public class DSRuntimeTest {
                 }
             }
         }, 400, 100);
-
-//        System.out.println("test2    now: " + System.nanoTime());
-//        System.out.println("test2nextrun: " + tim.nextRun());
-
         synchronized (lock2) {
-            lock2.wait(1000);
+            lock2.wait(2000);
         }
         Assert.assertTrue(runsWithDelay >= 5);
     }
@@ -69,10 +61,6 @@ public class DSRuntimeTest {
                 lock3.notifyAll();
             }
         }, System.currentTimeMillis() + 400);
-
-//        System.out.println("test3    now: " + System.nanoTime());
-//        System.out.println("test3nextrun: " + tim.nextRun());
-
         synchronized (lock3) {
             lock3.wait(500);
         }
@@ -88,10 +76,6 @@ public class DSRuntimeTest {
                 lock4.notifyAll();
             }
         }, 400);
-
-//        System.out.println("test4    now: " + System.nanoTime());
-//        System.out.println("test4nextrun: " + tim.nextRun());
-
         synchronized (lock4) {
             lock4.wait(500);
         }
@@ -109,14 +93,14 @@ public class DSRuntimeTest {
                 }
             }
         }, 0, 100);
-
-//        System.out.println("test1    now: " + System.nanoTime());
-//        System.out.println("test1nextrun: " + tim.nextRun());
-
         synchronized (lock5) {
             lock5.wait(600);
         }
         Assert.assertTrue(runsImmed >= 5);
+    }
+
+    @Test
+    public void test6() throws Exception {
     }
 
 }
