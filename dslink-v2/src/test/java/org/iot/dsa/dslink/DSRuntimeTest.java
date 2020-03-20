@@ -30,7 +30,7 @@ public class DSRuntimeTest {
             }
         }, System.currentTimeMillis() + 400, 100);
         synchronized (lock1) {
-            lock1.wait(1000);
+            lock1.wait(2000);
         }
         Assert.assertTrue(runs >= 5);
     }
@@ -47,7 +47,7 @@ public class DSRuntimeTest {
             }
         }, 400, 100);
         synchronized (lock2) {
-            lock2.wait(1000);
+            lock2.wait(2000);
         }
         Assert.assertTrue(runsWithDelay >= 5);
     }
