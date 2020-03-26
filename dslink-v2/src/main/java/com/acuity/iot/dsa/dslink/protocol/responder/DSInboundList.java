@@ -142,6 +142,12 @@ public class DSInboundList extends DSInboundRequest
             return;
         }
         switch (event.getEventId()) {
+            case DSNode.VALUE_CHANGED:
+                char ch = child.getName().charAt(0);
+                if ((ch == '@') || (ch == '$')) {
+                    send(child.getName(), child.getElement());
+                }
+                break;
             case DSNode.CHILD_RENAMED:
                 if (target.getTarget() == node) {
                     sendRemove(data.toString());
@@ -149,7 +155,12 @@ public class DSInboundList extends DSInboundRequest
                 //fall through to add the child
             case DSNode.CHILD_ADDED:
                 if (target.getTarget() == node) {
-                    encodeChild(child);
+                    char c = child.getName().charAt(0);
+                    if ((c == '@') || (c == '$')) {
+                        send(child.getName(), child.getElement());
+                    } else {
+                        encodeChild(child);
+                    }
                 }
                 break;
             case DSNode.CHILD_REMOVED:
