@@ -142,6 +142,14 @@ public class DSInboundList extends DSInboundRequest
             return;
         }
         switch (event.getEventId()) {
+            case DSNode.METADATA_CHANGED:
+                if (target.getTarget() == node) {
+                    cacheMap.clear();
+                    node.getInfo().getMetadata(cacheMap);
+                    encodeTargetMetadata(cacheMap);
+                    cacheMap.clear();
+                }
+                break;
             case DSNode.VALUE_CHANGED:
                 char ch = child.getName().charAt(0);
                 if ((ch == '@') || (ch == '$')) {
