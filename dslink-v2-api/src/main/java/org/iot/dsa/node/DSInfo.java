@@ -201,6 +201,19 @@ public class DSInfo<T extends DSIObject> implements GroupListener {
         if (metadata != null) {
             bucket.putAll(metadata);
         }
+        if (isNode()) {
+            DSNode node = getNode();
+            DSInfo<?> info = node.getFirstInfo();
+            while (info != null) {
+                if (info.isValue()) {
+                    char ch = info.getName().charAt(0);
+                    if ((ch == '$') || (ch == '@')) {
+                        bucket.put(info.getName(), info.getElement());
+                    }
+                }
+                info = info.next;
+            }
+        }
     }
 
     /**
