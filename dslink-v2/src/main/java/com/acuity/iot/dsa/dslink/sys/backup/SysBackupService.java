@@ -47,6 +47,7 @@ public class SysBackupService extends DSNode implements Runnable {
     private Object lock = new Object();
     private DSInfo<?> maximum = getInfo(MAXIMUM);
     private Timer nextSave;
+    private boolean saving = false;
 
     public boolean isEnabled() {
         return enabled.getElement().toBoolean();
@@ -101,6 +102,12 @@ public class SysBackupService extends DSNode implements Runnable {
     public void save() {
         if (!isEnabled()) {
             return;
+        }
+        synchronized (this) {
+            if (saving) {
+                return;
+            }
+            saving = true;
         }
         ZipOutputStream zos = null;
         InputStream in = null;
@@ -172,6 +179,9 @@ public class SysBackupService extends DSNode implements Runnable {
             }
         } catch (IOException x) {
             error("Closing output", x);
+        }
+        synchronized (this) {
+            saving = false;
         }
     }
 
