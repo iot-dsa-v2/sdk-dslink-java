@@ -18,6 +18,8 @@ import org.iot.dsa.io.DSIWriter;
 class ErrorMessage implements OutboundMessage {
 
     private static String SERVER_ERROR = "serverError";
+
+    private boolean close = true;
     private String message;
     private Integer rid;
     private String type = SERVER_ERROR;
@@ -46,6 +48,14 @@ class ErrorMessage implements OutboundMessage {
         return true;
     }
 
+    /**
+     * Whether or not to close the stream.
+     */
+    public ErrorMessage setClose(boolean close) {
+        this.close = close;
+        return this;
+    }
+
     public ErrorMessage setType(String type) {
         this.type = type;
         return this;
@@ -54,9 +64,10 @@ class ErrorMessage implements OutboundMessage {
     @Override
     public boolean write(DSSession session, MessageWriter writer) {
         DSIWriter out = writer.getWriter();
-        out.beginMap()
-           .key("rid").value(rid)
-           .key("stream").value("closed");
+        out.beginMap().key("rid").value(rid);
+        if (close) {
+           out.key("stream").value("closed");
+        }
         out.key("error").beginMap()
            .key("type").value(type)
            .key("msg").value(message)

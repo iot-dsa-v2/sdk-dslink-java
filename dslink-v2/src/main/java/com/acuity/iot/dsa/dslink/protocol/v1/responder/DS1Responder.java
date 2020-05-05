@@ -128,8 +128,8 @@ public class DS1Responder extends DSResponder {
     }
 
     @Override
-    public void sendError(DSInboundRequest req, Throwable reason) {
-        sendResponse(new ErrorMessage(req.getRequestId(), reason));
+    public void sendError(DSInboundRequest req, Throwable reason, boolean close) {
+        sendResponse(new ErrorMessage(req.getRequestId(), reason).setClose(close));
     }
 
     public void sendError(int rid, Throwable reason) {

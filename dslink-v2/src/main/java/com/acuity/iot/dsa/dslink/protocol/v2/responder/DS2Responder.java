@@ -83,7 +83,7 @@ public class DS2Responder extends DSResponder implements MessageConstants {
     }
 
     @Override
-    public void sendError(DSInboundRequest req, Throwable reason) {
+    public void sendError(DSInboundRequest req, Throwable reason, boolean close) {
         sendResponse(new ErrorMessage(req, reason));
     }
 

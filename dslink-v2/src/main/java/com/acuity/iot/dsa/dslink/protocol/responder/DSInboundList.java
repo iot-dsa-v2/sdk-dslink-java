@@ -95,7 +95,7 @@ public class DSInboundList extends DSInboundRequest
     @Override
     public void close(Exception reason) {
         if (isOpen()) {
-            getResponder().sendError(this, reason);
+            getResponder().sendError(this, reason, false);
         }
         close();
     }
