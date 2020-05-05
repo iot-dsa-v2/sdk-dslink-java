@@ -618,7 +618,11 @@ public class DSByteBuffer extends InputStream {
     private void growBuffer(int minSize) {
         int size = buffer.length;
         while (size < minSize) {
-            size *= 2;
+            if (size < 1000000) {
+                size *= 2;
+            } else {
+                size += 1000000;
+            }
         }
         byte[] tmp = new byte[size];
         System.arraycopy(buffer, offset, tmp, 0, length);
