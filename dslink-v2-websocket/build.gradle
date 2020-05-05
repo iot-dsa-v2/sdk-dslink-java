@@ -1,6 +1,6 @@
 dependencies {
     api project(':dslink-v2')
-    implementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:[1.15,)'
+    implementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:1.16'
 }
 
 artifacts {

@@ -125,9 +125,11 @@ public class DS1Session extends DSSession implements MessageReader, MessageWrite
     @Override
     protected void onConnected() {
         super.onConnected();
+        lastMessageSent = 0;
         setRequesterAllowed(true); //Rick says Dart broker doesn't send this
         requester.onConnected();
         responder.onConnected();
+        sendMessage();
     }
 
     @Override

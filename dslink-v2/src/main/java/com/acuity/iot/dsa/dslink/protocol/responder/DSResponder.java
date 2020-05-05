@@ -97,7 +97,11 @@ public abstract class DSResponder extends DSNode {
 
     public abstract void sendClose(int rid);
 
-    public abstract void sendError(DSInboundRequest req, Throwable reason);
+    public void sendError(DSInboundRequest req, Throwable reason) {
+        sendError(req, reason, true);
+    }
+
+    public abstract void sendError(DSInboundRequest req, Throwable reason, boolean close);
 
     public void sendResponse(OutboundMessage res) {
         session.enqueueOutgoingResponse(res);

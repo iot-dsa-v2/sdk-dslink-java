@@ -1,7 +1,7 @@
 dependencies {
     api project(':dslink-v2-api')
-    compileOnly 'org.glassfish.tyrus.bundles:tyrus-standalone-client:[1.15,)'
-    testImplementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:[1.15,)'
+    compileOnly 'org.glassfish.tyrus.bundles:tyrus-standalone-client:1.16'
+    testImplementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:1.16'
     testImplementation 'org.testng:testng:+'
     testImplementation 'org.openjdk.jmh:jmh-core:+'
     testImplementation 'org.openjdk.jmh:jmh-generator-annprocess:+'
