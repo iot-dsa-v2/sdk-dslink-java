@@ -924,7 +924,7 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             node.stop();
             node.infoInParent = null;
         } else if (old instanceof DSGroup) {
-            ((DSGroup) object).setParent(null);
+            ((DSGroup) old).setParent(null);
         }
         if (argIsNode) {
             argAsNode.infoInParent = (DSInfo<DSNode>) info;
