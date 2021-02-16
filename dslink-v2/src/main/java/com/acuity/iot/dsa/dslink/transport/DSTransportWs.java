@@ -119,6 +119,8 @@ public abstract class DSTransportWs extends DSTransport {
         this.session = session;
         this.basicRemote = session.getBasicRemote();
         this.config = config;
+        session.setMaxBinaryMessageBufferSize(Integer.MAX_VALUE);
+        session.setMaxTextMessageBufferSize(Integer.MAX_VALUE);
         setOpen();
     }
 

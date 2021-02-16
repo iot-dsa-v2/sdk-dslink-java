@@ -1,18 +1,17 @@
 subprojects {
 
-    apply plugin: 'jacoco'
     apply plugin: 'java-library'
-    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
 
     group 'org.iot-dsa'
-    version '0.75.3'
+    version '0.76.0'
 
     targetCompatibility = JavaVersion.VERSION_1_8
     sourceCompatibility = JavaVersion.VERSION_1_8
 
     repositories {
-        jcenter()
         mavenLocal()
+        mavenCentral()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
@@ -23,6 +22,14 @@ subprojects {
             attributes(
                     'Automatic-Module-Name': 'org.iot.dsa.' + project.name.replaceAll('-', '.')
             )
+        }
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
         }
     }
 
@@ -40,17 +47,6 @@ subprojects {
         useTestNG()
     }
 
-    jacocoTestReport {
-
-        reports {
-            xml.enabled true
-            csv.enabled false
-            html.enabled true
-        }
-    }
-
-    build.dependsOn jacocoTestReport
-
 }
 
 allprojects {
@@ -60,5 +56,5 @@ allprojects {
 }
 
 wrapper {
-    gradleVersion = '6.1'
+    gradleVersion = '6.8'
 }
