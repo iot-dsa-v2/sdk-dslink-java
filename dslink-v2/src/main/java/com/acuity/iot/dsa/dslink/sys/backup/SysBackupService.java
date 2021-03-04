@@ -114,17 +114,41 @@ public class SysBackupService extends DSNode implements Runnable {
         try {
             File nodes = getLink().getOptions().getNodesFile();
             String name = nodes.getName();
+            // serialize to tmp file
+            long time = System.currentTimeMillis();
+            put(lastTime, DSDateTime.valueOf(time));
+            info("Saving node database " + nodes.getCanonicalPath());
+            DSIWriter writer;
+            File tmpNodes = new File(nodes.getParentFile(), nodes.getName() + ".tmp");
+            if (tmpNodes.exists()) {
+                if (!tmpNodes.delete()) {
+                    warn("Failed to delete existing tmp file: %s", tmpNodes.getName());
+                }
+            }
+            if (name.endsWith(".zip")) {
+                String tmp = name.substring(0, name.lastIndexOf(".zip"));
+                writer = Json.zipWriter(tmpNodes, tmp + ".json");
+            } else {
+                writer = Json.writer(tmpNodes);
+            }
+            NodeEncoder.encode(writer, getLink());
+            writer.close();
+            // make backup
             if (nodes.exists()) {
                 StringBuilder buf = new StringBuilder();
                 Calendar cal = Time.getCalendar(System.currentTimeMillis());
                 if (name.endsWith(".zip")) {
+                    // just rename
                     String tmp = name.substring(0, name.lastIndexOf(".zip"));
                     buf.append(tmp).append('.');
                     Time.encodeForFiles(cal, buf);
                     buf.append(".zip");
                     File bakFile = new File(nodes.getParent(), buf.toString());
-                    nodes.renameTo(bakFile);
+                    if (!nodes.renameTo(bakFile)) {
+                        warn("Failed to rename %s to %s", nodes.getName(), bakFile.getName());
+                    }
                 } else {
+                    // create zip
                     buf.append(name).append('.');
                     Time.encodeForFiles(cal, buf);
                     buf.append(".zip");
@@ -144,21 +168,17 @@ public class SysBackupService extends DSNode implements Runnable {
                     zos.closeEntry();
                     zos.close();
                     zos = null;
+                    if (!nodes.delete()) {
+                        warn("Failed to delete after creating backup: %s", nodes.getName());
+                    }
                 }
                 Time.recycle(cal);
             }
-            long time = System.currentTimeMillis();
-            put(lastTime, DSDateTime.valueOf(time));
-            info("Saving node database " + nodes.getAbsolutePath());
-            DSIWriter writer;
-            if (name.endsWith(".zip")) {
-                String tmp = name.substring(0, name.lastIndexOf(".zip"));
-                writer = Json.zipWriter(nodes, tmp + ".json");
-            } else {
-                writer = Json.writer(nodes);
+            // rename tmp
+            if (!tmpNodes.renameTo(nodes)) {
+                warn("Failed to rename %s to %s", tmpNodes.getName(), nodes.getName());
             }
-            NodeEncoder.encode(writer, getLink());
-            writer.close();
+            // cleanup
             trimBackups();
             time = System.currentTimeMillis() - time;
             put(lastDuration, DSLong.valueOf(time));
