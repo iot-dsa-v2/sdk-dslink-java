@@ -33,12 +33,16 @@ public class DSString extends DSElement implements Comparable<Object> {
     // Constructors
     // ------------
 
-    DSString(String val) {
-        value = val;
+    static {
+        DSRegistry.registerDecoder(DSString.class, NULL);
     }
 
     // Public Methods
     // --------------
+
+    DSString(String val) {
+        value = val;
+    }
 
     @Override
     public int compareTo(Object arg) {
@@ -81,7 +85,6 @@ public class DSString extends DSElement implements Comparable<Object> {
         return DSElementType.STRING;
     }
 
-
     @Override
     public DSValueType getValueType() {
         return DSValueType.STRING;
@@ -122,6 +125,34 @@ public class DSString extends DSElement implements Comparable<Object> {
     }
 
     @Override
+    public byte[] toBytes() {
+        if (isNull()) {
+            return null;
+        }
+        return DSBytes.decode(value);
+    }
+
+    @Override
+    public double toDouble() {
+        return Double.parseDouble(value);
+    }
+
+    @Override
+    public float toFloat() {
+        return Float.parseFloat(value);
+    }
+
+    @Override
+    public int toInt() {
+        return Integer.parseInt(value);
+    }
+
+    @Override
+    public long toLong() {
+        return Long.parseLong(value);
+    }
+
+    @Override
     public String toString() {
         return value;
     }
@@ -146,13 +177,6 @@ public class DSString extends DSElement implements Comparable<Object> {
             return EMPTY;
         }
         return new DSString(str);
-    }
-
-    // Initialization
-    // --------------
-
-    static {
-        DSRegistry.registerDecoder(DSString.class, NULL);
     }
 
 }
