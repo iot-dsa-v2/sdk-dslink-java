@@ -147,6 +147,7 @@ public class DSInboundList extends DSInboundRequest
                     cacheMap.clear();
                     node.getInfo().getMetadata(cacheMap);
                     encodeTargetMetadata(cacheMap);
+                    enqueueResponse();
                     cacheMap.clear();
                 }
                 break;
@@ -225,7 +226,7 @@ public class DSInboundList extends DSInboundRequest
         if (!isOpen()) {
             throw new IllegalStateException("List stream closed");
         }
-        enqueue(encodeName(name, cacheBuf), value);
+        enqueueResponse(encodeName(name, cacheBuf), value);
     }
 
     @Override
@@ -246,7 +247,7 @@ public class DSInboundList extends DSInboundRequest
         } else {
             map.put("$invokable", "read");
         }
-        enqueue(encodeName(name, cacheBuf), map);
+        enqueueResponse(encodeName(name, cacheBuf), map);
     }
 
     @Override
@@ -262,7 +263,7 @@ public class DSInboundList extends DSInboundRequest
         if (admin) {
             map.put("$permission", "config");
         }
-        enqueue(encodeName(name, cacheBuf), map);
+        enqueueResponse(encodeName(name, cacheBuf), map);
     }
 
     @Override
@@ -293,7 +294,7 @@ public class DSInboundList extends DSInboundRequest
                 map.put("$writable", "write");
             }
         }
-        enqueue(encodeName(name, cacheBuf), map);
+        enqueueResponse(encodeName(name, cacheBuf), map);
     }
 
     @Override
@@ -401,15 +402,8 @@ public class DSInboundList extends DSInboundRequest
     /**
      * Override point for v2.
      */
-    protected void enqueue(String key, DSElement value) {
+    protected void enqueueResponse(String key, DSElement value) {
         enqueueResponse(new DSList().add(key).add(ensureUnparented(value)));
-    }
-
-    /**
-     * Override point for v2.
-     */
-    protected void enqueue(String key, String value) {
-        enqueueResponse(new DSList().add(key).add(value));
     }
 
     /**
@@ -427,6 +421,22 @@ public class DSInboundList extends DSInboundRequest
     ///////////////////////////////////////////////////////////////////////////
     // Package / Private Methods
     ///////////////////////////////////////////////////////////////////////////
+
+    private void bufferUpdate(DSElement update) {
+        if (!state.isClosed()) {
+            synchronized (updates) {
+                updates.add(update);
+            }
+        }
+    }
+
+    private void bufferUpdate(String key, DSElement value) {
+        bufferUpdate(new DSList().add(key).add(value));
+    }
+
+    private void bufferUpdate(String key, String value) {
+        bufferUpdate(new DSList().add(key).add(value));
+    }
 
     private DSElement dequeueUpdate() {
         synchronized (updates) {
@@ -453,18 +463,18 @@ public class DSInboundList extends DSInboundRequest
             e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
         }
         if (e != null) {
-            enqueue("$name", e);
+            bufferUpdate("$name", e);
         }
         e = cacheMap.remove("$invokable");
         if (e != null) {
-            enqueue("$invokable", e);
+            bufferUpdate("$invokable", e);
         } else {
             if (action.isAdmin()) {
-                enqueue("$invokable", "config");
+                bufferUpdate("$invokable", "config");
             } else if (!action.isReadOnly()) {
-                enqueue("$invokable", "write");
+                bufferUpdate("$invokable", "write");
             } else {
-                enqueue("$invokable", "read");
+                bufferUpdate("$invokable", "read");
             }
         }
         DSMetadata md = new DSMetadata();
@@ -474,7 +484,7 @@ public class DSInboundList extends DSInboundRequest
         }
         e = cacheMap.remove("$params");
         if (e != null) {
-            enqueue("$params", e);
+            bufferUpdate("$params", e);
         } else {
             DSList list = new DSList();
             DSMap map = md.getMap();
@@ -488,11 +498,11 @@ public class DSInboundList extends DSInboundRequest
                 map.put("type", encodeType(md.getDefault(), md));
                 list.add(map.copy());
             }
-            enqueue("$params", list);
+            bufferUpdate("$params", list);
         }
         e = cacheMap.remove("$columns");
         if (e != null) {
-            enqueue("$columns", e);
+            bufferUpdate("$columns", e);
         } else if (action.getColumnCount() > 0) {
             DSList list = new DSList();
             DSMap col = md.getMap();
@@ -506,15 +516,16 @@ public class DSInboundList extends DSInboundRequest
                 col.put("type", encodeType(md.getDefault(), md));
                 list.add(col.copy());
             }
-            enqueue("$columns", list);
+            bufferUpdate("$columns", list);
         }
         e = cacheMap.remove("$result");
         if (e != null) {
-            enqueue("$result", e);
+            bufferUpdate("$result", e);
         } else if (!action.getResultsType().isVoid()) {
-            enqueue("$result", action.getResultsType().toString());
+            bufferUpdate("$result", action.getResultsType().toString());
         }
         encodeTargetMetadata(cacheMap);
+        enqueueResponse();
         cacheMap.clear();
     }
 
@@ -546,24 +557,25 @@ public class DSInboundList extends DSInboundRequest
         DSMetadata.getMetadata(object, cacheMap.clear());
         DSElement e = cacheMap.remove("$is");
         if (e == null) {
-            enqueue("$is", "node");
+            bufferUpdate("$is", "node");
         } else {
-            enqueue("$is", e);
+            bufferUpdate("$is", e);
         }
         e = cacheMap.remove("$name");
         if (e == null) {
             e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
         }
         if (e != null) {
-            enqueue("$name", e);
+            bufferUpdate("$name", e);
         }
         e = cacheMap.remove("$permission");
         if (e != null) {
-            enqueue("$permission", e);
+            bufferUpdate("$permission", e);
         } else if (object.isAdmin()) {
-            enqueue("$permission", "config");
+            bufferUpdate("$permission", "config");
         }
         encodeTargetMetadata(cacheMap);
+        enqueueResponse();
         cacheMap.clear();
     }
 
@@ -571,24 +583,25 @@ public class DSInboundList extends DSInboundRequest
         node.getMetadata(cacheMap.clear());
         DSElement e = cacheMap.remove("$is");
         if (e == null) {
-            enqueue("$is", "node");
+            bufferUpdate("$is", "node");
         } else {
-            enqueue("$is", e);
+            bufferUpdate("$is", e);
         }
         e = cacheMap.remove("$name");
         if (e == null) {
             e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
         }
         if (e != null) {
-            enqueue("$name", e);
+            bufferUpdate("$name", e);
         }
         e = cacheMap.remove("$permission");
         if (e != null) {
-            enqueue("$permission", e);
+            bufferUpdate("$permission", e);
         } else if (node.isAdmin()) {
-            enqueue("$permission", "config");
+            bufferUpdate("$permission", "config");
         }
         encodeTargetMetadata(cacheMap);
+        enqueueResponse();
         cacheMap.clear();
     }
 
@@ -620,7 +633,7 @@ public class DSInboundList extends DSInboundRequest
                     name = cacheBuf.toString();
 
             }
-            enqueue(name, entry.getValue());
+            bufferUpdate(name, entry.getValue());
             entry = entry.next();
         }
     }
@@ -683,36 +696,37 @@ public class DSInboundList extends DSInboundRequest
         DSMetadata.getMetadata(object, cacheMap.clear());
         DSElement e = cacheMap.remove("$is");
         if (e == null) {
-            enqueue("$is", "node");
+            bufferUpdate("$is", "node");
         } else {
-            enqueue("$is", e);
+            bufferUpdate("$is", e);
         }
         e = cacheMap.remove("$name");
         if (e == null) {
             e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
         }
         if (e != null) {
-            enqueue("$name", e);
+            bufferUpdate("$name", e);
         }
         e = cacheMap.remove("$type");
         if (e != null) {
-            enqueue("$type", e);
+            bufferUpdate("$type", e);
         } else {
-            enqueue("$type", encodeType(object.getValue(), cacheMeta));
+            bufferUpdate("$type", encodeType(object.getValue(), cacheMeta));
         }
         e = cacheMap.remove("$writable");
         if (e != null) {
-            enqueue("$writable", e);
+            bufferUpdate("$writable", e);
         } else if (!object.isReadOnly()) {
-            enqueue("$writable", object.isAdmin() ? "config" : "write");
+            bufferUpdate("$writable", object.isAdmin() ? "config" : "write");
         }
         e = cacheMap.remove("$permission");
         if (e != null) {
-            enqueue("$permission", e);
+            bufferUpdate("$permission", e);
         } else if (object.isAdmin()) {
-            enqueue("$permission", "config");
+            bufferUpdate("$permission", "config");
         }
         encodeTargetMetadata(cacheMap);
+        enqueueResponse();
         cacheMap.clear();
     }
 
@@ -724,36 +738,37 @@ public class DSInboundList extends DSInboundRequest
         value.getMetadata(cacheMap);
         DSElement e = cacheMap.remove("$is");
         if (e == null) {
-            enqueue("$is", "node");
+            bufferUpdate("$is", "node");
         } else {
-            enqueue("$is", e);
+            bufferUpdate("$is", e);
         }
         e = cacheMap.remove("$name");
         if (e == null) {
             e = cacheMap.remove(DSMetadata.DISPLAY_NAME);
         }
         if (e != null) {
-            enqueue("$name", e);
+            bufferUpdate("$name", e);
         }
         e = cacheMap.remove("$type");
         if (e != null) {
-            enqueue("$type", e);
+            bufferUpdate("$type", e);
         } else {
-            enqueue("$type", encodeType(value));
+            bufferUpdate("$type", encodeType(value));
         }
         e = cacheMap.remove("$writable");
         if (e != null) {
-            enqueue("$writable", e);
+            bufferUpdate("$writable", e);
         } else if (!value.isReadOnly()) {
-            enqueue("$writable", value.isAdmin() ? "config" : "write");
+            bufferUpdate("$writable", value.isAdmin() ? "config" : "write");
         }
         e = cacheMap.remove("$permission");
         if (e != null) {
-            enqueue("$permission", e);
+            bufferUpdate("$permission", e);
         } else if (value.isAdmin()) {
-            enqueue("$permission", "config");
+            bufferUpdate("$permission", "config");
         }
         encodeTargetMetadata(cacheMap);
+        enqueueResponse();
         cacheMap.clear();
     }
 

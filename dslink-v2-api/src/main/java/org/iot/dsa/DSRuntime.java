@@ -14,7 +14,6 @@ public class DSRuntime {
     ///////////////////////////////////////////////////////////////////////////
 
     private static boolean alive = true;
-    private static boolean hasStarted = false;
     private static long nextCycle = 0;
     private static RuntimeThread runtimeThread;
     private static DSThreadPool threadPool;
@@ -73,9 +72,8 @@ public class DSRuntime {
                 timerTail.next = f;
                 timerTail = f;
             }
-            if (!hasStarted || startNanos - nextCycle < 0) {
+            if (startNanos - nextCycle < 0) {
                 nextCycle = startNanos;
-                hasStarted = true;
                 DSRuntime.class.notifyAll();
             }
         }
@@ -113,9 +111,8 @@ public class DSRuntime {
                 timerTail.next = f;
                 timerTail = f;
             }
-            if (!hasStarted || startNanos - nextCycle < 0) {
+            if (startNanos - nextCycle < 0) {
                 nextCycle = startNanos;
-                hasStarted = true;
                 DSRuntime.class.notifyAll();
             }
         }
@@ -137,7 +134,6 @@ public class DSRuntime {
         //Take the task link list.
         synchronized (DSRuntime.class) {
             nextCycle = nextCycleTmp;
-            hasStarted = true;
             current = timerHead;
             timerHead = null;
             timerTail = null;
