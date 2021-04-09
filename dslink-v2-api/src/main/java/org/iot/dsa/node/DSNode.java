@@ -916,6 +916,13 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
         }
         if (object instanceof DSGroup) {
             ((DSGroup) object).setParent(this);
+        } else if ((object == null) && (old instanceof DSIValue)) {
+            DSIValue tmp = (DSIValue) old;
+            try {
+                object = tmp.valueOf(null);
+            } catch (Exception x) {
+                warn(x);
+            }
         }
         ((DSInfo<DSIObject>) info).setObject(object);
         if (isNode(old)) {
@@ -1473,14 +1480,6 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
             DSNode node = (DSNode) val;
             node.infoInParent = (DSInfo<DSNode>) info;
         }
-        if (isRunning()) {
-            try {
-                onChildAdded(info);
-            } catch (Exception x) {
-                error(getPath(), x);
-            }
-            fire(CHILD_ADDED_EVENT, info, null);
-        }
     }
 
     /**
@@ -1543,6 +1542,14 @@ public class DSNode extends DSLogger implements DSIObject, Iterable<DSInfo<?>> {
                     }
                 }
             });
+        }
+        if (isRunning()) {
+            try {
+                onChildAdded(info);
+            } catch (Exception x) {
+                error(getPath(), x);
+            }
+            fire(CHILD_ADDED_EVENT, info, null);
         }
     }
 
