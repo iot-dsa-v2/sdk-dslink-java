@@ -1,5 +1,6 @@
 package com.acuity.iot.dsa.dslink.sys.backup;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -48,6 +49,7 @@ public class SysBackupService extends DSNode implements Runnable {
     private DSInfo<?> maximum = getInfo(MAXIMUM);
     private Timer nextSave;
     private boolean saving = false;
+    private Timer saveDelay;
 
     public boolean isEnabled() {
         return enabled.getElement().toBoolean();
@@ -91,7 +93,7 @@ public class SysBackupService extends DSNode implements Runnable {
     @Override
     public void run() {
         synchronized (lock) {
-            save();
+            saveActual();
             scheduleNextSave();
         }
     }
@@ -100,6 +102,52 @@ public class SysBackupService extends DSNode implements Runnable {
      * Serializes the configuration database.
      */
     public void save() {
+        if (!isEnabled()) {
+            return;
+        }
+        if (saveDelay != null) {
+            saveDelay.cancel();
+        }
+        saveDelay = DSRuntime.runDelayed(this::saveActual, 5000);
+    }
+
+    @Override
+    protected void declareDefaults() {
+        declareDefault(SAVE, new SaveAction());
+        declareDefault(ENABLED, DSBool.TRUE).setTransient(true);
+        declareDefault(INTERVAL, DSLong.valueOf(60));
+        declareDefault(LAST_TIME, DSDateTime.NULL).setReadOnly(true);
+        declareDefault(LAST_DURATION, DSLong.NULL).setReadOnly(true);
+        declareDefault(MAXIMUM, DSLong.valueOf(3));
+    }
+
+    @Override
+    protected void onStable() {
+        File nodes = getLink().getOptions().getNodesFile();
+        if (nodes.exists()) {
+            synchronized (lock) {
+                scheduleNextSave();
+            }
+        } else {
+            DSRuntime.run(this);
+        }
+    }
+
+    private DSLink getLink() {
+        if (link == null) {
+            link = getAncestor(DSLink.class);
+        }
+        return link;
+    }
+
+    /**
+     * Serializes the configuration database.
+     */
+    private void saveActual() {
+        if (saveDelay != null) {
+            saveDelay.cancel();
+            saveDelay = null;
+        }
         if (!isEnabled()) {
             return;
         }
@@ -114,25 +162,10 @@ public class SysBackupService extends DSNode implements Runnable {
         try {
             File nodes = getLink().getOptions().getNodesFile();
             String name = nodes.getName();
-            // serialize to tmp file
             long time = System.currentTimeMillis();
             put(lastTime, DSDateTime.valueOf(time));
-            info("Saving node database " + nodes.getCanonicalPath());
-            DSIWriter writer;
-            File tmpNodes = new File(nodes.getParentFile(), nodes.getName() + ".tmp");
-            if (tmpNodes.exists()) {
-                if (!tmpNodes.delete()) {
-                    warn("Failed to delete existing tmp file: %s", tmpNodes.getName());
-                }
-            }
-            if (name.endsWith(".zip")) {
-                String tmp = name.substring(0, name.lastIndexOf(".zip"));
-                writer = Json.zipWriter(tmpNodes, tmp + ".json");
-            } else {
-                writer = Json.writer(tmpNodes);
-            }
-            NodeEncoder.encode(writer, getLink());
-            writer.close();
+            // save tmp file
+            File tmpNodes = saveTmpFile(nodes);
             // make backup
             if (nodes.exists()) {
                 StringBuilder buf = new StringBuilder();
@@ -168,6 +201,7 @@ public class SysBackupService extends DSNode implements Runnable {
                     zos.closeEntry();
                     zos.close();
                     zos = null;
+                    fos.getFD().sync();
                     if (!nodes.delete()) {
                         warn("Failed to delete after creating backup: %s", nodes.getName());
                     }
@@ -205,33 +239,37 @@ public class SysBackupService extends DSNode implements Runnable {
         }
     }
 
-    @Override
-    protected void declareDefaults() {
-        declareDefault(SAVE, new SaveAction());
-        declareDefault(ENABLED, DSBool.TRUE).setTransient(true);
-        declareDefault(INTERVAL, DSLong.valueOf(60));
-        declareDefault(LAST_TIME, DSDateTime.NULL).setReadOnly(true);
-        declareDefault(LAST_DURATION, DSLong.NULL).setReadOnly(true);
-        declareDefault(MAXIMUM, DSLong.valueOf(3));
-    }
-
-    @Override
-    protected void onStable() {
-        File nodes = getLink().getOptions().getNodesFile();
-        if (nodes.exists()) {
-            synchronized (lock) {
-                scheduleNextSave();
+    private File saveTmpFile(File nodes) throws Exception {
+        String name = nodes.getName();
+        long time = System.currentTimeMillis();
+        put(lastTime, DSDateTime.valueOf(time));
+        info("Saving node database " + nodes.getCanonicalPath());
+        DSIWriter writer;
+        File tmpNodes = new File(nodes.getParentFile(), name + ".tmp");
+        if (tmpNodes.exists()) {
+            if (!tmpNodes.delete()) {
+                warn("Failed to delete existing tmp file: %s", tmpNodes.getName());
             }
+        }
+        FileOutputStream out = new FileOutputStream(tmpNodes);
+        ZipOutputStream zout = null;
+        if (name.endsWith(".zip")) {
+            String tmp = name.substring(0, name.lastIndexOf(".zip"));
+            zout = new ZipOutputStream(new BufferedOutputStream(out));
+            zout.putNextEntry(new ZipEntry(tmp + ".json"));
+            writer = Json.writer(zout);
         } else {
-            DSRuntime.run(this);
+            writer = Json.writer(out);
         }
-    }
-
-    private DSLink getLink() {
-        if (link == null) {
-            link = getAncestor(DSLink.class);
+        NodeEncoder.encode(writer, getLink());
+        writer.flush();
+        if (zout != null) {
+            zout.closeEntry();
         }
-        return link;
+        writer.flush();
+        out.getFD().sync();
+        writer.close();
+        return tmpNodes;
     }
 
     private void scheduleNextSave() {

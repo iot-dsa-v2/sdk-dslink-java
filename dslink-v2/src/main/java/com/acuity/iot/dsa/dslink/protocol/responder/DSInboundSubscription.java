@@ -80,11 +80,6 @@ public class DSInboundSubscription extends DSInboundRequest
 
     @Override
     public void close() {
-        //never close locally in case a node is added back
-        if (isOpen()) {
-            update(DSDateTime.now(), DSNull.NULL, DSStatus.unknown);
-        }
-        state = StreamState.DISCONNECTED;
         if ((subscription != null) && (qos < 2)) {
             subscription.close();
             subscription = null;
@@ -97,6 +92,11 @@ public class DSInboundSubscription extends DSInboundRequest
             }
             closeHandler = null;
         }
+        //never close locally in case a node is added back
+        if (isOpen()) {
+            update(DSDateTime.now(), DSNull.NULL, DSStatus.unknown);
+        }
+        state = StreamState.DISCONNECTED;
     }
 
     public int getQos() {
