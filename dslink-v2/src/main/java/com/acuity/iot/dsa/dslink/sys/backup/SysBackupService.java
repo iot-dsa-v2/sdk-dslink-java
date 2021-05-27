@@ -269,6 +269,9 @@ public class SysBackupService extends DSNode implements Runnable {
         writer.flush();
         out.getFD().sync();
         writer.close();
+        if (tmpNodes.length() <= 0) {
+            throw new IllegalStateException(name + " has no data!");
+        }
         return tmpNodes;
     }
 
