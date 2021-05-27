@@ -72,12 +72,6 @@ public class DSInboundList extends DSInboundRequest
 
     @Override
     public void close() {
-        if (isOpen()) {
-            //we don't actually close the stream because an object could be added back at this path
-            send("$disconnectedTs", DSDateTime.now().toElement());
-            sendStreamOpen = true;
-            state = StreamState.DISCONNECTED;
-        }
         if (subscription != null) {
             subscription.close();
             subscription = null;
@@ -89,6 +83,12 @@ public class DSInboundList extends DSInboundRequest
                 error(getPath(), x);
             }
             response = null;
+        }
+        if (isOpen()) {
+            //we don't actually close the stream because an object could be added back at this path
+            send("$disconnectedTs", DSDateTime.now().toElement());
+            sendStreamOpen = true;
+            state = StreamState.DISCONNECTED;
         }
     }
 
@@ -152,6 +152,10 @@ public class DSInboundList extends DSInboundRequest
                 }
                 break;
             case DSNode.VALUE_CHANGED:
+                if (child == null) {
+                    // The node is a value node and this will be repeated for the parent.
+                    return;
+                }
                 char ch = child.getName().charAt(0);
                 if ((ch == '@') || (ch == '$')) {
                     send(child.getName(), child.getElement());
