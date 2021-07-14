@@ -87,7 +87,7 @@ public class SysBackupService extends DSNode implements Runnable {
             nextSave.cancel();
             nextSave = null;
         }
-        save();
+        saveActual();
     }
 
     @Override
